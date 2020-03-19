@@ -5,8 +5,11 @@ from setuptools.command.test import test as TestCommand
 
 
 PACKAGE_NAME = "openscm-runner"
-AUTHOR = "Zebedee Nicholls"
-EMAIL = "zebedee.nicholls@climate-energy-college.org"
+AUTHORS = [
+    ("Zeb Nicholls", "zebedee.nicholls@climate-energy-college.org"),
+    ("Robert Gieseke", "robert.gieseke@pik-potsdam.de"),
+    ("Jared Lewis", "jared.lewis@climate-energy-college.org"),
+]
 URL = "https://github.com/znicholls/OpenscmRunner"
 
 DESCRIPTION = (
@@ -67,8 +70,8 @@ setup(
     description=DESCRIPTION,
     long_description=README_TEXT,
     long_description_content_type="text/x-rst",
-    author=AUTHOR,
-    author_email=EMAIL,
+    author=", ".join([author[0] for author in AUTHORS]),
+    author_email=", ".join([author[1] for author in AUTHORS]),
     url=URL,
     license="3-Clause BSD License",
     classifiers=[  # full list at https://pypi.org/pypi?%3Aaction=list_classifiers
