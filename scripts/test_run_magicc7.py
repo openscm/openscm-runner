@@ -1,16 +1,23 @@
+import os
+import os.path
+
 import pyam
 
 from openscm_runner import run
 
 UPDATE = True  # Should we update the regression data?
-DATA_FILE_SCENARIOS = "rcmip_scen_ssp_world_emissions.csv"
-DATA_FILE_REGRESSION = "magicc7_regression.csv"
+DATA_FILE_SCENARIOS_NAME = "rcmip_scen_ssp_world_emissions.csv"
+DATA_FILE_REGRESSION_NAME = "magicc7_regression.csv"
 
+data_file_scenarios = os.path.join(os.path.dirname(__file__), DATA_FILE_SCENARIOS_NAME)
+data_file_regression = os.path.join(
+    os.path.dirname(__file__), DATA_FILE_REGRESSION_NAME
+)
+
+
+scenarios = pyam.IamDataFrame(data_file_scenarios)
 
 assert False, "Check MAGICC7 version"
-
-scenarios = pyam.IamDataFrame(DATA_FILE_SCENARIOS)
-
 
 res = run(
     {
@@ -23,7 +30,7 @@ res = run(
 )
 
 if UPDATE:
-    res.to_csv(DATA_FILE_REGRESSION)
+    res.to_csv(data_file_regression)
 else:
-    expected_res = pyam.IamDataFrame(DATA_FILE_REGRESSION)
+    expected_res = pyam.IamDataFrame(data_file_regression)
     pyam.assert_iamframe_equal(res, expected_res)
