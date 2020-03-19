@@ -27,7 +27,12 @@ checks: $(VENV_DIR)  ## run all the checks
 		echo "\n\n=== notebook tests ==="; $(VENV_DIR)/bin/pytest notebooks -r a --nbval --sanitize-with tests/notebook-tests.cfg || echo "--- notebook tests failed ---" >&2; \
 		echo "\n\n=== tests ==="; $(VENV_DIR)/bin/pytest tests -r a --cov=openscm_runner --cov-report='' \
 			&& $(VENV_DIR)/bin/coverage report --fail-under=95 || echo "--- tests failed ---" >&2; \
-		echo "\n\n=== sphinx ==="; $(VENV_DIR)/bin/sphinx-build -M html docs/source docs/build -EWn -b coverage || echo "--- sphinx failed ---" >&2
+		echo
+
+.PHONY: format
+format:  ## re-format files
+	make isort
+	make black
 
 black: $(VENV_DIR)  ## apply black formatter to source and tests
 	@status=$$(git status --porcelain src tests); \

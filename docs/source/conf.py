@@ -10,13 +10,13 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-sys.path.append(os.path.join(os.path.dirname(__file__), "../src/openscm_runner"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../src/openscm_runner"))
 from _version import get_versions  # isort:skip # append path before
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'OpenSCM-Runner'
+project = "OpenSCM-Runner"
 authors = ", ".join(["Zeb Nicholls", "Robert Gieseke", "Jared Lewis", "Sven Willner"])
 copyright_year = "2020"
 copyright = "{}, {}".format(copyright_year, authors)
@@ -49,7 +49,7 @@ autodoc_default_options = {
 }
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -80,12 +80,12 @@ pygments_style = "sphinx"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -140,7 +140,9 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "openscm-runner", "OpenSCM-Runner Documentation", [author], 1)]
+man_pages = [
+    (master_doc, "openscm-runner", "OpenSCM-Runner Documentation", [author], 1)
+]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -190,7 +192,7 @@ intersphinx_mapping = {
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "python": ("https://docs.python.org/3", None),
     "pyam": ("https://pyam-iamc.readthedocs.io/en/latest", None),
-    "scmdata": ("https://scmdata.readthedocs.io/", None),
+    "scmdata": ("https://scmdata.readthedocs.io/en/latest", None),
     # "pint": ("https://pint.readthedocs.io/en/latest", None), # no full API doc here, unfortunately
 }
 napoleon_google_docstring = False
