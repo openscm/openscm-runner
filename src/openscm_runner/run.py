@@ -1,4 +1,4 @@
-import tqdm.autonotebook.tqdm as tqdm
+from tqdm.autonotebook import tqdm
 
 from .adapters import MAGICC7
 
