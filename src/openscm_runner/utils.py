@@ -2,6 +2,7 @@
 Utility functions
 """
 
+
 def add_example(first, second):
     """
     Add the inputs given together
