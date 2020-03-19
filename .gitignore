@@ -1,3 +1,6 @@
+# temporary data files
+scripts/*.csv
+
 # Compiled Dynamic libraries
 *.so
 *.dylib
