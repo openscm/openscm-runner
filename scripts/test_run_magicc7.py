@@ -3,7 +3,7 @@ import pyam
 from openscm_runner import run
 
 UPDATE = True  # Should we update the regression data?
-DATA_FILE_SCENARIOS = "rcmip_scen_emissions.csv"
+DATA_FILE_SCENARIOS = "rcmip_scen_ssp_world_emissions.csv"
 DATA_FILE_REGRESSION = "magicc7_regression.csv"
 
 

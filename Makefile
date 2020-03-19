@@ -35,9 +35,9 @@ format:  ## re-format files
 	make black
 
 black: $(VENV_DIR)  ## apply black formatter to source and tests
-	@status=$$(git status --porcelain src tests); \
+	@status=$$(git status --porcelain src tests docs scripts); \
 	if test "x$${status}" = x; then \
-		$(VENV_DIR)/bin/black --exclude _version.py setup.py src tests docs/source/conf.py; \
+		$(VENV_DIR)/bin/black --exclude _version.py setup.py src tests docs/source/conf.py scripts/*.py; \
 	else \
 		echo Not trying any formatting. Working directory is dirty ... >&2; \
 	fi;
