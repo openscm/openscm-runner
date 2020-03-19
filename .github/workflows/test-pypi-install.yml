@@ -1,0 +1,28 @@
+name: Test PyPI install
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '* * * * 3'
+
+jobs:
+  test-installation:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    - name: Setup python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install package
+      run: |
+        pip install --upgrade pip
+        pip install openscm-runner --pre
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Test installation
+      run: |
+        python scripts/test_install.py
