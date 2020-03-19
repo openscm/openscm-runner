@@ -1,14 +1,13 @@
 import versioneer
-
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
-
 
 PACKAGE_NAME = "openscm-runner"
 AUTHORS = [
     ("Zeb Nicholls", "zebedee.nicholls@climate-energy-college.org"),
     ("Robert Gieseke", "robert.gieseke@pik-potsdam.de"),
     ("Jared Lewis", "jared.lewis@climate-energy-college.org"),
+    ("Sven Willner", "sven.willner@pik-potsdam.de"),
 ]
 URL = "https://github.com/znicholls/OpenscmRunner"
 

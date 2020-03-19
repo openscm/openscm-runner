@@ -1,0 +1,2 @@
+exclude_dirs:
+  - openscm_runner/_version.py
