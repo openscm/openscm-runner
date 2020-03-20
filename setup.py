@@ -16,7 +16,7 @@ README = "README.rst"
 
 SOURCE_DIR = "src"
 
-REQUIREMENTS = ["pymagicc>=2.0.0b12", "scmdata", "tqdm"]
+REQUIREMENTS = ["python-dotenv", "pymagicc>=2.0.0b12", "scmdata", "tqdm"]
 REQUIREMENTS_NOTEBOOKS = [
     "ipywidgets",
     "notebook",
