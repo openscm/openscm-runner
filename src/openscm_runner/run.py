@@ -11,18 +11,22 @@ from .adapters import MAGICC7
 load_dotenv(find_dotenv(), verbose=True)
 
 
-def run(climate_models_cfgs, scenarios, full_config=False):
+def run(climate_models_cfgs, scenarios, output_variables=["Surface Air Temperature"], full_config=False):
     """
     Run a number of climate models over a number of scenarios
 
     Parameters
     ----------
-    climate_models_cfgs : dict
+    climate_models_cfgs : dict[str: list]
         Dictionary where each key is a model and each value is the configs
-        with which to run the model.
+        with which to run the model. The configs are passed to the model
+        adapter.
 
     scenarios : :obj:`pyam.IamDataFrame`
         Scenarios to run
+
+    output_variables : list[str]
+        Variables to include in the output
 
     full_config : bool
         Include the configuration used to run each model in the output's
@@ -31,7 +35,7 @@ def run(climate_models_cfgs, scenarios, full_config=False):
     Returns
     -------
     :obj:`pyam.IamDataFrame`
-        Model output plus the input timeseries
+        Model output
     """
     if full_config:
         raise NotImplementedError("Returning full config is not yet implemented")
@@ -45,7 +49,7 @@ def run(climate_models_cfgs, scenarios, full_config=False):
                 "No adapter available for {}".format(climate_model)
             )
 
-        model_res = runner.run(scenarios, cfgs)
+        model_res = runner.run(scenarios, cfgs, output_variables=output_variables)
         res.append(model_res)
 
     raise NotImplementedError("Fancy business to make sure pyam doesn't drop columns")
