@@ -1,11 +1,14 @@
+"""
+High-level run function
+"""
+from dotenv import load_dotenv, find_dotenv
 from tqdm.autonotebook import tqdm
 
 from .adapters import MAGICC7
 
 
-"""
-High-level run function
-"""
+# is this the right place to put this...
+load_dotenv(find_dotenv(), verbose=True)
 
 
 def run(climate_models_cfgs, scenarios, full_config=False):
