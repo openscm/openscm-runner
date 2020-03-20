@@ -16,7 +16,7 @@ Brief summary
 .. sec-begin-index
 
 OpenSCM-Runner is a thin wrapper to run simple climate models with a unified interface.
-It supports emissions driven runs only.
+At present, it supports emissions driven runs only.
 This wrapper is implemented whilst `OpenSCM <https://github.com/openclimatedata/openscm>`_ is still a work in progress.
 
 .. sec-end-index
