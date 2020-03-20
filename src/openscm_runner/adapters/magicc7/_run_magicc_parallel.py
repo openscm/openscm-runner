@@ -14,6 +14,7 @@ from ._parallel_process import _parallel_process
 
 logger = logging.getLogger(__name__)
 
+
 def _inject_pymagicc_compatible_magcfg_user(magicc):
     """
     Overwrite ``magicc.run_dir / MAGCFG_USER.CFG`` with config that only point to ``MAGTUNE_PYMAGICC.CFG``
@@ -41,6 +42,7 @@ def _setup_func(magicc):
 
     _inject_pymagicc_compatible_magcfg_user(magicc)
 
+
 def _init_magicc_worker(dict_shared_instances):
     logger.debug("Initialising process %s", multiprocessing.current_process())
     logger.debug("Existing instances %s", dict_shared_instances)
@@ -52,8 +54,9 @@ def _run_func(magicc, cfg):
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
         res = magicc.run(**cfg)
-        res.set_meta("scenario", scenario)
-        res.set_meta("model", model)
+        res.set_meta(scenario, "scenario")
+        res.set_meta(model, "model")
+        res.set_meta(cfg["run_id"], "run_id")
 
         return res
     except CalledProcessError as e:
@@ -73,9 +76,9 @@ def _execute_run(cfg, run_func, setup_func, instances):
 
     return run_func(magicc, cfg)
 
+
 def run_magicc_parallel(
-    cfgs,
-    output_vars,
+    cfgs, output_vars,
 ):
     """
     Run MAGICC in parallel using compact out files
@@ -101,10 +104,7 @@ def run_magicc_parallel(
 
     runs = [
         {
-            "cfg": {
-                **cfg,
-                "only": output_vars,
-            },
+            "cfg": {**cfg, "only": output_vars},
             "run_func": _run_func,
             "setup_func": _setup_func,
             "instances": instances,
@@ -114,9 +114,9 @@ def run_magicc_parallel(
 
     try:
         pool = ProcessPoolExecutor(
-            max_workers=get_env("MAGICC_WORKER_NUMBER"),
+            max_workers=int(get_env("MAGICC_WORKER_NUMBER")),
             initializer=_init_magicc_worker,
-            initargs=(shared_dict),
+            initargs=(shared_dict,),
         )
 
         res = _parallel_process(
@@ -129,7 +129,6 @@ def run_magicc_parallel(
         )
 
         res = df_append([r for r in res if r is not None])
-
 
     finally:
         instances.cleanup()

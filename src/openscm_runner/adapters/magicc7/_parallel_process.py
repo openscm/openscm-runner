@@ -7,7 +7,7 @@ from tqdm.autonotebook import tqdm
 logger = logging.getLogger(__name__)
 
 
-def _run_serial(func, configs, config_are_kwargs, notebook, desc):
+def _run_serial(func, configs, config_are_kwargs, desc):
     logger.debug("Entering _run_serial")
 
     if config_are_kwargs:
@@ -22,7 +22,7 @@ def _run_serial(func, configs, config_are_kwargs, notebook, desc):
 
 
 def _run_parallel(
-    pool, timeout, func, configs, config_are_kwargs, notebook, desc, bar_start
+    pool, timeout, func, configs, config_are_kwargs, desc, bar_start
 ):
     logger.debug("Entering _run_parallel")
 
@@ -76,7 +76,6 @@ def _parallel_process(
     config_are_kwargs=False,
     front_serial=3,
     front_parallel=2,
-    notebook=True,
     timeout=None,
 ):
     """
@@ -109,9 +108,6 @@ def _parallel_process(
         of the parallel jobs. Useful for debugging (especially if pickling is
         possible).
 
-    notebook : bool
-        Are we running in a notebook (required to make progress bars appear nicely)?
-
     timeout : float, int
         How long to wait for processes to complete before timing out. If ``None``, there is no timeout limit.
 
@@ -127,7 +123,6 @@ def _parallel_process(
             func=func,
             configs=configuration[:front_serial],
             config_are_kwargs=config_are_kwargs,
-            notebook=notebook,
             desc="Front serial",
         )
 
@@ -137,7 +132,6 @@ def _parallel_process(
             func=func,
             configs=configuration[front_serial:],
             config_are_kwargs=config_are_kwargs,
-            notebook=notebook,
             desc="Serial runs",
         )
 
@@ -152,7 +146,6 @@ def _parallel_process(
             func=func,
             configs=configuration[front_serial : front_serial + front_parallel],
             config_are_kwargs=config_are_kwargs,
-            notebook=notebook,
             desc="Front parallel",
             bar_start=front_serial,
         )
@@ -164,7 +157,6 @@ def _parallel_process(
         func=func,
         configs=configuration[front_serial + front_parallel :],
         config_are_kwargs=config_are_kwargs,
-        notebook=notebook,
         desc="Parallel runs",
         bar_start=front_serial + front_parallel,
     )
