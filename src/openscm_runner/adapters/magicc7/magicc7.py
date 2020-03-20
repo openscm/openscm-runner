@@ -14,10 +14,12 @@ from ._run_magicc_parallel import run_magicc_parallel
 
 logger = logging.getLogger(__name__)
 
+
 class MAGICC7(_Adapter):
     """
     Adapter for running MAGICC7
     """
+
     def __init__(self):
         """
         Initialise the MAGICC7 adapter
@@ -56,30 +58,56 @@ class MAGICC7(_Adapter):
         logger.warning("Historical data has not been checked")
         full_cfgs = []
         run_id_block = 0
-        for scenario, df in tqdm(scenarios.timeseries().groupby("scenario"), desc="Writing SCEN7 files"):
+
+        magicc_df = scenarios.timeseries().reset_index()
+        magicc_df["variable"] = magicc_df["variable"].apply(lambda x: x.replace("Sulfur", "SOx").replace("HFC4310mee", "HFC4310").replace("VOC", "NMVOC"))
+
+        magicc_scmdf = pymagicc.io.MAGICCData(magicc_df)
+        emms_units = pymagicc.definitions.MAGICC7_EMISSIONS_UNITS
+        emms_units["openscm_variable"] = emms_units["magicc_variable"].apply(lambda x: pymagicc.definitions.convert_magicc7_to_openscm_variables("{}_EMIS".format(x)))
+        emms_units = emms_units.set_index("openscm_variable")
+        for variable in magicc_scmdf["variable"].unique():
+            magicc_unit = emms_units.loc[variable, "emissions_unit"]
+            magicc_scmdf = magicc_scmdf.convert_unit(magicc_unit, variable=variable, context="NOx_conversions")
+
+        for (scenario, model), df in tqdm(
+            magicc_scmdf.timeseries().groupby(["scenario", "model"]), desc="Writing SCEN7 files"
+        ):
+
+
             writer = pymagicc.io.MAGICCData(df)
             writer.set_meta("SET", "todo")
             writer.metadata = {
-                "header": "SCEN7 file written by openscm_runner for the {} scenario".format(scenario)
+                "header": "SCEN7 file written by openscm_runner for the {} scenario".format(
+                    scenario
+                )
             }
-            scen_file_name = "{}.SCEN7".format(scenario).upper()
+            scen_file_name = "{}_{}.SCEN7".format(scenario, model).upper().replace("/", "-").replace("\\", "-")
             writer.write(
                 os.path.join(self._run_dir(), scen_file_name),
                 magicc_version=self.get_version()[1],
             )
 
-            scenario_cfg =[{**self.magicc_scenario_setup, **cfg, "scenario": scenario, "file_emisscen_8": scen_file_name, "only": output_variables, "run_id": i + run_id_block} for i, cfg in enumerate(cfgs)]
+            scenario_cfg = [
+                {
+                    **self.magicc_scenario_setup,
+                    **cfg,
+                    "scenario": scenario,
+                    "model": model,
+                    "file_emisscen_8": scen_file_name,
+                    "run_id": i + run_id_block,
+                }
+                for i, cfg in enumerate(cfgs)
+            ]
             run_id_block += len(scenario_cfg)
 
             full_cfgs += scenario_cfg
 
         assert len(full_cfgs) == len(scenarios.scenarios()) * len(cfgs)
 
-        res = run_magicc_parallel(full_cfgs)
+        res = run_magicc_parallel(full_cfgs, output_variables)
 
-        import pdb
-        pdb.set_trace()
-
+        return res
 
     @classmethod
     def get_version(cls):
@@ -91,7 +119,7 @@ class MAGICC7(_Adapter):
         str
             The MAGICC7 version id
         """
-        return check_output([cls._executable(), '--version']).decode("utf-8").strip()
+        return check_output([cls._executable(), "--version"]).decode("utf-8").strip()
 
     @classmethod
     def _executable(cls):
