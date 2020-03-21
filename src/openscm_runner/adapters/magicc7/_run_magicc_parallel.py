@@ -11,7 +11,6 @@ from ...utils import get_env
 from ._magicc_instances import _MagiccInstances
 from ._parallel_process import _parallel_process
 
-
 logger = logging.getLogger(__name__)
 
 
