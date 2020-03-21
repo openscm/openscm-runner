@@ -1,34 +1,39 @@
+"""
+Code to support running in parallel
+"""
 import logging
 import time
 from concurrent.futures import as_completed
 
 from tqdm.autonotebook import tqdm
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def _run_serial(func, configs, config_are_kwargs, desc):
-    logger.debug("Entering _run_serial")
+    LOGGER.debug("Entering _run_serial")
 
     if config_are_kwargs:
-        logger.debug("Treating config as kwargs")
-        res = [func(**a) for a in tqdm(configs, desc="Front serial")]
+        LOGGER.debug("Treating config as kwargs")
+        res = [func(**a) for a in tqdm(configs, desc=desc)]
     else:
-        logger.debug("Treating config as args")
-        res = [func(a) for a in tqdm(configs, desc="Front serial")]
+        LOGGER.debug("Treating config as args")
+        res = [func(a) for a in tqdm(configs, desc=desc)]
 
-    logger.debug("Exiting _run_serial")
+    LOGGER.debug("Exiting _run_serial")
     return res
 
 
-def _run_parallel(pool, timeout, func, configs, config_are_kwargs, desc, bar_start):
-    logger.debug("Entering _run_parallel")
+def _run_parallel(  # pylint:disable=too-many-arguments
+    pool, timeout, func, configs, config_are_kwargs, desc, bar_start,
+):
+    LOGGER.debug("Entering _run_parallel")
 
     if config_are_kwargs:
-        logger.debug("Treating config as kwargs")
+        LOGGER.debug("Treating config as kwargs")
         futures = [pool.submit(func, **a) for a in configs]
     else:
-        logger.debug("Treating config as args")
+        LOGGER.debug("Treating config as args")
         futures = [pool.submit(func, a) for a in configs]
 
     kwargs_tqdm = {
@@ -38,7 +43,7 @@ def _run_parallel(pool, timeout, func, configs, config_are_kwargs, desc, bar_sta
         "desc": desc,
     }
 
-    logger.debug("Waiting for jobs to complete")
+    LOGGER.debug("Waiting for jobs to complete")
     for i, future in tqdm(
         enumerate(as_completed(futures, timeout=timeout)), **kwargs_tqdm
     ):
@@ -50,24 +55,24 @@ def _run_parallel(pool, timeout, func, configs, config_are_kwargs, desc, bar_sta
             )
             raise future.exception()
 
-        logger.debug("Job %s completed", i + bar_start)
+        LOGGER.debug("Job %s completed", i + bar_start)
 
     res = []
 
-    logger.debug("Collecting results")
+    LOGGER.debug("Collecting results")
     for i, future in enumerate(futures):
         try:
             res.append(future.result())
-            logger.debug("Retrived result %s", i + bar_start)
-        except Exception as e:
-            logger.debug("Retrieving result %s failed", i + bar_start)
-            res.append(e)
+            LOGGER.debug("Retrived result %s", i + bar_start)
+        except Exception as exc:  # pylint:disable=broad-except
+            LOGGER.debug("Retrieving result %s failed", i + bar_start)
+            res.append(exc)
 
-    logger.debug("Exiting _run_parallel")
+    LOGGER.debug("Exiting _run_parallel")
     return res
 
 
-def _parallel_process(
+def _parallel_process(  # pylint:disable=too-many-arguments
     func,
     configuration,
     pool=None,
@@ -77,7 +82,7 @@ def _parallel_process(
     timeout=None,
 ):
     """
-    A parallel version of the map function with a progress bar.
+    Run a process in parallel with a progress bar.
 
     Adapted from http://danshiebler.com/2016-09-14-parallel-progress-bar/
 
@@ -106,8 +111,9 @@ def _parallel_process(
         of the parallel jobs. Useful for debugging (especially if pickling is
         possible).
 
-    timeout : float, int
-        How long to wait for processes to complete before timing out. If ``None``, there is no timeout limit.
+    timeout : float
+        How long to wait for processes to complete before timing out. If
+        ``None``, there is no timeout limit.
 
     Returns
     -------
@@ -116,7 +122,7 @@ def _parallel_process(
     """
     front_serial_res = []
     if front_serial > 0:
-        logger.debug("Running front serial jobs")
+        LOGGER.debug("Running front serial jobs")
         front_serial_res = _run_serial(
             func=func,
             configs=configuration[:front_serial],
@@ -125,7 +131,7 @@ def _parallel_process(
         )
 
     if pool is None:
-        logger.info("No pool provided, running rest of the jobs serially and returning")
+        LOGGER.info("No pool provided, running rest of the jobs serially and returning")
         rest = _run_serial(
             func=func,
             configs=configuration[front_serial:],
@@ -137,7 +143,7 @@ def _parallel_process(
 
     front_parallel_res = []
     if front_parallel > 0:
-        logger.debug("Running front parallel jobs")
+        LOGGER.debug("Running front parallel jobs")
         front_parallel_res = _run_parallel(
             pool=pool,
             timeout=timeout,
@@ -148,7 +154,7 @@ def _parallel_process(
             bar_start=front_serial,
         )
 
-    logger.debug("Running rest of parallel jobs")
+    LOGGER.debug("Running rest of parallel jobs")
     rest = _run_parallel(
         pool=pool,
         timeout=timeout,

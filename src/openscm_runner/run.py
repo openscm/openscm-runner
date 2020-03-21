@@ -15,7 +15,7 @@ load_dotenv(find_dotenv(), verbose=True)
 def run(
     climate_models_cfgs,
     scenarios,
-    output_variables=["Surface Temperature"],
+    output_variables=("Surface Temperature",),
     full_config=False,
 ):
     """
@@ -42,6 +42,12 @@ def run(
     -------
     :obj:`pyam.IamDataFrame`
         Model output
+
+    Raises
+    ------
+    NotImplementedError
+        ``full_config`` is ``True``, we haven't worked out how this should
+        behave yet.
     """
     if full_config:
         raise NotImplementedError("Returning full config is not yet implemented")
@@ -58,11 +64,11 @@ def run(
         model_res = runner.run(scenarios, cfgs, output_variables=output_variables)
         res.append(model_res)
 
-    for i, mr in enumerate(res):
-        if i == 0:
-            key_meta = mr.meta.columns.tolist()
+    for i, model_res in enumerate(res):
+        if i < 1:
+            key_meta = model_res.meta.columns.tolist()
 
-        assert mr.meta.columns.tolist() == key_meta
+        assert model_res.meta.columns.tolist() == key_meta
 
     scmdf = scmdata.df_append(res)
     assert (

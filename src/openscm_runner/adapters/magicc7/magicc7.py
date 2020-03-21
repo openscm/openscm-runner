@@ -5,6 +5,7 @@ import logging
 import os
 from subprocess import check_output
 
+import pyam
 import pymagicc
 from tqdm.autonotebook import tqdm
 
@@ -12,7 +13,7 @@ from ...utils import get_env
 from ..base import _Adapter
 from ._run_magicc_parallel import run_magicc_parallel
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class MAGICC7(_Adapter):
@@ -24,8 +25,7 @@ class MAGICC7(_Adapter):
         """
         Initialise the MAGICC7 adapter
         """
-        # self.magicc = pymagicc.MAGICC7(strict=False)
-        # """:obj:`pymagicc.MAGICC7`: Pymagicc class instance used to run MAGICC"""
+        super().__init__()
         self.magicc_scenario_setup = {
             "file_emisscen": "WMO_MHALO.SCEN7",
             "file_emisscen_2": "Velders_HFC_Kigali.SCEN7",
@@ -35,6 +35,9 @@ class MAGICC7(_Adapter):
             "file_emisscen_6": "SSP245_AEROSOLS_NMVOC.SCEN7",
         }
         """dict: MAGICC base scenario setup"""
+
+    def _init_model(self):  # pylint:disable=arguments-differ
+        pass
 
     def run(self, scenarios, cfgs, output_variables):
         """
@@ -54,10 +57,8 @@ class MAGICC7(_Adapter):
         :obj:`pyam.IamDataFrame`
             MAGICC7 output
         """
-        # TODO: add use of historical data properly
-        logger.warning("Historical data has not been checked")
-        full_cfgs = []
-        run_id_block = 0
+        # TODO: add use of historical data properly  # pylint:disable=fixme
+        LOGGER.warning("Historical data has not been checked")
 
         magicc_df = scenarios.timeseries().reset_index()
         magicc_df["variable"] = magicc_df["variable"].apply(
@@ -80,12 +81,24 @@ class MAGICC7(_Adapter):
                 magicc_unit, variable=variable, context="NOx_conversions"
             )
 
-        for (scenario, model), df in tqdm(
-            magicc_scmdf.timeseries().groupby(["scenario", "model"]),
+        full_cfgs = self._write_scen_files_and_make_full_cfgs(magicc_scmdf, cfgs)
+
+        res = run_magicc_parallel(full_cfgs, output_variables).timeseries()
+        res.index = res.index.droplevel("todo")
+        res = pyam.IamDataFrame(res)
+
+        return res
+
+    def _write_scen_files_and_make_full_cfgs(self, scenarios, cfgs):
+        full_cfgs = []
+        run_id_block = 0
+
+        for (scenario, model), smdf in tqdm(
+            scenarios.timeseries().groupby(["scenario", "model"]),
             desc="Writing SCEN7 files",
         ):
 
-            writer = pymagicc.io.MAGICCData(df)
+            writer = pymagicc.io.MAGICCData(smdf)
             writer.set_meta("SET", "todo")
             writer.metadata = {
                 "header": "SCEN7 file written by openscm_runner for the {} scenario".format(
@@ -122,9 +135,7 @@ class MAGICC7(_Adapter):
             ["scenario", "model"]
         ].drop_duplicates().shape[0] * len(cfgs)
 
-        res = run_magicc_parallel(full_cfgs, output_variables)
-
-        return res
+        return full_cfgs
 
     @classmethod
     def get_version(cls):

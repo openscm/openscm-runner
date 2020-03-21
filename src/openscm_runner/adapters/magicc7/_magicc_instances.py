@@ -1,16 +1,17 @@
+"""
+Module to keep track of MAGICC instances on disk
+"""
 import logging
 import multiprocessing
-import os
 import shutil
 import tempfile
 
-import f90nml
 import pymagicc
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
-class _MagiccInstances(object):
+class _MagiccInstances:
     def __init__(self, existing_instances):
         """
         Initialise a MAGICC instances handler
@@ -32,10 +33,10 @@ class _MagiccInstances(object):
         # have to use list as can't modify dict whilst iterating
         insts = list(self.instances.keys())
 
-        for m in insts:
-            logger.info("removing %s", self.instances[m].root_dir)
-            shutil.rmtree(self.instances[m].root_dir)
-            self.instances.pop(m)
+        for magicc_inst in insts:
+            LOGGER.info("removing %s", self.instances[magicc_inst].root_dir)
+            shutil.rmtree(self.instances[magicc_inst].root_dir)
+            self.instances.pop(magicc_inst)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.cleanup()
@@ -46,15 +47,17 @@ class _MagiccInstances(object):
     def __getitem__(self, item):
         return self.instances[item]
 
-    def _get_key(self):
+    @staticmethod
+    def _get_key():
         return multiprocessing.current_process().name
 
-    def _generate_magicc_root(self, root_dir):
+    @staticmethod
+    def _generate_magicc_root(root_dir):
         return tempfile.mkdtemp(prefix="pymagicc-", dir=root_dir)
 
-    def get(self, root_dir=None, init_callback=None, init_callback_kwargs={}):
+    def get(self, root_dir=None, init_callback=None, init_callback_kwargs=None):
         """
-        Gets a MAGICC object which is ready to run (always uses ``strict=False``)
+        Get a MAGICC object which is ready to run (always uses ``strict=False``)
 
         This caches the magicc instance used to minimise overhead from copying files.
         Each process gets a unique copy of MAGICC to ensure that each process has
@@ -66,7 +69,11 @@ class _MagiccInstances(object):
             Root directory in which to create MAGICC instances.
 
         init_callback : func
-            Function to call when making the MAGICC instance. Must have the same function signature as ``default_magicc_setup``.
+            Function to call when making the MAGICC instance. Must have the
+            same function signature as ``default_magicc_setup``.
+
+        init_callback_kwargs : dict
+            Keyword arguments to pass to :func:`init_callback`
 
         Returns
         -------
@@ -85,11 +92,12 @@ class _MagiccInstances(object):
             magicc = pymagicc.MAGICC7(strict=False, **kwargs_tqdm)
 
             magicc.create_copy()
-            logger.info(
-                "Created new magicc instance: {} - {}".format(key, magicc.root_dir)
-            )
+            LOGGER.info("Created new magicc instance: %s - %s", key, magicc.root_dir)
 
             self.instances[key] = magicc
+            if init_callback_kwargs is None:
+                init_callback_kwargs = {}
+
             if init_callback is not None:
                 init_callback(magicc, **init_callback_kwargs)
 
