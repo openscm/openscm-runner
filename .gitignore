@@ -1,5 +1,6 @@
 # temporary data files
 scripts/*.csv
+scripts/*.json
 
 # Compiled Dynamic libraries
 *.so
