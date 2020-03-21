@@ -3,6 +3,7 @@ import os
 import os.path
 
 import matplotlib.pyplot as plt
+import pandas.testing as pdt
 import pyam
 import seaborn as sns
 
@@ -10,8 +11,8 @@ from openscm_runner import run
 from openscm_runner.adapters import MAGICC7
 
 
-UPDATE = True  # Should we update the regression data?
-PLOT = True  # Do you want to see a plot?
+UPDATE = False  # Should we update the regression data?
+PLOT = False  # Do you want to see a plot?
 EXPECTED_MAGICC_VERSION = "v7.1.0-beta.2-27-g584b06ce"
 
 DATA_FILE_SCENARIOS_NAME = "rcmip_scen_ssp_world_emissions.csv"
@@ -62,7 +63,7 @@ if UPDATE:
     res.to_csv(data_file_regression)
 else:
     expected_res = pyam.IamDataFrame(data_file_regression)
-    pyam.assert_iamframe_equal(res, expected_res)
+    pdt.assert_frame_equal(res.timeseries(), expected_res.timeseries(), check_like=True)
 
 if PLOT:
     fig, axes = plt.subplots(ncols=2, sharey=True, sharex=True)

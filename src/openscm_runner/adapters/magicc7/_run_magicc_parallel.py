@@ -1,3 +1,6 @@
+"""
+Module for running MAGICC in parallel
+"""
 import logging
 import multiprocessing
 import os.path
@@ -11,7 +14,7 @@ from ...utils import get_env
 from ._magicc_instances import _MagiccInstances
 from ._parallel_process import _parallel_process
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def _inject_pymagicc_compatible_magcfg_user(magicc):
@@ -22,18 +25,14 @@ def _inject_pymagicc_compatible_magcfg_user(magicc):
     ----------
     magicc : :obj:`pymagicc.MAGICC7`
         Instance of :obj:`pymagicc.MAGICC7` to setup
-
-    Returns
-    -------
-    None
     """
-    logger.info("Writing Pymagicc compatible MAGCFG_USER.CFG in %s", magicc.run_dir)
-    with open(os.path.join(magicc.run_dir, "MAGCFG_USER.CFG"), "w") as fp:
-        f90nml.write({"nml_allcfgs": {"file_tuningmodel_1": "PYMAGICC"}}, fp)
+    LOGGER.info("Writing Pymagicc compatible MAGCFG_USER.CFG in %s", magicc.run_dir)
+    with open(os.path.join(magicc.run_dir, "MAGCFG_USER.CFG"), "w") as file_handle:
+        f90nml.write({"nml_allcfgs": {"file_tuningmodel_1": "PYMAGICC"}}, file_handle)
 
 
 def _setup_func(magicc):
-    logger.info(
+    LOGGER.info(
         "Setting up MAGICC worker in %s", magicc.root_dir,
     )
 
@@ -43,25 +42,32 @@ def _setup_func(magicc):
 
 
 def _init_magicc_worker(dict_shared_instances):
-    logger.debug("Initialising process %s", multiprocessing.current_process())
-    logger.debug("Existing instances %s", dict_shared_instances)
-    magicc_instances = _MagiccInstances(dict_shared_instances)
+    LOGGER.debug("Initialising process %s", multiprocessing.current_process())
+    LOGGER.debug("Existing instances %s", dict_shared_instances)
+    magicc_instances = _MagiccInstances(  # noqa: F841 # pylint:disable=unused-variable
+        dict_shared_instances
+    )
 
 
 def _run_func(magicc, cfg):
     try:
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
+
         res = magicc.run(**cfg)
+        if res.metadata["stderr"]:
+            LOGGER.info("magicc run stderr: %s", res.metadata["stderr"])
+            LOGGER.info("cfg: %s", cfg)
+
         res.set_meta(scenario, "scenario")
         res.set_meta(model, "model")
         res.set_meta(cfg["run_id"], "run_id")
 
         return res
-    except CalledProcessError as e:
+    except CalledProcessError as exc:
         # Swallow the exception, but return None
-        logger.debug("magicc run failed: %s", e.stderr)
-        logger.debug("cfg: %s", cfg)
+        LOGGER.debug("magicc run failed: %s", exc.stderr)
+        LOGGER.debug("cfg: %s", cfg)
 
         return None
 
@@ -96,7 +102,7 @@ def run_magicc_parallel(
     :obj:`ScmDataFrame`
         :obj:`ScmDataFrame` instance with all results.
     """
-    logger.info("Entered _parallel_magicc_compact_out")
+    LOGGER.info("Entered _parallel_magicc_compact_out")
     shared_manager = multiprocessing.Manager()
     shared_dict = shared_manager.dict()
     instances = _MagiccInstances(existing_instances=shared_dict)

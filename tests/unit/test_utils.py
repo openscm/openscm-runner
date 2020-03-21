@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from openscm_runner.utils import get_env
