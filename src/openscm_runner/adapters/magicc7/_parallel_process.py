@@ -21,9 +21,7 @@ def _run_serial(func, configs, config_are_kwargs, desc):
     return res
 
 
-def _run_parallel(
-    pool, timeout, func, configs, config_are_kwargs, desc, bar_start
-):
+def _run_parallel(pool, timeout, func, configs, config_are_kwargs, desc, bar_start):
     logger.debug("Entering _run_parallel")
 
     if config_are_kwargs:
