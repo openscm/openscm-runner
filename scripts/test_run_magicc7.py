@@ -38,9 +38,21 @@ assert MAGICC7.get_version() == EXPECTED_MAGICC_VERSION
 res = run(
     climate_models_cfgs={
         "MAGICC7": [
-            {"core_climatesensitivity": 3, "rf_soxi_dir_wm2": -0.2, "out_temperature": 1},
-            {"core_climatesensitivity": 2, "rf_soxi_dir_wm2": -0.1, "out_temperature": 1},
-            {"core_climatesensitivity": 5, "rf_soxi_dir_wm2": -0.35, "out_temperature": 1},
+            {
+                "core_climatesensitivity": 3,
+                "rf_soxi_dir_wm2": -0.2,
+                "out_temperature": 1,
+            },
+            {
+                "core_climatesensitivity": 2,
+                "rf_soxi_dir_wm2": -0.1,
+                "out_temperature": 1,
+            },
+            {
+                "core_climatesensitivity": 5,
+                "rf_soxi_dir_wm2": -0.35,
+                "out_temperature": 1,
+            },
         ],
     },
     scenarios=scenarios,
@@ -59,11 +71,6 @@ if PLOT:
 
     sns_df = pdf.data
     sns.lineplot(
-        data=sns_df,
-        x="year",
-        y="value",
-        hue="scenario",
-        ci="sd",
-        ax=axes[1],
+        data=sns_df, x="year", y="value", hue="scenario", ci="sd", ax=axes[1],
     )
     plt.show()
