@@ -103,7 +103,7 @@ class MAGICC7(_Adapter):
 
             full_cfgs += scenario_cfg
 
-        assert len(full_cfgs) == len(scenarios.scenarios()) * len(cfgs)
+        assert len(full_cfgs) == scenarios[["scenario", "model"]].drop_duplicates().shape[0] * len(cfgs)
 
         res = run_magicc_parallel(full_cfgs, output_variables)
 
