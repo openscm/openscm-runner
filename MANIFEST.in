@@ -1,0 +1,2 @@
+include versioneer.py
+include src/openscm_runner/_version.py

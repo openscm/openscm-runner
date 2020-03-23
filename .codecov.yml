@@ -1,0 +1,16 @@
+# this explains how to configure this file
+# https://docs.codecov.io/docs/commit-status
+
+# validate with `curl --data-binary @.codecov.yml https://codecov.io/validate`
+coverage:
+  status:
+    project:
+      default:
+        target: 90%
+        threshold: 2%
+    patch:
+      default:
+        target: 95%
+
+comment:
+  behaviour: new
