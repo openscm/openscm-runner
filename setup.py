@@ -9,7 +9,7 @@ AUTHORS = [
     ("Jared Lewis", "jared.lewis@climate-energy-college.org"),
     ("Sven Willner", "sven.willner@pik-potsdam.de"),
 ]
-URL = "https://github.com/znicholls/OpenscmRunner"
+URL = "https://github.com/openscm-project/openscm-runner"
 
 DESCRIPTION = "Thin wrapper to run simple climate models (emissions driven runs only)"
 README = "README.rst"
@@ -92,7 +92,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    keywords=["OpenscmRunner", "python", "repo", "simple", "climate", "model"],
+    keywords=["openscm", "runner", "python", "repo", "simple", "climate", "model"],
     packages=find_packages(SOURCE_DIR),  # no exclude as only searching in `src`
     package_dir={"": SOURCE_DIR},
     # include_package_data=True,
