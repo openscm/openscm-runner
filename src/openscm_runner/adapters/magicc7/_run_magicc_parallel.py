@@ -8,6 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 from subprocess import CalledProcessError
 
 import f90nml
+import pandas as pd
 from scmdata import df_append
 
 from ...utils import get_env
@@ -49,15 +50,56 @@ def _init_magicc_worker(dict_shared_instances):
     )
 
 
+def _read_carbon_cycle(out_dir):
+    ccycle_file = os.path.join(out_dir, "CARBONCYCLE.OUT")
+    with open(ccycle_file) as fh:
+        for line in fh.readlines():
+            if line.strip().startswith("THISFILE_FIRSTDATAROW"):
+                start_row = int(line.split("=")[1].strip().strip(",").strip())
+                break
+        else:
+            raise ValueError("Didn't find THISFILE_FIRSTDATAROW")
+
+    raw = pd.read_csv(ccycle_file, delim_whitespace=True, skiprows=start_row-2, skipfooter=1, index_col=0, engine="python")
+    raw.index.name = "time"
+    scmdf_style = raw.reset_index().melt(id_vars="time")
+
+    def set_unit(v):
+        if v == "AIR2OCEAN_FLUX":
+            return "GtC / yr"
+
+        if v == "AIR2LAND_FLUX":
+            return "GtC / yr"
+
+        return "unknown"
+
+    scmdf_style["unit"] = scmdf_style["variable"].apply(set_unit)
+    scmdf_style["scenario"] = "unspecified"
+    scmdf_style["model"] = "unspecified"
+    scmdf_style["region"] = "World"
+
+    return scmdf_style
+
+
 def _run_func(magicc, cfg):
     try:
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
+        read_carbon_cycle = cfg.pop("include_carbon_cycle", False)
+        out_carboncycle = 1 if read_carbon_cycle else 0
 
-        res = magicc.run(**cfg)
+        res = magicc.run(out_carboncycle=out_carboncycle, **cfg)
         if res.metadata["stderr"]:
             LOGGER.info("magicc run stderr: %s", res.metadata["stderr"])
             LOGGER.info("cfg: %s", cfg)
+
+        if read_carbon_cycle:
+            carbon_cycle_res = _read_carbon_cycle(magicc.out_dir)
+            for k in res.meta.columns:
+                if k not in carbon_cycle_res:
+                    carbon_cycle_res[k] = res.get_unique_meta(k, no_duplicates=True)
+
+            res = res.append(carbon_cycle_res)
 
         res.set_meta(scenario, "scenario")
         res.set_meta(model, "model")
