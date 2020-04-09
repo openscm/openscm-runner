@@ -118,12 +118,12 @@ class MAGICC7(_Adapter):
 
             scenario_cfg = [
                 {
-                    **self.magicc_scenario_setup,
-                    **cfg,
                     "scenario": scenario,
                     "model": model,
                     "file_emisscen_8": scen_file_name,
                     "run_id": i + run_id_block,
+                    **self.magicc_scenario_setup,
+                    **cfg,
                 }
                 for i, cfg in enumerate(cfgs)
             ]

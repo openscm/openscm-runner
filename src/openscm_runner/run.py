@@ -1,7 +1,6 @@
 """
 High-level run function
 """
-import pyam
 import scmdata
 from dotenv import find_dotenv, load_dotenv
 from tqdm.autonotebook import tqdm
@@ -40,7 +39,7 @@ def run(
 
     Returns
     -------
-    :obj:`pyam.IamDataFrame`
+    :obj:`scmdata.ScmDataFrame`
         Model output
 
     Raises
@@ -71,10 +70,5 @@ def run(
         assert model_res.meta.columns.tolist() == key_meta
 
     scmdf = scmdata.df_append(res)
-    assert (
-        not scmdf.meta.isna().any().any()
-    ), "something will be dropped when casting to IamDataFrame"
 
-    return pyam.IamDataFrame(
-        pyam.IamDataFrame(scmdf.timeseries()).swap_time_for_year().data
-    )
+    return scmdf
