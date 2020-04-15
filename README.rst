@@ -17,7 +17,7 @@ Brief summary
 
 OpenSCM-Runner is a thin wrapper to run simple climate models with a unified interface.
 At present, it supports emissions driven runs only.
-This wrapper is implemented whilst `OpenSCM <https://github.com/openclimatedata/openscm>`_ is still a work in progress.
+This wrapper is implemented whilst `OpenSCM <https://github.com/openscm/openscm>`_ is still a work in progress.
 
 .. sec-end-index
 
@@ -27,7 +27,7 @@ License
 .. sec-begin-license
 
 OpenSCM-Runner is free software under a BSD 3-Clause License, see
-`LICENSE <https://github.com/openscm-project/openscm-runner/blob/master/LICENSE>`_.
+`LICENSE <https://github.com/openscm/openscm-runner/blob/master/LICENSE>`_.
 
 .. sec-end-license
 .. sec-end-long-description
@@ -71,10 +71,10 @@ Please see the `Development section of the docs <https://openscm-runner.readthed
 
 .. sec-begin-links
 
-.. |CI CD| image:: https://github.com/openscm-project/openscm-runner/workflows/openscm-runner%20CI-CD/badge.svg
-    :target: https://github.com/openscm-project/openscm-runner/actions?query=workflow%3A%22openscm-runner+CI-CD%22
-.. |PyPI Install| image:: https://github.com/openscm-project/openscm-runner/workflows/Test%20PyPI%20install/badge.svg
-    :target: https://github.com/openscm-project/openscm-runner/actions?query=workflow%3A%22Test+PyPI+install%22
+.. |CI CD| image:: https://github.com/openscm/openscm-runner/workflows/openscm-runner%20CI-CD/badge.svg
+    :target: https://github.com/openscm/openscm-runner/actions?query=workflow%3A%22openscm-runner+CI-CD%22
+.. |PyPI Install| image:: https://github.com/openscm/openscm-runner/workflows/Test%20PyPI%20install/badge.svg
+    :target: https://github.com/openscm/openscm-runner/actions?query=workflow%3A%22Test+PyPI+install%22
 .. |PyPI| image:: https://img.shields.io/pypi/pyversions/openscm-runner.svg
     :target: https://pypi.org/project/openscm-runner/
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/openscm-runner.svg

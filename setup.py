@@ -9,7 +9,7 @@ AUTHORS = [
     ("Jared Lewis", "jared.lewis@climate-energy-college.org"),
     ("Sven Willner", "sven.willner@pik-potsdam.de"),
 ]
-URL = "https://github.com/znicholls/OpenscmRunner"
+URL = "https://github.com/openscm/openscm-runner"
 
 DESCRIPTION = "Thin wrapper to run simple climate models (emissions driven runs only)"
 README = "README.rst"
