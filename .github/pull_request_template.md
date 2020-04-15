@@ -3,4 +3,4 @@
 - [ ] Tests added
 - [ ] Documentation added
 - [ ] Example added (in the documentation, to an existing notebook, or in a new notebook)
-- [ ] Description in ``CHANGELOG.rst`` added (single line such as: ``(`#XX <https://github.com/znicholls/openscm-runner/pull/XX>`_) Added feature which does something``)
+- [ ] Description in ``CHANGELOG.rst`` added (single line such as: ``(`#XX <https://github.com/openscm/openscm-runner/pull/XX>`_) Added feature which does something``)

@@ -46,17 +46,14 @@ To get setup as a developer, we recommend the following steps (if any of these t
     #. Upgrade pip ``pip intall --upgrade pip``
     #. Install the development dependencies (very important, make sure your virtual environment is active before doing this) ``pip install -e .[dev]``
 
-#. Make sure the tests pass by running ``make test-all``, if that fails the commands are
+#. Make sure the tests pass by running ``make check``, if that fails the commands can be read out of the ``Makefile``
 
-    #. Activate your virtual environment ``source ./venv/bin/activate``
-    #. Run the unit and integration tests ``pytest --cov -r a --cov-report term-missing``
-    #. Test the notebooks ``pytest -r a --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg``
 
 Getting help
 ~~~~~~~~~~~~
 
 Whilst developing, unexpected things can go wrong (that's why it's called 'developing', if we knew what we were doing, it would already be 'developed').
-Normally, the fastest way to solve an issue is to contact us via the `issue tracker <https://github.com/znicholls/openscm-runner/issues>`_.
+Normally, the fastest way to solve an issue is to contact us via the `issue tracker <https://github.com/openscm/openscm-runner/issues>`_.
 The other option is to debug yourself.
 For this purpose, we provide a list of the tools we use during our development as starting points for your search to find what has gone wrong.
 
@@ -157,28 +154,17 @@ First step
 #. ``git tag vX.Y.Z``
 #. Test version updated as intended with ``make test-install``
 
-PyPI
-~~~~
-
-If uploading to PyPI, do the following (otherwise skip these steps)
-
-#. ``make publish-on-testpypi``
-#. Go to `test PyPI <https://test.pypi.org/project/openscm-runner/>`_ and check that the new release is as intended. If it isn't, stop and debug.
-#. Test the install with ``make test-testpypi-install`` (this doesn't test all the imports as most required packages are not on test PyPI).
-
-Assuming test PyPI worked, now upload to the main repository
-
-#. ``make publish-on-pypi``
-#. Go to `OpenSCM-Runner's PyPI`_ and check that the new release is as intended.
-#. Test the install with ``make test-pypi-install``
 
 Push to repository
 ~~~~~~~~~~~~~~~~~~
 
-Finally, push the tags and the repository state
+To do the release, push the tags and the repository state.
 
 #. ``git push``
 #. ``git push --tags``
+
+Assuming all the checks pass, this automatically triggers a release on PyPI via the ``.github/workflows/ci-cd-workflow.yml`` action.
+
 
 Why is there a ``Makefile`` in a pure Python repository?
 --------------------------------------------------------
@@ -187,5 +173,5 @@ Whilst it may not be standard practice, a ``Makefile`` is a simple way to automa
 Hence we have one here which basically acts as a notes file for how to do all those little jobs which we often forget e.g. setting up environments, running tests (and making sure we're in the right environment), building docs, setting up auxillary bits and pieces.
 
 .. _Sphinx: http://www.sphinx-doc.org/en/master/
-.. _OpenSCM-Runner issue tracker: https://github.com/znicholls/openscm-runner/issues
+.. _OpenSCM-Runner issue tracker: https://github.com/openscm/openscm-runner/issues
 .. _`OpenSCM-Runner's PyPI`: https://pypi.org/project/openscm-runner/
