@@ -2,7 +2,7 @@ name: Test PyPI install
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '* * * * 3'
+    - cron:  '0 * * * 3'
 
 jobs:
   test-installation:
