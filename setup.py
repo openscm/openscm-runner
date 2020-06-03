@@ -16,7 +16,7 @@ README = "README.rst"
 
 SOURCE_DIR = "src"
 
-REQUIREMENTS = ["click", "scmdata", "tqdm"]
+REQUIREMENTS = ["click", "scmdata", "tqdm", "fair>=1.6.0a0,<2.0.0"]
 REQUIREMENTS_NOTEBOOKS = [
     "ipywidgets",
     "notebook",
