@@ -7,7 +7,7 @@ import scmdata
 from dotenv import find_dotenv, load_dotenv
 from tqdm.autonotebook import tqdm
 
-from .adapters import MAGICC7
+from .adapters import MAGICC7, FAIR
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +59,8 @@ def run(
     for climate_model, cfgs in tqdm(climate_models_cfgs.items(), desc="Climate models"):
         if climate_model == "MAGICC7":
             runner = MAGICC7()
+        elif climate_model.upper() == "FAIR": # allow various capitalisations
+            runner = FAIR()
         else:
             raise NotImplementedError(
                 "No adapter available for {}".format(climate_model)
