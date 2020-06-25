@@ -19,6 +19,8 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+- (`#8 <https://github.com/openscm/openscm-runner/pull/8>`_) FaIR 1.6.0 adapter
+
 v0.1.0 - 2020-07-07
 -------------------
 
