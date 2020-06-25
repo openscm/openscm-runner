@@ -48,13 +48,19 @@ def _process_output(fair_output, output_vars):
     Parameters
     ----------
     fair_output:
-        3-tuple of C, F, T:
+        6-tuple of C, F, T, lambda_eff, ohc, heatflux:
             C : np.ndarray
                 (nt, 31) array of greenhouse gas concentrations
             F : np.ndarray
                 (nt, 41) array of effective radiative forcings
             T : np.ndarray
                 (nt,) array of temperature
+            lambda_eff: np.ndarray
+                effective climate feedback
+            ohc : np.ndarray
+                total ocean heat uptake
+            heatflux:
+                heat transfer into the ocean
     output_vars:
         List of output variables
     Returns
@@ -65,7 +71,7 @@ def _process_output(fair_output, output_vars):
         dict of units corresponding to data
     """
 
-    C, F, T = fair_output
+    C, F, T, lambda_eff, ohc, heatflux = fair_output
 
     data = {}
     unit = {}
