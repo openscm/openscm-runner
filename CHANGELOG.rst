@@ -19,6 +19,11 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Added
+~~~~~
+
+- (`#12 <https://github.com/openscm/openscm-runner/pull/12>`_) FaIR 1.6.0 adapter
+
 v0.1.2 - 2020-31-07
 -------------------
 
@@ -34,7 +39,6 @@ Changed
 ~~~~~~~
 
 - (`#9 <https://github.com/openscm/openscm-runner/pull/9>`_) Remove unnecessary conversion to IamDataFrame when running MAGICC7 and clarify :meth:`adapters.base._Adapter.run` interface
-
 
 v0.1.0 - 2020-07-07
 -------------------
