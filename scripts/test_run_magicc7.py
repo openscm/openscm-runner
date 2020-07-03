@@ -34,7 +34,7 @@ logging.getLogger().addHandler(stdoutHandler)
 
 scenarios = pyam.IamDataFrame(data_file_scenarios)
 
-assert MAGICC7.get_version() == EXPECTED_MAGICC_VERSION
+assert MAGICC7.get_version() == EXPECTED_MAGICC_VERSION, MAGICC7.get_version()
 
 res = run(
     climate_models_cfgs={
