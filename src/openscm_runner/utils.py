@@ -32,7 +32,11 @@ def get_env(env_var):
     return os.getenv(env_var)
 
 
-def calculate_quantiles(scmdf, quantiles, process_over_columns=("run_id", "ensemble_member", "climate_model")):
+def calculate_quantiles(
+    scmdf,
+    quantiles,
+    process_over_columns=("run_id", "ensemble_member", "climate_model"),
+):
     """
     Calculate quantiles of an :obj:`ScmDataFrame`
 

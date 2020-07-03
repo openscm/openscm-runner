@@ -60,7 +60,14 @@ def _read_carbon_cycle(out_dir):
         else:
             raise ValueError("Didn't find THISFILE_FIRSTDATAROW")
 
-    raw = pd.read_csv(ccycle_file, delim_whitespace=True, skiprows=start_row-2, skipfooter=1, index_col=0, engine="python")
+    raw = pd.read_csv(
+        ccycle_file,
+        delim_whitespace=True,
+        skiprows=start_row - 2,
+        skipfooter=1,
+        index_col=0,
+        engine="python",
+    )
     raw.index.name = "time"
     scmdf_style = raw.reset_index().melt(id_vars="time")
 
