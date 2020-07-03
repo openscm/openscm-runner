@@ -1,10 +1,10 @@
 [run]
 branch = True
 source = openscm_runner
-omit = *_version.py
+omit = *_version.py,*adapters/magicc7*
 
 [report]
-fail_under = 90
+fail_under = 30
 exclude_lines =
     if self.debug:
     pragma: no cover

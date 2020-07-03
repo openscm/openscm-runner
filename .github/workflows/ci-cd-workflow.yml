@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8]
 
     steps:
     - name: Checkout repository
@@ -64,7 +64,7 @@ jobs:
         pip install -e .[tests]
     - name: Test with pytest
       env:
-        MIN_COVERAGE: 70  # TODO: put this back up to 95 once we start writing
+        MIN_COVERAGE: 30  # TODO: put this back up to 95 once we start writing
       run: |
           pytest tests -r a --cov=openscm_runner --cov-report=''
           if ! coverage report --fail-under=${MIN_COVERAGE} --show-missing
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8]
 
     steps:
     - name: Checkout repository

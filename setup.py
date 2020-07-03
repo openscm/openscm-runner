@@ -16,7 +16,14 @@ README = "README.rst"
 
 SOURCE_DIR = "src"
 
-REQUIREMENTS = ["click", "scmdata", "tqdm"]
+REQUIREMENTS = [
+    "click",
+    "pyam-iamc",
+    "pymagicc>=2.0.0rc4",
+    "python-dotenv",
+    "scmdata",
+    "tqdm",
+]
 REQUIREMENTS_NOTEBOOKS = [
     "ipywidgets",
     "notebook",
@@ -24,7 +31,7 @@ REQUIREMENTS_NOTEBOOKS = [
 ]
 REQUIREMENTS_TESTS = ["codecov", "coverage", "nbval", "pytest-cov", "pytest>=4.0"]
 REQUIREMENTS_DOCS = ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-click"]
-REQUIREMENTS_DEPLOY = ["twine>=1.11.0", "setuptools>=38.6.0", "wheel>=0.31.0"]
+REQUIREMENTS_DEPLOY = ["twine>=1.11.0", "setuptools>=41.2", "wheel>=0.31.0"]
 
 REQUIREMENTS_DEV = [
     *["bandit", "black", "flake8", "isort", "mypy", "pydocstyle", "pylint>=2.4.4"],
@@ -92,7 +99,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    keywords=["OpenscmRunner", "python", "repo", "simple", "climate", "model"],
+    keywords=["openscm", "runner", "python", "repo", "simple", "climate", "model"],
     packages=find_packages(SOURCE_DIR),  # no exclude as only searching in `src`
     package_dir={"": SOURCE_DIR},
     # include_package_data=True,

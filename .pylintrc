@@ -12,7 +12,8 @@ load-plugins=
 [MESSAGES CONTROL]
 disable=
     # handled by black
-    format
+    format,
+    import-error
 
 [SIMILARITIES]
 ignore-comments=no

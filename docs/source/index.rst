@@ -26,6 +26,7 @@ OpenSCM-Runner
     :maxdepth: 2
     :caption: API reference
 
+    run
     utils
 
 .. toctree::

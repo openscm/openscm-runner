@@ -1,8 +1,15 @@
-from openscm_runner.utils import add_example
+import pytest
+
+from openscm_runner.utils import get_env
 
 
-def test_addition():
-    expected = 4
-    result = add_example(1, 3)
+def test_get_env(monkeypatch):
+    expected_output = "hello"
+    monkeypatch.setenv("TESTVAR", expected_output)
+    assert get_env("TESTVAR") == expected_output
 
-    assert expected == result
+
+def test_get_env_not_defined(monkeypatch):
+    monkeypatch.delenv("TESTVAR", raising=False)
+    with pytest.raises(ValueError, match="TESTVAR is not set"):
+        get_env("TESTVAR")
