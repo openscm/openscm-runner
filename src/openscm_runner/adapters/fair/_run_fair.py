@@ -48,7 +48,7 @@ def _process_output(fair_output, output_vars):
     Parameters
     ----------
     fair_output:
-        6-tuple of C, F, T, lambda_eff, ohc, heatflux:
+        7-tuple of C, F, T, lambda_eff, ohc, heatflux, airborne_emissions:
             C : np.ndarray
                 (nt, 31) array of greenhouse gas concentrations
             F : np.ndarray
@@ -61,6 +61,8 @@ def _process_output(fair_output, output_vars):
                 total ocean heat uptake
             heatflux:
                 heat transfer into the ocean
+            airborne_emissions:
+                atmospheric carbon content
     output_vars:
         List of output variables
     Returns
@@ -71,7 +73,7 @@ def _process_output(fair_output, output_vars):
         dict of units corresponding to data
     """
 
-    C, F, T, lambda_eff, ohc, heatflux = fair_output
+    C, F, T, lambda_eff, ohc, heatflux, airborne_emissions = fair_output
 
     data = {}
     unit = {}
@@ -156,6 +158,10 @@ def _process_output(fair_output, output_vars):
     data['Effective Radiative Forcing|F Gases'] = np.sum(F[:,3:15], axis=1)
     data['Effective Radiative Forcing|Montreal Protocol Halogen Gases'] = np.sum(F[:,15:31], axis=1)
     data['Surface Temperature'] = T
+    data['Airborne Fraction'] = airborne_emissions 
+    data['Effective Climate Feedback'] = lambda_eff
+    data['Ocean Heat Uptake'] = ohc
+    data['Net Energy Imbalance'] = heatflux
 
     unit['Atmospheric Concentrations|CO2'] = 'ppm' 
     unit['Atmospheric Concentrations|CH4'] = 'ppb'
@@ -237,5 +243,9 @@ def _process_output(fair_output, output_vars):
     unit['Effective Radiative Forcing|F Gases'] =  'W/m**2'
     unit['Effective Radiative Forcing|Montreal Protocol Halogen Gases'] =  'W/m**2'
     unit['Surface Temperature'] = 'K'
+    unit['Airborne Fraction'] = 'dimensionless'
+    unit['Effective Climate Feedback'] = 'W/m**2/K'
+    unit['Ocean Heat Uptake'] = 'J'
+    unit['Net Energy Imbalance'] = 'W/m**2'
     return ({key: data[key] for key in output_vars}, 
         {key: unit[key] for key in output_vars})
