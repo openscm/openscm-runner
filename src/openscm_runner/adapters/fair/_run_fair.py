@@ -158,7 +158,10 @@ def _process_output(fair_output, output_vars):
     data['Effective Radiative Forcing|F Gases'] = np.sum(F[:,3:15], axis=1)
     data['Effective Radiative Forcing|Montreal Protocol Halogen Gases'] = np.sum(F[:,15:31], axis=1)
     data['Surface Temperature'] = T
-    data['Airborne fraction'] = airborne_emissions 
+    data['Airborne Fraction'] = airborne_emissions 
+    data['Effective Climate Feedback'] = lambda_eff
+    data['Ocean Heat Uptake'] = ohc
+    data['Net Energy Imbalance'] = heatflux
 
     unit['Atmospheric Concentrations|CO2'] = 'ppm' 
     unit['Atmospheric Concentrations|CH4'] = 'ppb'
@@ -240,5 +243,9 @@ def _process_output(fair_output, output_vars):
     unit['Effective Radiative Forcing|F Gases'] =  'W/m**2'
     unit['Effective Radiative Forcing|Montreal Protocol Halogen Gases'] =  'W/m**2'
     unit['Surface Temperature'] = 'K'
+    unit['Airborne Fraction'] = 'dimensionless'
+    unit['Effective Climate Feedback'] = 'W/m**2/K'
+    unit['Ocean Heat Uptake'] = 'J'
+    unit['Net Energy Imbalance'] = 'W/m**2'
     return ({key: data[key] for key in output_vars}, 
         {key: unit[key] for key in output_vars})
