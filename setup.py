@@ -8,6 +8,7 @@ AUTHORS = [
     ("Robert Gieseke", "robert.gieseke@pik-potsdam.de"),
     ("Jared Lewis", "jared.lewis@climate-energy-college.org"),
     ("Sven Willner", "sven.willner@pik-potsdam.de"),
+    ("Chris Smith", "c.j.smith1@leeds.ac.uk"),
 ]
 URL = "https://github.com/openscm/openscm-runner"
 
@@ -16,7 +17,7 @@ README = "README.rst"
 
 SOURCE_DIR = "src"
 
-REQUIREMENTS = ["click", "scmdata", "tqdm", "fair>=1.6.0a3,<2.0.0"]
+REQUIREMENTS = ["click", "scmdata", "tqdm", "fair@git+https://github.com/OMS-NetZero/FAIR.git@master"]
 REQUIREMENTS_NOTEBOOKS = [
     "ipywidgets",
     "notebook",
