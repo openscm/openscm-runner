@@ -17,12 +17,13 @@ class FAIR(_Adapter):
     Adapter for running FAIR
     """
 
-    def __init__(self):  # pylint: disable=W0231
+    def __init__(self):
         """
         Initialise the FAIR adapter
         """
+        super().__init__()
 
-    def _init_model(self):  # pylint: disable=W0221
+    def _init_model(self):
         pass
 
     def run(self, scenarios, cfgs, output_variables):
@@ -31,10 +32,13 @@ class FAIR(_Adapter):
         ----------
         scenarios : :obj:`pyam.IamDataFrame`
             Scenarios to run
+
         cfgs : list[dict]
             The config with which to run the model
+
         output_variables : list[str]
             Variables to include in the output
+
         Returns
         -------
         :obj:`pyam.IamDataFrame`
