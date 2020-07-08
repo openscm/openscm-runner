@@ -36,7 +36,7 @@ REQUIREMENTS_DOCS = ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-click"]
 REQUIREMENTS_DEPLOY = ["twine>=1.11.0", "setuptools>=41.2", "wheel>=0.31.0"]
 
 REQUIREMENTS_DEV = [
-    *["bandit", "black", "black-nb", "flake8", "isort<5", "mypy", "pydocstyle", "pylint>=2.4.4"],
+    *["bandit", "black", "black-nb", "flake8", "isort<5", "mypy", "nbdime", "pydocstyle", "pylint>=2.4.4"],
     *REQUIREMENTS_DEPLOY,
     *REQUIREMENTS_DOCS,
     *REQUIREMENTS_NOTEBOOKS,
