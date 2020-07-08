@@ -17,12 +17,12 @@ class FAIR(_Adapter):
     Adapter for running FAIR
     """
 
-    def __init__(self):
+    def __init__(self):  # pylint: disable=W0231
         """
         Initialise the FAIR adapter
         """
 
-    def _init_model(self):
+    def _init_model(self):  # pylint: disable=W0221
         pass
 
     def run(self, scenarios, cfgs, output_variables):
@@ -48,7 +48,7 @@ class FAIR(_Adapter):
 
         return res
 
-    def _make_full_cfgs(self, scenarios, cfgs):
+    def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0201
         full_cfgs = []
 
         for (scenario, model), smdf in tqdm(
@@ -57,13 +57,13 @@ class FAIR(_Adapter):
         ):
 
             emissions = scmdf_to_emissions(smdf)
-            E_pi = np.zeros(40)
-            E_pi[5] = 1.2212429848636561
-            E_pi[6] = 348.5273588
-            E_pi[7] = 60.02182622
-            E_pi[8] = 3.8773253867471933
-            E_pi[9] = 2.097770755
-            E_pi[10] = 15.44766815
+            emissions_pi = np.zeros(40)
+            emissions_pi[5] = 1.2212429848636561
+            emissions_pi[6] = 348.5273588
+            emissions_pi[7] = 60.02182622
+            emissions_pi[8] = 3.8773253867471933
+            emissions_pi[9] = 2.097770755
+            emissions_pi[10] = 15.44766815
 
             scenario_cfg = [
                 {
@@ -79,7 +79,7 @@ class FAIR(_Adapter):
                     "temperature_function": "Geoffroy",
                     "aerosol_forcing": "aerocom+ghan2",
                     "fixPre1850RCP": False,
-                    "E_pi": E_pi,
+                    "E_pi": emissions_pi,
                     "b_tro3": np.array(
                         [1.77871043e-04, 5.80173377e-05, 1.94458719e-04, 2.09151270e-03]
                     ),

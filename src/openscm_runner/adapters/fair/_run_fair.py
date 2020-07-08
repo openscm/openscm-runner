@@ -46,18 +46,19 @@ def run_fair(cfgs, output_vars):
     return res
 
 
-def _process_output(fair_output, output_vars):
+def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     """
     Make sense of FaIR1.6 output
+
     Parameters
     ----------
-    fair_output:
-        7-tuple of C, F, T, lambda_eff, ohc, heatflux, airborne_emissions:
-            C : np.ndarray
+    fair_output : tuple
+        7-tuple of concentrations, forcing, temperature, lambda_eff, ohc, heatflux, airborne_emissions:
+            c : np.ndarray
                 (nt, 31) array of greenhouse gas concentrations
-            F : np.ndarray
+            f : np.ndarray
                 (nt, 41) array of effective radiative forcings
-            T : np.ndarray
+            t : np.ndarray
                 (nt,) array of temperature
             lambda_eff: np.ndarray
                 effective climate feedback
@@ -67,105 +68,118 @@ def _process_output(fair_output, output_vars):
                 heat transfer into the ocean
             airborne_emissions:
                 atmospheric carbon content
-    output_vars:
+    output_vars : list[str]
         List of output variables
+
     Returns
     -------
-    data:
+    data : dict
         dict of climate model output
-    unit:
+    unit : dict
         dict of units corresponding to data
     """
-    C, F, T, lambda_eff, ohc, heatflux, airborne_emissions = fair_output
+    (
+        concentrations,
+        forcing,
+        temperature,
+        lambda_eff,
+        ohc,
+        heatflux,
+        airborne_emissions,
+    ) = fair_output
 
     data = {}
     unit = {}
 
-    data["Atmospheric Concentrations|CO2"] = C[:, 0]
-    data["Atmospheric Concentrations|CH4"] = C[:, 1]
-    data["Atmospheric Concentrations|N2O"] = C[:, 2]
-    data["Atmospheric Concentrations|F-Gases|PFC|CF4"] = C[:, 3]
-    data["Atmospheric Concentrations|F-Gases|PFC|C2F6"] = C[:, 4]
-    data["Atmospheric Concentrations|F-Gases|PFC|C6F14"] = C[:, 5]
-    data["Atmospheric Concentrations|F-Gases|HFC|HFC23"] = C[:, 6]
-    data["Atmospheric Concentrations|F-Gases|HFC|HFC32"] = C[:, 7]
-    data["Atmospheric Concentrations|F-Gases|HFC|HFC125"] = C[:, 8]
-    data["Atmospheric Concentrations|F-Gases|HFC|HFC134a"] = C[:, 9]
-    data["Atmospheric Concentrations|F-Gases|HFC|HFC143a"] = C[:, 10]
-    data["Atmospheric Concentrations|F-Gases|HFC|HFC227ea"] = C[:, 11]
-    data["Atmospheric Concentrations|F-Gases|HFC|HFC245fa"] = C[:, 12]
-    data["Atmospheric Concentrations|F-Gases|HFC|HFC4310mee"] = C[:, 13]
-    data["Atmospheric Concentrations|F-Gases|SF6"] = C[:, 14]
-    data["Atmospheric Concentrations|Montreal Gases|CFC|CFC11"] = C[:, 15]
-    data["Atmospheric Concentrations|Montreal Gases|CFC|CFC12"] = C[:, 16]
-    data["Atmospheric Concentrations|Montreal Gases|CFC|CFC113"] = C[:, 17]
-    data["Atmospheric Concentrations|Montreal Gases|CFC|CFC114"] = C[:, 18]
-    data["Atmospheric Concentrations|Montreal Gases|CFC|CFC115"] = C[:, 19]
-    data["Atmospheric Concentrations|Montreal Gases|CCl4"] = C[:, 20]
-    data["Atmospheric Concentrations|Montreal Gases|CH3CCl3"] = C[:, 21]
-    data["Atmospheric Concentrations|Montreal Gases|HCFC22"] = C[:, 22]
-    data["Atmospheric Concentrations|Montreal Gases|HCFC141b"] = C[:, 23]
-    data["Atmospheric Concentrations|Montreal Gases|HCFC142b"] = C[:, 24]
-    data["Atmospheric Concentrations|Montreal Gases|Halon1211"] = C[:, 25]
-    data["Atmospheric Concentrations|Montreal Gases|Halon1202"] = C[:, 26]
-    data["Atmospheric Concentrations|Montreal Gases|Halon1301"] = C[:, 27]
-    data["Atmospheric Concentrations|Montreal Gases|Halon2402"] = C[:, 28]
-    data["Atmospheric Concentrations|Montreal Gases|CH3Br"] = C[:, 29]
-    data["Atmospheric Concentrations|Montreal Gases|CH3Cl"] = C[:, 30]
-    data["Effective Radiative Forcing|CO2"] = F[:, 0]
-    data["Effective Radiative Forcing|CH4"] = F[:, 1]
-    data["Effective Radiative Forcing|N2O"] = F[:, 2]
-    data["Effective Radiative Forcing|CF4"] = F[:, 3]
-    data["Effective Radiative Forcing|C2F6"] = F[:, 4]
-    data["Effective Radiative Forcing|C6F14"] = F[:, 5]
-    data["Effective Radiative Forcing|HFC23"] = F[:, 6]
-    data["Effective Radiative Forcing|HFC32"] = F[:, 7]
-    data["Effective Radiative Forcing|HFC125"] = F[:, 8]
-    data["Effective Radiative Forcing|HFC134a"] = F[:, 9]
-    data["Effective Radiative Forcing|HFC143a"] = F[:, 10]
-    data["Effective Radiative Forcing|HFC227ea"] = F[:, 11]
-    data["Effective Radiative Forcing|HFC245fa"] = F[:, 12]
-    data["Effective Radiative Forcing|HFC4310mee"] = F[:, 13]
-    data["Effective Radiative Forcing|F-Gases|SF6"] = F[:, 14]
-    data["Effective Radiative Forcing|CFC11"] = F[:, 15]
-    data["Effective Radiative Forcing|CFC12"] = F[:, 16]
-    data["Effective Radiative Forcing|CFC113"] = F[:, 17]
-    data["Effective Radiative Forcing|CFC114"] = F[:, 18]
-    data["Effective Radiative Forcing|CFC115"] = F[:, 19]
-    data["Effective Radiative Forcing|CCl4"] = F[:, 20]
-    data["Effective Radiative Forcing|CH3CCl3"] = F[:, 21]
-    data["Effective Radiative Forcing|HCFC22"] = F[:, 22]
-    data["Effective Radiative Forcing|HCFC141b"] = F[:, 23]
-    data["Effective Radiative Forcing|HCFC142b"] = F[:, 24]
-    data["Effective Radiative Forcing|Halon1211"] = F[:, 25]
-    data["Effective Radiative Forcing|Halon1202"] = F[:, 26]
-    data["Effective Radiative Forcing|Halon1301"] = F[:, 27]
-    data["Effective Radiative Forcing|Halon2402"] = F[:, 28]
-    data["Effective Radiative Forcing|CH3Br"] = F[:, 29]
-    data["Effective Radiative Forcing|CH3Cl"] = F[:, 30]
-    data["Effective Radiative Forcing|Tropospheric Ozone"] = F[:, 31]
-    data["Effective Radiative Forcing|Stratospheric Ozone"] = F[:, 32]
-    data["Effective Radiative Forcing|CH4 Oxidation Stratospheric H2O"] = F[:, 33]
-    data["Effective Radiative Forcing|Contrails"] = F[:, 34]
-    data["Effective Radiative Forcing|Aerosols|Direct Effect"] = F[:, 35]
-    data["Effective Radiative Forcing|Aerosols|Indirect Effect"] = F[:, 36]
-    data["Effective Radiative Forcing|Black Carbon on Snow"] = F[:, 37]
-    data["Effective Radiative Forcing|Land-use Change"] = F[:, 38]
-    data["Effective Radiative Forcing|Volcanic"] = F[:, 39]
-    data["Effective Radiative Forcing|Solar"] = F[:, 40]
-    data["Effective Radiative Forcing"] = np.sum(F, axis=1)
-    data["Effective Radiative Forcing|Anthropogenic"] = np.sum(F[:, :39], axis=1)
-    data["Effective Radiative Forcing|Greenhouse Gases"] = np.sum(F[:, :31], axis=1)
+    data["Atmospheric Concentrations|CO2"] = concentrations[:, 0]
+    data["Atmospheric Concentrations|CH4"] = concentrations[:, 1]
+    data["Atmospheric Concentrations|N2O"] = concentrations[:, 2]
+    data["Atmospheric Concentrations|F-Gases|PFC|CF4"] = concentrations[:, 3]
+    data["Atmospheric Concentrations|F-Gases|PFC|C2F6"] = concentrations[:, 4]
+    data["Atmospheric Concentrations|F-Gases|PFC|C6F14"] = concentrations[:, 5]
+    data["Atmospheric Concentrations|F-Gases|HFC|HFC23"] = concentrations[:, 6]
+    data["Atmospheric Concentrations|F-Gases|HFC|HFC32"] = concentrations[:, 7]
+    data["Atmospheric Concentrations|F-Gases|HFC|HFC125"] = concentrations[:, 8]
+    data["Atmospheric Concentrations|F-Gases|HFC|HFC134a"] = concentrations[:, 9]
+    data["Atmospheric Concentrations|F-Gases|HFC|HFC143a"] = concentrations[:, 10]
+    data["Atmospheric Concentrations|F-Gases|HFC|HFC227ea"] = concentrations[:, 11]
+    data["Atmospheric Concentrations|F-Gases|HFC|HFC245fa"] = concentrations[:, 12]
+    data["Atmospheric Concentrations|F-Gases|HFC|HFC4310mee"] = concentrations[:, 13]
+    data["Atmospheric Concentrations|F-Gases|SF6"] = concentrations[:, 14]
+    data["Atmospheric Concentrations|Montreal Gases|CFC|CFC11"] = concentrations[:, 15]
+    data["Atmospheric Concentrations|Montreal Gases|CFC|CFC12"] = concentrations[:, 16]
+    data["Atmospheric Concentrations|Montreal Gases|CFC|CFC113"] = concentrations[:, 17]
+    data["Atmospheric Concentrations|Montreal Gases|CFC|CFC114"] = concentrations[:, 18]
+    data["Atmospheric Concentrations|Montreal Gases|CFC|CFC115"] = concentrations[:, 19]
+    data["Atmospheric Concentrations|Montreal Gases|CCl4"] = concentrations[:, 20]
+    data["Atmospheric Concentrations|Montreal Gases|CH3CCl3"] = concentrations[:, 21]
+    data["Atmospheric Concentrations|Montreal Gases|HCFC22"] = concentrations[:, 22]
+    data["Atmospheric Concentrations|Montreal Gases|HCFC141b"] = concentrations[:, 23]
+    data["Atmospheric Concentrations|Montreal Gases|HCFC142b"] = concentrations[:, 24]
+    data["Atmospheric Concentrations|Montreal Gases|Halon1211"] = concentrations[:, 25]
+    data["Atmospheric Concentrations|Montreal Gases|Halon1202"] = concentrations[:, 26]
+    data["Atmospheric Concentrations|Montreal Gases|Halon1301"] = concentrations[:, 27]
+    data["Atmospheric Concentrations|Montreal Gases|Halon2402"] = concentrations[:, 28]
+    data["Atmospheric Concentrations|Montreal Gases|CH3Br"] = concentrations[:, 29]
+    data["Atmospheric Concentrations|Montreal Gases|CH3Cl"] = concentrations[:, 30]
+    data["Effective Radiative Forcing|CO2"] = forcing[:, 0]
+    data["Effective Radiative Forcing|CH4"] = forcing[:, 1]
+    data["Effective Radiative Forcing|N2O"] = forcing[:, 2]
+    data["Effective Radiative Forcing|CF4"] = forcing[:, 3]
+    data["Effective Radiative Forcing|C2F6"] = forcing[:, 4]
+    data["Effective Radiative Forcing|C6F14"] = forcing[:, 5]
+    data["Effective Radiative Forcing|HFC23"] = forcing[:, 6]
+    data["Effective Radiative Forcing|HFC32"] = forcing[:, 7]
+    data["Effective Radiative Forcing|HFC125"] = forcing[:, 8]
+    data["Effective Radiative Forcing|HFC134a"] = forcing[:, 9]
+    data["Effective Radiative Forcing|HFC143a"] = forcing[:, 10]
+    data["Effective Radiative Forcing|HFC227ea"] = forcing[:, 11]
+    data["Effective Radiative Forcing|HFC245fa"] = forcing[:, 12]
+    data["Effective Radiative Forcing|HFC4310mee"] = forcing[:, 13]
+    data["Effective Radiative Forcing|F-Gases|SF6"] = forcing[:, 14]
+    data["Effective Radiative Forcing|CFC11"] = forcing[:, 15]
+    data["Effective Radiative Forcing|CFC12"] = forcing[:, 16]
+    data["Effective Radiative Forcing|CFC113"] = forcing[:, 17]
+    data["Effective Radiative Forcing|CFC114"] = forcing[:, 18]
+    data["Effective Radiative Forcing|CFC115"] = forcing[:, 19]
+    data["Effective Radiative Forcing|CCl4"] = forcing[:, 20]
+    data["Effective Radiative Forcing|CH3CCl3"] = forcing[:, 21]
+    data["Effective Radiative Forcing|HCFC22"] = forcing[:, 22]
+    data["Effective Radiative Forcing|HCFC141b"] = forcing[:, 23]
+    data["Effective Radiative Forcing|HCFC142b"] = forcing[:, 24]
+    data["Effective Radiative Forcing|Halon1211"] = forcing[:, 25]
+    data["Effective Radiative Forcing|Halon1202"] = forcing[:, 26]
+    data["Effective Radiative Forcing|Halon1301"] = forcing[:, 27]
+    data["Effective Radiative Forcing|Halon2402"] = forcing[:, 28]
+    data["Effective Radiative Forcing|CH3Br"] = forcing[:, 29]
+    data["Effective Radiative Forcing|CH3Cl"] = forcing[:, 30]
+    data["Effective Radiative Forcing|Tropospheric Ozone"] = forcing[:, 31]
+    data["Effective Radiative Forcing|Stratospheric Ozone"] = forcing[:, 32]
+    data["Effective Radiative Forcing|CH4 Oxidation Stratospheric H2O"] = forcing[:, 33]
+    data["Effective Radiative Forcing|Contrails"] = forcing[:, 34]
+    data["Effective Radiative Forcing|Aerosols|Direct Effect"] = forcing[:, 35]
+    data["Effective Radiative Forcing|Aerosols|Indirect Effect"] = forcing[:, 36]
+    data["Effective Radiative Forcing|Black Carbon on Snow"] = forcing[:, 37]
+    data["Effective Radiative Forcing|Land-use Change"] = forcing[:, 38]
+    data["Effective Radiative Forcing|Volcanic"] = forcing[:, 39]
+    data["Effective Radiative Forcing|Solar"] = forcing[:, 40]
+    data["Effective Radiative Forcing"] = np.sum(forcing, axis=1)
+    data["Effective Radiative Forcing|Anthropogenic"] = np.sum(forcing[:, :39], axis=1)
+    data["Effective Radiative Forcing|Greenhouse Gases"] = np.sum(
+        forcing[:, :31], axis=1
+    )
     # This definition does not include ozone and H2O from CH4 oxidation
     data["Effective Radiative Forcing|Greenhouse Gases|Kyoto Gases"] = np.sum(
-        F[:, :15], axis=1
+        forcing[:, :15], axis=1
     )
-    data["Effective Radiative Forcing|CO2, CH4 and N2O"] = np.sum(F[:, :3], axis=1)
-    data["Effective Radiative Forcing|F Gases"] = np.sum(F[:, 3:15], axis=1)
+    data["Effective Radiative Forcing|CO2, CH4 and N2O"] = np.sum(
+        forcing[:, :3], axis=1
+    )
+    data["Effective Radiative Forcing|F Gases"] = np.sum(forcing[:, 3:15], axis=1)
     data["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = np.sum(
-        F[:, 15:31], axis=1
+        forcing[:, 15:31], axis=1
     )
-    data["Surface Temperature"] = T
+    data["Surface Temperature"] = temperature
     data["Airborne Fraction"] = airborne_emissions
     data["Effective Climate Feedback"] = lambda_eff
     data["Ocean Heat Uptake"] = ohc
