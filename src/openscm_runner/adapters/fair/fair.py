@@ -54,7 +54,7 @@ class FAIR(_Adapter):
 
         for (scenario, model), smdf in tqdm(
             scenarios.timeseries().groupby(["scenario", "model"]),
-            desc="Creating FaIR emissions files"
+            desc="Creating FaIR emissions files",
         ):
 
             emissions = scmdf_to_emissions(smdf)
@@ -68,22 +68,24 @@ class FAIR(_Adapter):
 
             scenario_cfg = [
                 {
-                    "scenario"   : scenario,
-                    "model"      : model,
-                    "emissions"  : emissions,
-                    'natural'    : natural.Emissions.emissions[:336, :],
-                    'F_volcanic' : cmip6_volcanic.Forcing.volcanic[:336],
-                    'F_solar'    : cmip6_solar.Forcing.solar[:336],
-                    'efficacy'   : np.ones(41),
-                    'diagnostics': 'AR6',
-                    'gir_carbon_cycle': True,
-                    'temperature_function':'Geoffroy',
-                    'aerosol_forcing':'aerocom+ghan2',
-                    'fixPre1850RCP':False,
-                    'E_pi'       : E_pi,
-                    'b_tro3'     : np.array([1.77871043e-04, 5.80173377e-05, 1.94458719e-04, 2.09151270e-03]),
-                    'tropO3_forcing': 'cmip6',
-                    'aCO2land'   : 0.0006394631886297174,
+                    "scenario": scenario,
+                    "model": model,
+                    "emissions": emissions,
+                    "natural": natural.Emissions.emissions[:336, :],
+                    "F_volcanic": cmip6_volcanic.Forcing.volcanic[:336],
+                    "F_solar": cmip6_solar.Forcing.solar[:336],
+                    "efficacy": np.ones(41),
+                    "diagnostics": "AR6",
+                    "gir_carbon_cycle": True,
+                    "temperature_function": "Geoffroy",
+                    "aerosol_forcing": "aerocom+ghan2",
+                    "fixPre1850RCP": False,
+                    "E_pi": E_pi,
+                    "b_tro3": np.array(
+                        [1.77871043e-04, 5.80173377e-05, 1.94458719e-04, 2.09151270e-03]
+                    ),
+                    "tropO3_forcing": "cmip6",
+                    "aCO2land": 0.0006394631886297174,
                     **cfg,
                 }
                 for i, cfg in enumerate(cfgs)

@@ -1,4 +1,3 @@
-
 """
 Module supporting the FAIR adapter
 """

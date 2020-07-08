@@ -10,6 +10,7 @@ class MAGICC7(_Adapter):
     """
     Adapter for running MAGICC7
     """
+
     def __init__(self):
         """
         Initialise the MAGICC7 adapter
@@ -17,6 +18,7 @@ class MAGICC7(_Adapter):
         self.magicc = pymagicc.MAGICC7()
         """:obj:`pymagicc.MAGICC7`: Pymagicc class instance used to run MAGICC"""
         import pdb
+
         pdb.set_trace()
 
     @classmethod
@@ -29,7 +31,7 @@ class MAGICC7(_Adapter):
         str
             The MAGICC7 version id
         """
-        return check_output([cls._executable(), '--version']).decode("utf-8").strip()
+        return check_output([cls._executable(), "--version"]).decode("utf-8").strip()
 
     @classmethod
     def _executable(cls):
