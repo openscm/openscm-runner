@@ -55,7 +55,7 @@ def run(
     for climate_model, cfgs in tqdm(climate_models_cfgs.items(), desc="Climate models"):
         if climate_model == "MAGICC7":
             runner = MAGICC7()
-        elif climate_model.upper() == "FAIR": # allow various capitalisations
+        elif climate_model.upper() == "FAIR":  # allow various capitalisations
             runner = FAIR()
         else:
             raise NotImplementedError(
