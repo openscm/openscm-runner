@@ -1,8 +1,6 @@
 """
 FAIR adapter
 """
-import os
-
 import numpy as np
 import pyam
 import fair
@@ -51,7 +49,6 @@ class FAIR(_Adapter):
 
         return res
 
-
     def _make_full_cfgs(self, scenarios, cfgs):
         full_cfgs = []
 
@@ -61,20 +58,20 @@ class FAIR(_Adapter):
         ):
 
             emissions = scmdf_to_emissions(smdf)
-            E_pi=np.zeros(40)
-            E_pi[5]= 1.2212429848636561 
-            E_pi[6]= 348.5273588
-            E_pi[7]= 60.02182622
-            E_pi[8]= 3.8773253867471933
-            E_pi[9]= 2.097770755
-            E_pi[10]= 15.44766815
+            E_pi = np.zeros(40)
+            E_pi[5] = 1.2212429848636561
+            E_pi[6] = 348.5273588
+            E_pi[7] = 60.02182622
+            E_pi[8] = 3.8773253867471933
+            E_pi[9] = 2.097770755
+            E_pi[10] = 15.44766815
 
             scenario_cfg = [
                 {
                     "scenario"   : scenario,
                     "model"      : model,
                     "emissions"  : emissions,
-                    'natural'    : natural.Emissions.emissions[:336,:],
+                    'natural'    : natural.Emissions.emissions[:336, :],
                     'F_volcanic' : cmip6_volcanic.Forcing.volcanic[:336],
                     'F_solar'    : cmip6_solar.Forcing.solar[:336],
                     'efficacy'   : np.ones(41),
@@ -84,7 +81,7 @@ class FAIR(_Adapter):
                     'aerosol_forcing':'aerocom+ghan2',
                     'fixPre1850RCP':False,
                     'E_pi'       : E_pi,
-                    'b_tro3'     : np.array([  1.77871043e-04,   5.80173377e-05, 1.94458719e-04,  2.09151270e-03]),
+                    'b_tro3'     : np.array([1.77871043e-04, 5.80173377e-05, 1.94458719e-04, 2.09151270e-03]),
                     'tropO3_forcing': 'cmip6',
                     'aCO2land'   : 0.0006394631886297174,
                     **cfg,
@@ -94,9 +91,7 @@ class FAIR(_Adapter):
 
             full_cfgs += scenario_cfg
 
-
         return full_cfgs
-
 
     @staticmethod
     def get_version():
