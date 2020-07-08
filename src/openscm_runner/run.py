@@ -7,7 +7,7 @@ import scmdata
 from dotenv import find_dotenv, load_dotenv
 from tqdm.autonotebook import tqdm
 
-from .adapters import MAGICC7, FAIR
+from .adapters import FAIR, MAGICC7
 
 LOGGER = logging.getLogger(__name__)
 

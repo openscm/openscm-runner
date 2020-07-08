@@ -1,11 +1,11 @@
 """
 FAIR adapter
 """
+import fair
 import numpy as np
 import pyam
-import fair
+from fair.ancil import cmip6_solar, cmip6_volcanic, natural
 from fair.tools.scmdf import scmdf_to_emissions
-from fair.ancil import natural, cmip6_volcanic, cmip6_solar
 from tqdm.autonotebook import tqdm
 
 from ..base import _Adapter

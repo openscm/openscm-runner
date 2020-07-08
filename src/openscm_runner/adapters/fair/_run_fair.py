@@ -1,9 +1,9 @@
 """
 Module for running FaIR
 """
-from scmdata import df_append, ScmDataFrame
 import numpy as np
 from fair.forward import fair_scm
+from scmdata import ScmDataFrame, df_append
 
 
 def run_fair(cfgs, output_vars):
