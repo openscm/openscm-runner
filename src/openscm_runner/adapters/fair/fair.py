@@ -17,13 +17,7 @@ class FAIR(_Adapter):
     Adapter for running FAIR
     """
 
-    def __init__(self):
-        """
-        Initialise the FAIR adapter
-        """
-        super().__init__()
-
-    def _init_model(self):
+    def _init_model(self, *args, **kwargs):
         pass
 
     def run(self, scenarios, cfgs, output_variables):
