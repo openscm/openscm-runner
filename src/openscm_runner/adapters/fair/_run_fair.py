@@ -20,7 +20,6 @@ def run_fair(cfgs, output_vars):
     :obj:`ScmDataFrame`
         :obj:`ScmDataFrame` instance with all results.
     """
-
     res = []
 
     for cfg in cfgs:
@@ -77,7 +76,6 @@ def _process_output(fair_output, output_vars):
     unit:
         dict of units corresponding to data
     """
-
     C, F, T, lambda_eff, ohc, heatflux, airborne_emissions = fair_output
 
     data = {}

@@ -40,7 +40,6 @@ class FAIR(_Adapter):
         :obj:`pyam.IamDataFrame`
             FAIR output
         """
-
         fair_df = pyam.IamDataFrame(scenarios.timeseries().reset_index())
         full_cfgs = self._make_full_cfgs(fair_df, cfgs)
 
