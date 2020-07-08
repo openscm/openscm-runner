@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.testing as npt
-import pytest
 from scmdata import ScmDataFrame
 
 from openscm_runner import run
@@ -12,16 +11,8 @@ def test_fair_run(test_scenarios):
         climate_models_cfgs={
             "FaIR": [
                 {},
-                {
-                    "q": np.array([0.3, 0.45]),
-                    "r0": 30.0,
-                    "lambda_global": 0.9,
-                },
-                {
-                    "q": np.array([0.35, 0.4]),
-                    "r0": 25.0,
-                    "lambda_global": 1.1,
-                },
+                {"q": np.array([0.3, 0.45]), "r0": 30.0, "lambda_global": 0.9},
+                {"q": np.array([0.35, 0.4]), "r0": 25.0, "lambda_global": 1.1},
             ],
         },
         scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
