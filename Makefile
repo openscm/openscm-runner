@@ -2,6 +2,7 @@
 
 VENV_DIR ?= venv
 
+TESTS_DIR=./tests
 NOTEBOOKS_DIR=./notebooks
 NOTEBOOKS_SANITIZE_FILE=$(TESTS_DIR)/notebook-tests.cfg
 
