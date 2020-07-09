@@ -51,6 +51,7 @@ class FAIR(_Adapter):
 
     def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0201
         full_cfgs = []
+        run_id_block = 0
 
         for (scenario, model), smdf in tqdm(
             scenarios.timeseries().groupby(["scenario", "model"]),
@@ -72,6 +73,7 @@ class FAIR(_Adapter):
                 {
                     "scenario": scenario,
                     "model": model,
+                    "run_id": run_id_block + i,
                     "emissions": emissions,
                     "natural": natural.Emissions.emissions[:336, :],
                     "F_volcanic": cmip6_volcanic.Forcing.volcanic[:336],
@@ -88,12 +90,13 @@ class FAIR(_Adapter):
                     ),
                     "tropO3_forcing": "cmip6",
                     "aCO2land": 0.0006394631886297174,
-                    'b_aero': np.array([-0.00503, 0.0, 0.0, 0.0, 0.0385, -0.0104, 0.0]),
-                    'ghan_params': np.array([1.232, 73.9, 63.0]),
+                    "b_aero": np.array([-0.00503, 0.0, 0.0, 0.0, 0.0385, -0.0104, 0.0]),
+                    "ghan_params": np.array([1.232, 73.9, 63.0]),
                     **cfg,
                 }
                 for i, cfg in enumerate(cfgs)
             ]
+            run_id_block += len(scenario_cfg)
 
             full_cfgs += scenario_cfg
 
