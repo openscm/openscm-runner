@@ -5,6 +5,7 @@ from scmdata import ScmDataFrame
 from openscm_runner import run
 from openscm_runner.utils import calculate_quantiles
 
+
 def test_multimodel_run(test_scenarios, magicc7_is_available):
     res = run(
         climate_models_cfgs={
@@ -19,23 +20,35 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
                     "rf_soxi_dir_wm2": -0.2,
                     "out_temperature": 1,
                     "out_forcing": 1,
-                    "out_dynamic_vars": ["DAT_CO2_CONC", "DAT_AEROSOL_ERF", "DAT_HEATUPTK_AGGREG"],
+                    "out_dynamic_vars": [
+                        "DAT_CO2_CONC",
+                        "DAT_AEROSOL_ERF",
+                        "DAT_HEATUPTK_AGGREG",
+                    ],
                 },
                 {
                     "core_climatesensitivity": 2,
                     "rf_soxi_dir_wm2": -0.1,
                     "out_temperature": 1,
                     "out_forcing": 1,
-                    "out_dynamic_vars": ["DAT_CO2_CONC", "DAT_AEROSOL_ERF", "DAT_HEATUPTK_AGGREG"],
+                    "out_dynamic_vars": [
+                        "DAT_CO2_CONC",
+                        "DAT_AEROSOL_ERF",
+                        "DAT_HEATUPTK_AGGREG",
+                    ],
                 },
                 {
                     "core_climatesensitivity": 5,
                     "rf_soxi_dir_wm2": -0.35,
                     "out_temperature": 1,
                     "out_forcing": 1,
-                    "out_dynamic_vars": ["DAT_CO2_CONC", "DAT_AEROSOL_ERF", "DAT_HEATUPTK_AGGREG"],
+                    "out_dynamic_vars": [
+                        "DAT_CO2_CONC",
+                        "DAT_AEROSOL_ERF",
+                        "DAT_HEATUPTK_AGGREG",
+                    ],
                 },
-            ]
+            ],
         },
         scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
         output_variables=(
@@ -72,7 +85,13 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
 
     npt.assert_allclose(
         1.41688847,
-        quantiles.filter(variable="Surface Temperature",region="World",year=2100,scenario="ssp126",quantile=0.05,).values,
+        quantiles.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
+            quantile=0.05,
+        ).values,
     )
     npt.assert_allclose(
         3.17393531,
@@ -106,7 +125,6 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
         ).values,
     )
 
-
     quantiles_cm = calculate_quantiles(
         res,
         [0.05, 0.17, 0.5, 0.83, 0.95],
@@ -121,7 +139,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             year=2100,
             scenario="ssp126",
             quantile=0.05,
-            climate_model="MAGICC*"
+            climate_model="MAGICC*",
         ).values,
     )
     npt.assert_allclose(
@@ -132,14 +150,20 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             year=2100,
             scenario="ssp370",
             quantile=0.95,
-            climate_model="MAGICC*"
+            climate_model="MAGICC*",
         ).values,
     )
 
     npt.assert_allclose(
         2.61447382,
-        quantiles_cm.filter(variable="Surface Temperature", region="World", year=2100, scenario="ssp126", quantile=0.05,
-            climate_model="FaIR*").values,
+        quantiles_cm.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
+            quantile=0.05,
+            climate_model="FaIR*",
+        ).values,
     )
     npt.assert_allclose(
         8.16182462,
@@ -149,6 +173,6 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             year=2100,
             scenario="ssp370",
             quantile=0.95,
-            climate_model="FaIR*"
+            climate_model="FaIR*",
         ).values,
     )

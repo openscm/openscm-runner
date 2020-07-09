@@ -32,7 +32,9 @@ def test_fair_run(test_scenarios):
     assert isinstance(res, ScmDataFrame)
     assert res["run_id"].min() == 0
     assert res["run_id"].max() == 8
-    assert res.get_unique_meta("climate_model", no_duplicates=True) == "FaIRv{}".format(FAIR.get_version())
+    assert res.get_unique_meta("climate_model", no_duplicates=True) == "FaIRv{}".format(
+        FAIR.get_version()
+    )
 
     assert set(res.get_unique_meta("variable")) == set(
         [
@@ -47,7 +49,9 @@ def test_fair_run(test_scenarios):
 
     npt.assert_allclose(
         3.2614773448454883,
-        res.filter(variable="Surface Temperature", region="World", year=2100, scenario="ssp126").values.max(),
+        res.filter(
+            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+        ).values.max(),
     )
     npt.assert_allclose(
         2.6047028876600935,
@@ -74,7 +78,13 @@ def test_fair_run(test_scenarios):
 
     npt.assert_allclose(
         2.61447382,
-        quantiles.filter(variable="Surface Temperature", region="World", year=2100, scenario="ssp126", quantile=0.05).values,
+        quantiles.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
+            quantile=0.05,
+        ).values,
     )
     npt.assert_allclose(
         3.20557083,
