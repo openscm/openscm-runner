@@ -1,20 +1,27 @@
 """
 Module for running FaIR
 """
+import logging
+
 import numpy as np
 from fair.forward import fair_scm
 from scmdata import ScmDataFrame, df_append
+
+LOGGER = logging.getLogger(__name__)
 
 
 def run_fair(cfgs, output_vars):
     """
     Run FaIR
+
     Parameters
     ----------
     cfgs : list[dict]
         List of configurations with which to run FaIR
+
     output_vars : list[str]
         Variables to output
+
     Returns
     -------
     :obj:`ScmDataFrame`
@@ -22,7 +29,7 @@ def run_fair(cfgs, output_vars):
     """
     res = []
 
-    for cfg in cfgs:
+    for i, cfg in enumerate(cfgs):
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
         data, unit = _process_output(fair_scm(**cfg), output_vars)
@@ -32,12 +39,13 @@ def run_fair(cfgs, output_vars):
             columns={
                 "scenario": scenario,
                 "model": model,
-                "region": ["unspecified"],
+                "region": "World",
                 "variable": list(data.keys()),
                 "unit": list(unit.values()),
             },
         )
-        tempres.__setitem__("time", np.arange(1765, 2101))
+        tempres["time"] = np.arange(1765, 2101)
+        tempres["run_id"] = i
 
         res.append(tempres)
 
@@ -68,6 +76,7 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
                 heat transfer into the ocean
             airborne_emissions:
                 atmospheric carbon content
+
     output_vars : list[str]
         List of output variables
 
@@ -159,6 +168,7 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     data["Effective Radiative Forcing|Contrails"] = forcing[:, 34]
     data["Effective Radiative Forcing|Aerosols|Direct Effect"] = forcing[:, 35]
     data["Effective Radiative Forcing|Aerosols|Indirect Effect"] = forcing[:, 36]
+    data["Effective Radiative Forcing|Aerosols"] = forcing[:, 35] + forcing[:, 36]
     data["Effective Radiative Forcing|Black Carbon on Snow"] = forcing[:, 37]
     data["Effective Radiative Forcing|Land-use Change"] = forcing[:, 38]
     data["Effective Radiative Forcing|Volcanic"] = forcing[:, 39]
@@ -253,6 +263,7 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Effective Radiative Forcing|Contrails"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Direct Effect"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Indirect Effect"] = "W/m**2"
+    unit["Effective Radiative Forcing|Aerosols"] = "W/m**2"
     unit["Effective Radiative Forcing|Black Carbon on Snow"] = "W/m**2"
     unit["Effective Radiative Forcing|Land-use Change"] = "W/m**2"
     unit["Effective Radiative Forcing|Volcanic"] = "W/m**2"
@@ -270,7 +281,13 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Ocean Heat Uptake"] = "J"
     unit["Net Energy Imbalance"] = "W/m**2"
 
-    return (
-        {key: data[key] for key in output_vars},
-        {key: unit[key] for key in output_vars},
-    )
+    out = ({}, {})
+    for key in output_vars:
+        if key not in data:
+            LOGGER.warning("%s not available from FaIR", key)
+            continue
+
+        out[0][key] = data[key]
+        out[1][key] = unit[key]
+
+    return out

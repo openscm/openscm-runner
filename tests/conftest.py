@@ -3,6 +3,8 @@ import os.path
 import pyam
 import pytest
 
+from openscm_runner.adapters import MAGICC7
+
 TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test-data")
 
 
@@ -18,3 +20,12 @@ def test_scenarios(test_data_dir):
     )
 
     return scenarios
+
+
+@pytest.fixture(scope="session")
+def magicc7_is_available():
+    try:
+        MAGICC7.get_version()
+
+    except ValueError:
+        pytest.skip("MAGICC7 not available")

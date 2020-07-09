@@ -6,6 +6,7 @@ import numpy as np
 import pyam
 from fair.ancil import cmip6_solar, cmip6_volcanic, natural
 from fair.tools.scmdf import scmdf_to_emissions
+from scmdata import ScmDataFrame
 from tqdm.autonotebook import tqdm
 
 from ..base import _Adapter
@@ -17,12 +18,7 @@ class FAIR(_Adapter):
     Adapter for running FAIR
     """
 
-    def __init__(self):  # pylint: disable=W0231
-        """
-        Initialise the FAIR adapter
-        """
-
-    def _init_model(self):  # pylint: disable=W0221
+    def _init_model(self, *args, **kwargs):
         pass
 
     def run(self, scenarios, cfgs, output_variables):
@@ -31,20 +27,25 @@ class FAIR(_Adapter):
         ----------
         scenarios : :obj:`pyam.IamDataFrame`
             Scenarios to run
+
         cfgs : list[dict]
             The config with which to run the model
+
         output_variables : list[str]
             Variables to include in the output
+
         Returns
         -------
         :obj:`pyam.IamDataFrame`
             FAIR output
         """
-        fair_df = pyam.IamDataFrame(scenarios.timeseries().reset_index())
+        fair_df = pyam.IamDataFrame(scenarios.timeseries())
         full_cfgs = self._make_full_cfgs(fair_df, cfgs)
 
-        res = run_fair(full_cfgs, output_variables).timeseries()
-        res = pyam.IamDataFrame(res)
+        res = run_fair(full_cfgs, output_variables)
+        res["climate_model"] = "FaIRv{}".format(self.get_version())
+
+        res = pyam.IamDataFrame(res.timeseries())
 
         return res
 
@@ -53,10 +54,12 @@ class FAIR(_Adapter):
 
         for (scenario, model), smdf in tqdm(
             scenarios.timeseries().groupby(["scenario", "model"]),
-            desc="Creating FaIR emissions files",
+            desc="Creating FaIR emissions inputs",
         ):
+            smdf_in = ScmDataFrame(smdf)
 
-            emissions = scmdf_to_emissions(smdf)
+            emissions = scmdf_to_emissions(smdf_in)
+
             emissions_pi = np.zeros(40)
             emissions_pi[5] = 1.2212429848636561
             emissions_pi[6] = 348.5273588

@@ -2,6 +2,10 @@
 
 VENV_DIR ?= venv
 
+TESTS_DIR=./tests
+NOTEBOOKS_DIR=./notebooks
+NOTEBOOKS_SANITIZE_FILE=$(TESTS_DIR)/notebook-tests.cfg
+
 define PRINT_HELP_PYSCRIPT
 import re, sys
 
@@ -24,7 +28,7 @@ checks: $(VENV_DIR)  ## run all the checks
 		echo "\n\n=== isort ==="; $(VENV_DIR)/bin/isort --check-only --quiet --recursive src tests setup.py || echo "--- isort failed ---" >&2; \
 		echo "\n\n=== pydocstyle ==="; $(VENV_DIR)/bin/pydocstyle src || echo "--- pydocstyle failed ---" >&2; \
 		echo "\n\n=== pylint ==="; $(VENV_DIR)/bin/pylint src || echo "--- pylint failed ---" >&2; \
-		echo "\n\n=== notebook tests ==="; $(VENV_DIR)/bin/pytest notebooks -r a --nbval --sanitize-with tests/notebook-tests.cfg || echo "--- notebook tests failed ---" >&2; \
+		echo "\n\n=== notebook tests ==="; $(VENV_DIR)/bin/pytest notebooks -r a --nbval --sanitize-with $(NOTEBOOKS_SANITIZE_FILE) || echo "--- notebook tests failed ---" >&2; \
 		echo "\n\n=== tests ==="; $(VENV_DIR)/bin/pytest tests -r a --cov=openscm_runner --cov-report='' \
 			&& $(VENV_DIR)/bin/coverage report --fail-under=95 || echo "--- tests failed ---" >&2; \
 		echo
@@ -33,6 +37,15 @@ checks: $(VENV_DIR)  ## run all the checks
 format:  ## re-format files
 	make isort
 	make black
+
+.PHONY: format-notebooks
+format-notebooks: $(VENV_DIR)  ## format the notebooks
+	@status=$$(git status --porcelain $(NOTEBOOKS_DIR)); \
+	if test ${FORCE} || test "x$${status}" = x; then \
+		$(VENV_DIR)/bin/black-nb $(NOTEBOOKS_DIR); \
+	else \
+		echo Not trying any formatting. Working directory is dirty ... >&2; \
+	fi;
 
 black: $(VENV_DIR)  ## apply black formatter to source and tests
 	@status=$$(git status --porcelain src tests docs scripts); \
@@ -59,7 +72,7 @@ test:  $(VENV_DIR) ## run the full testsuite
 test-testpypi-install: $(VENV_DIR)  ## test whether installing from test PyPI works
 	$(eval TEMPVENV := $(shell mktemp -d))
 	python3 -m venv $(TEMPVENV)
-	$(TEMPVENV)/bin/pip install pip --upgrade
+	$(TEMPVENV)/bin/pip install pip wheel --upgrade
 	# Install dependencies not on testpypi registry
 	$(TEMPVENV)/bin/pip install pandas
 	# Install pymagicc without dependencies.
@@ -71,7 +84,7 @@ test-testpypi-install: $(VENV_DIR)  ## test whether installing from test PyPI wo
 test-pypi-install: $(VENV_DIR)  ## test whether installing from PyPI works
 	$(eval TEMPVENV := $(shell mktemp -d))
 	python3 -m venv $(TEMPVENV)
-	$(TEMPVENV)/bin/pip install pip --upgrade
+	$(TEMPVENV)/bin/pip install pip wheel --upgrade
 	$(TEMPVENV)/bin/pip install openscm-runner --pre
 	$(TEMPVENV)/bin/python scripts/test_install.py
 
@@ -81,8 +94,10 @@ virtual-environment:  ## update venv, create a new venv if it doesn't exist
 $(VENV_DIR): setup.py
 	[ -d $(VENV_DIR) ] || python3 -m venv $(VENV_DIR)
 
-	$(VENV_DIR)/bin/pip install --upgrade pip
+	$(VENV_DIR)/bin/pip install --upgrade pip wheel
 	$(VENV_DIR)/bin/pip install -e .[dev]
+	$(VENV_DIR)/bin/pip uninstall -y fair
+	$(VENV_DIR)/bin/pip install git+git://github.com/OMS-NetZero/FAIR.git@4046216fa5c190a4698b3d5e9f70f35555557d51
 	$(VENV_DIR)/bin/jupyter nbextension enable --py widgetsnbextension
 
 	touch $(VENV_DIR)
