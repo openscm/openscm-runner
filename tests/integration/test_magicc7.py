@@ -7,22 +7,7 @@ from openscm_runner.adapters import MAGICC7
 from openscm_runner.utils import calculate_quantiles
 
 
-def magicc7_is_available():
-    try:
-        MAGICC7.get_version()
-        return True
-
-    except ValueError:
-        return False
-
-
-magicc7_available = pytest.mark.skipif(
-    not magicc7_is_available(), reason="at least mymodule-1.1 required"
-)
-
-
-@magicc7_available
-def test_magicc7_run(test_scenarios):
+def test_magicc7_run(test_scenarios, magicc7_is_available):
     res = run(
         climate_models_cfgs={
             "MAGICC7": [
@@ -53,6 +38,7 @@ def test_magicc7_run(test_scenarios):
             "Effective Radiative Forcing",
             "Effective Radiative Forcing|Aerosols",
             "Effective Radiative Forcing|CO2",
+            # "CO2 Air to Land Flux",  # todo: add this back in
         ),
         full_config=False,
     )
@@ -60,6 +46,7 @@ def test_magicc7_run(test_scenarios):
     assert isinstance(res, ScmDataFrame)
     assert res["run_id"].min() == 0
     assert res["run_id"].max() == 8
+    assert res.get_unique_meta("climate_model", no_duplicates=True) == "MAGICC{}".format(MAGICC7.get_version())
     assert set(res.get_unique_meta("variable")) == set(
         [
             "Surface Temperature",

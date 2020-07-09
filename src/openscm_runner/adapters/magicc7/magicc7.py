@@ -16,6 +16,10 @@ from ._run_magicc_parallel import run_magicc_parallel
 LOGGER = logging.getLogger(__name__)
 
 
+VARIABLE_MAP = {
+    "Ocean Heat Uptake": "HEATUPTK_AGGREG"
+}
+
 class MAGICC7(_Adapter):
     """
     Adapter for running MAGICC7
@@ -83,8 +87,23 @@ class MAGICC7(_Adapter):
 
         full_cfgs = self._write_scen_files_and_make_full_cfgs(magicc_scmdf, cfgs)
 
-        res = run_magicc_parallel(full_cfgs, output_variables).timeseries()
+        pymagicc_vars = [
+            VARIABLE_MAP[v]
+            if v in VARIABLE_MAP else v
+            for v in output_variables
+        ]
+        res = run_magicc_parallel(full_cfgs, pymagicc_vars)
+        res["climate_model"] = "MAGICC{}".format(self.get_version())
+
+        res = res.timeseries()
         res.index = res.index.droplevel("todo")
+        res = res.reset_index()
+
+        inverse_map = {v: k for k, v in VARIABLE_MAP.items()}
+        res["variable"] = res["variable"].apply(
+            lambda x: inverse_map[x] if x in inverse_map else x
+        )
+
         res = pyam.IamDataFrame(res)
 
         return res
