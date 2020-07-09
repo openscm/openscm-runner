@@ -54,10 +54,12 @@ class FAIR(_Adapter):
 
         for (scenario, model), smdf in tqdm(
             scenarios.timeseries().groupby(["scenario", "model"]),
-            desc="Creating FaIR emissions files",
+            desc="Creating FaIR emissions inputs",
         ):
+            smdf_in = ScmDataFrame(smdf)
 
-            emissions = scmdf_to_emissions(ScmDataFrame(smdf))
+            emissions = scmdf_to_emissions(smdf_in)
+
             emissions_pi = np.zeros(40)
             emissions_pi[5] = 1.2212429848636561
             emissions_pi[6] = 348.5273588

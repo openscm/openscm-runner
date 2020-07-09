@@ -1,5 +1,4 @@
 import numpy.testing as npt
-import pytest
 from scmdata import ScmDataFrame
 
 from openscm_runner import run
