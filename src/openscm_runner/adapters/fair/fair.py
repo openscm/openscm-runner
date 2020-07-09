@@ -88,6 +88,8 @@ class FAIR(_Adapter):
                     ),
                     "tropO3_forcing": "cmip6",
                     "aCO2land": 0.0006394631886297174,
+                    'b_aero': np.array([-0.00503, 0.0, 0.0, 0.0, 0.0385, -0.0104, 0.0]),
+                    'ghan_params': np.array([1.232, 73.9, 63.0]),
                     **cfg,
                 }
                 for i, cfg in enumerate(cfgs)

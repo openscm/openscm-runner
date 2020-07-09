@@ -46,7 +46,7 @@ def test_fair_run(test_scenarios):
             "Effective Radiative Forcing|CO2",
         ]
     )
-
+    res.timeseries().to_csv('~/junk.csv')
     npt.assert_allclose(
         3.2614773448454883,
         res.filter(
