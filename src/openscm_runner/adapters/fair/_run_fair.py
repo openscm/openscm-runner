@@ -29,9 +29,10 @@ def run_fair(cfgs, output_vars):
     """
     res = []
 
-    for i, cfg in enumerate(cfgs):
+    for cfg in cfgs:
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
+        run_id = cfg.pop("run_id")
         data, unit = _process_output(fair_scm(**cfg), output_vars)
 
         tempres = ScmDataFrame(
@@ -42,10 +43,10 @@ def run_fair(cfgs, output_vars):
                 "region": "World",
                 "variable": list(data.keys()),
                 "unit": list(unit.values()),
+                "run_id": run_id,
             },
         )
         tempres["time"] = np.arange(1765, 2101)
-        tempres["run_id"] = i
 
         res.append(tempres)
 

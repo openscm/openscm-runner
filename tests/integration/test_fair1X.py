@@ -46,28 +46,28 @@ def test_fair_run(test_scenarios):
             "Effective Radiative Forcing|CO2",
         ]
     )
-    res.timeseries().to_csv('~/junk.csv')
+
     npt.assert_allclose(
-        3.2614773448454883,
+        2.20992212289941214,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
         ).values.max(),
     )
     npt.assert_allclose(
-        2.6047028876600935,
+        1.79454132586243476,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
         ).values.min(),
     )
 
     npt.assert_allclose(
-        8.28727898862411,
+        4.82486826751120557,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
         ).values.max(),
     )
     npt.assert_allclose(
-        6.99511132121012,
+        4.07183385108648110,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
         ).values.min(),
@@ -77,7 +77,7 @@ def test_fair_run(test_scenarios):
     quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
 
     npt.assert_allclose(
-        2.61447382,
+        1.80924962216328056,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -87,7 +87,7 @@ def test_fair_run(test_scenarios):
         ).values,
     )
     npt.assert_allclose(
-        3.20557083,
+        2.18309233949656001,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -98,7 +98,7 @@ def test_fair_run(test_scenarios):
     )
 
     npt.assert_allclose(
-        6.99887371,
+        4.08625089047860079,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -108,7 +108,7 @@ def test_fair_run(test_scenarios):
         ).values,
     )
     npt.assert_allclose(
-        8.16182462,
+        4.76398186526085254,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
