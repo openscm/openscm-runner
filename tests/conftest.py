@@ -5,7 +5,6 @@ import pytest
 
 from openscm_runner.adapters import MAGICC7
 
-
 TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test-data")
 
 

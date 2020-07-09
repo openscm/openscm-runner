@@ -46,7 +46,9 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     assert isinstance(res, ScmDataFrame)
     assert res["run_id"].min() == 0
     assert res["run_id"].max() == 8
-    assert res.get_unique_meta("climate_model", no_duplicates=True) == "MAGICC{}".format(MAGICC7.get_version())
+    assert res.get_unique_meta(
+        "climate_model", no_duplicates=True
+    ) == "MAGICC{}".format(MAGICC7.get_version())
     assert set(res.get_unique_meta("variable")) == set(
         [
             "Surface Temperature",

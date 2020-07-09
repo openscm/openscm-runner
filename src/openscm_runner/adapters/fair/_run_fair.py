@@ -7,8 +7,8 @@ import numpy as np
 from fair.forward import fair_scm
 from scmdata import ScmDataFrame, df_append
 
-
 LOGGER = logging.getLogger(__name__)
+
 
 def run_fair(cfgs, output_vars):
     """
@@ -281,10 +281,7 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Ocean Heat Uptake"] = "J"
     unit["Net Energy Imbalance"] = "W/m**2"
 
-    out = (
-        {},
-        {}
-    )
+    out = ({}, {})
     for key in output_vars:
         if key not in data:
             LOGGER.warning("%s not available from FaIR", key)

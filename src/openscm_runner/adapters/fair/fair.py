@@ -47,7 +47,6 @@ class FAIR(_Adapter):
 
         res = pyam.IamDataFrame(res.timeseries())
 
-
         return res
 
     def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0201
