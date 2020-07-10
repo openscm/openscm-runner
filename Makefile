@@ -97,7 +97,7 @@ $(VENV_DIR): setup.py
 	$(VENV_DIR)/bin/pip install --upgrade pip wheel
 	$(VENV_DIR)/bin/pip install -e .[dev]
 	$(VENV_DIR)/bin/pip uninstall -y fair
-	$(VENV_DIR)/bin/pip install git+git://github.com/OMS-NetZero/FAIR.git@4046216fa5c190a4698b3d5e9f70f35555557d51
+	$(VENV_DIR)/bin/pip install git+git://github.com/OMS-NetZero/FAIR.git@ba6010ad583cff0252785c88d3e09beac34ec3f4
 	$(VENV_DIR)/bin/jupyter nbextension enable --py widgetsnbextension
 
 	touch $(VENV_DIR)
