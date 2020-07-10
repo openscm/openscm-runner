@@ -85,7 +85,13 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
 
     npt.assert_allclose(
         1.40714179,
-        quantiles.filter(variable="Surface Temperature",region="World",year=2100,scenario="ssp126",quantile=0.05,).values,
+        quantiles.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
+            quantile=0.05,
+        ).values,
     )
     npt.assert_allclose(
         2.73596021,
