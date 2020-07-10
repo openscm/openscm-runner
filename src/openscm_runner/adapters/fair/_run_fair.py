@@ -191,7 +191,7 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
         forcing[:, 15:31], axis=1
     )
     data["Surface Temperature"] = temperature
-    data["Surface Temperature (GMST)"] = temperature*1/1.04
+    data["Surface Temperature (GMST)"] = temperature * 1 / 1.04
     data["Airborne Fraction"] = airborne_emissions
     data["Effective Climate Feedback"] = lambda_eff
     data["Ocean Heat Uptake"] = ohc
