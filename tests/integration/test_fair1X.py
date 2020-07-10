@@ -49,7 +49,9 @@ def test_fair_run(test_scenarios):
 
     npt.assert_allclose(
         2.2099132544445927,
-        res.filter(variable="Surface Temperature", region="World", year=2100, scenario="ssp126").values.max(),
+        res.filter(
+            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+        ).values.max(),
     )
     npt.assert_allclose(
         1.7945341435607594,
@@ -76,7 +78,13 @@ def test_fair_run(test_scenarios):
 
     npt.assert_allclose(
         1.80924238,
-        quantiles.filter(variable="Surface Temperature",region="World",year=2100,scenario="ssp126", quantile=0.05,).values,
+        quantiles.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
+            quantile=0.05,
+        ).values,
     )
     npt.assert_allclose(
         2.18308358,
