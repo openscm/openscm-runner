@@ -191,6 +191,7 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
         forcing[:, 15:31], axis=1
     )
     data["Surface Temperature"] = temperature
+    data["Surface Temperature (GMST)"] = temperature*1/1.04
     data["Airborne Fraction"] = airborne_emissions
     data["Effective Climate Feedback"] = lambda_eff
     data["Ocean Heat Uptake"] = ohc
@@ -277,6 +278,7 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Effective Radiative Forcing|F Gases"] = "W/m**2"
     unit["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = "W/m**2"
     unit["Surface Temperature"] = "K"
+    unit["Surface Temperature (GMST)"] = "K"
     unit["Airborne Fraction"] = "dimensionless"
     unit["Effective Climate Feedback"] = "W/m**2/K"
     unit["Ocean Heat Uptake"] = "J"
