@@ -6,6 +6,9 @@ from openscm_runner.adapters import MAGICC7
 from openscm_runner.utils import calculate_quantiles
 
 
+RTOL = 1e-5
+
+
 def test_magicc7_run(test_scenarios, magicc7_is_available):
     res = run(
         climate_models_cfgs={
@@ -62,12 +65,14 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
         ).values.max(),
+        rtol=RTOL,
     )
     npt.assert_allclose(
         1.278011,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
         ).values.min(),
+        rtol=RTOL,
     )
 
     npt.assert_allclose(
@@ -75,12 +80,14 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
         ).values.max(),
+        rtol=RTOL,
     )
     npt.assert_allclose(
         2.4871168,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
         ).values.min(),
+        rtol=RTOL,
     )
 
     # check we can also calcluate quantiles
@@ -95,6 +102,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             scenario="ssp126",
             quantile=0.05,
         ).values,
+        rtol=RTOL,
     )
     npt.assert_allclose(
         2.80353037,
@@ -105,6 +113,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             scenario="ssp126",
             quantile=0.95,
         ).values,
+        rtol=RTOL,
     )
 
     npt.assert_allclose(
@@ -116,6 +125,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             scenario="ssp370",
             quantile=0.05,
         ).values,
+        rtol=RTOL,
     )
     npt.assert_allclose(
         5.10001636,
@@ -126,4 +136,5 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             scenario="ssp370",
             quantile=0.95,
         ).values,
+        rtol=RTOL,
     )
