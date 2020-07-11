@@ -7,6 +7,9 @@ from openscm_runner.adapters import FAIR
 from openscm_runner.utils import calculate_quantiles
 
 
+RTOL = 1e-5
+
+
 def test_fair_run(test_scenarios):
     res = run(
         climate_models_cfgs={
@@ -52,12 +55,14 @@ def test_fair_run(test_scenarios):
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
         ).values.max(),
+        rtol=RTOL,
     )
     npt.assert_allclose(
         1.7945341435607594,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
         ).values.min(),
+        rtol=RTOL,
     )
 
     npt.assert_allclose(
@@ -65,12 +70,14 @@ def test_fair_run(test_scenarios):
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
         ).values.max(),
+        rtol=RTOL,
     )
     npt.assert_allclose(
         4.07184261082167,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
         ).values.min(),
+        rtol=RTOL,
     )
 
     # check we can also calcluate quantiles
@@ -85,6 +92,7 @@ def test_fair_run(test_scenarios):
             scenario="ssp126",
             quantile=0.05,
         ).values,
+        rtol=RTOL,
     )
     npt.assert_allclose(
         2.18308358,
@@ -95,6 +103,7 @@ def test_fair_run(test_scenarios):
             scenario="ssp126",
             quantile=0.95,
         ).values,
+        rtol=RTOL,
     )
 
     npt.assert_allclose(
@@ -106,6 +115,7 @@ def test_fair_run(test_scenarios):
             scenario="ssp370",
             quantile=0.05,
         ).values,
+        rtol=RTOL,
     )
     npt.assert_allclose(
         4.76399179,
@@ -116,4 +126,5 @@ def test_fair_run(test_scenarios):
             scenario="ssp370",
             quantile=0.95,
         ).values,
+        rtol=RTOL,
     )
