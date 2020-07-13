@@ -5,7 +5,6 @@ from openscm_runner import run
 from openscm_runner.adapters import MAGICC7
 from openscm_runner.utils import calculate_quantiles
 
-
 RTOL = 1e-5
 
 
