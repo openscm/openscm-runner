@@ -9,7 +9,6 @@ from tqdm.autonotebook import tqdm
 
 from .adapters import MAGICC7
 
-
 LOGGER = logging.getLogger(__name__)
 
 # is this the right place to put this...
