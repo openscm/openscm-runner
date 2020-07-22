@@ -5,8 +5,8 @@ import logging
 import os
 from subprocess import check_output
 
-import pyam
 import pymagicc
+from scmdata import ScmDataFrame
 from tqdm.autonotebook import tqdm
 
 from ...utils import get_env
@@ -39,24 +39,7 @@ class MAGICC7(_Adapter):
     def _init_model(self):  # pylint:disable=arguments-differ
         pass
 
-    def run(self, scenarios, cfgs, output_variables):
-        """
-        Parameters
-        ----------
-        scenarios : :obj:`pyam.IamDataFrame`
-            Scenarios to run
-
-        cfgs : list[dict]
-            The config with which to run the model
-
-        output_variables : list[str]
-            Variables to include in the output
-
-        Returns
-        -------
-        :obj:`pyam.IamDataFrame`
-            MAGICC7 output
-        """
+    def _run(self, scenarios, cfgs, output_variables):
         # TODO: add use of historical data properly  # pylint:disable=fixme
         LOGGER.warning("Historical data has not been checked")
 
@@ -84,8 +67,9 @@ class MAGICC7(_Adapter):
         full_cfgs = self._write_scen_files_and_make_full_cfgs(magicc_scmdf, cfgs)
 
         res = run_magicc_parallel(full_cfgs, output_variables).timeseries()
+        LOGGER.debug("Dropping todo metadata")
         res.index = res.index.droplevel("todo")
-        res = pyam.IamDataFrame(res)
+        res = ScmDataFrame(res)
 
         return res
 

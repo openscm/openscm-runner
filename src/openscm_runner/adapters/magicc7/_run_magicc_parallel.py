@@ -142,6 +142,7 @@ def run_magicc_parallel(
 
     finally:
         instances.cleanup()
+        LOGGER.info("Shutting down parallel pool")
         shared_manager.shutdown()
         pool.shutdown()
 
