@@ -71,9 +71,13 @@ def run(
         if i < 1:
             key_meta = model_res.meta.columns.tolist()
 
-        assert model_res.meta.columns.tolist() == key_meta
+        assert model_res.meta.columns.tolist() == key_meta, key_meta
 
-    LOGGER.info("Appending model results")
-    scmdf = scmdata.df_append(res)
+    if len(res) == 1:
+        LOGGER.info("Only one model run, returning its results")
+        scmdf = res[0]
+    else:
+        LOGGER.info("Appending model results")
+        scmdf = scmdata.df_append(res)
 
     return scmdf
