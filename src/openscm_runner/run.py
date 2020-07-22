@@ -1,11 +1,16 @@
 """
 High-level run function
 """
+import logging
+
 import scmdata
 from dotenv import find_dotenv, load_dotenv
 from tqdm.autonotebook import tqdm
 
 from .adapters import MAGICC7
+
+
+LOGGER = logging.getLogger(__name__)
 
 # is this the right place to put this...
 load_dotenv(find_dotenv(), verbose=True)
@@ -69,6 +74,7 @@ def run(
 
         assert model_res.meta.columns.tolist() == key_meta
 
+    LOGGER.info("Appending model results")
     scmdf = scmdata.df_append(res)
 
     return scmdf
