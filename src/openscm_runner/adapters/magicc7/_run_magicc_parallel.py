@@ -8,6 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 from subprocess import CalledProcessError
 
 import f90nml
+import pandas as pd
 from scmdata import run_append, ScmDataFrame
 
 from ...utils import get_env
@@ -134,8 +135,9 @@ def run_magicc_parallel(
         )
 
         LOGGER.info("Appending results into a single ScmRun")
+        # not ideal using pandas for appending but ok as short-term hack
         res = ScmDataFrame(
-            run_append([r for r in res if r is not None]).timeseries()
+            pd.concat([r.timeseries() for r in res if r is not None])
         )
 
     finally:
