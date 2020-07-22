@@ -19,6 +19,12 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Changed
+~~~~~~~
+
+- (`#9 <https://github.com/openscm/openscm-runner/pull/9>`_) Remove unnecessary conversion to IamDataFrame when running MAGICC7 and clarify :meth:`adapters.base._Adapter.run` interface
+
+
 v0.1.0 - 2020-07-07
 -------------------
 
