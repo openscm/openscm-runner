@@ -9,7 +9,7 @@ from subprocess import CalledProcessError
 
 import f90nml
 import pandas as pd
-from scmdata import ScmDataFrame, run_append
+from scmdata import ScmDataFrame
 
 from ...utils import get_env
 from ._magicc_instances import _MagiccInstances

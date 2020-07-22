@@ -60,5 +60,7 @@ class _Adapter(ABC):  # pylint: disable=too-few-public-methods
     @abstractmethod
     def _run(self, scenarios, cfgs, output_variables):
         """
-        Implementation of :meth:`run` interface
+        Run the model.
+
+        This method is the internal implementation of the :meth:`run` interface
         """
