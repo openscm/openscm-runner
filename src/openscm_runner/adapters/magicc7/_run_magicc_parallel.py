@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 from subprocess import CalledProcessError
 
 import f90nml
-from scmdata import df_append
+from scmdata import run_append, ScmDataFrame
 
 from ...utils import get_env
 from ._magicc_instances import _MagiccInstances
@@ -133,7 +133,10 @@ def run_magicc_parallel(
             front_parallel=2,
         )
 
-        res = df_append([r for r in res if r is not None])
+        LOGGER.info("Appending results into a single ScmRun")
+        res = ScmDataFrame(
+            run_append([r for r in res if r is not None]).timeseries()
+        )
 
     finally:
         instances.cleanup()

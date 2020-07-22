@@ -22,7 +22,7 @@ REQUIREMENTS = [
     "pyam-iamc",
     "pymagicc>=2.0.0rc4",
     "python-dotenv",
-    "scmdata",
+    "scmdata>=0.6.1",
     "tqdm",
 ]
 REQUIREMENTS_NOTEBOOKS = [
