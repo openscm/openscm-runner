@@ -22,7 +22,8 @@ REQUIREMENTS = [
     "pyam-iamc",
     "pymagicc>=2.0.0rc4",
     "python-dotenv",
-    "scmdata",
+    "pandas<1.1",  # until scmdata is fixed, see https://github.com/openscm/scmdata/issues/78
+    "scmdata>=0.6.1",
     "tqdm",
 ]
 REQUIREMENTS_NOTEBOOKS = [

@@ -1,11 +1,15 @@
 """
 High-level run function
 """
+import logging
+
 import scmdata
 from dotenv import find_dotenv, load_dotenv
 from tqdm.autonotebook import tqdm
 
 from .adapters import MAGICC7
+
+LOGGER = logging.getLogger(__name__)
 
 # is this the right place to put this...
 load_dotenv(find_dotenv(), verbose=True)
@@ -67,8 +71,13 @@ def run(
         if i < 1:
             key_meta = model_res.meta.columns.tolist()
 
-        assert model_res.meta.columns.tolist() == key_meta
+        assert model_res.meta.columns.tolist() == key_meta, key_meta
 
-    scmdf = scmdata.df_append(res)
+    if len(res) == 1:
+        LOGGER.info("Only one model run, returning its results")
+        scmdf = res[0]
+    else:
+        LOGGER.info("Appending model results")
+        scmdf = scmdata.df_append(res)
 
     return scmdf

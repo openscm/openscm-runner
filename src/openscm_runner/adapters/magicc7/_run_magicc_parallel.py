@@ -8,7 +8,8 @@ from concurrent.futures import ProcessPoolExecutor
 from subprocess import CalledProcessError
 
 import f90nml
-from scmdata import df_append
+import pandas as pd
+from scmdata import ScmDataFrame
 
 from ...utils import get_env
 from ._magicc_instances import _MagiccInstances
@@ -133,10 +134,13 @@ def run_magicc_parallel(
             front_parallel=2,
         )
 
-        res = df_append([r for r in res if r is not None])
+        LOGGER.info("Appending results into a single ScmRun")
+        # not ideal using pandas for appending but ok as short-term hack
+        res = ScmDataFrame(pd.concat([r.timeseries() for r in res if r is not None]))
 
     finally:
         instances.cleanup()
+        LOGGER.info("Shutting down parallel pool")
         shared_manager.shutdown()
         pool.shutdown()
 
