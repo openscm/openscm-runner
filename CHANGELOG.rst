@@ -19,11 +19,11 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
-Changed
-~~~~~~~
-
 v0.1.2 - 2020-31-07
 -------------------
+
+Changed
+~~~~~~~
 
 - (`#10 <https://github.com/openscm/openscm-runner/pull/10>`_) Upgrade to ``scmdata>=0.6.2`` so that package can be installed
 
