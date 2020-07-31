@@ -71,8 +71,8 @@ Please see the `Development section of the docs <https://openscm-runner.readthed
 
 .. sec-begin-links
 
-.. |CI CD| image:: https://github.com/openscm/openscm-runner/workflows/openscm-runner%20CI-CD/badge.svg
-    :target: https://github.com/openscm/openscm-runner/actions?query=workflow%3A%22openscm-runner+CI-CD%22
+.. |CI CD| image:: https://github.com/openscm/openscm-runner/workflows/OpenSCM-Runner%20CI-CD/badge.svg
+    :target: https://github.com/openscm/openscm-runner/actions?query=workflow%3A%22OpenSCM-Runner+CI-CD%22
 .. |PyPI Install| image:: https://github.com/openscm/openscm-runner/workflows/Test%20PyPI%20install/badge.svg
     :target: https://github.com/openscm/openscm-runner/actions?query=workflow%3A%22Test+PyPI+install%22
 .. |PyPI| image:: https://img.shields.io/pypi/pyversions/openscm-runner.svg
