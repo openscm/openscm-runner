@@ -55,7 +55,7 @@ def _run_func(magicc, cfg):
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
 
-        res = magicc.run(**cfg)
+        res = magicc.run(**cfg, debug=True)
         if res.metadata["stderr"]:
             LOGGER.info("magicc run stderr: %s", res.metadata["stderr"])
             LOGGER.info("cfg: %s", cfg)

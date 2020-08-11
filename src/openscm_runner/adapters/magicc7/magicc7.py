@@ -111,6 +111,7 @@ class MAGICC7(_Adapter):
                 .upper()
                 .replace("/", "-")
                 .replace("\\", "-")
+                .replace(" ", "-")
             )
             writer.write(
                 os.path.join(self._run_dir(), scen_file_name),
