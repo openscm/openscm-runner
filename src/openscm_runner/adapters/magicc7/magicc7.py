@@ -38,6 +38,7 @@ class MAGICC7(_Adapter):
             "file_emisscen_5": "NONE",
             "file_emisscen_6": "NONE",
             "file_emisscen_7": "NONE",
+            "file_emisscen_8": "NONE",
         }
         """dict: MAGICC base scenario setup"""
 
@@ -122,7 +123,7 @@ class MAGICC7(_Adapter):
                 {
                     "scenario": scenario,
                     "model": model,
-                    "file_emisscen_8": scen_file_name,
+                    "file_emisscen": scen_file_name,
                     "run_id": i + run_id_block,
                     **self.magicc_scenario_setup,
                     **cfg,
