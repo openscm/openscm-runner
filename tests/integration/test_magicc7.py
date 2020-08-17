@@ -69,14 +69,14 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     )
 
     npt.assert_allclose(
-        2.9113092,
+        2.6126502,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
         ).values.max(),
         rtol=RTOL,
     )
     npt.assert_allclose(
-        1.278011,
+        1.4454666,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
         ).values.min(),
@@ -84,14 +84,14 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     )
 
     npt.assert_allclose(
-        5.283013,
+        5.5218109,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
         ).values.max(),
         rtol=RTOL,
     )
     npt.assert_allclose(
-        2.4871168,
+        2.7332273999999996,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
         ).values.min(),
@@ -102,7 +102,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
 
     npt.assert_allclose(
-        1.33356199,
+        1.4932964,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -113,7 +113,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
         rtol=RTOL,
     )
     npt.assert_allclose(
-        2.80353037,
+        2.54376164,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -125,7 +125,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     )
 
     npt.assert_allclose(
-        2.58370978,
+        2.8361154,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -136,7 +136,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
         rtol=RTOL,
     )
     npt.assert_allclose(
-        5.10001636,
+        5.34584055,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
