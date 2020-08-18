@@ -13,7 +13,9 @@ def magicc7_is_available():
     try:
         magicc_version = MAGICC7.get_version()
         if magicc_version != "v7.4.0":
-            raise AssertionError("Wrong MAGICC version for tests ({})".format(magicc_version))
+            raise AssertionError(
+                "Wrong MAGICC version for tests ({})".format(magicc_version)
+            )
         return True
 
 
