@@ -16,6 +16,7 @@ from ._run_magicc_parallel import run_magicc_parallel
 LOGGER = logging.getLogger(__name__)
 
 
+# TODO: upgrade pymagicc and remove this
 VARIABLE_MAP = {"Ocean Heat Uptake": "HEATUPTK_AGGREG"}
 
 
@@ -74,12 +75,10 @@ class MAGICC7(_Adapter):
         ]
         res = run_magicc_parallel(full_cfgs, pymagicc_vars)
         LOGGER.debug("Dropping todo metadata")
-        res.index = res.index.droplevel("todo")
-        res["climate_model"] = "MAGICC{}".format(self.get_version())
-
         res = res.timeseries()
         res.index = res.index.droplevel("todo")
         res = res.reset_index()
+        res["climate_model"] = "MAGICC{}".format(self.get_version())
 
         inverse_map = {v: k for k, v in VARIABLE_MAP.items()}
         res["variable"] = res["variable"].apply(
@@ -100,7 +99,7 @@ class MAGICC7(_Adapter):
         ):
 
             writer = pymagicc.io.MAGICCData(smdf)
-            writer.set_meta("SET", "todo")
+            writer["todo"] = "SET"
             writer.metadata = {
                 "header": "SCEN7 file written by openscm_runner for the {} scenario".format(
                     scenario
@@ -132,7 +131,7 @@ class MAGICC7(_Adapter):
 
             full_cfgs += scenario_cfg
 
-        assert len(full_cfgs) == scenarios[
+        assert len(full_cfgs) == scenarios.meta[
             ["scenario", "model"]
         ].drop_duplicates().shape[0] * len(cfgs)
 

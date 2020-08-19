@@ -3,7 +3,6 @@ FAIR adapter
 """
 import fair
 import numpy as np
-import pyam
 from fair.ancil import cmip6_solar, cmip6_volcanic, natural
 from fair.tools.scmdf import scmdf_to_emissions
 from scmdata import ScmDataFrame
@@ -21,31 +20,12 @@ class FAIR(_Adapter):
     def _init_model(self, *args, **kwargs):
         pass
 
-    def run(self, scenarios, cfgs, output_variables):
-        """
-        Parameters
-        ----------
-        scenarios : :obj:`pyam.IamDataFrame`
-            Scenarios to run
-
-        cfgs : list[dict]
-            The config with which to run the model
-
-        output_variables : list[str]
-            Variables to include in the output
-
-        Returns
-        -------
-        :obj:`pyam.IamDataFrame`
-            FAIR output
-        """
-        fair_df = pyam.IamDataFrame(scenarios.timeseries())
+    def _run(self, scenarios, cfgs, output_variables):
+        fair_df = ScmDataFrame(scenarios.timeseries())
         full_cfgs = self._make_full_cfgs(fair_df, cfgs)
 
         res = run_fair(full_cfgs, output_variables)
         res["climate_model"] = "FaIRv{}".format(self.get_version())
-
-        res = pyam.IamDataFrame(res.timeseries())
 
         return res
 

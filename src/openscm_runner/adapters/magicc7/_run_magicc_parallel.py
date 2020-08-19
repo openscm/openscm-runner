@@ -60,9 +60,9 @@ def _run_func(magicc, cfg):
             LOGGER.info("magicc run stderr: %s", res.metadata["stderr"])
             LOGGER.info("cfg: %s", cfg)
 
-        res.set_meta(scenario, "scenario")
-        res.set_meta(model, "model")
-        res.set_meta(cfg["run_id"], "run_id")
+        res["scenario"] = scenario
+        res["model"] = model
+        res["run_id"] = cfg["run_id"]
 
         return res
     except CalledProcessError as exc:
