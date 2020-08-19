@@ -7,7 +7,7 @@ import scmdata
 from dotenv import find_dotenv, load_dotenv
 from tqdm.autonotebook import tqdm
 
-from .adapters import MAGICC7
+from .adapters import FAIR, MAGICC7
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +59,8 @@ def run(
     for climate_model, cfgs in tqdm(climate_models_cfgs.items(), desc="Climate models"):
         if climate_model == "MAGICC7":
             runner = MAGICC7()
+        elif climate_model.upper() == "FAIR":  # allow various capitalisations
+            runner = FAIR()
         else:
             raise NotImplementedError(
                 "No adapter available for {}".format(climate_model)
@@ -69,9 +71,13 @@ def run(
 
     for i, model_res in enumerate(res):
         if i < 1:
-            key_meta = model_res.meta.columns.tolist()
+            key_meta = set(model_res.meta.columns.tolist())
 
-        assert model_res.meta.columns.tolist() == key_meta, key_meta
+        model_meta = set(model_res.meta.columns.tolist())
+        climate_model = model_res.get_unique_meta("climate_model")
+        assert model_meta == key_meta, "{} meta: {}, expected meta: {}".format(
+            climate_model, model_meta, key_meta
+        )
 
     if len(res) == 1:
         LOGGER.info("Only one model run, returning its results")
