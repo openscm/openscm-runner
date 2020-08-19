@@ -13,7 +13,8 @@ load-plugins=
 disable=
     # handled by black
     format,
-    import-error
+    import-error,
+    fixme
 
 [SIMILARITIES]
 min-similarity-lines=7
