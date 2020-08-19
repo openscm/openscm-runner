@@ -71,9 +71,11 @@ def run(
 
     for i, model_res in enumerate(res):
         if i < 1:
-            key_meta = model_res.meta.columns.tolist()
+            key_meta = set(model_res.meta.columns.tolist())
 
-        assert model_res.meta.columns.tolist() == key_meta, key_meta
+        model_meta = set(model_res.meta.columns.tolist())
+        cm = model_res.get_unique_meta("climate_model")
+        assert model_meta == key_meta, "{} meta: {}, expected meta: {}".format(cm, model_meta, key_meta)
 
     if len(res) == 1:
         LOGGER.info("Only one model run, returning its results")
