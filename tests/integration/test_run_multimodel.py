@@ -27,6 +27,8 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
                         "DAT_AEROSOL_ERF",
                         "DAT_HEATUPTK_AGGREG",
                     ],
+                    "out_ascii_binary": "BINARY",
+                    "out_binary_format": 2,
                 },
                 {
                     "core_climatesensitivity": 2,
@@ -38,6 +40,8 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
                         "DAT_AEROSOL_ERF",
                         "DAT_HEATUPTK_AGGREG",
                     ],
+                    "out_ascii_binary": "BINARY",
+                    "out_binary_format": 2,
                 },
                 {
                     "core_climatesensitivity": 5,
@@ -49,6 +53,8 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
                         "DAT_AEROSOL_ERF",
                         "DAT_HEATUPTK_AGGREG",
                     ],
+                    "out_ascii_binary": "BINARY",
+                    "out_binary_format": 2,
                 },
             ],
         },
