@@ -18,6 +18,9 @@ def magicc7_is_available():
             )
         return True
 
+    except ValueError:
+        return False
+
 
 def test_magicc7_run(test_scenarios, magicc7_is_available):
     res = run(
