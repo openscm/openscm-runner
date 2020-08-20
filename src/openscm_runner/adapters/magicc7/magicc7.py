@@ -98,7 +98,6 @@ class MAGICC7(_Adapter):
             scenarios.timeseries().groupby(["scenario", "model"]),
             desc="Writing SCEN7 files",
         ):
-
             writer = pymagicc.io.MAGICCData(smdf)
             writer["todo"] = "SET"
             writer.metadata = {
