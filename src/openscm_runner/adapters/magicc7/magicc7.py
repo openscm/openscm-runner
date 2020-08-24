@@ -23,6 +23,9 @@ VARIABLE_MAP = {"Ocean Heat Uptake": "HEATUPTK_AGGREG"}
 class MAGICC7(_Adapter):
     """
     Adapter for running MAGICC7
+
+    The adapter overwrites all of MAGICC7's emissions flags so that only
+    emissions passed from the user are used.
     """
 
     def __init__(self):
