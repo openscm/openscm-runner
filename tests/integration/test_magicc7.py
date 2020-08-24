@@ -1,4 +1,8 @@
+import os
+import os.path
+
 import numpy.testing as npt
+import pymagicc.io
 from scmdata import ScmDataFrame
 
 from openscm_runner import run
@@ -156,3 +160,37 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
         ).values,
         rtol=RTOL,
     )
+
+
+def test_write_scen_files_and_make_full_cfgs(monkeypatch, tmpdir, test_scenarios, magicc7_is_available):
+    adapter = MAGICC7()
+    test_scenarios_magiccdf = pymagicc.io.MAGICCData(test_scenarios)
+    res = adapter._write_scen_files_and_make_full_cfgs(
+        test_scenarios_magiccdf,
+        [{"file_emisscen_3": "overwrites adapter.magicc_scenario_setup", "other_cfg": 12}]
+    )
+
+    for (model, scenario), _ in test_scenarios_magiccdf.meta.groupby(["model", "scenario"]):
+        scen_file_name = (
+            "{}_{}.SCEN7".format(scenario, model)
+            .upper()
+            .replace("/", "-")
+            .replace("\\", "-")
+            .replace(" ", "-")
+        )
+
+        scenario_cfg = [
+            v for v in res if v["file_emisscen"] == scen_file_name
+        ]
+
+        assert len(scenario_cfg) == 1
+        scenario_cfg = scenario_cfg[0]
+        assert scenario_cfg["other_cfg"] == 12
+        assert scenario_cfg["model"] == model
+        assert scenario_cfg["scenario"] == scenario
+        for i in range(2, 9):
+            scen_flag_val = scenario_cfg["file_emisscen_{}".format(i)]
+            if i == 3:
+                assert scen_flag_val == "overwrites adapter.magicc_scenario_setup"
+            else:
+                assert scen_flag_val == "NONE"
