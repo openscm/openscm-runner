@@ -123,8 +123,8 @@ class MAGICC7(_Adapter):
                     "model": model,
                     "file_emisscen": scen_file_name,
                     "run_id": i + run_id_block,
-                    **self.magicc_scenario_setup,
                     **cfg,
+                    **self.magicc_scenario_setup,
                 }
                 for i, cfg in enumerate(cfgs)
             ]

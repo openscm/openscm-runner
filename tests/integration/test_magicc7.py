@@ -167,7 +167,7 @@ def test_write_scen_files_and_make_full_cfgs(monkeypatch, tmpdir, test_scenarios
     test_scenarios_magiccdf = pymagicc.io.MAGICCData(test_scenarios)
     res = adapter._write_scen_files_and_make_full_cfgs(
         test_scenarios_magiccdf,
-        [{"file_emisscen_3": "overwrites adapter.magicc_scenario_setup", "other_cfg": 12}]
+        [{"file_emisscen_3": "overwritten by adapter.magicc_scenario_setup", "other_cfg": 12}]
     )
 
     for (model, scenario), _ in test_scenarios_magiccdf.meta.groupby(["model", "scenario"]):
@@ -190,7 +190,5 @@ def test_write_scen_files_and_make_full_cfgs(monkeypatch, tmpdir, test_scenarios
         assert scenario_cfg["scenario"] == scenario
         for i in range(2, 9):
             scen_flag_val = scenario_cfg["file_emisscen_{}".format(i)]
-            if i == 3:
-                assert scen_flag_val == "overwrites adapter.magicc_scenario_setup"
-            else:
-                assert scen_flag_val == "NONE"
+
+            assert scen_flag_val == "NONE"
