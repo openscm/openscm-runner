@@ -23,6 +23,9 @@ VARIABLE_MAP = {"Ocean Heat Uptake": "HEATUPTK_AGGREG"}
 class MAGICC7(_Adapter):
     """
     Adapter for running MAGICC7
+
+    The adapter overwrites all of MAGICC7's emissions flags so that only
+    emissions passed from the user are used.
     """
 
     def __init__(self):
@@ -31,12 +34,13 @@ class MAGICC7(_Adapter):
         """
         super().__init__()
         self.magicc_scenario_setup = {
-            "file_emisscen": "WMO_MHALO.SCEN7",
-            "file_emisscen_2": "Velders_HFC_Kigali.SCEN7",
-            "file_emisscen_3": "SSP2_45_HFC_C2F6_CF4_SF6_MISSGAS_Ext2250.SCEN7",
-            "file_emisscen_4": "SSP2_45_HFC_C2F6_CF4_SF6_Ext2250.SCEN7",
-            "file_emisscen_5": "SSP2_45_RCPPLUSBUNKERS_Ext2250.SCEN7",
-            "file_emisscen_6": "SSP245_AEROSOLS_NMVOC.SCEN7",
+            "file_emisscen_2": "NONE",
+            "file_emisscen_3": "NONE",
+            "file_emisscen_4": "NONE",
+            "file_emisscen_5": "NONE",
+            "file_emisscen_6": "NONE",
+            "file_emisscen_7": "NONE",
+            "file_emisscen_8": "NONE",
         }
         """dict: MAGICC base scenario setup"""
 
@@ -97,7 +101,6 @@ class MAGICC7(_Adapter):
             scenarios.timeseries().groupby(["scenario", "model"]),
             desc="Writing SCEN7 files",
         ):
-
             writer = pymagicc.io.MAGICCData(smdf)
             writer["todo"] = "SET"
             writer.metadata = {
@@ -110,6 +113,7 @@ class MAGICC7(_Adapter):
                 .upper()
                 .replace("/", "-")
                 .replace("\\", "-")
+                .replace(" ", "-")
             )
             writer.write(
                 os.path.join(self._run_dir(), scen_file_name),
@@ -120,10 +124,10 @@ class MAGICC7(_Adapter):
                 {
                     "scenario": scenario,
                     "model": model,
-                    "file_emisscen_8": scen_file_name,
+                    "file_emisscen": scen_file_name,
                     "run_id": i + run_id_block,
-                    **self.magicc_scenario_setup,
                     **cfg,
+                    **self.magicc_scenario_setup,
                 }
                 for i, cfg in enumerate(cfgs)
             ]
