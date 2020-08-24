@@ -24,6 +24,11 @@ Added
 
 - (`#12 <https://github.com/openscm/openscm-runner/pull/12>`_) FaIR 1.6.0 adapter
 
+Fixed
+~~~~~
+
+- (`#11 <https://github.com/openscm/openscm-runner/pull/11>`_) MAGICC adapter so passed in emissions are followed (previously non-CO2 always followed SSP245)
+
 v0.1.2 - 2020-31-07
 -------------------
 
