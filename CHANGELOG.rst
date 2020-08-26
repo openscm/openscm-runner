@@ -19,6 +19,11 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Changed
+~~~~~~~
+
+- (`#13 <https://github.com/openscm/openscm-runner/pull/13>`_) Renamed ``openscm_runner.adapters.fair`` to ``openscm_runner.adapters.fair_adapter`` and ``openscm_runner.adapters.fair.fair`` to ``openscm_runner.adapters.fair_adapter.fair_adapter`` to avoid a namespace collision with the source ``fair`` package
+
 v0.2.0 - 2020-25-08
 -------------------
 
