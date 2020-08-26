@@ -88,6 +88,13 @@ test-pypi-install: $(VENV_DIR)  ## test whether installing from PyPI works
 	$(TEMPVENV)/bin/pip install openscm-runner --pre
 	$(TEMPVENV)/bin/python scripts/test_install.py
 
+test-install: $(VENV_DIR)  ## test installing works
+	$(eval TEMPVENV := $(shell mktemp -d))
+	python3 -m venv $(TEMPVENV)
+	$(TEMPVENV)/bin/pip install pip wheel --upgrade
+	$(TEMPVENV)/bin/pip install .
+	$(TEMPVENV)/bin/python scripts/test_install.py
+
 virtual-environment:  ## update venv, create a new venv if it doesn't exist
 	make $(VENV_DIR)
 
