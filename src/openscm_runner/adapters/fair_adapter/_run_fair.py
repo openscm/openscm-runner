@@ -196,9 +196,7 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     data["Effective Radiative Forcing|Aerosols|Direct Effect"] = np.sum(
         forcing[:, 35:40], axis=1
     )
-    data["Effective Radiative Forcing|Aerosols"] = np.sum(
-        forcing[:, 35:41], axis=1
-    )
+    data["Effective Radiative Forcing|Aerosols"] = np.sum(forcing[:, 35:41], axis=1)
     data["Surface Temperature (GSAT)"] = temperature
     data["Surface Temperature (GMST)"] = temperature * 1 / 1.04
     data["Airborne Fraction"] = airborne_emissions
