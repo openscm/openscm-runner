@@ -18,7 +18,7 @@ SOURCE_DIR = "src"
 
 REQUIREMENTS = [
     "click",
-    "fair>=1.6.0c0,<2.0.0",
+    "fair>=1.6.0c1,<2.0.0",
     "matplotlib==3.2.2",
     "pyam-iamc",
     "pymagicc>=2.0.0rc4",
