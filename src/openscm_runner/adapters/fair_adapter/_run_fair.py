@@ -197,7 +197,7 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
         forcing[:, 35:40], axis=1
     )
     data["Effective Radiative Forcing|Aerosols"] = np.sum(forcing[:, 35:41], axis=1)
-    data["Surface Temperature (GSAT)"] = temperature
+    data["Surface Temperature"] = temperature
     data["Surface Temperature (GMST)"] = temperature * 1 / 1.04
     data["Airborne Fraction"] = airborne_emissions
     data["Effective Climate Feedback"] = lambda_eff
@@ -287,7 +287,7 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Direct Effect"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols"] = "W/m**2"
-    unit["Surface Temperature (GSAT)"] = "K"
+    unit["Surface Temperature"] = "K"
     unit["Surface Temperature (GMST)"] = "K"
     unit["Airborne Fraction"] = "dimensionless"
     unit["Effective Climate Feedback"] = "W/m**2/K"
