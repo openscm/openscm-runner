@@ -34,7 +34,8 @@ def _inject_pymagicc_compatible_magcfg_user(magicc):
 
 def _setup_func(magicc):
     LOGGER.info(
-        "Setting up MAGICC worker in %s", magicc.root_dir,
+        "Setting up MAGICC worker in %s",
+        magicc.root_dir,
     )
 
     magicc.set_config()
@@ -84,7 +85,8 @@ def _execute_run(cfg, run_func, setup_func, instances):
 
 
 def run_magicc_parallel(
-    cfgs, output_vars,
+    cfgs,
+    output_vars,
 ):
     """
     Run MAGICC in parallel using compact out files

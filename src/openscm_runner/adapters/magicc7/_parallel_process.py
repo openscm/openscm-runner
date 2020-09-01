@@ -25,7 +25,13 @@ def _run_serial(func, configs, config_are_kwargs, desc):
 
 
 def _run_parallel(  # pylint:disable=too-many-arguments
-    pool, timeout, func, configs, config_are_kwargs, desc, bar_start,
+    pool,
+    timeout,
+    func,
+    configs,
+    config_are_kwargs,
+    desc,
+    bar_start,
 ):
     LOGGER.debug("Entering _run_parallel")
 
