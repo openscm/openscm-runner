@@ -20,7 +20,7 @@ def test_fair_run(test_scenarios):
         },
         scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
         output_variables=(
-            "Surface Temperature",
+            "Surface Temperature (GSAT)",
             "Atmospheric Concentrations|CO2",
             "Ocean Heat Uptake",
             "Effective Radiative Forcing",
@@ -40,7 +40,7 @@ def test_fair_run(test_scenarios):
 
     assert set(res.get_unique_meta("variable")) == set(
         [
-            "Surface Temperature",
+            "Surface Temperature (GSAT)",
             "Atmospheric Concentrations|CO2",
             "Ocean Heat Uptake",
             "Effective Radiative Forcing",
@@ -52,14 +52,20 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         2.2099132544445927,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+            variable="Surface Temperature (GSAT)",
+            region="World",
+            year=2100,
+            scenario="ssp126",
         ).values.max(),
         rtol=RTOL,
     )
     npt.assert_allclose(
         1.7945341435607594,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+            variable="Surface Temperature (GSAT)",
+            region="World",
+            year=2100,
+            scenario="ssp126",
         ).values.min(),
         rtol=RTOL,
     )
@@ -67,14 +73,20 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         4.824878345585957,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
+            variable="Surface Temperature (GSAT)",
+            region="World",
+            year=2100,
+            scenario="ssp370",
         ).values.max(),
         rtol=RTOL,
     )
     npt.assert_allclose(
         4.07184261082167,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
+            variable="Surface Temperature (GSAT)",
+            region="World",
+            year=2100,
+            scenario="ssp370",
         ).values.min(),
         rtol=RTOL,
     )
@@ -85,7 +97,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         1.80924238,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Temperature (GSAT)",
             region="World",
             year=2100,
             scenario="ssp126",
@@ -96,7 +108,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         2.18308358,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Temperature (GSAT)",
             region="World",
             year=2100,
             scenario="ssp126",
@@ -108,7 +120,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         4.08625963,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Temperature (GSAT)",
             region="World",
             year=2100,
             scenario="ssp370",
@@ -119,7 +131,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         4.76399179,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Temperature (GSAT)",
             region="World",
             year=2100,
             scenario="ssp370",
