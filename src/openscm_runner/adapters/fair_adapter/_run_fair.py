@@ -168,8 +168,10 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     data["Effective Radiative Forcing|CH4 Oxidation Stratospheric H2O"] = forcing[:, 33]
     data["Effective Radiative Forcing|Contrails"] = forcing[:, 34]
     data["Effective Radiative Forcing|Aerosols|Direct Effect|Sulfur"] = forcing[:, 35]
-    # index 36 = Secondary Organic Aerosol: unused
-    # index 37 = Nitrate: no dependence on AR6 setup
+    data[
+        "Effective Radiative Forcing|Aerosols|Direct Effect|Secondary Organic Aerosol"
+    ] = forcing[:, 36]
+    data["Effective Radiative Forcing|Aerosols|Direct Effect|Nitrate"] = forcing[:, 37]
     data["Effective Radiative Forcing|Aerosols|Direct Effect|BC"] = forcing[:, 38]
     data["Effective Radiative Forcing|Aerosols|Direct Effect|OC"] = forcing[:, 39]
     data["Effective Radiative Forcing|Aerosols|Indirect Effect"] = forcing[:, 40]
@@ -271,6 +273,10 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Effective Radiative Forcing|CH4 Oxidation Stratospheric H2O"] = "W/m**2"
     unit["Effective Radiative Forcing|Contrails"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Direct Effect|Sulfur"] = "W/m**2"
+    unit[
+        "Effective Radiative Forcing|Aerosols|Direct Effect|Secondary Organic Aerosol"
+    ] = "W/m**2"
+    unit["Effective Radiative Forcing|Aerosols|Direct Effect|Nitrate"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Direct Effect|BC"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Direct Effect|OC"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Indirect Effect"] = "W/m**2"
