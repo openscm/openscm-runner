@@ -19,6 +19,11 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Changed
+~~~~~~~
+
+- (`#14 <https://github.com/openscm/openscm-runner/pull/14>`_) Added in direct aerosol forcing by species in FaIR 
+
 v0.3.0 - 2020-26-08
 -------------------
 
