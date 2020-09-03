@@ -52,14 +52,20 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         2.2099132544445927,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
         ).values.max(),
         rtol=RTOL,
     )
     npt.assert_allclose(
         1.7945341435607594,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
         ).values.min(),
         rtol=RTOL,
     )
@@ -67,14 +73,20 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         4.824878345585957,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp370",
         ).values.max(),
         rtol=RTOL,
     )
     npt.assert_allclose(
         4.07184261082167,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp370",
         ).values.min(),
         rtol=RTOL,
     )

@@ -137,3 +137,6 @@ venv3.bak/
 
 # DS_Store
 *.DS_Store
+
+# CS pre-push testing script
+hurdle.bat

@@ -167,13 +167,18 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     data["Effective Radiative Forcing|Stratospheric Ozone"] = forcing[:, 32]
     data["Effective Radiative Forcing|CH4 Oxidation Stratospheric H2O"] = forcing[:, 33]
     data["Effective Radiative Forcing|Contrails"] = forcing[:, 34]
-    data["Effective Radiative Forcing|Aerosols|Direct Effect"] = forcing[:, 35]
-    data["Effective Radiative Forcing|Aerosols|Indirect Effect"] = forcing[:, 36]
-    data["Effective Radiative Forcing|Aerosols"] = forcing[:, 35] + forcing[:, 36]
-    data["Effective Radiative Forcing|Black Carbon on Snow"] = forcing[:, 37]
-    data["Effective Radiative Forcing|Land-use Change"] = forcing[:, 38]
-    data["Effective Radiative Forcing|Volcanic"] = forcing[:, 39]
-    data["Effective Radiative Forcing|Solar"] = forcing[:, 40]
+    data["Effective Radiative Forcing|Aerosols|Direct Effect|Sulfur"] = forcing[:, 35]
+    data[
+        "Effective Radiative Forcing|Aerosols|Direct Effect|Secondary Organic Aerosol"
+    ] = forcing[:, 36]
+    data["Effective Radiative Forcing|Aerosols|Direct Effect|Nitrate"] = forcing[:, 37]
+    data["Effective Radiative Forcing|Aerosols|Direct Effect|BC"] = forcing[:, 38]
+    data["Effective Radiative Forcing|Aerosols|Direct Effect|OC"] = forcing[:, 39]
+    data["Effective Radiative Forcing|Aerosols|Indirect Effect"] = forcing[:, 40]
+    data["Effective Radiative Forcing|Black Carbon on Snow"] = forcing[:, 41]
+    data["Effective Radiative Forcing|Land-use Change"] = forcing[:, 42]
+    data["Effective Radiative Forcing|Volcanic"] = forcing[:, 43]
+    data["Effective Radiative Forcing|Solar"] = forcing[:, 44]
     data["Effective Radiative Forcing"] = np.sum(forcing, axis=1)
     data["Effective Radiative Forcing|Anthropogenic"] = np.sum(forcing[:, :39], axis=1)
     data["Effective Radiative Forcing|Greenhouse Gases"] = np.sum(
@@ -190,6 +195,10 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     data["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = np.sum(
         forcing[:, 15:31], axis=1
     )
+    data["Effective Radiative Forcing|Aerosols|Direct Effect"] = np.sum(
+        forcing[:, 35:40], axis=1
+    )
+    data["Effective Radiative Forcing|Aerosols"] = np.sum(forcing[:, 35:41], axis=1)
     data["Surface Temperature"] = temperature
     data["Surface Temperature (GMST)"] = temperature * 1 / 1.04
     data["Airborne Fraction"] = airborne_emissions
@@ -263,9 +272,14 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Effective Radiative Forcing|Stratospheric Ozone"] = "W/m**2"
     unit["Effective Radiative Forcing|CH4 Oxidation Stratospheric H2O"] = "W/m**2"
     unit["Effective Radiative Forcing|Contrails"] = "W/m**2"
-    unit["Effective Radiative Forcing|Aerosols|Direct Effect"] = "W/m**2"
+    unit["Effective Radiative Forcing|Aerosols|Direct Effect|Sulfur"] = "W/m**2"
+    unit[
+        "Effective Radiative Forcing|Aerosols|Direct Effect|Secondary Organic Aerosol"
+    ] = "W/m**2"
+    unit["Effective Radiative Forcing|Aerosols|Direct Effect|Nitrate"] = "W/m**2"
+    unit["Effective Radiative Forcing|Aerosols|Direct Effect|BC"] = "W/m**2"
+    unit["Effective Radiative Forcing|Aerosols|Direct Effect|OC"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Indirect Effect"] = "W/m**2"
-    unit["Effective Radiative Forcing|Aerosols"] = "W/m**2"
     unit["Effective Radiative Forcing|Black Carbon on Snow"] = "W/m**2"
     unit["Effective Radiative Forcing|Land-use Change"] = "W/m**2"
     unit["Effective Radiative Forcing|Volcanic"] = "W/m**2"
@@ -277,6 +291,8 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Effective Radiative Forcing|CO2, CH4 and N2O"] = "W/m**2"
     unit["Effective Radiative Forcing|F Gases"] = "W/m**2"
     unit["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = "W/m**2"
+    unit["Effective Radiative Forcing|Aerosols|Direct Effect"] = "W/m**2"
+    unit["Effective Radiative Forcing|Aerosols"] = "W/m**2"
     unit["Surface Temperature"] = "K"
     unit["Surface Temperature (GMST)"] = "K"
     unit["Airborne Fraction"] = "dimensionless"
