@@ -19,12 +19,15 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+v0.3.1 - 2020-09-03
+-------------------
+
 Changed
 ~~~~~~~
 
-- (`#14 <https://github.com/openscm/openscm-runner/pull/14>`_) Added in direct aerosol forcing by species in FaIR 
+- (`#14 <https://github.com/openscm/openscm-runner/pull/14>`_) Added in direct aerosol forcing by species in FaIR
 
-v0.3.0 - 2020-26-08
+v0.3.0 - 2020-08-26
 -------------------
 
 Changed
@@ -32,7 +35,7 @@ Changed
 
 - (`#13 <https://github.com/openscm/openscm-runner/pull/13>`_) Renamed ``openscm_runner.adapters.fair`` to ``openscm_runner.adapters.fair_adapter`` and ``openscm_runner.adapters.fair.fair`` to ``openscm_runner.adapters.fair_adapter.fair_adapter`` to avoid a namespace collision with the source ``fair`` package
 
-v0.2.0 - 2020-25-08
+v0.2.0 - 2020-08-25
 -------------------
 
 Added
@@ -45,7 +48,7 @@ Fixed
 
 - (`#11 <https://github.com/openscm/openscm-runner/pull/11>`_) MAGICC adapter so passed in emissions are followed (previously non-CO2 always followed SSP245)
 
-v0.1.2 - 2020-31-07
+v0.1.2 - 2020-07-31
 -------------------
 
 Changed
@@ -53,7 +56,7 @@ Changed
 
 - (`#10 <https://github.com/openscm/openscm-runner/pull/10>`_) Upgrade to ``scmdata>=0.6.2`` so that package can be installed
 
-v0.1.1 - 2020-22-07
+v0.1.1 - 2020-07-22
 -------------------
 
 Changed
