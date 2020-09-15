@@ -8,7 +8,6 @@ from concurrent.futures import ProcessPoolExecutor
 from subprocess import CalledProcessError
 
 import f90nml
-import pandas as pd
 import scmdata
 
 from ...utils import get_env

@@ -1,5 +1,5 @@
 name: OpenSCM-Runner CI-CD
-on: [push, pull_request]
+on: push
 
 jobs:
   linting-and-docs:

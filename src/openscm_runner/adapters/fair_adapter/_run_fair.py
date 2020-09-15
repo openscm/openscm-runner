@@ -38,10 +38,10 @@ def run_fair(cfgs, output_vars):
         data_scmrun = []
         variables = []
         units = []
-        for k, v in data.items():
-            variables.append(k)
-            data_scmrun.append(v)
-            units.append(unit[k])
+        for key, variable in data.items():
+            variables.append(key)
+            data_scmrun.append(variable)
+            units.append(unit[key])
 
         tempres = ScmRun(
             np.vstack(data_scmrun).T,
