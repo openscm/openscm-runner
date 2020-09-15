@@ -18,12 +18,13 @@ SOURCE_DIR = "src"
 
 REQUIREMENTS = [
     "click",
-    "fair>=1.6.0c2,<2.0.0",
+    # "fair>=1.6.0c2,<2.0.0",
+    "fair @ git+https://github.com/znicholls/FAIR.git@upgrade-scmdata",
     "matplotlib==3.2.2",
     "pyam-iamc",
-    "pymagicc>=2.0.0rc4",
+    "pymagicc>=2.0.0rc6",
     "python-dotenv",
-    "scmdata>=0.6.2",
+    "scmdata>=0.7.1",
     "tqdm",
 ]
 REQUIREMENTS_NOTEBOOKS = [

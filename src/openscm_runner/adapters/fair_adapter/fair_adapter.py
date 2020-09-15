@@ -5,7 +5,7 @@ import fair
 import numpy as np
 from fair.ancil import cmip6_solar, cmip6_volcanic, natural
 from fair.tools.scmdf import scmdf_to_emissions
-from scmdata import ScmDataFrame
+from scmdata import ScmRun
 from tqdm.autonotebook import tqdm
 
 from ..base import _Adapter
@@ -21,7 +21,7 @@ class FAIR(_Adapter):
         pass
 
     def _run(self, scenarios, cfgs, output_variables):
-        fair_df = ScmDataFrame(scenarios.timeseries())
+        fair_df = ScmRun(scenarios.timeseries())
         full_cfgs = self._make_full_cfgs(fair_df, cfgs)
 
         res = run_fair(full_cfgs, output_variables)
@@ -37,7 +37,7 @@ class FAIR(_Adapter):
             scenarios.timeseries().groupby(["scenario", "model"]),
             desc="Creating FaIR emissions inputs",
         ):
-            smdf_in = ScmDataFrame(smdf)
+            smdf_in = ScmRun(smdf)
 
             emissions = scmdf_to_emissions(smdf_in)
 

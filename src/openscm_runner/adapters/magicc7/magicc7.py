@@ -6,7 +6,7 @@ import os
 from subprocess import check_output
 
 import pymagicc
-from scmdata import ScmDataFrame
+from scmdata import ScmRun
 from tqdm.autonotebook import tqdm
 
 from ...utils import get_env
@@ -89,7 +89,7 @@ class MAGICC7(_Adapter):
             lambda x: inverse_map[x] if x in inverse_map else x
         )
 
-        res = ScmDataFrame(res)
+        res = ScmRun(res)
 
         return res
 

@@ -9,7 +9,7 @@ from subprocess import CalledProcessError
 
 import f90nml
 import pandas as pd
-from scmdata import ScmDataFrame
+import scmdata
 
 from ...utils import get_env
 from ._magicc_instances import _MagiccInstances
@@ -100,8 +100,8 @@ def run_magicc_parallel(
 
     Returns
     -------
-    :obj:`ScmDataFrame`
-        :obj:`ScmDataFrame` instance with all results.
+    :obj:`ScmRun`
+        :obj:`ScmRun` instance with all results.
     """
     LOGGER.info("Entered _parallel_magicc_compact_out")
     shared_manager = multiprocessing.Manager()
@@ -135,8 +135,7 @@ def run_magicc_parallel(
         )
 
         LOGGER.info("Appending results into a single ScmRun")
-        # not ideal using pandas for appending but ok as short-term hack
-        res = ScmDataFrame(pd.concat([r.timeseries() for r in res if r is not None]))
+        res = scmdata.run_append([r for r in res if r is not None])
 
     finally:
         instances.cleanup()
