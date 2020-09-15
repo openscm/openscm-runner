@@ -18,8 +18,7 @@ SOURCE_DIR = "src"
 
 REQUIREMENTS = [
     "click",
-    # "fair>=1.6.0c2,<2.0.0",
-    "fair @ git+https://github.com/znicholls/FAIR.git@upgrade-scmdata",
+    "fair>=1.6.0c3,<2.0.0",
     "matplotlib==3.2.2",
     "pyam-iamc",
     "pymagicc>=2.0.0rc6",
