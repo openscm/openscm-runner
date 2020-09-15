@@ -33,7 +33,7 @@ def run_fair(cfgs, output_vars):
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
         run_id = cfg.pop("run_id")
-        data, unit = _process_output(fair_scm(**cfg), output_vars)
+        data, unit, nt = _process_output(fair_scm(**cfg), output_vars)
 
         data_scmrun = []
         variables = []
@@ -55,6 +55,7 @@ def run_fair(cfgs, output_vars):
                 "run_id": run_id,
             },
         )
+        tempres["time"] = np.arange(1765, 1765+nt)
 
         res.append(tempres)
 
@@ -95,6 +96,8 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
         dict of climate model output
     unit : dict
         dict of units corresponding to data
+    nt : int
+        number of timesteps modelled
     """
     (
         concentrations,
@@ -308,7 +311,9 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Ocean Heat Uptake"] = "J"
     unit["Net Energy Imbalance"] = "W/m**2"
 
-    out = ({}, {})
+    nt = len(temperature)
+
+    out = ({}, {}, nt)
     for key in output_vars:
         if key not in data:
             LOGGER.warning("%s not available from FaIR", key)

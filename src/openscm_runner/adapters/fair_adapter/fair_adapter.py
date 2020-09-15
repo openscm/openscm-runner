@@ -38,8 +38,8 @@ class FAIR(_Adapter):
             desc="Creating FaIR emissions inputs",
         ):
             smdf_in = ScmRun(smdf)
-
-            emissions = scmdf_to_emissions(smdf_in)
+            endyear = smdf_in.time_points.years()[-1]
+            emissions = scmdf_to_emissions(smdf_in, endyear=endyear)
 
             emissions_pi = np.zeros(40)
             emissions_pi[5] = 1.2212429848636561
@@ -49,15 +49,18 @@ class FAIR(_Adapter):
             emissions_pi[9] = 2.097770755
             emissions_pi[10] = 15.44766815
 
+            nt = emissions.shape[0]
+            # TODO: raise error if nt > 736
+
             scenario_cfg = [
                 {
                     "scenario": scenario,
                     "model": model,
                     "run_id": run_id_block + i,
                     "emissions": emissions,
-                    "natural": natural.Emissions.emissions[:336, :],
-                    "F_volcanic": cmip6_volcanic.Forcing.volcanic[:336],
-                    "F_solar": cmip6_solar.Forcing.solar[:336],
+                    "natural": natural.Emissions.emissions[:nt, :],
+                    "F_volcanic": cmip6_volcanic.Forcing.volcanic[:nt],
+                    "F_solar": cmip6_solar.Forcing.solar[:nt],
                     "efficacy": np.ones(41),
                     "diagnostics": "AR6",
                     "gir_carbon_cycle": True,
