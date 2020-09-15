@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.testing as npt
-from scmdata import ScmDataFrame
+from scmdata import ScmRun
 
 from openscm_runner import run
 from openscm_runner.adapters import FAIR
@@ -31,7 +31,7 @@ def test_fair_run(test_scenarios):
         full_config=False,
     )
 
-    assert isinstance(res, ScmDataFrame)
+    assert isinstance(res, ScmRun)
     assert res["run_id"].min() == 0
     assert res["run_id"].max() == 8
     assert res.get_unique_meta("climate_model", no_duplicates=True) == "FaIRv{}".format(

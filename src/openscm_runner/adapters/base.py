@@ -52,7 +52,7 @@ class _Adapter(ABC):  # pylint: disable=too-few-public-methods
 
         Returns
         -------
-        :obj:`ScmDataFrame`
+        :obj:`ScmRun`
             Model output
         """
         return self._run(scenarios, cfgs, output_variables)

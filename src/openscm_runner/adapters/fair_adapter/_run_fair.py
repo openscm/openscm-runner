@@ -5,7 +5,7 @@ import logging
 
 import numpy as np
 from fair.forward import fair_scm
-from scmdata import ScmDataFrame, df_append
+from scmdata import ScmRun, run_append
 
 LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ def run_fair(cfgs, output_vars):
 
     Returns
     -------
-    :obj:`ScmDataFrame`
-        :obj:`ScmDataFrame` instance with all results.
+    :obj:`ScmRun`
+        :obj:`ScmRun` instance with all results.
     """
     res = []
 
@@ -35,22 +35,30 @@ def run_fair(cfgs, output_vars):
         run_id = cfg.pop("run_id")
         data, unit = _process_output(fair_scm(**cfg), output_vars)
 
-        tempres = ScmDataFrame(
-            data,
+        data_scmrun = []
+        variables = []
+        units = []
+        for key, variable in data.items():
+            variables.append(key)
+            data_scmrun.append(variable)
+            units.append(unit[key])
+
+        tempres = ScmRun(
+            np.vstack(data_scmrun).T,
+            index=np.arange(1765, 2101),
             columns={
                 "scenario": scenario,
                 "model": model,
                 "region": "World",
-                "variable": list(data.keys()),
-                "unit": list(unit.values()),
+                "variable": variables,
+                "unit": units,
                 "run_id": run_id,
             },
         )
-        tempres["time"] = np.arange(1765, 2101)
 
         res.append(tempres)
 
-    res = df_append(res)
+    res = run_append(res)
 
     return res
 

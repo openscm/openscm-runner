@@ -3,7 +3,7 @@ Utility functions
 """
 import os
 
-from scmdata import df_append
+import scmdata
 
 
 def get_env(env_var):
@@ -38,12 +38,12 @@ def calculate_quantiles(
     process_over_columns=("run_id", "ensemble_member", "climate_model"),
 ):
     """
-    Calculate quantiles of an :obj:`ScmDataFrame`
+    Calculate quantiles of an :obj:`ScmRun`
 
     Parameters
     ----------
-    scmdf : :obj:`ScmDataFrame`
-        :obj:`ScmDataFrame` containing the data from which to calculate the
+    scmdf : :obj:`ScmRun`
+        :obj:`ScmRun` containing the data from which to calculate the
         quantiles
 
     quantiles : list of float
@@ -55,8 +55,8 @@ def calculate_quantiles(
 
     Returns
     -------
-    :obj:`ScmDataFrame`
-        :obj:`ScmDataFrame` containing the quantiles of interest, processed
+    :obj:`ScmRun`
+        :obj:`ScmRun` containing the quantiles of interest, processed
         over ``process_over_columns``
     """
     out = []
@@ -66,6 +66,6 @@ def calculate_quantiles(
 
         out.append(quantile_df)
 
-    out = df_append(out)
+    out = scmdata.run_append([scmdata.ScmRun(o) for o in out])
 
     return out

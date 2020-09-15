@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.testing as npt
-from scmdata import ScmDataFrame
+from scmdata import ScmRun
 
 from openscm_runner import run
 from openscm_runner.utils import calculate_quantiles
@@ -70,7 +70,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
         full_config=False,
     )
 
-    assert isinstance(res, ScmDataFrame)
+    assert isinstance(res, ScmRun)
 
     climate_models = res.get_unique_meta("climate_model")
     assert any(["MAGICC" in m for m in climate_models])

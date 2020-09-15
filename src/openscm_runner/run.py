@@ -84,6 +84,6 @@ def run(
         scmdf = res[0]
     else:
         LOGGER.info("Appending model results")
-        scmdf = scmdata.df_append(res)
+        scmdf = scmdata.run_append(res)
 
     return scmdf

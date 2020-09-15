@@ -1,6 +1,6 @@
 import numpy.testing as npt
 import pymagicc.io
-from scmdata import ScmDataFrame
+from scmdata import ScmRun
 
 from openscm_runner import run
 from openscm_runner.adapters import MAGICC7
@@ -64,7 +64,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
         full_config=False,
     )
 
-    assert isinstance(res, ScmDataFrame)
+    assert isinstance(res, ScmRun)
     assert res["run_id"].min() == 0
     assert res["run_id"].max() == 8
     assert res.get_unique_meta(
