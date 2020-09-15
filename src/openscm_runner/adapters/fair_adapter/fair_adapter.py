@@ -61,7 +61,7 @@ class FAIR(_Adapter):
                     "natural": natural.Emissions.emissions[:nt, :],
                     "F_volcanic": cmip6_volcanic.Forcing.volcanic[:nt],
                     "F_solar": cmip6_solar.Forcing.solar[:nt],
-                    "efficacy": np.ones(41),
+                    "efficacy": np.ones(45),
                     "diagnostics": "AR6",
                     "gir_carbon_cycle": True,
                     "temperature_function": "Geoffroy",
