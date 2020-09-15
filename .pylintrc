@@ -21,3 +21,6 @@ min-similarity-lines=7
 ignore-comments=no
 ignore-docstrings=yes
 ignore-imports=yes
+
+[FORMAT]
+good-names=nt
