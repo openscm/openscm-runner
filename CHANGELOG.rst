@@ -19,6 +19,11 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Added
+~~~~~
+
+- (`#17 <https://github.com/openscm/openscm-runner/pull/17>`_) Support for scmdata >= 0.7.1
+
 v0.3.1 - 2020-09-03
 -------------------
 
