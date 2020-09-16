@@ -10,7 +10,7 @@ from scmdata import ScmRun, run_append
 LOGGER = logging.getLogger(__name__)
 
 
-def run_fair(cfgs, output_vars):
+def run_fair(cfgs, output_vars):  # pylint: disable=R0914
     """
     Run FaIR
 
