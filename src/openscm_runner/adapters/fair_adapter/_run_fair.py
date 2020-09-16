@@ -45,7 +45,7 @@ def run_fair(cfgs, output_vars):
 
         tempres = ScmRun(
             np.vstack(data_scmrun).T,
-            index=np.arange(1765, 2101),
+            index=np.arange(1765, 1765 + nt),
             columns={
                 "scenario": scenario,
                 "model": model,
@@ -55,7 +55,6 @@ def run_fair(cfgs, output_vars):
                 "run_id": run_id,
             },
         )
-        tempres["time"] = np.arange(1765, 1765 + nt)
 
         res.append(tempres)
 
