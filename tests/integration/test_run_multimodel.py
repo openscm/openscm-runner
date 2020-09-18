@@ -62,7 +62,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
         output_variables=(
             "Surface Temperature",
             "Atmospheric Concentrations|CO2",
-            "Ocean Heat Uptake",
+            "Heat Content",
             "Effective Radiative Forcing",
             "Effective Radiative Forcing|Aerosols",
             "Effective Radiative Forcing|CO2",
@@ -84,7 +84,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
                 "Effective Radiative Forcing",
                 "Effective Radiative Forcing|Aerosols",
                 "Effective Radiative Forcing|CO2",
-                "Ocean Heat Uptake",
+                "Heat Content",
                 "Atmospheric Concentrations|CO2",
             ]
         )

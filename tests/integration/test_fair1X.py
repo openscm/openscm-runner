@@ -22,7 +22,7 @@ def test_fair_run(test_scenarios):
         output_variables=(
             "Surface Temperature",
             "Atmospheric Concentrations|CO2",
-            "Ocean Heat Uptake",
+            "Heat Content",
             "Effective Radiative Forcing",
             "Effective Radiative Forcing|Aerosols",
             "Effective Radiative Forcing|CO2",
@@ -42,7 +42,7 @@ def test_fair_run(test_scenarios):
         [
             "Surface Temperature",
             "Atmospheric Concentrations|CO2",
-            "Ocean Heat Uptake",
+            "Heat Content",
             "Effective Radiative Forcing",
             "Effective Radiative Forcing|Aerosols",
             "Effective Radiative Forcing|CO2",
