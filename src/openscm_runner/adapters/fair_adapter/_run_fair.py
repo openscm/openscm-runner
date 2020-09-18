@@ -4,10 +4,12 @@ Module for running FaIR
 import logging
 
 import numpy as np
+from fair.constants.general import EARTH_RADIUS, SECONDS_PER_YEAR
 from fair.forward import fair_scm
 from scmdata import ScmRun, run_append
 
 LOGGER = logging.getLogger(__name__)
+toa_to_joule = 4 * np.pi * EARTH_RADIUS ** 2 * SECONDS_PER_YEAR
 
 
 def run_fair(cfgs, output_vars):  # pylint: disable=R0914
@@ -213,8 +215,11 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     data["Surface Temperature (GMST)"] = temperature * 1 / 1.04
     data["Airborne Fraction"] = airborne_emissions
     data["Effective Climate Feedback"] = lambda_eff
-    data["Ocean Heat Uptake"] = ohc
+    data["Heat Content"] = ohc
+    data["Heat Content|Ocean"] = ohc * 0.92
     data["Net Energy Imbalance"] = heatflux
+    data["Heat Uptake"] = heatflux * toa_to_joule
+    data["Heat Uptake|Ocean"] = heatflux * toa_to_joule * 0.92
 
     unit["Atmospheric Concentrations|CO2"] = "ppm"
     unit["Atmospheric Concentrations|CH4"] = "ppb"
@@ -307,8 +312,11 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Surface Temperature (GMST)"] = "K"
     unit["Airborne Fraction"] = "dimensionless"
     unit["Effective Climate Feedback"] = "W/m**2/K"
-    unit["Ocean Heat Uptake"] = "J"
+    unit["Heat Content"] = "J"
+    unit["Heat Content|Ocean"] = "J"
     unit["Net Energy Imbalance"] = "W/m**2"
+    unit["Heat Uptake"] = "J/yr"
+    unit["Heat Uptake|Ocean"] = "J/yr"
 
     nt = len(temperature)
 
