@@ -48,6 +48,7 @@ class FAIR(_Adapter):
             emissions_pi[8] = 3.8773253867471933
             emissions_pi[9] = 2.097770755
             emissions_pi[10] = 15.44766815
+            emissions_pi[11] = 6.92769009144426
 
             nt = emissions.shape[0]
             # TODO: raise error if nt > 736
