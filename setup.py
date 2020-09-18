@@ -18,12 +18,12 @@ SOURCE_DIR = "src"
 
 REQUIREMENTS = [
     "click",
-    "fair>=1.6.0c3,<2.0.0",
+    "fair>=1.6.1a0,<2.0.0",
     "matplotlib==3.2.2",
     "pyam-iamc",
     "pymagicc>=2.0.0rc6",
     "python-dotenv",
-    "scmdata>=0.7.1",
+    "scmdata>=0.7.2",
     "tqdm",
 ]
 REQUIREMENTS_NOTEBOOKS = [
