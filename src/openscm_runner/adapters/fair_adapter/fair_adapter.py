@@ -76,6 +76,8 @@ class FAIR(_Adapter):
                     "aCO2land": 0.0006394631886297174,
                     "b_aero": np.array([-0.00503, 0.0, 0.0, 0.0, 0.0385, -0.0104, 0.0]),
                     "ghan_params": np.array([1.232, 73.9, 63.0]),
+                    "gmst_factor": 1 / 1.04,
+                    "ohu_factor": 0.92,
                     **cfg,
                 }
                 for i, cfg in enumerate(cfgs)

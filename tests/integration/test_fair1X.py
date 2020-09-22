@@ -139,3 +139,49 @@ def test_fair_run(test_scenarios):
         ).values,
         rtol=RTOL,
     )
+
+
+def test_fair_ocean_factors(test_scenarios):
+    res_default_factors = run(
+        climate_models_cfgs={"FaIR": [{}]},
+        scenarios=test_scenarios.filter(scenario=["ssp585"]),
+        output_variables=(
+            "Surface Temperature (GMST)",
+            "Heat Uptake|Ocean",
+            "Heat Content|Ocean",
+        ),
+        full_config=False,
+    )
+
+    res_custom_factors = run(
+        climate_models_cfgs={
+            "FaIR": [
+                {
+                    "gmst_factor": np.linspace(0.90, 1.00, 336),  # test with array
+                    "ohu_factor": 0.93,
+                }
+            ]
+        },
+        scenarios=test_scenarios.filter(scenario=["ssp585"]),
+        output_variables=(
+            "Surface Temperature (GMST)",
+            "Heat Uptake|Ocean",
+            "Heat Content|Ocean",
+        ),
+        full_config=False,
+    )
+
+    assert (
+        res_default_factors.filter(
+            variable="Surface Temperature (GMST)",
+            region="World",
+            year=2100,
+            scenario="ssp585",
+        ).values
+        != res_custom_factors.filter(
+            variable="Surface Temperature (GMST)",
+            region="World",
+            year=2100,
+            scenario="ssp585",
+        ).values
+    )

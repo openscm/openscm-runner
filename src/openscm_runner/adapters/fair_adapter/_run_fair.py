@@ -35,7 +35,10 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
         run_id = cfg.pop("run_id")
-        data, unit, nt = _process_output(fair_scm(**cfg), output_vars)
+        factors = {}
+        factors["gmst"] = cfg.pop("gmst_factor")
+        factors["ohu"] = cfg.pop("ohu_factor")
+        data, unit, nt = _process_output(fair_scm(**cfg), output_vars, factors)
 
         data_scmrun = []
         variables = []
@@ -65,7 +68,7 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
     return res
 
 
-def _process_output(fair_output, output_vars):  # pylint: disable=R0915
+def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     """
     Make sense of FaIR1.6 output
 
@@ -90,6 +93,10 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
 
     output_vars : list[str]
         List of output variables
+
+    factors : dict[(Union[float, numpy.ndarray])]
+        ohu : ratio of ocean heat uptake to total Earth energy uptake
+        gmst : ratio of GMST to GSAT
 
     Returns
     -------
@@ -212,14 +219,14 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     )
     data["Effective Radiative Forcing|Aerosols"] = np.sum(forcing[:, 35:41], axis=1)
     data["Surface Temperature"] = temperature
-    data["Surface Temperature (GMST)"] = temperature * 1 / 1.04
+    data["Surface Temperature (GMST)"] = temperature * factors["gmst"]
     data["Airborne Fraction"] = airborne_emissions
     data["Effective Climate Feedback"] = lambda_eff
     data["Heat Content"] = ohc
-    data["Heat Content|Ocean"] = ohc * 0.92
+    data["Heat Content|Ocean"] = ohc * factors["ohu"]
     data["Net Energy Imbalance"] = heatflux
     data["Heat Uptake"] = heatflux * toa_to_joule
-    data["Heat Uptake|Ocean"] = heatflux * toa_to_joule * 0.92
+    data["Heat Uptake|Ocean"] = heatflux * toa_to_joule * factors["ohu"]
 
     unit["Atmospheric Concentrations|CO2"] = "ppm"
     unit["Atmospheric Concentrations|CH4"] = "ppb"
