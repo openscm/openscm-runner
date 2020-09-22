@@ -51,7 +51,6 @@ class FAIR(_Adapter):
             emissions_pi[11] = 6.92769009144426
 
             nt = emissions.shape[0]
-            # TODO: raise error if nt > 736
 
             scenario_cfg = [
                 {
