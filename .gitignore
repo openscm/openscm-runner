@@ -140,3 +140,4 @@ venv3.bak/
 
 # CS pre-push testing script
 hurdle.bat
+hurdle.sh

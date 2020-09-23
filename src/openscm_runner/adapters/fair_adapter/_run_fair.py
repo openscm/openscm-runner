@@ -4,13 +4,15 @@ Module for running FaIR
 import logging
 
 import numpy as np
+from fair.constants.general import EARTH_RADIUS, SECONDS_PER_YEAR
 from fair.forward import fair_scm
 from scmdata import ScmRun, run_append
 
 LOGGER = logging.getLogger(__name__)
+toa_to_joule = 4 * np.pi * EARTH_RADIUS ** 2 * SECONDS_PER_YEAR
 
 
-def run_fair(cfgs, output_vars):
+def run_fair(cfgs, output_vars):  # pylint: disable=R0914
     """
     Run FaIR
 
@@ -33,7 +35,10 @@ def run_fair(cfgs, output_vars):
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
         run_id = cfg.pop("run_id")
-        data, unit = _process_output(fair_scm(**cfg), output_vars)
+        factors = {}
+        factors["gmst"] = cfg.pop("gmst_factor")
+        factors["ohu"] = cfg.pop("ohu_factor")
+        data, unit, nt = _process_output(fair_scm(**cfg), output_vars, factors)
 
         data_scmrun = []
         variables = []
@@ -45,7 +50,7 @@ def run_fair(cfgs, output_vars):
 
         tempres = ScmRun(
             np.vstack(data_scmrun).T,
-            index=np.arange(1765, 2101),
+            index=np.arange(1765, 1765 + nt),
             columns={
                 "scenario": scenario,
                 "model": model,
@@ -63,7 +68,7 @@ def run_fair(cfgs, output_vars):
     return res
 
 
-def _process_output(fair_output, output_vars):  # pylint: disable=R0915
+def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     """
     Make sense of FaIR1.6 output
 
@@ -89,12 +94,18 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     output_vars : list[str]
         List of output variables
 
+    factors : dict[(Union[float, numpy.ndarray])]
+        ohu : ratio of ocean heat uptake to total Earth energy uptake
+        gmst : ratio of GMST to GSAT
+
     Returns
     -------
     data : dict
         dict of climate model output
     unit : dict
         dict of units corresponding to data
+    nt : int
+        number of timesteps modelled
     """
     (
         concentrations,
@@ -208,11 +219,14 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     )
     data["Effective Radiative Forcing|Aerosols"] = np.sum(forcing[:, 35:41], axis=1)
     data["Surface Temperature"] = temperature
-    data["Surface Temperature (GMST)"] = temperature * 1 / 1.04
+    data["Surface Temperature (GMST)"] = temperature * factors["gmst"]
     data["Airborne Fraction"] = airborne_emissions
     data["Effective Climate Feedback"] = lambda_eff
-    data["Ocean Heat Uptake"] = ohc
+    data["Heat Content"] = ohc
+    data["Heat Content|Ocean"] = ohc * factors["ohu"]
     data["Net Energy Imbalance"] = heatflux
+    data["Heat Uptake"] = heatflux * toa_to_joule
+    data["Heat Uptake|Ocean"] = heatflux * toa_to_joule * factors["ohu"]
 
     unit["Atmospheric Concentrations|CO2"] = "ppm"
     unit["Atmospheric Concentrations|CH4"] = "ppb"
@@ -305,10 +319,15 @@ def _process_output(fair_output, output_vars):  # pylint: disable=R0915
     unit["Surface Temperature (GMST)"] = "K"
     unit["Airborne Fraction"] = "dimensionless"
     unit["Effective Climate Feedback"] = "W/m**2/K"
-    unit["Ocean Heat Uptake"] = "J"
+    unit["Heat Content"] = "J"
+    unit["Heat Content|Ocean"] = "J"
     unit["Net Energy Imbalance"] = "W/m**2"
+    unit["Heat Uptake"] = "J/yr"
+    unit["Heat Uptake|Ocean"] = "J/yr"
 
-    out = ({}, {})
+    nt = len(temperature)
+
+    out = ({}, {}, nt)
     for key in output_vars:
         if key not in data:
             LOGGER.warning("%s not available from FaIR", key)

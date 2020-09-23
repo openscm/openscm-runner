@@ -38,8 +38,8 @@ class FAIR(_Adapter):
             desc="Creating FaIR emissions inputs",
         ):
             smdf_in = ScmRun(smdf)
-
-            emissions = scmdf_to_emissions(smdf_in)
+            endyear = smdf_in.time_points.years()[-1]
+            emissions = scmdf_to_emissions(smdf_in, endyear=endyear)
 
             emissions_pi = np.zeros(40)
             emissions_pi[5] = 1.2212429848636561
@@ -48,6 +48,9 @@ class FAIR(_Adapter):
             emissions_pi[8] = 3.8773253867471933
             emissions_pi[9] = 2.097770755
             emissions_pi[10] = 15.44766815
+            emissions_pi[11] = 6.92769009144426
+
+            nt = emissions.shape[0]
 
             scenario_cfg = [
                 {
@@ -55,10 +58,10 @@ class FAIR(_Adapter):
                     "model": model,
                     "run_id": run_id_block + i,
                     "emissions": emissions,
-                    "natural": natural.Emissions.emissions[:336, :],
-                    "F_volcanic": cmip6_volcanic.Forcing.volcanic[:336],
-                    "F_solar": cmip6_solar.Forcing.solar[:336],
-                    "efficacy": np.ones(41),
+                    "natural": natural.Emissions.emissions[:nt, :],
+                    "F_volcanic": cmip6_volcanic.Forcing.volcanic[:nt],
+                    "F_solar": cmip6_solar.Forcing.solar[:nt],
+                    "efficacy": np.ones(45),
                     "diagnostics": "AR6",
                     "gir_carbon_cycle": True,
                     "temperature_function": "Geoffroy",
@@ -72,6 +75,8 @@ class FAIR(_Adapter):
                     "aCO2land": 0.0006394631886297174,
                     "b_aero": np.array([-0.00503, 0.0, 0.0, 0.0, 0.0385, -0.0104, 0.0]),
                     "ghan_params": np.array([1.232, 73.9, 63.0]),
+                    "gmst_factor": 1 / 1.04,
+                    "ohu_factor": 0.92,
                     **cfg,
                 }
                 for i, cfg in enumerate(cfgs)
