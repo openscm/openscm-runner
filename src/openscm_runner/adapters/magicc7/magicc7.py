@@ -9,7 +9,7 @@ import pymagicc
 from scmdata import ScmRun
 from tqdm.autonotebook import tqdm
 
-from ...utils import get_env
+from ...settings import config
 from ..base import _Adapter
 from ._run_magicc_parallel import run_magicc_parallel
 
@@ -158,7 +158,7 @@ class MAGICC7(_Adapter):
 
     @classmethod
     def _executable(cls):
-        return get_env("MAGICC_EXECUTABLE_7")
+        return config["MAGICC_EXECUTABLE_7"]
 
     @classmethod
     def _run_dir(cls):
