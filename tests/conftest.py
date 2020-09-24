@@ -31,5 +31,5 @@ def magicc7_is_available():
                 "Wrong MAGICC version for tests ({})".format(magicc_version)
             )
 
-    except ValueError:
+    except KeyError:
         pytest.skip("MAGICC7 not available")
