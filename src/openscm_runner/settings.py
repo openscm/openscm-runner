@@ -20,7 +20,8 @@ from dotenv import dotenv_values
 
 
 class ConfigLoader(object):
-    """Configuration container
+    """
+    Configuration container
 
     Loads a local dotenv file containing configuration. An example of a
     configuration file is provided in root of the project.
