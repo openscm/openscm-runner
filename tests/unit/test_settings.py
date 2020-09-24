@@ -1,7 +1,9 @@
-import pytest
-from openscm_runner.settings import ConfigLoader
 import os
 from unittest import mock
+
+import pytest
+
+from openscm_runner.settings import ConfigLoader
 
 
 @mock.patch("openscm_runner.settings.dotenv_values")
