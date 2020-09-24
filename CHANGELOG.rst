@@ -24,6 +24,11 @@ Added
 
 - (`#17 <https://github.com/openscm/openscm-runner/pull/17>`_) Support for scmdata >= 0.7.1
 
+Fixed
+~~~~~
+
+- (`#20 <https://github.com/openscm/openscm-runner/pull/20>`_) Update bandit configuration
+
 v0.3.1 - 2020-09-03
 -------------------
 
