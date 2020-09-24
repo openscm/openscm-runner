@@ -27,6 +27,7 @@ OpenSCM-Runner
     :caption: API reference
 
     run
+    settings
     utils
 
 .. toctree::
