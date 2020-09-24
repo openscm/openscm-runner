@@ -5,7 +5,7 @@ import logging
 import multiprocessing
 import os.path
 from concurrent.futures import ProcessPoolExecutor
-from subprocess import CalledProcessError
+from subprocess import CalledProcessError  # nosec
 
 import f90nml
 import scmdata

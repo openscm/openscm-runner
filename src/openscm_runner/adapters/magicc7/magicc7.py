@@ -3,7 +3,7 @@ MAGICC7 adapter
 """
 import logging
 import os
-from subprocess import check_output
+from subprocess import check_output  # nosec
 
 import pymagicc
 from scmdata import ScmRun
@@ -135,10 +135,13 @@ class MAGICC7(_Adapter):
 
             full_cfgs += scenario_cfg
 
-        assert len(full_cfgs) == scenarios.meta[
-            ["scenario", "model"]
-        ].drop_duplicates().shape[0] * len(cfgs)
-
+        exp_shape = scenarios.meta[["scenario", "model"]].drop_duplicates().shape[
+            0
+        ] * len(cfgs)
+        if len(full_cfgs) != exp_shape:
+            raise AssertionError(
+                "Expected {} configs got {}".format(exp_shape, len(full_cfgs))
+            )
         return full_cfgs
 
     @classmethod
