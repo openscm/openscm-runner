@@ -25,7 +25,7 @@ jobs:
         black --check src tests setup.py --exclude openscm_runner/_version.py
         isort --check-only --quiet --recursive src tests setup.py
         pydocstyle src
-        bandit -c .bandit.yml -r openscm_runner
+        bandit -c .bandit.yml -r src
         flake8 src tests setup.py
         pylint src
     - name: Build docs
