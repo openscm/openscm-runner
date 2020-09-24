@@ -20,7 +20,7 @@ def run(
     scenarios,
     output_variables=("Surface Temperature",),
     full_config=False,
-):
+):  # pylint: disable=W9006
     """
     Run a number of climate models over a number of scenarios
 
@@ -75,7 +75,7 @@ def run(
 
         model_meta = set(model_res.meta.columns.tolist())
         climate_model = model_res.get_unique_meta("climate_model")
-        if model_meta != key_meta:
+        if model_meta != key_meta:  # noqa
             raise AssertionError(
                 "{} meta: {}, expected meta: {}".format(
                     climate_model, model_meta, key_meta
