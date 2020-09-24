@@ -52,8 +52,9 @@ def test_config_with_dotenv(mock_dotenv, monkeypatch):
 
 
 @mock.patch("openscm_runner.settings.dotenv_values")
-def test_config_get(monkeypatch):
+def test_config_get(mock_dotenv, monkeypatch):
     monkeypatch.setenv("TEST", "env_var")
+    mock_dotenv.return_value = {}
 
     config = ConfigLoader()
 

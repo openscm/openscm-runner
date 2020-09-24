@@ -18,7 +18,7 @@ def magicc7_is_available():
             )
         return True
 
-    except ValueError:
+    except KeyError:
         return False
 
 
