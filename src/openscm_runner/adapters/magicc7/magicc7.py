@@ -10,7 +10,6 @@ from scmdata import ScmRun
 from tqdm.autonotebook import tqdm
 
 from ...settings import config
-from ...utils import get_env
 from ..base import _Adapter
 from ._run_magicc_parallel import run_magicc_parallel
 

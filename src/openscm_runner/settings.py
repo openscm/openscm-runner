@@ -1,6 +1,4 @@
 """
-Configuration
-
 Rather than hard-coding constants, configuration can be source from 2 different
 sources:
 
@@ -9,8 +7,6 @@ sources:
 
 Environment variables are always used in preference to the values in dotenv
 files.
-
-TODO: Add docs for possible config
 """
 
 

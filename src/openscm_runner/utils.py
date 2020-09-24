@@ -1,8 +1,6 @@
 """
 Utility functions
 """
-import os
-
 import scmdata
 
 
