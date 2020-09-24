@@ -33,10 +33,7 @@ def test_config_envvar(mock_dotenv, monkeypatch):
 @mock.patch("openscm_runner.settings.dotenv_values")
 def test_config_with_dotenv(mock_dotenv, monkeypatch):
     monkeypatch.setenv("TEST", "env_var")
-    mock_dotenv.return_value = {
-        "TEST": "env_file",
-        "EXTRA": "yay"
-    }
+    mock_dotenv.return_value = {"TEST": "env_file", "EXTRA": "yay"}
 
     config = ConfigLoader()
 
@@ -50,3 +47,13 @@ def test_config_with_dotenv(mock_dotenv, monkeypatch):
     assert config.is_loaded
     mock_dotenv.assert_called_once()
     assert config._config == mock_dotenv.return_value
+
+
+@mock.patch("openscm_runner.settings.dotenv_values")
+def test_config_get(monkeypatch):
+    monkeypatch.setenv("TEST", "env_var")
+
+    config = ConfigLoader()
+
+    assert config.get("TEST", "default") == "env_var"
+    assert config.get("UNKNOWN_CONFIG", "default") == "default"

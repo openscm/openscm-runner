@@ -1,3 +1,11 @@
+"""
+Configuration
+
+Environment variables are
+
+"""
+
+
 import os
 
 from dotenv import dotenv_values
@@ -5,6 +13,10 @@ from dotenv import dotenv_values
 
 class ConfigLoader(object):
     """Store the configuration for the application
+
+    Attempts to load a dotenv file.
+
+
 
     Configuration values are stored on disk as YAML. An example of a configuration file is provided in root of the project.
 
