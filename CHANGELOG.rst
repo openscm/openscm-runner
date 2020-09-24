@@ -25,6 +25,11 @@ Added
 - (`#18 <https://github.com/openscm/openscm-runner/pull/18>`_) Flexible end date for FaIR
 - (`#17 <https://github.com/openscm/openscm-runner/pull/17>`_) Support for scmdata >= 0.7.1
 
+Changed
+~~~~~~~
+
+- (`#19 <https://github.com/openscm/openscm-runner/pull/19>`_) Configuration is now handled using ``openscm_runner.settings`` providing support for environment variables and dotenv files
+
 Fixed
 ~~~~~
 
