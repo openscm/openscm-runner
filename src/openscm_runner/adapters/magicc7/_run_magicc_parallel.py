@@ -10,7 +10,7 @@ from subprocess import CalledProcessError  # nosec
 import f90nml
 import scmdata
 
-from ...utils import get_env
+from ...settings import config
 from ._magicc_instances import _MagiccInstances
 from ._parallel_process import _parallel_process
 
@@ -74,7 +74,7 @@ def _run_func(magicc, cfg):
 
 def _execute_run(cfg, run_func, setup_func, instances):
     magicc = instances.get(
-        root_dir=get_env("MAGICC_WORKER_ROOT_DIR"),
+        root_dir=config["MAGICC_WORKER_ROOT_DIR"],
         init_callback=setup_func,
         init_callback_kwargs={},
     )
@@ -119,7 +119,7 @@ def run_magicc_parallel(
 
     try:
         pool = ProcessPoolExecutor(
-            max_workers=int(get_env("MAGICC_WORKER_NUMBER")),
+            max_workers=int(config.get("MAGICC_WORKER_NUMBER", os.cpu_count())),
             initializer=_init_magicc_worker,
             initargs=(shared_dict,),
         )
