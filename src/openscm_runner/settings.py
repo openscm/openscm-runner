@@ -12,7 +12,7 @@ files.
 
 import os
 
-from dotenv import dotenv_values
+from dotenv import dotenv_values, find_dotenv
 
 
 class ConfigLoader:
@@ -48,7 +48,7 @@ class ConfigLoader:
 
         If no dotenv files are found, then
         """
-        dotenv_cfg = dotenv_values(verbose=True)
+        dotenv_cfg = dotenv_values(find_dotenv(usecwd=True), verbose=True)
         self.update(dotenv_cfg)
 
         # Add any extra files here
