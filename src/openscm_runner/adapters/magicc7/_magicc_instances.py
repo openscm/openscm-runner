@@ -8,6 +8,8 @@ import tempfile
 
 import pymagicc
 
+from ...settings import config
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -85,12 +87,13 @@ class _MagiccInstances:
         try:
             return self.instances[key]
         except KeyError:
-            kwargs_tqdm = {}
+            kwargs_init = {}
             if root_dir:
-                kwargs_tqdm["root_dir"] = self._generate_magicc_root(root_dir)
+                kwargs_init["root_dir"] = self._generate_magicc_root(root_dir)
 
-            magicc = pymagicc.MAGICC7(strict=False, **kwargs_tqdm)
-
+            # ensure pymagicc will behave itself
+            pymagicc.config.config["EXECUTABLE_7"] = config["MAGICC_EXECUTABLE_7"]
+            magicc = pymagicc.MAGICC7(strict=False, **kwargs_init)
             magicc.create_copy()
             LOGGER.info("Created new magicc instance: %s - %s", key, magicc.root_dir)
 

@@ -25,7 +25,11 @@ def test_scenarios(test_data_dir):
 @pytest.fixture(scope="session")
 def magicc7_is_available():
     try:
-        MAGICC7.get_version()
+        magicc_version = MAGICC7.get_version()
+        if magicc_version != "v7.4.0":
+            raise AssertionError(
+                "Wrong MAGICC version for tests ({})".format(magicc_version)
+            )
 
     except ValueError:
         pytest.skip("MAGICC7 not available")
