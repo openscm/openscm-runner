@@ -50,7 +50,7 @@ class HistoricalWorldEmms:
                     _, fair_unit, context = _get_fair_col_unit_context(variable)
                 except AssertionError:
                     # FaIR does not model the variable
-                    assert variable in [
+                    if variable in [
                         "Emissions|F-Gases|HFC|HFC152a",
                         "Emissions|F-Gases|HFC|HFC236fa",
                         "Emissions|F-Gases|HFC|HFC365mfc",
@@ -64,9 +64,8 @@ class HistoricalWorldEmms:
                         "Emissions|F-Gases|SO2F2",
                         "Emissions|Montreal Gases|CH2Cl2",
                         "Emissions|Montreal Gases|CHCl3",
-                    ]
-
-                    continue
+                    ]:
+                        continue
 
                 if in_unit != fair_unit:
                     ssp_df_hist = ssp_df_hist.convert_unit(
@@ -136,6 +135,8 @@ def _get_fair_col_unit_context(variable):
     )
 
     in_unit = EMISSIONS_SPECIES_UNITS_CONTEXT[row]["in_unit"]
+    if in_unit.shape[0] != 1:
+        raise AssertionError(in_unit)
 
     fair_col = int(row[row].index.values) + 1  # first col is time
     in_unit = in_unit.iloc[0]
