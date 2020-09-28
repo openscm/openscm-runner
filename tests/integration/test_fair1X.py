@@ -1,11 +1,8 @@
 import numpy as np
-# import numpy.testing as npt
 from scmdata import ScmRun
 
 from openscm_runner import run
 from openscm_runner.adapters import FAIR
-
-# from openscm_runner.utils import calculate_quantiles
 
 RTOL = 1e-5
 
