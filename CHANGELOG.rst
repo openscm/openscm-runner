@@ -18,6 +18,12 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Changed
+~~~~~~~
+
+- (`#21 <https://github.com/openscm/openscm-runner/pull/21>`_) Flexible start date for FaIR; build scmdata to emissions converter on openscm-runner
+
+
 v0.4.1 - 2020-10-06
 -------------------
 
