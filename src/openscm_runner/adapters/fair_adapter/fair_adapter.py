@@ -3,13 +3,12 @@ FAIR adapter
 """
 import fair
 import numpy as np
-from fair.ancil import cmip6_solar, cmip6_volcanic, natural
-from fair.tools.scmdf import scmdf_to_emissions
 from scmdata import ScmRun
 from tqdm.autonotebook import tqdm
 
 from ..base import _Adapter
 from ._run_fair import run_fair
+from ._scmdf_to_emissions import scmdf_to_emissions
 
 
 class FAIR(_Adapter):
@@ -41,18 +40,11 @@ class FAIR(_Adapter):
             desc="Creating FaIR emissions inputs",
         ):
             smdf_in = ScmRun(smdf)
+            scen_startyear = smdf_in.time_points.years()[0]
             endyear = smdf_in.time_points.years()[-1]
-            emissions = scmdf_to_emissions(smdf_in, endyear=endyear)
-
-            emissions_pi = np.zeros(40)
-            emissions_pi[5] = 1.2212429848636561
-            emissions_pi[6] = 348.5273588
-            emissions_pi[7] = 60.02182622
-            emissions_pi[8] = 3.8773253867471933
-            emissions_pi[9] = 2.097770755
-            emissions_pi[10] = 15.44766815
-            emissions_pi[11] = 6.92769009144426
-
+            emissions = scmdf_to_emissions(
+                smdf_in, startyear=1750, scen_startyear=scen_startyear, endyear=endyear
+            )
             nt = emissions.shape[0]
 
             scenario_cfg = [
@@ -61,16 +53,17 @@ class FAIR(_Adapter):
                     "model": model,
                     "run_id": run_id_block + i,
                     "emissions": emissions,
-                    "natural": natural.Emissions.emissions[:nt, :],
-                    "F_volcanic": cmip6_volcanic.Forcing.volcanic[:nt],
-                    "F_solar": cmip6_solar.Forcing.solar[:nt],
+                    "natural": np.zeros(
+                        (nt, 2)
+                    ),  # any sensible scenario should override: provide in the config
+                    "F_volcanic": np.zeros(nt),  # likewise
+                    "F_solar": np.zeros(nt),  # likewise
                     "efficacy": np.ones(45),
                     "diagnostics": "AR6",
                     "gir_carbon_cycle": True,
                     "temperature_function": "Geoffroy",
                     "aerosol_forcing": "aerocom+ghan2",
                     "fixPre1850RCP": False,
-                    "E_pi": emissions_pi,
                     "b_tro3": np.array(
                         [1.77871043e-04, 5.80173377e-05, 1.94458719e-04, 2.09151270e-03]
                     ),
@@ -80,6 +73,7 @@ class FAIR(_Adapter):
                     "ghan_params": np.array([1.232, 73.9, 63.0]),
                     "gmst_factor": 1 / 1.04,
                     "ohu_factor": 0.92,
+                    "startyear": 1750,
                     **cfg,
                 }
                 for i, cfg in enumerate(cfgs)

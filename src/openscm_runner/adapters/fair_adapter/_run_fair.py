@@ -38,6 +38,7 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
         factors = {}
         factors["gmst"] = cfg.pop("gmst_factor")
         factors["ohu"] = cfg.pop("ohu_factor")
+        startyear = cfg.pop("startyear")
         data, unit, nt = _process_output(fair_scm(**cfg), output_vars, factors)
 
         data_scmrun = []
@@ -50,7 +51,7 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
 
         tempres = ScmRun(
             np.vstack(data_scmrun).T,
-            index=np.arange(1765, 1765 + nt),
+            index=np.arange(startyear, startyear + nt),
             columns={
                 "scenario": scenario,
                 "model": model,
