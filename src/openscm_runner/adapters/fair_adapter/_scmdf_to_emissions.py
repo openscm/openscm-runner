@@ -136,7 +136,6 @@ def _get_fair_col_unit_context(variable):
     )
 
     in_unit = EMISSIONS_SPECIES_UNITS_CONTEXT[row]["in_unit"]
-    assert in_unit.shape[0] == 1, in_unit
 
     fair_col = int(row[row].index.values) + 1  # first col is time
     in_unit = in_unit.iloc[0]
