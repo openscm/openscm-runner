@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.testing as npt
 from scmdata import ScmRun
 
 from openscm_runner import run
@@ -48,19 +49,96 @@ def test_fair_run(test_scenarios):
         ]
     )
 
-    res.filter(
-        variable="Surface Temperature", region="World", year=2100, scenario="ssp126",
+    # these values are from the run-fair notebook
+    npt.assert_allclose(
+        2.003964892582933,
+        res.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
+        ).values.max(),
+        rtol=RTOL,
+    )
+    npt.assert_allclose(
+        1.6255017914500822,
+        res.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
+        ).values.min(),
+        rtol=RTOL,
+    )
+
+    npt.assert_allclose(
+        4.645930053608295,
+        res.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp370",
+        ).values.max(),
+        rtol=RTOL,
+    )
+    npt.assert_allclose(
+        3.927009494888895,
+        res.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp370",
+        ).values.min(),
+        rtol=RTOL,
     )
 
     # check we can also calcluate quantiles
     quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
 
-    quantiles.filter(
-        variable="Surface Temperature",
-        region="World",
-        year=2100,
-        scenario="ssp126",
-        quantile=0.05,
+    npt.assert_allclose(
+        1.6410216803638293,
+        quantiles.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
+            quantile=0.05,
+        ).values,
+        rtol=RTOL,
+    )
+    npt.assert_allclose(
+        1.9816384713833952,
+        quantiles.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp126",
+            quantile=0.95,
+        ).values,
+        rtol=RTOL,
+    )
+
+    npt.assert_allclose(
+        3.9423565896925803,
+        quantiles.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp370",
+            quantile=0.05,
+        ).values,
+        rtol=RTOL,
+    )
+    npt.assert_allclose(
+        4.58938509254004,
+        quantiles.filter(
+            variable="Surface Temperature",
+            region="World",
+            year=2100,
+            scenario="ssp370",
+            quantile=0.95,
+        ).values,
+        rtol=RTOL,
     )
 
 
