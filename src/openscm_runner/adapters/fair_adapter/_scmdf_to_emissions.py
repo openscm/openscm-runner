@@ -1,5 +1,5 @@
 """
-Converter for reading scmdata dataframes into FaIR emissions arrays.
+Conversion of :obj:`scmdata.ScmRun` into FaIR emissions :obj:`np.ndarray`.
 """
 import datetime as dt
 import os
@@ -20,7 +20,7 @@ class HistoricalWorldEmms:
 
     @property
     def values(self):
-        """Fill in emissions values from historical + SSP2-4.5"""
+        """Emissions values from historical joint with ssp245"""
         if not self._loaded:
             self._values = ScmRun(
                 os.path.join(
@@ -38,7 +38,7 @@ class HistoricalWorldEmms:
 
     @property
     def values_fair_units(self):
-        """Fill in the units and ignores species not used by FaIR"""
+        """Get values with FaIR's expected units, ignores species not used by FaIR"""
         if not self._loaded_fair_history:
             ssp_df_hist = self.values
             for variable in ssp_df_hist.get_unique_meta("variable"):
@@ -79,7 +79,6 @@ class HistoricalWorldEmms:
         return self._values_fair_history
 
 
-# TODO: lazy load this and only load once
 historical_world_emms_holder = HistoricalWorldEmms()
 
 
@@ -149,7 +148,9 @@ def scmdf_to_emissions(
     scmrun, startyear=1750, endyear=2100, scen_startyear=2015
 ):  # pylint: disable=R0914
     """
-    Open an :obj:`ScmRun` and extracts the data. Interpolates linearly
+    Convert an :obj:`scmdata.ScmRun` into a FaIR emissions :obj:`np.ndarray`
+
+    Interpolates linearly if required and fills in montreal gases based on ssp245.
     between non-consecutive years in the SCEN file. Fills in Montreal gases
     from SSP2-4.5.
 
