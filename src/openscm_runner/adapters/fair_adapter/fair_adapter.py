@@ -1,8 +1,11 @@
 """
 FAIR adapter
 """
+import os
+
 import fair
 import numpy as np
+import pandas as pd
 from scmdata import ScmRun
 from tqdm.autonotebook import tqdm
 
@@ -31,7 +34,7 @@ class FAIR(_Adapter):
 
         return res
 
-    def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0201
+    def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0201,R0914
         full_cfgs = []
         run_id_block = 0
 
@@ -47,17 +50,27 @@ class FAIR(_Adapter):
             )
             nt = emissions.shape[0]
 
+            # TODO: start years other than 1750
+            # TODO: somebody who knows what they are doing to use scmdata
+            natural_df = pd.read_csv(
+                os.path.join(
+                    os.path.dirname(__file__), "natural-emissions-and-forcing.csv",
+                ),
+            )
+
+            ch4_n2o = natural_df.values[0:2, 7 : nt + 7].T
+            solar_forcing = natural_df.values[2, 7 : nt + 7].T
+            volcanic_forcing = natural_df.values[3, 7 : nt + 7].T
+
             scenario_cfg = [
                 {
                     "scenario": scenario,
                     "model": model,
                     "run_id": run_id_block + i,
                     "emissions": emissions,
-                    "natural": np.zeros(
-                        (nt, 2)
-                    ),  # any sensible scenario should override: provide in the config
-                    "F_volcanic": np.zeros(nt),  # likewise
-                    "F_solar": np.zeros(nt),  # likewise
+                    "natural": ch4_n2o,
+                    "F_volcanic": volcanic_forcing,
+                    "F_solar": solar_forcing,
                     "efficacy": np.ones(45),
                     "diagnostics": "AR6",
                     "gir_carbon_cycle": True,
