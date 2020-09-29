@@ -87,7 +87,7 @@ EMISSIONS_SPECIES_UNITS_CONTEXT = pd.DataFrame(
         ("|CO2|MAGICC Fossil and Industrial", "GtC / yr", None),
         ("|CO2|MAGICC AFOLU", "GtC / yr", None),
         ("|CH4", "MtCH4 / yr", None),
-        ("|N2O", "MtN2 / yr", None),
+        ("|N2ON", "MtN2 / yr", None),
         ("|Sulfur", "MtS / yr", None),
         ("|CO", "MtCO / yr", None),
         ("|VOC", "MtNMVOC / yr", None),
