@@ -175,13 +175,6 @@ def scmdf_to_emissions(
     AssertionError
         If there is more than one model-scenario pair in the provided :obj:`ScmRun`.
     """
-    # We expect that aeneris and silicone are going to give us a nicely
-    # formatted ScmRun with all 23 species present and correct at
-    # timesteps 2015, 2020 and ten-yearly to 2100.
-    # We also implicitly assume that data up until 2014 will follow SSP
-    # historical.
-    # This adapter will not be tested on anything else!
-
     n_cols = 40
     nt = endyear - startyear + 1
 
