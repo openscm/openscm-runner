@@ -53,6 +53,7 @@ def _run_func(magicc, cfg):
     try:
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
+        output_config = cfg.pop("output_config")
 
         res = magicc.run(**cfg)
         if res.metadata["stderr"]:
@@ -62,6 +63,20 @@ def _run_func(magicc, cfg):
         res["scenario"] = scenario
         res["model"] = model
         res["run_id"] = cfg["run_id"]
+        if output_config is not None:
+            magicc_out_cfg = res.metadata["parameters"]["allcfgs"]
+            for k in output_config:
+                res[k] = cfg[k]
+                if k in magicc_out_cfg:
+                    if magicc_out_cfg[k] != cfg[k]:
+                        LOGGER.warning(
+                            "MAGICC input config (via OpenSCM-Runner): {}. "
+                            "MAGICC output config: {}.".format(
+                                cfg[k],
+                                magicc_out_cfg[k],
+                            )
+                        )
+
 
         return res
     except CalledProcessError as exc:
@@ -83,7 +98,7 @@ def _execute_run(cfg, run_func, setup_func, instances):
 
 
 def run_magicc_parallel(
-    cfgs, output_vars,
+    cfgs, output_vars, output_config
 ):
     """
     Run MAGICC in parallel using compact out files
@@ -97,6 +112,9 @@ def run_magicc_parallel(
         Variables to output (may require some fiddling with ``out_x``
         variables in ``cfgs`` to get this right)
 
+    output_config : tuple[str]
+        Configuration to include in the output
+
     Returns
     -------
     :obj:`ScmRun`
@@ -109,7 +127,7 @@ def run_magicc_parallel(
 
     runs = [
         {
-            "cfg": {**cfg, "only": output_vars},
+            "cfg": {**cfg, "only": output_vars, "output_config": output_config},
             "run_func": _run_func,
             "setup_func": _setup_func,
             "instances": instances,

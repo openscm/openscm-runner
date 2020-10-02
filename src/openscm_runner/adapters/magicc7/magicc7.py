@@ -6,7 +6,7 @@ import os
 from subprocess import check_output  # nosec
 
 import pymagicc
-from scmdata import ScmRun
+from scmdata import run_append, ScmRun
 from tqdm.autonotebook import tqdm
 
 from ...settings import config
@@ -17,7 +17,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 # TODO: upgrade pymagicc and remove this
-VARIABLE_MAP = {"Ocean Heat Uptake": "HEATUPTK_AGGREG"}
+VARIABLE_MAP = {
+    "Heat Uptake|Ocean": "HEATUPTK_AGGREG",
+    "Heat Content|Ocean": "Aggregated Ocean Heat Content"
+}
 
 
 class MAGICC7(_Adapter):
@@ -47,7 +50,7 @@ class MAGICC7(_Adapter):
     def _init_model(self):  # pylint:disable=arguments-differ
         pass
 
-    def _run(self, scenarios, cfgs, output_variables):
+    def _run(self, scenarios, cfgs, output_variables, output_config):
         # TODO: add use of historical data properly  # pylint:disable=fixme
         LOGGER.warning("Historical data has not been checked")
 
@@ -77,13 +80,22 @@ class MAGICC7(_Adapter):
         pymagicc_vars = [
             VARIABLE_MAP[v] if v in VARIABLE_MAP else v for v in output_variables
         ]
-        res = run_magicc_parallel(full_cfgs, pymagicc_vars)
+        res = run_magicc_parallel(full_cfgs, pymagicc_vars, output_config)
+
         LOGGER.debug("Dropping todo metadata")
-        res = res.timeseries()
-        res.index = res.index.droplevel("todo")
-        res = res.reset_index()
+        res = res.drop_meta("todo")
         res["climate_model"] = "MAGICC{}".format(self.get_version())
 
+        odd_unit = "10^22 J"
+        if odd_unit in res.get_unique_meta("unit"):
+            LOGGER.debug("Converting {} to ZJ".format(odd_unit))
+            rest_ts = res.filter(unit=odd_unit, keep=False)
+            odd_unit_ts = res.filter(unit=odd_unit)
+            odd_unit_ts *= 10
+            odd_unit_ts["unit"] = "ZJ"
+            res = run_append([rest_ts, odd_unit_ts])
+
+        LOGGER.debug("Mapping variables to OpenSCM conventions")
         inverse_map = {v: k for k, v in VARIABLE_MAP.items()}
         res["variable"] = res["variable"].apply(
             lambda x: inverse_map[x] if x in inverse_map else x

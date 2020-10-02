@@ -28,7 +28,7 @@ def test_fair_run(test_scenarios):
             "Effective Radiative Forcing|CO2",
             "CO2 Air to Land Flux",  # should be ignored
         ),
-        full_config=False,
+        out_config=None,
     )
 
     assert isinstance(res, ScmRun)
@@ -150,7 +150,6 @@ def test_fair_ocean_factors(test_scenarios):
             "Heat Uptake|Ocean",
             "Heat Content|Ocean",
         ),
-        full_config=False,
     )
 
     res_custom_factors = run(
@@ -168,7 +167,6 @@ def test_fair_ocean_factors(test_scenarios):
             "Heat Uptake|Ocean",
             "Heat Content|Ocean",
         ),
-        full_config=False,
     )
 
     assert (
