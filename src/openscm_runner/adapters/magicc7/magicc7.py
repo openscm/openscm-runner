@@ -103,16 +103,14 @@ class MAGICC7(_Adapter):
     def _fix_pint_incompatible_units(inp):
         out = inp
 
-        conversions = (
-            ("10^22 J", 10, "ZJ"),
-        )
+        conversions = (("10^22 J", 10, "ZJ"),)
         for odd_unit, conv_factor, new_unit in conversions:
             if odd_unit in inp.get_unique_meta("unit"):
                 LOGGER.debug(
                     "Converting %s to %s with a conversion factor of %f",
                     odd_unit,
                     new_unit,
-                    conv_factor
+                    conv_factor,
                 )
                 rest_ts = inp.filter(unit=odd_unit, keep=False)
                 odd_unit_ts = inp.filter(unit=odd_unit)

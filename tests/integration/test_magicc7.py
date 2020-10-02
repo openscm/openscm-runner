@@ -19,7 +19,10 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
                     "rf_soxi_dir_wm2": -0.2,
                     "out_temperature": 1,
                     "out_forcing": 1,
-                    "out_dynamic_vars": ["DAT_AEROSOL_ERF", "DAT_HEATCONTENT_AGGREG_TOTAL"],
+                    "out_dynamic_vars": [
+                        "DAT_AEROSOL_ERF",
+                        "DAT_HEATCONTENT_AGGREG_TOTAL",
+                    ],
                     "out_ascii_binary": "BINARY",
                     "out_binary_format": 2,
                 },
@@ -72,7 +75,11 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     npt.assert_allclose(
         1844.7,
         res.filter(
-            unit="ZJ", variable="Heat Content|Ocean", region="World", year=2100, scenario="ssp126"
+            unit="ZJ",
+            variable="Heat Content|Ocean",
+            region="World",
+            year=2100,
+            scenario="ssp126",
         ).values.max(),
         rtol=RTOL,
     )
