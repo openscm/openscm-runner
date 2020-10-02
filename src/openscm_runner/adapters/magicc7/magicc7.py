@@ -110,7 +110,6 @@ class MAGICC7(_Adapter):
 
         return out
 
-
     def _write_scen_files_and_make_full_cfgs(self, scenarios, cfgs):
         full_cfgs = []
         run_id_block = 0

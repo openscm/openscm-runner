@@ -27,6 +27,7 @@ def _check_out_config(out_config, climate_models_cfgs):
                     "climate_model: '{}'".format(key)
                 )
 
+
 def run(
     climate_models_cfgs,
     scenarios,
