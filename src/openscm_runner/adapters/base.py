@@ -61,7 +61,7 @@ class _Adapter(ABC):  # pylint: disable=too-few-public-methods
         return self._run(scenarios, cfgs, output_variables, output_config)
 
     @abstractmethod
-    def _run(self, scenarios, cfgs, output_variables):
+    def _run(self, scenarios, cfgs, output_variables, output_config):
         """
         Run the model.
 

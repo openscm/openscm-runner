@@ -14,7 +14,7 @@ def test_run_out_config_conflict_error():
         run(
             climate_models_cfgs={"model_a": ["config list"]},
             scenarios="not used",
-            out_config={"another model": ("hi",)}
+            out_config={"another model": ("hi",)},
         )
 
 
@@ -27,5 +27,5 @@ def test_run_out_config_type_error():
         run(
             climate_models_cfgs={"model_a": ["config list"]},
             scenarios="not used",
-            out_config={"model_a": "hi"}
+            out_config={"model_a": "hi"},
         )

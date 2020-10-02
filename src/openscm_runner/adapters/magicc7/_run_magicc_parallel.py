@@ -70,13 +70,11 @@ def _run_func(magicc, cfg):
                 if k in magicc_out_cfg:
                     if magicc_out_cfg[k] != cfg[k]:
                         LOGGER.warning(
-                            "MAGICC input config (via OpenSCM-Runner): {}. "
-                            "MAGICC output config: {}.".format(
-                                cfg[k],
-                                magicc_out_cfg[k],
-                            )
+                            "MAGICC input config (via OpenSCM-Runner): %s. "
+                            "MAGICC output config: %s.",
+                            cfg[k],
+                            magicc_out_cfg[k],
                         )
-
 
         return res
     except CalledProcessError as exc:
@@ -97,9 +95,7 @@ def _execute_run(cfg, run_func, setup_func, instances):
     return run_func(magicc, cfg)
 
 
-def run_magicc_parallel(
-    cfgs, output_vars, output_config
-):
+def run_magicc_parallel(cfgs, output_vars, output_config):
     """
     Run MAGICC in parallel using compact out files
 

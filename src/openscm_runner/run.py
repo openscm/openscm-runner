@@ -11,6 +11,22 @@ from .adapters import FAIR, MAGICC7
 LOGGER = logging.getLogger(__name__)
 
 
+def _check_out_config(out_config, climate_models_cfgs):
+    if out_config is not None:
+        unknown_models = set(out_config.keys()) - set(climate_models_cfgs.keys())
+        if unknown_models:
+            raise KeyError(
+                "Found model(s) in `out_config` which are not in "
+                "`climate_models_cfgs`: {}".format(unknown_models)
+            )
+
+        for key, value in out_config.items():
+            if not isinstance(value, tuple):
+                raise TypeError(
+                    "`out_config` values must be tuples, this isn't the case for "
+                    "climate_model: '{}'".format(key)
+                )
+
 def run(
     climate_models_cfgs,
     scenarios,
@@ -50,20 +66,7 @@ def run(
     TypeError
         A value in ``out_config`` is not a :obj:`tuple`
     """
-    if out_config is not None:
-        unknown_models = set(out_config.keys()) - set(climate_models_cfgs.keys())
-        if unknown_models:
-            raise KeyError(
-                "Found model(s) in `out_config` which are not in "
-                "`climate_models_cfgs`: {}".format(unknown_models)
-            )
-
-        for k, v in out_config.items():
-            if not isinstance(v, tuple):
-                raise TypeError(
-                    "`out_config` values must be tuples, this isn't the case for "
-                    "climate_model: '{}'".format(k)
-                )
+    _check_out_config(out_config, climate_models_cfgs)
 
     res = []
     for climate_model, cfgs in tqdm(climate_models_cfgs.items(), desc="Climate models"):
@@ -81,7 +84,12 @@ def run(
         else:
             output_config_cm = None
 
-        model_res = runner.run(scenarios, cfgs, output_variables=output_variables, output_config=output_config_cm)
+        model_res = runner.run(
+            scenarios,
+            cfgs,
+            output_variables=output_variables,
+            output_config=output_config_cm,
+        )
         res.append(model_res)
 
     for i, model_res in enumerate(res):

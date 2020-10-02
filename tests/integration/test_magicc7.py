@@ -1,5 +1,3 @@
-import itertools
-
 import numpy.testing as npt
 import pymagicc.io
 import pytest
@@ -187,11 +185,14 @@ def test_write_scen_files_and_make_full_cfgs(
             assert scen_flag_val == "NONE"
 
 
-@pytest.mark.parametrize("out_config", (
-    ("core_climatesensitivity", "rf_total_runmodus"),
-    ("core_climatesensitivity",),
-    ("rf_total_runmodus",),
-))
+@pytest.mark.parametrize(
+    "out_config",
+    (
+        ("core_climatesensitivity", "rf_total_runmodus"),
+        ("core_climatesensitivity",),
+        ("rf_total_runmodus",),
+    ),
+)
 def test_return_config(test_scenarios, magicc7_is_available, out_config):
     core_climatesensitivities = [2, 3]
     rf_total_runmoduses = ["ALL", "CO2"]
@@ -199,19 +200,21 @@ def test_return_config(test_scenarios, magicc7_is_available, out_config):
     cfgs = []
     for cs in core_climatesensitivities:
         for runmodus in rf_total_runmoduses:
-            cfgs.append({
-                "out_dynamic_vars": ["DAT_TOTAL_INCLVOLCANIC_ERF", "DAT_SURFACE_TEMP"],
-                "core_climatesensitivity": cs,
-                "rf_total_runmodus": runmodus
-            })
+            cfgs.append(
+                {
+                    "out_dynamic_vars": [
+                        "DAT_TOTAL_INCLVOLCANIC_ERF",
+                        "DAT_SURFACE_TEMP",
+                    ],
+                    "core_climatesensitivity": cs,
+                    "rf_total_runmodus": runmodus,
+                }
+            )
 
     res = run(
         climate_models_cfgs={"MAGICC7": cfgs},
         scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
-        output_variables=(
-            "Surface Temperature",
-            "Effective Radiative Forcing",
-        ),
+        output_variables=("Surface Temperature", "Effective Radiative Forcing",),
         out_config={"MAGICC7": out_config},
     )
 

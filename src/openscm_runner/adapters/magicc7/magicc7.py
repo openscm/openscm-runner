@@ -6,7 +6,7 @@ import os
 from subprocess import check_output  # nosec
 
 import pymagicc
-from scmdata import run_append, ScmRun
+from scmdata import ScmRun, run_append
 from tqdm.autonotebook import tqdm
 
 from ...settings import config
@@ -19,7 +19,7 @@ LOGGER = logging.getLogger(__name__)
 # TODO: upgrade pymagicc and remove this
 VARIABLE_MAP = {
     "Heat Uptake|Ocean": "HEATUPTK_AGGREG",
-    "Heat Content|Ocean": "Aggregated Ocean Heat Content"
+    "Heat Content|Ocean": "Aggregated Ocean Heat Content",
 }
 
 
@@ -86,15 +86,7 @@ class MAGICC7(_Adapter):
         res = res.drop_meta("todo")
         res["climate_model"] = "MAGICC{}".format(self.get_version())
 
-        odd_unit = "10^22 J"
-        if odd_unit in res.get_unique_meta("unit"):
-            LOGGER.debug("Converting {} to ZJ".format(odd_unit))
-            rest_ts = res.filter(unit=odd_unit, keep=False)
-            odd_unit_ts = res.filter(unit=odd_unit)
-            odd_unit_ts *= 10
-            odd_unit_ts["unit"] = "ZJ"
-            res = run_append([rest_ts, odd_unit_ts])
-
+        res = self._fix_odd_units(res)
         LOGGER.debug("Mapping variables to OpenSCM conventions")
         inverse_map = {v: k for k, v in VARIABLE_MAP.items()}
         res["variable"] = res["variable"].apply(
@@ -104,6 +96,20 @@ class MAGICC7(_Adapter):
         res = ScmRun(res)
 
         return res
+
+    @staticmethod
+    def _fix_odd_units(inp):
+        odd_unit = "10^22 J"
+        if odd_unit in inp.get_unique_meta("unit"):
+            LOGGER.debug("Converting %s to ZJ", odd_unit)
+            rest_ts = inp.filter(unit=odd_unit, keep=False)
+            odd_unit_ts = inp.filter(unit=odd_unit)
+            odd_unit_ts *= 10
+            odd_unit_ts["unit"] = "ZJ"
+            out = run_append([rest_ts, odd_unit_ts])
+
+        return out
+
 
     def _write_scen_files_and_make_full_cfgs(self, scenarios, cfgs):
         full_cfgs = []
