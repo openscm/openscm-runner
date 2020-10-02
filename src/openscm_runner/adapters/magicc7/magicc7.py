@@ -16,11 +16,13 @@ from ._run_magicc_parallel import run_magicc_parallel
 LOGGER = logging.getLogger(__name__)
 
 
-# TODO: upgrade pymagicc and remove this
-VARIABLE_MAP = {
-    "Heat Uptake|Ocean": "HEATUPTK_AGGREG",
-    "Heat Content|Ocean": "Aggregated Ocean Heat Content",
-}
+_VARIABLE_MAP = {}
+"""
+dict[str: str] : Mapping from openscm_runner names to pymagicc names
+
+Should only be used as an emergency escape, if changes are needed
+they should really be made in pymagicc.
+"""
 
 
 class MAGICC7(_Adapter):
@@ -78,7 +80,7 @@ class MAGICC7(_Adapter):
         full_cfgs = self._write_scen_files_and_make_full_cfgs(magicc_scmdf, cfgs)
 
         pymagicc_vars = [
-            VARIABLE_MAP[v] if v in VARIABLE_MAP else v for v in output_variables
+            _VARIABLE_MAP[v] if v in _VARIABLE_MAP else v for v in output_variables
         ]
         res = run_magicc_parallel(full_cfgs, pymagicc_vars, output_config)
 
@@ -86,9 +88,9 @@ class MAGICC7(_Adapter):
         res = res.drop_meta("todo")
         res["climate_model"] = "MAGICC{}".format(self.get_version())
 
-        res = self._fix_odd_units(res)
+        res = self._fix_pint_incompatible_units(res)
         LOGGER.debug("Mapping variables to OpenSCM conventions")
-        inverse_map = {v: k for k, v in VARIABLE_MAP.items()}
+        inverse_map = {v: k for k, v in _VARIABLE_MAP.items()}
         res["variable"] = res["variable"].apply(
             lambda x: inverse_map[x] if x in inverse_map else x
         )
@@ -98,15 +100,25 @@ class MAGICC7(_Adapter):
         return res
 
     @staticmethod
-    def _fix_odd_units(inp):
-        odd_unit = "10^22 J"
-        if odd_unit in inp.get_unique_meta("unit"):
-            LOGGER.debug("Converting %s to ZJ", odd_unit)
-            rest_ts = inp.filter(unit=odd_unit, keep=False)
-            odd_unit_ts = inp.filter(unit=odd_unit)
-            odd_unit_ts *= 10
-            odd_unit_ts["unit"] = "ZJ"
-            out = run_append([rest_ts, odd_unit_ts])
+    def _fix_pint_incompatible_units(inp):
+        out = inp
+
+        conversions = (
+            ("10^22 J", 10, "ZJ"),
+        )
+        for odd_unit, conv_factor, new_unit in conversions:
+            if odd_unit in inp.get_unique_meta("unit"):
+                LOGGER.debug(
+                    "Converting %s to %s with a conversion factor of %f",
+                    odd_unit,
+                    new_unit,
+                    conv_factor
+                )
+                rest_ts = inp.filter(unit=odd_unit, keep=False)
+                odd_unit_ts = inp.filter(unit=odd_unit)
+                odd_unit_ts *= conv_factor
+                odd_unit_ts["unit"] = new_unit
+                out = run_append([rest_ts, odd_unit_ts])
 
         return out
 
