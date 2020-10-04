@@ -51,7 +51,7 @@ def run(
         Variables to include in the output
 
     out_config : dict[str: tuple of str]
-        Dictionary where each key is a model and each value is a list of
+        Dictionary where each key is a model and each value is a tuple of
         configuration values to include in the output's metadata.
 
     Returns
