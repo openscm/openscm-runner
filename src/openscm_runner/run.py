@@ -18,7 +18,7 @@ def _check_out_config(out_config, climate_models_cfgs):
             LOGGER.warning(
                 "Found model(s) in `out_config` which are not in "
                 "`climate_models_cfgs`: %s",
-                unknown_models
+                unknown_models,
             )
 
         for key, value in out_config.items():
@@ -83,7 +83,9 @@ def run(
 
         if out_config is not None and climate_model in out_config:
             output_config_cm = out_config[climate_model]
-            LOGGER.debug("Using output config: %s for %s", output_config_cm, climate_model)
+            LOGGER.debug(
+                "Using output config: %s for %s", output_config_cm, climate_model
+            )
         else:
             LOGGER.debug("No output config for %s", climate_model)
             output_config_cm = None
