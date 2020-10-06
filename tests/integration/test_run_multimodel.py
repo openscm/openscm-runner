@@ -8,7 +8,19 @@ from openscm_runner.utils import calculate_quantiles
 RTOL = 1e-5
 
 
+def _check_res(exp, check_val, raise_error, rtol=RTOL):
+    try:
+        npt.assert_allclose(exp, check_val, rtol=rtol)
+    except AssertionError:
+        if raise_error:
+            raise
+
+        print("exp: {}, check_val: {}".format(exp, check_val))
+
+
 def test_multimodel_run(test_scenarios, magicc7_is_available):
+    debug_run = False
+
     res = run(
         climate_models_cfgs={
             "FaIR": [
@@ -96,8 +108,8 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
 
     quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
 
-    npt.assert_allclose(
-        1.53273349,
+    _check_res(
+        1.3603486,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -105,10 +117,11 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             scenario="ssp126",
             quantile=0.05,
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
-    npt.assert_allclose(
-        2.51196596,
+    _check_res(
+        2.61950384,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -116,11 +129,12 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             scenario="ssp126",
             quantile=0.95,
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
 
-    npt.assert_allclose(
-        2.9904474,
+    _check_res(
+        2.99063777,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -128,10 +142,11 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             scenario="ssp370",
             quantile=0.05,
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
-    npt.assert_allclose(
-        5.34757776,
+    _check_res(
+        5.34821243,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -139,6 +154,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             scenario="ssp370",
             quantile=0.95,
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
 
@@ -148,8 +164,8 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
         process_over_columns=("run_id", "ensemble_member"),
     )
 
-    npt.assert_allclose(
-        1.4932964,
+    _check_res(
+        1.27586919,
         quantiles_cm.filter(
             variable="Surface Temperature",
             region="World",
@@ -158,10 +174,11 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             quantile=0.05,
             climate_model="MAGICC*",
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
-    npt.assert_allclose(
-        5.34584055,
+    _check_res(
+        5.34663565,
         quantiles_cm.filter(
             variable="Surface Temperature",
             region="World",
@@ -170,10 +187,11 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             quantile=0.95,
             climate_model="MAGICC*",
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
 
-    npt.assert_allclose(
+    _check_res(
         1.80924238,
         quantiles_cm.filter(
             variable="Surface Temperature",
@@ -183,9 +201,10 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             quantile=0.05,
             climate_model="FaIR*",
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
-    npt.assert_allclose(
+    _check_res(
         4.76399179,
         quantiles_cm.filter(
             variable="Surface Temperature",
@@ -195,5 +214,9 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             quantile=0.95,
             climate_model="FaIR*",
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
+
+    if debug_run:
+        assert False, "Turn off debug"
