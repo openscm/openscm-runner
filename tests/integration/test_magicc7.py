@@ -10,7 +10,19 @@ from openscm_runner.utils import calculate_quantiles
 RTOL = 1e-5
 
 
+def _check_res(exp, check_val, raise_error, rtol=RTOL):
+    try:
+        npt.assert_allclose(exp, check_val, rtol=rtol)
+    except AssertionError:
+        if raise_error:
+            raise
+
+        print("exp: {}, check_val: {}".format(exp, check_val))
+
+
 def test_magicc7_run(test_scenarios, magicc7_is_available):
+    debug_run = False
+
     res = run(
         climate_models_cfgs={
             "MAGICC7": [
@@ -22,6 +34,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
                     "out_dynamic_vars": [
                         "DAT_AEROSOL_ERF",
                         "DAT_HEATCONTENT_AGGREG_TOTAL",
+                        "DAT_CO2_AIR2LAND_FLUX",
                     ],
                     "out_ascii_binary": "BINARY",
                     "out_binary_format": 2,
@@ -51,7 +64,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             "Effective Radiative Forcing|Aerosols",
             "Effective Radiative Forcing|CO2",
             "Heat Content|Ocean",
-            # "CO2 Air to Land Flux",  # todo: add this back in
+            "Net Atmosphere to Land Flux|CO2",
         ),
     )
 
@@ -68,12 +81,13 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             "Effective Radiative Forcing|Aerosols",
             "Effective Radiative Forcing|CO2",
             "Heat Content|Ocean",
+            "Net Atmosphere to Land Flux|CO2",
         ]
     )
 
     # check ocean heat content unit conversion comes through correctly
-    npt.assert_allclose(
-        1844.7,
+    _check_res(
+        1824.05,
         res.filter(
             unit="ZJ",
             variable="Heat Content|Ocean",
@@ -81,44 +95,62 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             year=2100,
             scenario="ssp126",
         ).values.max(),
+        not debug_run,
         rtol=RTOL,
     )
 
-    npt.assert_allclose(
-        2.6126502,
+    _check_res(
+        0.472378,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+            unit="GtC / yr",
+            variable="Net Atmosphere to Land Flux|CO2",
+            region="World",
+            year=2100,
+            scenario="ssp126",
         ).values.max(),
-        rtol=RTOL,
-    )
-    npt.assert_allclose(
-        1.4454666,
-        res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
-        ).values.min(),
+        not debug_run,
         rtol=RTOL,
     )
 
-    npt.assert_allclose(
-        5.5218109,
+    _check_res(
+        2.756034,
+        res.filter(
+            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+        ).values.max(),
+        not debug_run,
+        rtol=RTOL,
+    )
+    _check_res(
+        1.2195495,
+        res.filter(
+            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+        ).values.min(),
+        not debug_run,
+        rtol=RTOL,
+    )
+
+    _check_res(
+        5.5226571,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
         ).values.max(),
+        not debug_run,
         rtol=RTOL,
     )
-    npt.assert_allclose(
-        2.7332273999999996,
+    _check_res(
+        2.733369581,
         res.filter(
             variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
         ).values.min(),
+        not debug_run,
         rtol=RTOL,
     )
 
     # check we can also calcluate quantiles
     quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
 
-    npt.assert_allclose(
-        1.4932964,
+    _check_res(
+        1.27586919,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -126,10 +158,11 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             scenario="ssp126",
             quantile=0.05,
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
-    npt.assert_allclose(
-        2.54376164,
+    _check_res(
+        2.6587052,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -137,11 +170,12 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             scenario="ssp126",
             quantile=0.95,
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
 
-    npt.assert_allclose(
-        2.8361154,
+    _check_res(
+        2.83627686,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -149,10 +183,11 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             scenario="ssp370",
             quantile=0.05,
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
-    npt.assert_allclose(
-        5.34584055,
+    _check_res(
+        5.34663565,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -160,8 +195,12 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
             scenario="ssp370",
             quantile=0.95,
         ).values,
+        not debug_run,
         rtol=RTOL,
     )
+
+    if debug_run:
+        assert False, "Turn off debug"
 
 
 def test_write_scen_files_and_make_full_cfgs(
