@@ -21,6 +21,7 @@ master
 Added
 ~~~~~
 
+- (`#23 <https://github.com/openscm/openscm-runner/pull/23>`_) Test that MAGICC's carbon cycle output can be used with MAGICCv7.4.2.
 - (`#22 <https://github.com/openscm/openscm-runner/pull/22>`_) ``out_config`` argument to :func:`openscm_runner.run`, which allows the user to specify model configuration to include in the output's metadata.
 
 v0.4.0 - 2020-09-24
