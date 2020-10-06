@@ -37,7 +37,7 @@ class _Adapter(ABC):  # pylint: disable=too-few-public-methods
             Keyword arguments used to initialise the model
         """
 
-    def run(self, scenarios, cfgs, output_variables):
+    def run(self, scenarios, cfgs, output_variables, output_config):
         """
         Parameters
         ----------
@@ -50,15 +50,18 @@ class _Adapter(ABC):  # pylint: disable=too-few-public-methods
         output_variables : list[str]
             Variables to include in the output
 
+        output_config : tuple[str]
+            Configuration to include in the output
+
         Returns
         -------
         :obj:`ScmRun`
             Model output
         """
-        return self._run(scenarios, cfgs, output_variables)
+        return self._run(scenarios, cfgs, output_variables, output_config)
 
     @abstractmethod
-    def _run(self, scenarios, cfgs, output_variables):
+    def _run(self, scenarios, cfgs, output_variables, output_config):
         """
         Run the model.
 

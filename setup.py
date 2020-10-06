@@ -1,6 +1,7 @@
-import versioneer
 from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
+
+import versioneer
 
 PACKAGE_NAME = "openscm-runner"
 AUTHORS = [
@@ -21,7 +22,8 @@ REQUIREMENTS = [
     "fair>=1.6.1a0,<2.0.0",
     "matplotlib==3.2.2",
     "pyam-iamc",
-    "pymagicc>=2.0.0rc6",
+    # "pymagicc>=2.0.0rc7,<3",
+    "pymagicc @ git+https://github.com/openscm/pymagicc.git@fix-naming",
     "python-dotenv",
     "scmdata>=0.7.2",
     "tqdm",
@@ -41,7 +43,7 @@ REQUIREMENTS_DEV = [
         "black==19.10b0",
         "black-nb",
         "flake8",
-        "isort<5",
+        "isort>5",
         "mypy",
         "nbdime",
         "pydocstyle",

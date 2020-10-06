@@ -25,6 +25,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
                     "out_dynamic_vars": [
                         "DAT_CO2_CONC",
                         "DAT_AEROSOL_ERF",
+                        "DAT_HEATCONTENT_AGGREG_TOTAL",
                         "DAT_HEATUPTK_AGGREG",
                     ],
                     "out_ascii_binary": "BINARY",
@@ -38,6 +39,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
                     "out_dynamic_vars": [
                         "DAT_CO2_CONC",
                         "DAT_AEROSOL_ERF",
+                        "DAT_HEATCONTENT_AGGREG_TOTAL",
                         "DAT_HEATUPTK_AGGREG",
                     ],
                     "out_ascii_binary": "BINARY",
@@ -51,6 +53,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
                     "out_dynamic_vars": [
                         "DAT_CO2_CONC",
                         "DAT_AEROSOL_ERF",
+                        "DAT_HEATCONTENT_AGGREG_TOTAL",
                         "DAT_HEATUPTK_AGGREG",
                     ],
                     "out_ascii_binary": "BINARY",
@@ -62,12 +65,13 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
         output_variables=(
             "Surface Temperature",
             "Atmospheric Concentrations|CO2",
-            "Heat Content",
+            "Heat Content|Ocean",
+            "Heat Uptake|Ocean",
             "Effective Radiative Forcing",
             "Effective Radiative Forcing|Aerosols",
             "Effective Radiative Forcing|CO2",
         ),
-        full_config=False,
+        out_config=None,
     )
 
     assert isinstance(res, ScmRun)
@@ -84,7 +88,8 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
                 "Effective Radiative Forcing",
                 "Effective Radiative Forcing|Aerosols",
                 "Effective Radiative Forcing|CO2",
-                "Heat Content",
+                "Heat Content|Ocean",
+                "Heat Uptake|Ocean",
                 "Atmospheric Concentrations|CO2",
             ]
         )

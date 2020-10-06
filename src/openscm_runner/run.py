@@ -11,11 +11,29 @@ from .adapters import FAIR, MAGICC7
 LOGGER = logging.getLogger(__name__)
 
 
+def _check_out_config(out_config, climate_models_cfgs):
+    if out_config is not None:
+        unknown_models = set(out_config.keys()) - set(climate_models_cfgs.keys())
+        if unknown_models:
+            LOGGER.warning(
+                "Found model(s) in `out_config` which are not in "
+                "`climate_models_cfgs`: %s",
+                unknown_models,
+            )
+
+        for key, value in out_config.items():
+            if not isinstance(value, tuple):
+                raise TypeError(
+                    "`out_config` values must be tuples, this isn't the case for "
+                    "climate_model: '{}'".format(key)
+                )
+
+
 def run(
     climate_models_cfgs,
     scenarios,
     output_variables=("Surface Temperature",),
-    full_config=False,
+    out_config=None,
 ):  # pylint: disable=W9006
     """
     Run a number of climate models over a number of scenarios
@@ -33,9 +51,9 @@ def run(
     output_variables : list[str]
         Variables to include in the output
 
-    full_config : bool
-        Include the configuration used to run each model in the output's
-        metadata
+    out_config : dict[str: tuple of str]
+        Dictionary where each key is a model and each value is a tuple of
+        configuration values to include in the output's metadata.
 
     Returns
     -------
@@ -44,12 +62,13 @@ def run(
 
     Raises
     ------
-    NotImplementedError
-        ``full_config`` is ``True``, we haven't worked out how this should
-        behave yet.
+    KeyError
+        ``out_config`` has keys which are not in ``climate_models_cfgs``
+
+    TypeError
+        A value in ``out_config`` is not a :obj:`tuple`
     """
-    if full_config:
-        raise NotImplementedError("Returning full config is not yet implemented")
+    _check_out_config(out_config, climate_models_cfgs)
 
     res = []
     for climate_model, cfgs in tqdm(climate_models_cfgs.items(), desc="Climate models"):
@@ -62,7 +81,21 @@ def run(
                 "No adapter available for {}".format(climate_model)
             )
 
-        model_res = runner.run(scenarios, cfgs, output_variables=output_variables)
+        if out_config is not None and climate_model in out_config:
+            output_config_cm = out_config[climate_model]
+            LOGGER.debug(
+                "Using output config: %s for %s", output_config_cm, climate_model
+            )
+        else:
+            LOGGER.debug("No output config for %s", climate_model)
+            output_config_cm = None
+
+        model_res = runner.run(
+            scenarios,
+            cfgs,
+            output_variables=output_variables,
+            output_config=output_config_cm,
+        )
         res.append(model_res)
 
     for i, model_res in enumerate(res):

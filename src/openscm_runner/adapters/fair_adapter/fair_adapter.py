@@ -20,7 +20,10 @@ class FAIR(_Adapter):
     def _init_model(self, *args, **kwargs):
         pass
 
-    def _run(self, scenarios, cfgs, output_variables):
+    def _run(self, scenarios, cfgs, output_variables, output_config):
+        if output_config is not None:
+            raise NotImplementedError("`output_config` not implemented for FaIR")
+
         fair_df = ScmRun(scenarios.timeseries())
         full_cfgs = self._make_full_cfgs(fair_df, cfgs)
 

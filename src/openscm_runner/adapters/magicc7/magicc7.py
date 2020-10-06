@@ -6,7 +6,7 @@ import os
 from subprocess import check_output  # nosec
 
 import pymagicc
-from scmdata import ScmRun
+from scmdata import ScmRun, run_append
 from tqdm.autonotebook import tqdm
 
 from ...settings import config
@@ -16,8 +16,13 @@ from ._run_magicc_parallel import run_magicc_parallel
 LOGGER = logging.getLogger(__name__)
 
 
-# TODO: upgrade pymagicc and remove this
-VARIABLE_MAP = {"Ocean Heat Uptake": "HEATUPTK_AGGREG"}
+_VARIABLE_MAP = {}
+"""
+dict[str: str] : Mapping from openscm_runner names to pymagicc names
+
+Should only be used as an emergency escape, if changes are needed
+they should really be made in pymagicc.
+"""
 
 
 class MAGICC7(_Adapter):
@@ -47,7 +52,7 @@ class MAGICC7(_Adapter):
     def _init_model(self):  # pylint:disable=arguments-differ
         pass
 
-    def _run(self, scenarios, cfgs, output_variables):
+    def _run(self, scenarios, cfgs, output_variables, output_config):
         # TODO: add use of historical data properly  # pylint:disable=fixme
         LOGGER.warning("Historical data has not been checked")
 
@@ -75,16 +80,17 @@ class MAGICC7(_Adapter):
         full_cfgs = self._write_scen_files_and_make_full_cfgs(magicc_scmdf, cfgs)
 
         pymagicc_vars = [
-            VARIABLE_MAP[v] if v in VARIABLE_MAP else v for v in output_variables
+            _VARIABLE_MAP[v] if v in _VARIABLE_MAP else v for v in output_variables
         ]
-        res = run_magicc_parallel(full_cfgs, pymagicc_vars)
+        res = run_magicc_parallel(full_cfgs, pymagicc_vars, output_config)
+
         LOGGER.debug("Dropping todo metadata")
-        res = res.timeseries()
-        res.index = res.index.droplevel("todo")
-        res = res.reset_index()
+        res = res.drop_meta("todo")
         res["climate_model"] = "MAGICC{}".format(self.get_version())
 
-        inverse_map = {v: k for k, v in VARIABLE_MAP.items()}
+        res = self._fix_pint_incompatible_units(res)
+        LOGGER.debug("Mapping variables to OpenSCM conventions")
+        inverse_map = {v: k for k, v in _VARIABLE_MAP.items()}
         res["variable"] = res["variable"].apply(
             lambda x: inverse_map[x] if x in inverse_map else x
         )
@@ -92,6 +98,27 @@ class MAGICC7(_Adapter):
         res = ScmRun(res)
 
         return res
+
+    @staticmethod
+    def _fix_pint_incompatible_units(inp):
+        out = inp
+
+        conversions = (("10^22 J", 10, "ZJ"),)
+        for odd_unit, conv_factor, new_unit in conversions:
+            if odd_unit in inp.get_unique_meta("unit"):
+                LOGGER.debug(
+                    "Converting %s to %s with a conversion factor of %f",
+                    odd_unit,
+                    new_unit,
+                    conv_factor,
+                )
+                rest_ts = inp.filter(unit=odd_unit, keep=False)
+                odd_unit_ts = inp.filter(unit=odd_unit)
+                odd_unit_ts *= conv_factor
+                odd_unit_ts["unit"] = new_unit
+                out = run_append([rest_ts, odd_unit_ts])
+
+        return out
 
     def _write_scen_files_and_make_full_cfgs(self, scenarios, cfgs):
         full_cfgs = []

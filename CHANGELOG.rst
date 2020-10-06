@@ -15,9 +15,13 @@ The changes listed in this file are categorised as follows:
     - Security: in case of vulnerabilities.
 
 
-
 master
 ------
+
+Added
+~~~~~
+
+- (`#22 <https://github.com/openscm/openscm-runner/pull/22>`_) ``out_config`` argument to :func:`openscm_runner.run`, which allows the user to specify model configuration to include in the output's metadata.
 
 v0.4.0 - 2020-09-24
 -------------------
