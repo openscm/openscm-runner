@@ -204,7 +204,7 @@ def test_startyear(test_scenarios, test_scenarios_2600):
     )
 
     res_default = run(
-        climate_models_cfgs={"FaIR": [{},],},
+        climate_models_cfgs={"FaIR": [{}]},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
         output_variables=("Surface Temperature",),
         out_config=None,
