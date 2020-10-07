@@ -37,15 +37,16 @@ class FAIR(_Adapter):
     def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0201,R0914
         full_cfgs = []
         run_id_block = 0
+        startyear = _check_startyear(cfgs)
 
-        for icfg, ((scenario, model), smdf) in tqdm(
-            enumerate(scenarios.timeseries().groupby(["scenario", "model"])),
+        for (scenario, model), smdf in tqdm(
+            scenarios.timeseries().groupby(["scenario", "model"]),
             desc="Creating FaIR emissions inputs",
         ):
             smdf_in = ScmRun(smdf)
             scen_startyear = smdf_in.time_points.years()[0]
             endyear = smdf_in.time_points.years()[-1]
-            startyear = cfgs[icfg].pop("startyear", 1750)
+
             if startyear < 1750:
                 raise ValueError(
                     "startyear must be 1750 or later (%d specified)" % startyear
@@ -63,7 +64,6 @@ class FAIR(_Adapter):
             )
             nt = emissions.shape[0]
 
-            # TODO: start years other than 1750
             # TODO: somebody who knows what they are doing to use scmdata
             natural_df = pd.read_csv(
                 os.path.join(
@@ -122,3 +122,26 @@ class FAIR(_Adapter):
             The FAIR version id
         """
         return fair.__version__
+
+
+def _check_startyear(cfgs):
+    """
+    Check to see that at most one startyear is defined in the config
+    Returns
+    -------
+    int
+        startyear
+
+    Raises
+    ------
+    ValueError
+        if more that one startyear is defined
+    """
+    first_startyear = cfgs[0].pop("startyear", 1750)
+    if len(cfgs) > 1:
+        for cfg in cfgs[1:]:
+            this_startyear = cfg.pop("startyear", 1750)
+            if this_startyear != first_startyear:
+                raise ValueError("Can only handle one startyear per scenario ensemble")
+
+    return first_startyear

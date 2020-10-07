@@ -188,7 +188,7 @@ def test_fair_ocean_factors(test_scenarios):
 
 
 def test_startyear(test_scenarios, test_scenarios_2600):
-    # I think we can change the start year, but we can't run different start years in the same ensemble as output files will differ in shape.
+    # we can't run different start years in the same ensemble as output files will differ in shape. There is a separate test to ensure this does raise an error.
     res_1850 = run(
         climate_models_cfgs={"FaIR": [{"startyear": 1850}]},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
@@ -237,6 +237,14 @@ def test_startyear(test_scenarios, test_scenarios_2600):
         run(
             climate_models_cfgs={"FaIR": [{}]},
             scenarios=test_scenarios_2600.filter(scenario=["ssp245"]),
+            output_variables=("Surface Temperature",),
+            out_config=None,
+        )
+
+    with pytest.raises(ValueError):
+        run(
+            climate_models_cfgs={"FaIR": [{"startyear": 1750}, {"startyear": 1850}]},
+            scenarios=test_scenarios.filter(scenario=["ssp245"]),
             output_variables=("Surface Temperature",),
             out_config=None,
         )
