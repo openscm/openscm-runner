@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.testing as npt
+import pytest
 from scmdata import ScmRun
 
 from openscm_runner import run
@@ -184,3 +185,58 @@ def test_fair_ocean_factors(test_scenarios):
             scenario="ssp585",
         ).values
     )
+
+
+def test_startyear(test_scenarios, test_scenarios_2600):
+    # I think we can change the start year, but we can't run different start years in the same ensemble as output files will differ in shape.
+    res_1850 = run(
+        climate_models_cfgs={"FaIR": [{"startyear": 1850}]},
+        scenarios=test_scenarios.filter(scenario=["ssp245"]),
+        output_variables=("Surface Temperature",),
+        out_config=None,
+    )
+
+    res_1750 = run(
+        climate_models_cfgs={"FaIR": [{"startyear": 1750}]},
+        scenarios=test_scenarios.filter(scenario=["ssp245"]),
+        output_variables=("Surface Temperature",),
+        out_config=None,
+    )
+
+    res_default = run(
+        climate_models_cfgs={"FaIR": [{},],},
+        scenarios=test_scenarios.filter(scenario=["ssp245"]),
+        output_variables=("Surface Temperature",),
+        out_config=None,
+    )
+
+    gsat2100_start1850 = res_1850.filter(
+        variable="Surface Temperature", region="World", year=2100,
+    ).values
+
+    gsat2100_start1750 = res_1750.filter(
+        variable="Surface Temperature", region="World", year=2100,
+    ).values
+
+    gsat2100_startdefault = res_default.filter(
+        variable="Surface Temperature", region="World", year=2100,
+    ).values
+
+    assert gsat2100_start1850 != gsat2100_start1750
+    assert gsat2100_start1750 == gsat2100_startdefault
+
+    with pytest.raises(ValueError):
+        run(
+            climate_models_cfgs={"FaIR": [{"startyear": 1650}]},
+            scenarios=test_scenarios.filter(scenario=["ssp245"]),
+            output_variables=("Surface Temperature",),
+            out_config=None,
+        )
+
+    with pytest.raises(ValueError):
+        run(
+            climate_models_cfgs={"FaIR": [{}]},
+            scenarios=test_scenarios_2600.filter(scenario=["ssp245"]),
+            output_variables=("Surface Temperature",),
+            out_config=None,
+        )

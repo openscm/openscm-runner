@@ -23,6 +23,15 @@ def test_scenarios(test_data_dir):
 
 
 @pytest.fixture(scope="session")
+def test_scenarios_2600(test_data_dir):
+    scenarios = pyam.IamDataFrame(
+        os.path.join(test_data_dir, "rcmip_scen_ssp_world_emissions_2600.csv")
+    )
+
+    return scenarios
+
+
+@pytest.fixture(scope="session")
 def magicc7_is_available():
     try:
         magicc_version = MAGICC7.get_version()

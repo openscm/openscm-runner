@@ -38,15 +38,28 @@ class FAIR(_Adapter):
         full_cfgs = []
         run_id_block = 0
 
-        for (scenario, model), smdf in tqdm(
-            scenarios.timeseries().groupby(["scenario", "model"]),
+        for icfg, ((scenario, model), smdf) in tqdm(
+            enumerate(scenarios.timeseries().groupby(["scenario", "model"])),
             desc="Creating FaIR emissions inputs",
         ):
             smdf_in = ScmRun(smdf)
             scen_startyear = smdf_in.time_points.years()[0]
             endyear = smdf_in.time_points.years()[-1]
+            startyear = cfgs[icfg].pop("startyear", 1750)
+            if startyear < 1750:
+                raise ValueError(
+                    "startyear must be 1750 or later (%d specified)" % startyear
+                )
+            if endyear > 2500:
+                raise ValueError(
+                    "endyear must be 2500 or earlier (%d implied by scenario data)"
+                    % endyear
+                )
             emissions = scmdf_to_emissions(
-                smdf_in, startyear=1750, scen_startyear=scen_startyear, endyear=endyear
+                smdf_in,
+                startyear=startyear,
+                scen_startyear=scen_startyear,
+                endyear=endyear,
             )
             nt = emissions.shape[0]
 
@@ -58,9 +71,11 @@ class FAIR(_Adapter):
                 ),
             )
 
-            ch4_n2o = natural_df.values[0:2, 7 : nt + 7].T
-            solar_forcing = natural_df.values[2, 7 : nt + 7].T
-            volcanic_forcing = natural_df.values[3, 7 : nt + 7].T
+            n_index_columns = 7
+            start_index = startyear - 1750 + n_index_columns
+            ch4_n2o = natural_df.values[0:2, start_index : start_index + nt].T
+            solar_forcing = natural_df.values[2, start_index : start_index + nt].T
+            volcanic_forcing = natural_df.values[3, start_index : start_index + nt].T
 
             scenario_cfg = [
                 {
@@ -86,7 +101,7 @@ class FAIR(_Adapter):
                     "ghan_params": np.array([1.232, 73.9, 63.0]),
                     "gmst_factor": 1 / 1.04,
                     "ohu_factor": 0.92,
-                    "startyear": 1750,
+                    "startyear": startyear,
                     **cfg,
                 }
                 for i, cfg in enumerate(cfgs)
