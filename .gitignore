@@ -1,6 +1,9 @@
 # vim swap files
 *.swp
 
+#vscode files
+.vscode/*
+
 # temporary data files
 scripts/*.csv
 scripts/*.json
