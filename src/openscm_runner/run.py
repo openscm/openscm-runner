@@ -6,7 +6,7 @@ import logging
 import scmdata
 from tqdm.autonotebook import tqdm
 
-from .adapters import FAIR, MAGICC7
+from ..adapters import FAIR, MAGICC7, FAIR2
 
 LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +76,8 @@ def run(
             runner = MAGICC7()
         elif climate_model.upper() == "FAIR":  # allow various capitalisations
             runner = FAIR()
+        elif climate_model.upper() == "FAIR2":  # allow various capitalisations
+            runner = FAIR2()
         else:
             raise NotImplementedError(
                 "No adapter available for {}".format(climate_model)
