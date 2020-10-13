@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.testing as npt
+import pytest
 from scmdata import ScmRun
 
 from openscm_runner import run
@@ -49,8 +50,9 @@ def test_fair_run(test_scenarios):
         ]
     )
 
+    # these values are from the run-fair notebook
     npt.assert_allclose(
-        2.2099132544445927,
+        2.003964892582933,
         res.filter(
             variable="Surface Temperature",
             region="World",
@@ -60,7 +62,7 @@ def test_fair_run(test_scenarios):
         rtol=RTOL,
     )
     npt.assert_allclose(
-        1.7945341435607594,
+        1.6255017914500822,
         res.filter(
             variable="Surface Temperature",
             region="World",
@@ -71,7 +73,7 @@ def test_fair_run(test_scenarios):
     )
 
     npt.assert_allclose(
-        4.824878345585957,
+        4.645930053608295,
         res.filter(
             variable="Surface Temperature",
             region="World",
@@ -81,7 +83,7 @@ def test_fair_run(test_scenarios):
         rtol=RTOL,
     )
     npt.assert_allclose(
-        4.07184261082167,
+        3.927009494888895,
         res.filter(
             variable="Surface Temperature",
             region="World",
@@ -95,7 +97,7 @@ def test_fair_run(test_scenarios):
     quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
 
     npt.assert_allclose(
-        1.80924238,
+        1.6410216803638293,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -106,7 +108,7 @@ def test_fair_run(test_scenarios):
         rtol=RTOL,
     )
     npt.assert_allclose(
-        2.18308358,
+        1.9816384713833952,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -118,7 +120,7 @@ def test_fair_run(test_scenarios):
     )
 
     npt.assert_allclose(
-        4.08625963,
+        3.9423565896925803,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -129,7 +131,7 @@ def test_fair_run(test_scenarios):
         rtol=RTOL,
     )
     npt.assert_allclose(
-        4.76399179,
+        4.58938509254004,
         quantiles.filter(
             variable="Surface Temperature",
             region="World",
@@ -156,7 +158,7 @@ def test_fair_ocean_factors(test_scenarios):
         climate_models_cfgs={
             "FaIR": [
                 {
-                    "gmst_factor": np.linspace(0.90, 1.00, 336),  # test with array
+                    "gmst_factor": np.linspace(0.90, 1.00, 351),  # test with array
                     "ohu_factor": 0.93,
                 }
             ]
@@ -183,3 +185,66 @@ def test_fair_ocean_factors(test_scenarios):
             scenario="ssp585",
         ).values
     )
+
+
+def test_startyear(test_scenarios, test_scenarios_2600):
+    # we can't run different start years in the same ensemble as output files will differ in shape. There is a separate test to ensure this does raise an error.
+    res_1850 = run(
+        climate_models_cfgs={"FaIR": [{"startyear": 1850}]},
+        scenarios=test_scenarios.filter(scenario=["ssp245"]),
+        output_variables=("Surface Temperature",),
+        out_config=None,
+    )
+
+    res_1750 = run(
+        climate_models_cfgs={"FaIR": [{"startyear": 1750}]},
+        scenarios=test_scenarios.filter(scenario=["ssp245"]),
+        output_variables=("Surface Temperature",),
+        out_config=None,
+    )
+
+    res_default = run(
+        climate_models_cfgs={"FaIR": [{}]},
+        scenarios=test_scenarios.filter(scenario=["ssp245"]),
+        output_variables=("Surface Temperature",),
+        out_config=None,
+    )
+
+    gsat2100_start1850 = res_1850.filter(
+        variable="Surface Temperature", region="World", year=2100,
+    ).values
+
+    gsat2100_start1750 = res_1750.filter(
+        variable="Surface Temperature", region="World", year=2100,
+    ).values
+
+    gsat2100_startdefault = res_default.filter(
+        variable="Surface Temperature", region="World", year=2100,
+    ).values
+
+    assert gsat2100_start1850 != gsat2100_start1750
+    assert gsat2100_start1750 == gsat2100_startdefault
+
+    with pytest.raises(ValueError):
+        run(
+            climate_models_cfgs={"FaIR": [{"startyear": 1650}]},
+            scenarios=test_scenarios.filter(scenario=["ssp245"]),
+            output_variables=("Surface Temperature",),
+            out_config=None,
+        )
+
+    with pytest.raises(ValueError):
+        run(
+            climate_models_cfgs={"FaIR": [{}]},
+            scenarios=test_scenarios_2600.filter(scenario=["ssp245"]),
+            output_variables=("Surface Temperature",),
+            out_config=None,
+        )
+
+    with pytest.raises(ValueError):
+        run(
+            climate_models_cfgs={"FaIR": [{"startyear": 1750}, {"startyear": 1850}]},
+            scenarios=test_scenarios.filter(scenario=["ssp245"]),
+            output_variables=("Surface Temperature",),
+            out_config=None,
+        )

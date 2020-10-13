@@ -1,15 +1,17 @@
 """
 FAIR adapter
 """
+import os
+
 import fair
 import numpy as np
-from fair.ancil import cmip6_solar, cmip6_volcanic, natural
-from fair.tools.scmdf import scmdf_to_emissions
+import pandas as pd
 from scmdata import ScmRun
 from tqdm.autonotebook import tqdm
 
 from ..base import _Adapter
 from ._run_fair import run_fair
+from ._scmdf_to_emissions import scmdf_to_emissions
 
 
 class FAIR(_Adapter):
@@ -32,28 +34,48 @@ class FAIR(_Adapter):
 
         return res
 
-    def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0201
+    def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0201,R0914
         full_cfgs = []
         run_id_block = 0
+        startyear = _check_startyear(cfgs)
 
         for (scenario, model), smdf in tqdm(
             scenarios.timeseries().groupby(["scenario", "model"]),
             desc="Creating FaIR emissions inputs",
         ):
             smdf_in = ScmRun(smdf)
+            scen_startyear = smdf_in.time_points.years()[0]
             endyear = smdf_in.time_points.years()[-1]
-            emissions = scmdf_to_emissions(smdf_in, endyear=endyear)
 
-            emissions_pi = np.zeros(40)
-            emissions_pi[5] = 1.2212429848636561
-            emissions_pi[6] = 348.5273588
-            emissions_pi[7] = 60.02182622
-            emissions_pi[8] = 3.8773253867471933
-            emissions_pi[9] = 2.097770755
-            emissions_pi[10] = 15.44766815
-            emissions_pi[11] = 6.92769009144426
-
+            if startyear < 1750:
+                raise ValueError(
+                    "startyear must be 1750 or later (%d specified)" % startyear
+                )
+            if endyear > 2500:
+                raise ValueError(
+                    "endyear must be 2500 or earlier (%d implied by scenario data)"
+                    % endyear
+                )
+            emissions = scmdf_to_emissions(
+                smdf_in,
+                startyear=startyear,
+                scen_startyear=scen_startyear,
+                endyear=endyear,
+            )
             nt = emissions.shape[0]
+
+            # TODO: somebody who knows what they are doing to use scmdata
+            natural_df = pd.read_csv(
+                os.path.join(
+                    os.path.dirname(__file__), "natural-emissions-and-forcing.csv",
+                ),
+            )
+
+            n_index_columns = 7
+            start_index = startyear - 1750 + n_index_columns
+            ch4_n2o = natural_df.values[0:2, start_index : start_index + nt].T
+            solar_forcing = natural_df.values[2, start_index : start_index + nt].T
+            volcanic_forcing = natural_df.values[3, start_index : start_index + nt].T
 
             scenario_cfg = [
                 {
@@ -61,16 +83,15 @@ class FAIR(_Adapter):
                     "model": model,
                     "run_id": run_id_block + i,
                     "emissions": emissions,
-                    "natural": natural.Emissions.emissions[:nt, :],
-                    "F_volcanic": cmip6_volcanic.Forcing.volcanic[:nt],
-                    "F_solar": cmip6_solar.Forcing.solar[:nt],
+                    "natural": ch4_n2o,
+                    "F_volcanic": volcanic_forcing,
+                    "F_solar": solar_forcing,
                     "efficacy": np.ones(45),
                     "diagnostics": "AR6",
                     "gir_carbon_cycle": True,
                     "temperature_function": "Geoffroy",
                     "aerosol_forcing": "aerocom+ghan2",
                     "fixPre1850RCP": False,
-                    "E_pi": emissions_pi,
                     "b_tro3": np.array(
                         [1.77871043e-04, 5.80173377e-05, 1.94458719e-04, 2.09151270e-03]
                     ),
@@ -80,6 +101,7 @@ class FAIR(_Adapter):
                     "ghan_params": np.array([1.232, 73.9, 63.0]),
                     "gmst_factor": 1 / 1.04,
                     "ohu_factor": 0.92,
+                    "startyear": startyear,
                     **cfg,
                 }
                 for i, cfg in enumerate(cfgs)
@@ -100,3 +122,26 @@ class FAIR(_Adapter):
             The FAIR version id
         """
         return fair.__version__
+
+
+def _check_startyear(cfgs):
+    """
+    Check to see that at most one startyear is defined in the config
+    Returns
+    -------
+    int
+        startyear
+
+    Raises
+    ------
+    ValueError
+        if more that one startyear is defined
+    """
+    first_startyear = cfgs[0].pop("startyear", 1750)
+    if len(cfgs) > 1:
+        for cfg in cfgs[1:]:
+            this_startyear = cfg.pop("startyear", 1750)
+            if this_startyear != first_startyear:
+                raise ValueError("Can only handle one startyear per scenario ensemble")
+
+    return first_startyear
