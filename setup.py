@@ -115,7 +115,7 @@ setup(
     keywords=["openscm", "runner", "python", "repo", "simple", "climate", "model"],
     packages=find_packages(SOURCE_DIR),  # no exclude as only searching in `src`
     package_dir={"": SOURCE_DIR},
-    include_package_data=True,
+    # include_package_data=True,
     install_requires=REQUIREMENTS,
     extras_require=REQUIREMENTS_EXTRAS,
     cmdclass=cmdclass,
