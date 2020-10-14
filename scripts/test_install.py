@@ -23,5 +23,7 @@ def import_submodules(package_name):
 
 import_submodules("openscm_runner")
 # make sure csv was included
-openscm_runner.adapters.fair_adapter.fair_adapter._get_natural_emissions_and_forcing(1750, 4)
+openscm_runner.adapters.fair_adapter.fair_adapter._get_natural_emissions_and_forcing(
+    1750, 4
+)
 print(openscm_runner.__version__)

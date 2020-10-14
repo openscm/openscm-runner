@@ -19,9 +19,7 @@ from ._scmdf_to_emissions import scmdf_to_emissions
 def _get_natural_emissions_and_forcing(startyear, nt):
     # TODO: somebody who knows what they are doing to use scmdata
     natural_df = pd.read_csv(
-        os.path.join(
-            os.path.dirname(__file__), "natural-emissions-and-forcing.csv",
-        ),
+        os.path.join(os.path.dirname(__file__), "natural-emissions-and-forcing.csv",),
     )
 
     n_index_columns = 7
