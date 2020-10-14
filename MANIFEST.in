@@ -1,2 +1,3 @@
 include versioneer.py
 include src/openscm_runner/_version.py
+include src/openscm_runner/adapters/fair_adapter/*.csv
