@@ -18,6 +18,9 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+v0.4.3 - 2020-10-14
+-------------------
+
 Fixed
 ~~~~~
 
