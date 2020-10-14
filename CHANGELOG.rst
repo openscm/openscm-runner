@@ -18,6 +18,11 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Fixed
+~~~~~
+
+- (`#26 <https://github.com/openscm/openscm-runner/pull/26>`_) Include csv files needed for running FaIR 1.6 with CMIP6 setup
+
 v0.4.2 - 2020-10-13
 -------------------
 
