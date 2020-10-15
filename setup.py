@@ -1,3 +1,5 @@
+import os.path
+
 from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
@@ -62,6 +64,11 @@ REQUIREMENTS_EXTRAS = {
     "tests": REQUIREMENTS_TESTS,
 }
 
+# no tests/docs in `src` so don't need exclude
+PACKAGES = find_packages(SOURCE_DIR)
+PACKAGE_DIR = {"": SOURCE_DIR}
+PACKAGE_DATA = {"openscm_runner": [os.path.join("adapters", "fair_adapter", "*.csv")]}
+
 # Get the long description from the README file
 with open(README, "r") as f:
     README_LINES = ["OpenSCM-Runner", "==============", ""]
@@ -113,8 +120,9 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     keywords=["openscm", "runner", "python", "repo", "simple", "climate", "model"],
-    packages=find_packages(SOURCE_DIR),  # no exclude as only searching in `src`
-    package_dir={"": SOURCE_DIR},
+    packages=PACKAGES,
+    package_dir=PACKAGE_DIR,
+    package_data=PACKAGE_DATA,
     include_package_data=True,
     install_requires=REQUIREMENTS,
     extras_require=REQUIREMENTS_EXTRAS,

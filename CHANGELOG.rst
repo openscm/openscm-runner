@@ -18,6 +18,11 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Added
+~~~~~
+
+- (`#27 <https://github.com/openscm/openscm-runner/pull/27>`_) Test that installation includes required package data
+
 v0.4.3 - 2020-10-14
 -------------------
 

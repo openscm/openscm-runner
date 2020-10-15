@@ -1,6 +1,7 @@
 """
 FAIR adapter
 """
+import functools
 import os
 
 import fair
@@ -12,6 +13,26 @@ from tqdm.autonotebook import tqdm
 from ..base import _Adapter
 from ._run_fair import run_fair
 from ._scmdf_to_emissions import scmdf_to_emissions
+
+
+@functools.lru_cache()
+def _get_natural_emissions_and_forcing(startyear, nt):
+    # TODO: somebody who knows what they are doing to use scmdata
+    natural_df = pd.read_csv(
+        os.path.join(os.path.dirname(__file__), "natural-emissions-and-forcing.csv",),
+    )
+
+    n_index_columns = 7
+    start_index = startyear - 1750 + n_index_columns
+    ch4_n2o = natural_df.values[0:2, start_index : start_index + nt].T
+    solar_forcing = natural_df.values[2, start_index : start_index + nt].T
+    volcanic_forcing = natural_df.values[3, start_index : start_index + nt].T
+
+    return {
+        "ch4_n2o": ch4_n2o,
+        "solar_forcing": solar_forcing,
+        "volcanic_forcing": volcanic_forcing,
+    }
 
 
 class FAIR(_Adapter):
@@ -64,18 +85,10 @@ class FAIR(_Adapter):
             )
             nt = emissions.shape[0]
 
-            # TODO: somebody who knows what they are doing to use scmdata
-            natural_df = pd.read_csv(
-                os.path.join(
-                    os.path.dirname(__file__), "natural-emissions-and-forcing.csv",
-                ),
-            )
-
-            n_index_columns = 7
-            start_index = startyear - 1750 + n_index_columns
-            ch4_n2o = natural_df.values[0:2, start_index : start_index + nt].T
-            solar_forcing = natural_df.values[2, start_index : start_index + nt].T
-            volcanic_forcing = natural_df.values[3, start_index : start_index + nt].T
+            natural_components = _get_natural_emissions_and_forcing(startyear, nt)
+            ch4_n2o = natural_components["ch4_n2o"]
+            solar_forcing = natural_components["solar_forcing"]
+            volcanic_forcing = natural_components["volcanic_forcing"]
 
             scenario_cfg = [
                 {
