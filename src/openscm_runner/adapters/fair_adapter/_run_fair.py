@@ -42,7 +42,7 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
         # FaIR needs numpy arrays, not lists. json only does lists.
         cfg_as_arrays = {}
         for key, value in cfg.items():
-            if type(value) == list:
+            if isinstance(value, list):
                 cfg_as_arrays[key] = np.asarray(value)
             else:
                 cfg_as_arrays[key] = value
