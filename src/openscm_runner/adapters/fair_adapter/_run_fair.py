@@ -41,13 +41,15 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
         startyear = cfg.pop("startyear")
         # FaIR needs numpy arrays, not lists. json only does lists.
         cfg_as_arrays = {}
-        for key,value in cfg.items():
-            if type(value)==list:
+        for key, value in cfg.items():
+            if type(value) == list:
                 cfg_as_arrays[key] = np.asarray(value)
             else:
-                 cfg_as_arrays[key] = value
-        
-        data, unit, nt = _process_output(fair_scm(**cfg_as_arrays), output_vars, factors)
+                cfg_as_arrays[key] = value
+
+        data, unit, nt = _process_output(
+            fair_scm(**cfg_as_arrays), output_vars, factors
+        )
 
         data_scmrun = []
         variables = []
