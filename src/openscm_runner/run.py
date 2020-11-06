@@ -57,7 +57,7 @@ def run(
 
     Returns
     -------
-    :obj:`scmdata.ScmDataFrame`
+    :obj:`scmdata.ScmRun`
         Model output
 
     Raises
