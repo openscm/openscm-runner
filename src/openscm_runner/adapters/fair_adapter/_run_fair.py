@@ -39,7 +39,17 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
         factors["gmst"] = cfg.pop("gmst_factor")
         factors["ohu"] = cfg.pop("ohu_factor")
         startyear = cfg.pop("startyear")
-        data, unit, nt = _process_output(fair_scm(**cfg), output_vars, factors)
+        # FaIR needs numpy arrays, not lists. json only does lists.
+        cfg_as_arrays = {}
+        for key, value in cfg.items():
+            if isinstance(value, list):
+                cfg_as_arrays[key] = np.asarray(value)
+            else:
+                cfg_as_arrays[key] = value
+
+        data, unit, nt = _process_output(
+            fair_scm(**cfg_as_arrays), output_vars, factors
+        )
 
         data_scmrun = []
         variables = []
