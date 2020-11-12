@@ -18,10 +18,18 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+v0.4.4 - 2020-11-12
+-------------------
+
 Added
 ~~~~~
 
 - (`#27 <https://github.com/openscm/openscm-runner/pull/27>`_) Test that installation includes required package data
+
+Fixed
+~~~~~
+
+- (`#28 <https://github.com/openscm/openscm-runner/pull/28>`_) Minor smoothing for going from climate-assessment to openscm-runner to FaIR 1.6
 
 v0.4.3 - 2020-10-14
 -------------------
@@ -29,7 +37,6 @@ v0.4.3 - 2020-10-14
 Fixed
 ~~~~~
 
-- (`#28 <https://github.com/openscm/openscm-runner/pull/28>`_) Minor smoothing for going from climate-assessment to openscm-runner to FaIR 1.6
 - (`#26 <https://github.com/openscm/openscm-runner/pull/26>`_) Include csv files needed for running FaIR 1.6 with CMIP6 setup
 
 v0.4.2 - 2020-10-13
