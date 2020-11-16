@@ -11,8 +11,8 @@ import f90nml
 import scmdata
 
 from ...settings import config
+from ..utils._parallel_process import _parallel_process
 from ._magicc_instances import _MagiccInstances
-from ._parallel_process import _parallel_process
 
 LOGGER = logging.getLogger(__name__)
 
