@@ -30,14 +30,14 @@ they should really be made in pymagicc.
 """
 
 
-def _convert_to_pymagicc_var(v):
+def _convert_to_pymagicc_var(in_var):
     """
     Convert an OpenSCM-Runner name to a Pymagicc name
     """
-    if v in _VARIABLE_MAP:
-        return _VARIABLE_MAP[v]
+    if in_var in _VARIABLE_MAP:
+        return _VARIABLE_MAP[in_var]
 
-    out = pymagicc.definitions.convert_magicc7_to_openscm_variables(v)
+    out = pymagicc.definitions.convert_magicc7_to_openscm_variables(in_var)
 
     return out
 
