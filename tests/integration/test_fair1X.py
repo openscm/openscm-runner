@@ -21,7 +21,7 @@ def test_fair_run(test_scenarios):
         },
         scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
         output_variables=(
-            "Surface Temperature",
+            "Surface Air Temperature Change",
             "Atmospheric Concentrations|CO2",
             "Heat Content",
             "Effective Radiative Forcing",
@@ -41,7 +41,7 @@ def test_fair_run(test_scenarios):
 
     assert set(res.get_unique_meta("variable")) == set(
         [
-            "Surface Temperature",
+            "Surface Air Temperature Change",
             "Atmospheric Concentrations|CO2",
             "Heat Content",
             "Effective Radiative Forcing",
@@ -54,7 +54,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         2.003964892582933,
         res.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp126",
@@ -64,7 +64,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         1.6255017914500822,
         res.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp126",
@@ -75,7 +75,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         4.645930053608295,
         res.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp370",
@@ -85,7 +85,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         3.927009494888895,
         res.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp370",
@@ -99,7 +99,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         1.6410216803638293,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp126",
@@ -110,7 +110,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         1.9816384713833952,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp126",
@@ -122,7 +122,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         3.9423565896925803,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp370",
@@ -133,7 +133,7 @@ def test_fair_run(test_scenarios):
     npt.assert_allclose(
         4.58938509254004,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp370",
@@ -148,7 +148,7 @@ def test_fair_ocean_factors(test_scenarios):
         climate_models_cfgs={"FaIR": [{}]},
         scenarios=test_scenarios.filter(scenario=["ssp585"]),
         output_variables=(
-            "Surface Temperature (GMST)",
+            "Surface Air Ocean Blended Temperature Change",
             "Heat Uptake|Ocean",
             "Heat Content|Ocean",
         ),
@@ -165,7 +165,7 @@ def test_fair_ocean_factors(test_scenarios):
         },
         scenarios=test_scenarios.filter(scenario=["ssp585"]),
         output_variables=(
-            "Surface Temperature (GMST)",
+            "Surface Air Ocean Blended Temperature Change",
             "Heat Uptake|Ocean",
             "Heat Content|Ocean",
         ),
@@ -173,13 +173,13 @@ def test_fair_ocean_factors(test_scenarios):
 
     assert (
         res_default_factors.filter(
-            variable="Surface Temperature (GMST)",
+            variable="Surface Air Ocean Blended Temperature Change",
             region="World",
             year=2100,
             scenario="ssp585",
         ).values
         != res_custom_factors.filter(
-            variable="Surface Temperature (GMST)",
+            variable="Surface Air Ocean Blended Temperature Change",
             region="World",
             year=2100,
             scenario="ssp585",
@@ -192,34 +192,34 @@ def test_startyear(test_scenarios, test_scenarios_2600):
     res_1850 = run(
         climate_models_cfgs={"FaIR": [{"startyear": 1850}]},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
-        output_variables=("Surface Temperature",),
+        output_variables=("Surface Air Temperature Change",),
         out_config=None,
     )
 
     res_1750 = run(
         climate_models_cfgs={"FaIR": [{"startyear": 1750}]},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
-        output_variables=("Surface Temperature",),
+        output_variables=("Surface Air Temperature Change",),
         out_config=None,
     )
 
     res_default = run(
         climate_models_cfgs={"FaIR": [{}]},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
-        output_variables=("Surface Temperature",),
+        output_variables=("Surface Air Temperature Change",),
         out_config=None,
     )
 
     gsat2100_start1850 = res_1850.filter(
-        variable="Surface Temperature", region="World", year=2100,
+        variable="Surface Air Temperature Change", region="World", year=2100,
     ).values
 
     gsat2100_start1750 = res_1750.filter(
-        variable="Surface Temperature", region="World", year=2100,
+        variable="Surface Air Temperature Change", region="World", year=2100,
     ).values
 
     gsat2100_startdefault = res_default.filter(
-        variable="Surface Temperature", region="World", year=2100,
+        variable="Surface Air Temperature Change", region="World", year=2100,
     ).values
 
     assert gsat2100_start1850 != gsat2100_start1750
@@ -229,7 +229,7 @@ def test_startyear(test_scenarios, test_scenarios_2600):
         run(
             climate_models_cfgs={"FaIR": [{"startyear": 1650}]},
             scenarios=test_scenarios.filter(scenario=["ssp245"]),
-            output_variables=("Surface Temperature",),
+            output_variables=("Surface Air Temperature Change",),
             out_config=None,
         )
 
@@ -237,7 +237,7 @@ def test_startyear(test_scenarios, test_scenarios_2600):
         run(
             climate_models_cfgs={"FaIR": [{}]},
             scenarios=test_scenarios_2600.filter(scenario=["ssp245"]),
-            output_variables=("Surface Temperature",),
+            output_variables=("Surface Air Temperature Change",),
             out_config=None,
         )
 
@@ -245,6 +245,29 @@ def test_startyear(test_scenarios, test_scenarios_2600):
         run(
             climate_models_cfgs={"FaIR": [{"startyear": 1750}, {"startyear": 1850}]},
             scenarios=test_scenarios.filter(scenario=["ssp245"]),
-            output_variables=("Surface Temperature",),
+            output_variables=("Surface Air Temperature Change",),
             out_config=None,
         )
+
+
+def test_variable_naming(test_scenarios, common_variables):
+    missing_from_fair = (
+        "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC AFOLU",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC Fossil and Industrial",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC AFOLU",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC Fossil and Industrial",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC AFOLU",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC Fossil and Industrial",
+        'Net Atmosphere to Ocean Flux|CO2',
+        'Net Atmosphere to Land Flux|CO2'
+    )
+    common_variables = [c for c in common_variables if c not in missing_from_fair]
+    res = run(
+        climate_models_cfgs={"FaIR": ({"startyear": 1750},)},
+        scenarios=test_scenarios.filter(scenario="ssp126"),
+        output_variables=common_variables,
+    )
+
+    missing_vars = set(common_variables) - set(res["variable"])
+    if missing_vars:
+        raise AssertionError(missing_vars)

@@ -77,7 +77,7 @@ def common_variables():
         "Effective Radiative Forcing|HFC23",
         "Effective Radiative Forcing|HFC245fa",
         "Effective Radiative Forcing|HFC32",
-        "Effective Radiative Forcing|HFC4310",
+        "Effective Radiative Forcing|HFC4310mee",
         "Effective Radiative Forcing|CF4",
         "Effective Radiative Forcing|C6F14",
         "Effective Radiative Forcing|C2F6",
