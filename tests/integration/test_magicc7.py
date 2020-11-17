@@ -203,9 +203,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
         assert False, "Turn off debug"
 
 
-def test_write_scen_files_and_make_full_cfgs(
-    monkeypatch, tmpdir, test_scenarios, magicc7_is_available
-):
+def test_write_scen_files_and_make_full_cfgs(test_scenarios, magicc7_is_available):
     adapter = MAGICC7()
     test_scenarios_magiccdf = pymagicc.io.MAGICCData(test_scenarios)
     res = adapter._write_scen_files_and_make_full_cfgs(
@@ -289,3 +287,15 @@ def test_return_config(test_scenarios, magicc7_is_available, out_config):
             assert set(ssp126.get_unique_meta(k)) == set(rf_total_runmoduses)
         else:
             raise NotImplementedError(k)
+
+
+def test_variable_naming(test_scenarios, magicc7_is_available, common_variables):
+    res = run(
+        climate_models_cfgs={"MAGICC7": ({"core_climatesensitivity": 3},)},
+        scenarios=test_scenarios.filter(scenario="ssp126"),
+        output_variables=common_variables,
+    )
+
+    missing_vars = set(common_variables) - set(res["variable"])
+    if missing_vars:
+        raise AssertionError(missing_vars)
