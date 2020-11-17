@@ -59,7 +59,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
         },
         scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
         output_variables=(
-            "Surface Temperature",
+            "Surface Air Temperature Change",
             "Effective Radiative Forcing",
             "Effective Radiative Forcing|Aerosols",
             "Effective Radiative Forcing|CO2",
@@ -76,7 +76,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     ) == "MAGICC{}".format(MAGICC7.get_version())
     assert set(res.get_unique_meta("variable")) == set(
         [
-            "Surface Temperature",
+            "Surface Air Temperature Change",
             "Effective Radiative Forcing",
             "Effective Radiative Forcing|Aerosols",
             "Effective Radiative Forcing|CO2",
@@ -87,7 +87,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
 
     # check ocean heat content unit conversion comes through correctly
     _check_res(
-        1824.05,
+        2508.737908,
         res.filter(
             unit="ZJ",
             variable="Heat Content|Ocean",
@@ -115,7 +115,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     _check_res(
         2.756034,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+            variable="Surface Air Temperature Change", region="World", year=2100, scenario="ssp126"
         ).values.max(),
         not debug_run,
         rtol=RTOL,
@@ -123,7 +123,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     _check_res(
         1.2195495,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp126"
+            variable="Surface Air Temperature Change", region="World", year=2100, scenario="ssp126"
         ).values.min(),
         not debug_run,
         rtol=RTOL,
@@ -132,7 +132,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     _check_res(
         5.5226571,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
+            variable="Surface Air Temperature Change", region="World", year=2100, scenario="ssp370"
         ).values.max(),
         not debug_run,
         rtol=RTOL,
@@ -140,7 +140,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     _check_res(
         2.733369581,
         res.filter(
-            variable="Surface Temperature", region="World", year=2100, scenario="ssp370"
+            variable="Surface Air Temperature Change", region="World", year=2100, scenario="ssp370"
         ).values.min(),
         not debug_run,
         rtol=RTOL,
@@ -152,7 +152,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     _check_res(
         1.27586919,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp126",
@@ -164,7 +164,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     _check_res(
         2.6587052,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp126",
@@ -177,7 +177,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     _check_res(
         2.83627686,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp370",
@@ -189,7 +189,7 @@ def test_magicc7_run(test_scenarios, magicc7_is_available):
     _check_res(
         5.34663565,
         quantiles.filter(
-            variable="Surface Temperature",
+            variable="Surface Air Temperature Change",
             region="World",
             year=2100,
             scenario="ssp370",
@@ -269,7 +269,7 @@ def test_return_config(test_scenarios, magicc7_is_available, out_config):
     res = run(
         climate_models_cfgs={"MAGICC7": cfgs},
         scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
-        output_variables=("Surface Temperature", "Effective Radiative Forcing",),
+        output_variables=("Surface Air Temperature Change", "Effective Radiative Forcing",),
         out_config={"MAGICC7": out_config},
     )
 

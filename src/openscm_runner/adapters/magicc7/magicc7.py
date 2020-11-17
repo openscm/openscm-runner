@@ -18,6 +18,9 @@ LOGGER = logging.getLogger(__name__)
 
 _VARIABLE_MAP = {
     "Surface Air Temperature Change": "Surface Temperature",
+    "Atmospheric Concentrations|HFC4310mee": "Atmospheric Concentrations|HFC4310",
+    "Radiative Forcing|HFC4310mee": "Radiative Forcing|HFC4310",
+    "Effective Radiative Forcing|HFC4310mee": "Effective Radiative Forcing|HFC4310",
 }
 """
 dict[str: str] : Mapping from openscm_runner names to pymagicc names
