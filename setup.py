@@ -35,7 +35,14 @@ REQUIREMENTS_NOTEBOOKS = [
     "notebook",
     "seaborn",
 ]
-REQUIREMENTS_TESTS = ["codecov", "coverage", "nbval", "pytest-cov", "pytest>=4.0", "xlrd"]
+REQUIREMENTS_TESTS = [
+    "codecov",
+    "coverage",
+    "nbval",
+    "pytest-cov",
+    "pytest>=4.0",
+    "xlrd",
+]
 REQUIREMENTS_DOCS = ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-click"]
 REQUIREMENTS_DEPLOY = ["twine>=1.11.0", "setuptools>=41.2", "wheel>=0.31.0"]
 

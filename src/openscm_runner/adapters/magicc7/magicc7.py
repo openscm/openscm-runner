@@ -96,9 +96,7 @@ class MAGICC7(_Adapter):
 
         full_cfgs = self._write_scen_files_and_make_full_cfgs(magicc_scmdf, cfgs)
 
-        pymagicc_vars = [
-            _convert_to_pymagicc_var(v) for v in output_variables
-        ]
+        pymagicc_vars = [_convert_to_pymagicc_var(v) for v in output_variables]
         res = run_magicc_parallel(full_cfgs, pymagicc_vars, output_config)
 
         LOGGER.debug("Dropping todo metadata")

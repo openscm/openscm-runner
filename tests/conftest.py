@@ -1,6 +1,5 @@
 import os.path
 
-import pandas as pd
 import pyam
 import pytest
 

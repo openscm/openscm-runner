@@ -258,8 +258,8 @@ def test_variable_naming(test_scenarios, common_variables):
         "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC Fossil and Industrial",
         "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC AFOLU",
         "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC Fossil and Industrial",
-        'Net Atmosphere to Ocean Flux|CO2',
-        'Net Atmosphere to Land Flux|CO2'
+        "Net Atmosphere to Ocean Flux|CO2",
+        "Net Atmosphere to Land Flux|CO2",
     )
     common_variables = [c for c in common_variables if c not in missing_from_fair]
     res = run(
