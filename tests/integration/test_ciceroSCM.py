@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import numpy.testing as npt
+import pytest
 from scmdata import ScmRun
 
 from openscm_runner.adapters import CICEROSCM
@@ -92,8 +93,7 @@ def test_ciceroscm_run(test_scenarios):
             "Emissions|CO2",
         ]
     )
-    # assert
-    # assert False
+
     # check ocean heat content unit conversion comes through correctly
     _check_res(
         1448.67,
@@ -222,7 +222,7 @@ def test_ciceroscm_run(test_scenarios):
 
 def test_w_output_config(test_scenarios):
     adapter = CICEROSCM()
-    with npt.assert_raises(NotImplementedError):
+    with pytest.raises(NotImplementedError):
         adapter._run(
             scenarios=test_scenarios.filter(scenario=["ssp126"]),
             cfgs=[
@@ -244,7 +244,6 @@ def test_w_output_config(test_scenarios):
             output_variables=("Surface Temperature",),
             output_config="With ECS",
         )
-        print()
 
 
 def test_make_scenario_files():
@@ -283,13 +282,15 @@ def test_make_scenario_files():
     )
 
 
-def test_write_parameter_files():
-
-    npt.assert_equal(write_parameter_files.splitall("folder"), ["folder"])
-    npt.assert_equal(
-        write_parameter_files.splitall(os.path.join("folder", "subfolder")),
-        ["folder", "subfolder"],
-    )
+@pytest.mark.parametrize(
+    "input,exp",
+    (
+        ("folder", ("folder",)),
+        (os.path.join("folder", "subfolder"), ("folder", "subfolder")),
+    ),
+)
+def test_write_parameter_files(input, exp):
+    assert write_parameter_files.splitall(input) == exp
 
 
 def _self_function(x):
