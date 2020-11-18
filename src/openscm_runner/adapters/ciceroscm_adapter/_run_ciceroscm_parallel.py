@@ -2,11 +2,10 @@
 Module for running CICEROSCM in parallel
 """
 import logging
-import os.path
+import os
 from concurrent.futures import ProcessPoolExecutor
 
 import scmdata
-from pyam import IamDataFrame
 
 from ...settings import config
 from ..utils._parallel_process import _parallel_process
@@ -23,7 +22,7 @@ def _execute_run(cfgs, output_variables, scenariodata):
 
 def run_ciceroscm_parallel(scenarios, cfgs, output_vars):
     """
-    Run CICEROSCM in parallel using compact out files
+    Run CICEROSCM in parallel
 
     Parameters
     ----------
@@ -42,19 +41,18 @@ def run_ciceroscm_parallel(scenarios, cfgs, output_vars):
     :obj:`ScmRun`
         :obj:`ScmRun` instance with all results.
     """
-    LOGGER.info("Entered _parallel_ciceroscm_compact_out")
-
+    LOGGER.info("Entered _parallel_ciceroscm")
+    print(config.get("CICEROSCM_WORKER_NUMBER", os.cpu_count()))
     runs = [
         {
             "cfgs": cfgs,
             "output_variables": output_vars,
-            "scenariodata": IamDataFrame(smdf),
+            "scenariodata": smdf,  # IamDataFrame(smdf),
         }
         for (scen, model), smdf in scenarios.timeseries().groupby(["scenario", "model"])
     ]
 
     try:
-        print(int(config.get("CICEROSCM_WORKER_NUMBER", os.cpu_count())))
         pool = ProcessPoolExecutor(
             max_workers=4,  # int(config.get("CICEROSCM_WORKER_NUMBER", os.cpu_count())),
             # initializer=_init_ciceroscm_worker,

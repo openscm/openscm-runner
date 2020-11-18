@@ -8,7 +8,6 @@ import os
 import numpy as np
 import pandas as pd
 
-# import sys
 # Method to convert the unit names form tonnes to grams
 
 
@@ -29,23 +28,27 @@ def unit_name_converter(unit):
 # Method to find unit conversion factor
 
 
-def unit_conv_factor(proper_unit, unit, comp):
+def unit_conv_factor(cicero_unit, unit, comp):
     """
     Find conversion factor between two units
     """
     # Todo: raise exception
     conv_dict = {"P": 1.0e15, "T": 1.0e12, "G": 1.0e9, "M": 1.0e6, "k": 1.0e3}
-    conv_factor = conv_dict[unit[0]] / conv_dict[proper_unit[0]]
-    if unit[1:] != proper_unit[1:]:
-        if unit[1:] == "g" and proper_unit[1:] == "g_C" and (comp in ("CO2", "CO2_lu")):
+    conv_factor = conv_dict[unit[0]] / conv_dict[cicero_unit[0]]
+    if unit[1:] != cicero_unit[1:]:
+        if (
+            unit[1:] == "g CO2/yr"
+            and cicero_unit[1:] == "g_C"
+            and (comp in ("CO2", "CO2_lu"))
+        ):
             conv_factor = conv_factor * 3.0 / 11  # Carbon mass fraction in CO2
-        elif unit[1:] == "g" and proper_unit[1:] == "g_N" and comp == "N2O":
+        elif unit[1:] == "g N2O/yr" and cicero_unit[1:] == "g_N" and comp == "N2O":
             conv_factor = conv_factor * 0.636  # Nitrogen mass fraction in N2O
-        elif unit[1:] == "t NOx/yr" and proper_unit[1:] == "t_N" and comp == "NOx":
+        elif unit[1:] == "t NOx/yr" and cicero_unit[1:] == "t_N" and comp == "NOx":
             conv_factor = (
                 conv_factor * 0.304
             )  # Nitrogen mass fraction in NOx (approximated by NO2)
-        elif unit[1:] == "g" and proper_unit[1:] == "g_S" and comp == "SO2":
+        elif unit[1:] == "g SO2/yr" and cicero_unit[1:] == "g_S" and comp == "SO2":
             conv_factor = conv_factor * 0.501  # Sulphur mass fraction in SO2
 
     return conv_factor
@@ -68,7 +71,7 @@ def get_top_of_file(ssp245_em_file):
     """
     with open(ssp245_em_file) as semfile:
         filedata = semfile.read()
-    top_of_file = filedata.split("\n2016")[0]
+    top_of_file = filedata.split("\n2015")[0]
     return top_of_file
 
 
@@ -124,7 +127,7 @@ class SCENARIOFILEWRITER:
             "OC": ["OC", 1],
         }  # Halon1212, CH3Cl
         self.initialize_units_comps(os.path.join(udir, "gases_v1RCMIP.txt"))
-        self.years = range(2015, 2101)
+        self.years = np.arange(2015, 2101)  # TODO: get these numbers from scenarioframe
         self.ssp245data = read_ssp245_em(os.path.join(udir, "ssp245_em_RCMIP.txt"))
         self.udir = udir
 
@@ -143,80 +146,73 @@ class SCENARIOFILEWRITER:
                 self.units.append(row[1])
         self.components.insert(1, "CO2_lu")
         self.units.insert(1, "Pg_C")
-        self.years = np.arange(2015, 2100, 1)
 
     def get_unit_convfactor(self, comp, scenarioframe):
         """
         Get unit and conversion factor for component
         """
         # Find the unit and the original unit
-        proper_unit = self.units[self.components.index(comp)]
-        if scenarioframe.filter(variable="*{}*".format(self.component_dict[comp][0]))[
-            "unit"
-        ].empty:
-            return proper_unit, 1
+        cicero_unit = self.units[self.components.index(comp)]
+        for row_index in scenarioframe[2015].keys():
+            if row_index[3] == "Emissions|{}".format(self.component_dict[comp][0]):
+                unit = row_index[4]
 
-        unit = scenarioframe.filter(
-            variable="*{}*".format(self.component_dict[comp][0])
-        )["unit"].iat[0]
         # Getting units on the same form T/g
-        if unit != proper_unit:
-            if unit[0:2] == proper_unit[0:2]:
-                if not (unit == "Mt NOx/yr" and proper_unit == "Mt_N"):
-                    unit = proper_unit
+        if unit != cicero_unit:
+            if unit[0:2] == cicero_unit[0:2]:
+                if not (
+                    unit in ("Mt CO/yr", "Mt VOC/yr", "Mt NH3/yr")
+                    and cicero_unit == "Mt"
+                ):
+                    unit = cicero_unit
             else:
                 unit = unit_name_converter(unit)
         conv_factor = 1
-        if unit != proper_unit:
-            conv_factor = unit_conv_factor(proper_unit, unit, comp)
+        if unit != cicero_unit:
+            conv_factor = unit_conv_factor(cicero_unit, unit, comp)
         return conv_factor
+
+    def transform_scenarioframe(self, scenarioframe):
+        """
+        Get rid of multiindex and interpolate scenarioframe
+        """
+        scenarioframe = scenarioframe.reset_index((0, 1, 2, 4), drop=True)
+        for year in self.years:
+            if year not in scenarioframe.columns:
+                scenarioframe[year] = np.nan
+        scenarioframe = scenarioframe.reindex(sorted(scenarioframe.columns), axis=1)
+        interpol = scenarioframe.interpolate(axis=1)
+        return interpol
 
     def write_scenario_data(self, scenarioframe, odir):
         """
-        Take a pyam IamDataframe scenario filter to World and specific
-        scenario
+        Take a scenariodataframe
         and writing out necessary emissions files
         """
-        # And extra dictionary to hold data from ssp-scenario:
-        # This is for components for which data is missing for the ssp
         fname = os.path.join(
-            odir, "inputfiles", "{s}_em.txt".format(s=scenarioframe["scenario"][0])
+            odir, "inputfiles", "{s}_em.txt".format(s=scenarioframe[2015].keys()[0][1])
         )
         logging.getLogger("pyam").setLevel(logging.ERROR)
-        avail_comps = [c[10:] for c in scenarioframe.variables()]
-
-        # Setting conversion factors for components
+        avail_comps = [
+            c[3].replace("Emissions|", "") for c in scenarioframe[2015].keys()
+        ]
+        interpol = self.transform_scenarioframe(scenarioframe)
+        printout_frame = pd.DataFrame(columns=self.components)
+        # Setting conversion factors for components with data from scenariofram
         for comp in self.components:
             if self.component_dict[comp][0] in avail_comps:
-                self.component_dict[comp][1] = self.get_unit_convfactor(
-                    comp, scenarioframe
+                convfactor = self.get_unit_convfactor(comp, scenarioframe)
+                printout_frame[comp] = (
+                    interpol.T["Emissions|{}".format(self.component_dict[comp][0])]
+                    * convfactor
                 )
+            else:
+                printout_frame[comp] = (
+                    self.ssp245data[comp]
+                    .loc[str(self.years[0]) : str(self.years[-1])]
+                    .to_numpy()
+                )
+
         with open(fname, "w") as sfile:
             sfile.write(get_top_of_file(os.path.join(self.udir, "ssp245_em_RCMIP.txt")))
-            for year in range(2016, 2101):
-                line = "\n{}".format(year)
-                for comp in self.components:
-
-                    if year < 2015 or self.component_dict[comp][0] not in avail_comps:
-                        line = "{line} \t{val:.8f}".format(
-                            line=line, val=float(self.ssp245data[comp][str(year)]),
-                        )
-                    else:
-
-                        compframe = scenarioframe.filter(
-                            variable="Emissions|{}".format(self.component_dict[comp][0])
-                        )
-
-                        compframe.interpolate(year)
-
-                        line = "{line} \t{val:.8f}".format(
-                            line=line,
-                            val=float(
-                                compframe[["year", "value"]].set_index("year")["value"][
-                                    year
-                                ]
-                            )
-                            * self.component_dict[comp][1],
-                        )
-                sfile.write("{}".format(line))
-        logging.getLogger("pyam").setLevel(logging.WARNING)
+        printout_frame.to_csv(fname, sep="\t", mode="a", float_format="%.8f")

@@ -23,6 +23,10 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
 
     def __init__(self, udir):
         self.udir = udir
+        with open(
+            os.path.join(self.udir, "pam_RCMIP_test_klimsensdefault.scm"), "r"
+        ) as origfile:
+            self.origfiledata = origfile.read()
 
     def write_parameterfile(self, pamset, filedir):
         """
@@ -30,12 +34,10 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
         """
         scen = splitall(filedir)[-1]
         filedir_to_pamfile = os.path.join(".", scen)
-        with open(
-            os.path.join(self.udir, "pam_RCMIP_test_klimsensdefault.scm"), "r"
-        ) as origfile:
-            filedata = origfile.read()
+        filedata = self.origfiledata
         filedata = filedata.replace(
-            "output_rbs/test_rcmip", "{}/outputfiles/temp".format(filedir_to_pamfile)
+            "output_rbs/test_rcmip",
+            os.path.join(filedir_to_pamfile, "outputfiles", "temp"),
         )
         filedata = filedata.replace("../input_RCP/", "")
         filedata = filedata.replace("input/ssp434_conc_", "ssp245_conc_")
