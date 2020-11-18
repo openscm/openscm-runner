@@ -96,7 +96,7 @@ def test_ciceroscm_run(test_scenarios):
 
     # check ocean heat content unit conversion comes through correctly
     _check_res(
-        1448.67,
+        904.474,
         res.filter(
             unit="ZJ",
             variable="Heat Content|Ocean",
@@ -109,7 +109,7 @@ def test_ciceroscm_run(test_scenarios):
     )
 
     _check_res(
-        2.5702599999999998,
+        1.50177,
         res.filter(
             variable="Surface Temperature",
             region="World",
@@ -121,7 +121,7 @@ def test_ciceroscm_run(test_scenarios):
     )
 
     _check_res(
-        5.86734,
+        3.35742,
         res.filter(
             variable="Surface Temperature (GMST)",
             region="World",
@@ -132,7 +132,7 @@ def test_ciceroscm_run(test_scenarios):
         rtol=RTOL,
     )
     _check_res(
-        -0.785192107253429,
+        -2.5292859114958564,
         res.filter(
             unit="ZJ/yr",
             variable="Heat Uptake",
@@ -144,7 +144,7 @@ def test_ciceroscm_run(test_scenarios):
         rtol=RTOL,
     )
     _check_res(
-        2270.19,
+        780.2869999999999,
         res.filter(
             variable="Atmospheric Concentrations|CO2",
             region="World",
@@ -155,7 +155,7 @@ def test_ciceroscm_run(test_scenarios):
         rtol=RTOL,
     )
     _check_res(
-        82.7258,
+        22.5616,
         res.filter(
             variable="Emissions|CO2", region="World", year=2100, scenario="ssp370",
         ).values.max(),
@@ -166,7 +166,7 @@ def test_ciceroscm_run(test_scenarios):
     quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
 
     _check_res(
-        1.9638625,
+        1.1427785,
         quantiles.filter(
             variable="Surface Temperature (GMST)",
             region="World",
@@ -179,7 +179,7 @@ def test_ciceroscm_run(test_scenarios):
     )
 
     _check_res(
-        2.5228075,
+        1.4757515,
         quantiles.filter(
             variable="Surface Temperature (GMST)",
             region="World",
@@ -192,7 +192,7 @@ def test_ciceroscm_run(test_scenarios):
     )
 
     _check_res(
-        4.905807,
+        2.7883605,
         quantiles.filter(
             variable="Surface Temperature (GMST)",
             region="World",
@@ -205,7 +205,7 @@ def test_ciceroscm_run(test_scenarios):
     )
 
     _check_res(
-        5.816733,
+        3.3274695,
         quantiles.filter(
             variable="Surface Temperature (GMST)",
             region="World",
@@ -258,13 +258,13 @@ def test_make_scenario_files():
 
     _check_res(
         3.0 / 11 * 1000.0,
-        make_scenario_files.unit_conv_factor("Mg_C", "Tg", "CO2_lu"),
+        make_scenario_files.unit_conv_factor("Mg_C", "Tg CO2/yr", "CO2_lu"),
         False,
         rtol=RTOL,
     )
     _check_res(
         0.636 / 1.0e12,
-        make_scenario_files.unit_conv_factor("Pg_N", "kg", "N2O"),
+        make_scenario_files.unit_conv_factor("Pg_N", "kg N2O/yr", "N2O"),
         False,
         rtol=RTOL,
     )
@@ -276,7 +276,7 @@ def test_make_scenario_files():
     )
     _check_res(
         0.501,
-        make_scenario_files.unit_conv_factor("Tg_S", "Tg", "SO2"),
+        make_scenario_files.unit_conv_factor("Tg_S", "Tg SO2/yr", "SO2"),
         False,
         rtol=RTOL,
     )
