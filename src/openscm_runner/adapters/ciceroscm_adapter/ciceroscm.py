@@ -38,3 +38,15 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
         runs = run_ciceroscm_parallel(scenarios, cfgs, output_variables)
 
         return runs
+
+    @classmethod
+    def get_version(cls):
+        """
+        Get the CICEROSCM version being used by this adapter
+
+        Returns
+        -------
+        str
+            The CICEROSCM version id
+        """
+        return "v2019vCH4"
