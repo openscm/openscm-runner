@@ -108,7 +108,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         """
         self.rundir = tempfile.mkdtemp(prefix="ciceroscm-test-rundir-")
         dir_util.copy_tree(
-            os.path.join(os.path.dirname(__file__), "utils_templates", "run-dir"),
+            os.path.join(os.path.dirname(__file__), "utils_templates", "run_dir"),
             self.rundir,
         )
 
