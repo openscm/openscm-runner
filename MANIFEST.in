@@ -1,2 +1,4 @@
 include versioneer.py
 include src/openscm_runner/_version.py
+recursive-include src/openscm_runner/adapters/ciceroscm/utils_template/*.txt
+include src/openscm_runner/adapters/ciceroscm/utils_template/run_dir/scm_vCH4fb
