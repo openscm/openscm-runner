@@ -67,7 +67,54 @@ REQUIREMENTS_EXTRAS = {
 # no tests/docs in `src` so don't need exclude
 PACKAGES = find_packages(SOURCE_DIR)
 PACKAGE_DIR = {"": SOURCE_DIR}
-PACKAGE_DATA = {"openscm_runner": [os.path.join("adapters", "fair_adapter", "*.csv"), os.path.join("adapters", "ciceroscm_adapter", "utils_templates", "*.txt")]}
+PACKAGE_DATA = {
+    "openscm_runner": [
+        os.path.join("adapters", "fair_adapter", "*.csv"),
+        os.path.join("adapters", "ciceroscm_adapter", "utils_templates", "*.txt"),
+        os.path.join(
+            "adapters", "ciceroscm_adapter", "utils_templates", "run_dir", "*.txt"
+        ),
+        os.path.join(
+            "adapters", "ciceroscm_adapter", "utils_templates", "run_dir", "scm_vCH4fb"
+        ),
+        os.path.join(
+            "adapters",
+            "ciceroscm_adapter",
+            "utils_templates",
+            "run_dir",
+            "input_OTHER",
+            "NATEMIS",
+            "*.txt",
+        ),
+        os.path.join(
+            "adapters",
+            "ciceroscm_adapter",
+            "utils_templates",
+            "run_dir",
+            "input_RF",
+            "RFLUC",
+            "*.txt",
+        ),
+        os.path.join(
+            "adapters",
+            "ciceroscm_adapter",
+            "utils_templates",
+            "run_dir",
+            "input_RF",
+            "RFSUN",
+            "*.txt",
+        ),
+        os.path.join(
+            "adapters",
+            "ciceroscm_adapter",
+            "utils_templates",
+            "run_dir",
+            "input_RF",
+            "RFVOLC",
+            "*.txt",
+        ),
+    ]
+}
 
 # Get the long description from the README file
 with open(README, "r") as f:
