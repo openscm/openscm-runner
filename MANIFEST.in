@@ -1,4 +1,9 @@
 include versioneer.py
 include src/openscm_runner/_version.py
-recursive-include src/openscm_runner/adapters/ciceroscm_adapter/utils_template *.txt
+recursive-include src/openscm_runner/adapters/ciceroscm_adapter/utils_template/ *.txt
+recursive-include src/openscm_runner/adapters/ciceroscm_adapter/utils_template/run_dir/ *.txt
+recursive-include src/openscm_runner/adapters/ciceroscm_adapter/utils_template/run_dir/input_OTHER/NATEMIS/ *.txt
+recursive-include src/openscm_runner/adapters/ciceroscm_adapter/utils_template/run_dir/input_RF/RFLUC/ *.txt
+recursive-include src/openscm_runner/adapters/ciceroscm_adapter/utils_template/run_dir/input_RF/RFSUN/ *.txt
+recursive-include src/openscm_runner/adapters/ciceroscm_adapter/utils_template/run_dir/input_RF/RFVOLC/ *.txt
 include src/openscm_runner/adapters/ciceroscm_ciceroscm_adapter/utils_template/run_dir/scm_vCH4fb
