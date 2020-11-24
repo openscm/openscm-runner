@@ -67,7 +67,7 @@ REQUIREMENTS_EXTRAS = {
 # no tests/docs in `src` so don't need exclude
 PACKAGES = find_packages(SOURCE_DIR)
 PACKAGE_DIR = {"": SOURCE_DIR}
-PACKAGE_DATA = {"openscm_runner": [os.path.join("adapters", "fair_adapter", "*.csv")]}
+PACKAGE_DATA = {"openscm_runner": [os.path.join("adapters", "fair_adapter", "*.csv"), os.path.join("adapters", "ciceroscm_adapter", "utils_templates", "*.txt")]}
 
 # Get the long description from the README file
 with open(README, "r") as f:
