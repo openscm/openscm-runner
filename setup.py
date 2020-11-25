@@ -72,6 +72,12 @@ PACKAGE_DATA = {
         os.path.join("adapters", "fair_adapter", "*.csv"),
         os.path.join("adapters", "ciceroscm_adapter", "utils_templates", "*.txt"),
         os.path.join(
+            "adapters",
+            "ciceroscm_adapter",
+            "utils_templates",
+            "pam_RCMIP_test_klimsensdefault.scm",
+        ),
+        os.path.join(
             "adapters", "ciceroscm_adapter", "utils_templates", "run_dir", "*.txt"
         ),
         os.path.join(
