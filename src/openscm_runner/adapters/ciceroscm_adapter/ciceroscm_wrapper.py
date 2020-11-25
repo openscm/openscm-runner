@@ -36,11 +36,11 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         self.udir = os.path.join(os.path.dirname(__file__), "utils_templates")
         self.sfilewriter = SCENARIOFILEWRITER(self.udir)
         self.pamfilewriter = PARAMETERFILEWRITER(self.udir)
-        # self.rundir = None
         self._setup_tempdirs()
         self.resultsreader = CSCMREADER(self.rundir)
-        self.scen = scenariodata[2015].keys()[0][1]
-        self.model = scenariodata[2015].keys()[0][0]
+        startyear = scenariodata.keys()[0]
+        self.scen = scenariodata[startyear].keys()[0][1]
+        self.model = scenariodata[startyear].keys()[0][0]
         self._make_dir_structure(self.scen)
         self._call_sfilewriter(scenariodata)
 

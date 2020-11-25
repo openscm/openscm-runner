@@ -65,16 +65,6 @@ def read_ssp245_em(ssp245_em_file):
     return ssp245df
 
 
-def get_top_of_file(ssp245_em_file):
-    """
-    Get the top of the emission file which will be equal for all scenarios
-    """
-    with open(ssp245_em_file) as semfile:
-        filedata = semfile.read()
-    top_of_file = filedata.split("\n2015")[0]
-    return top_of_file
-
-
 class SCENARIOFILEWRITER:
     """
     Class to write scenariofiles:
@@ -131,6 +121,15 @@ class SCENARIOFILEWRITER:
         self.ssp245data = read_ssp245_em(os.path.join(udir, "ssp245_em_RCMIP.txt"))
         self.udir = udir
 
+    def get_top_of_file(self, ssp245_em_file):
+        """
+        Get the top of the emission file which will be equal for all scenarios
+        """
+        with open(ssp245_em_file) as semfile:
+            filedata = semfile.read()
+            top_of_file = filedata.split("\n{}".format(self.years[0]))[0]
+        return top_of_file
+
     def initialize_units_comps(self, gasfile):
         """
         Get the list of gas components and units
@@ -153,7 +152,7 @@ class SCENARIOFILEWRITER:
         """
         # Find the unit and the original unit
         cicero_unit = self.units[self.components.index(comp)]
-        for row_index in scenarioframe[2015].keys():
+        for row_index in scenarioframe[self.years[0]].keys():
             if row_index[3] == "Emissions|{}".format(self.component_dict[comp][0]):
                 unit = row_index[4]
 
@@ -189,12 +188,18 @@ class SCENARIOFILEWRITER:
         Take a scenariodataframe
         and writing out necessary emissions files
         """
+        self.years = np.arange(
+            int(scenarioframe.keys()[0]), int(scenarioframe.keys()[-1]) + 1
+        )
+        print(self.years)
         fname = os.path.join(
-            odir, "inputfiles", "{s}_em.txt".format(s=scenarioframe[2015].keys()[0][1])
+            odir,
+            "inputfiles",
+            "{s}_em.txt".format(s=scenarioframe[self.years[0]].keys()[0][1]),
         )
         logging.getLogger("pyam").setLevel(logging.ERROR)
         avail_comps = [
-            c[3].replace("Emissions|", "") for c in scenarioframe[2015].keys()
+            c[3].replace("Emissions|", "") for c in scenarioframe[self.years[0]].keys()
         ]
         interpol = self.transform_scenarioframe(scenarioframe)
         printout_frame = pd.DataFrame(columns=self.components)
@@ -214,5 +219,7 @@ class SCENARIOFILEWRITER:
                 )
 
         with open(fname, "w") as sfile:
-            sfile.write(get_top_of_file(os.path.join(self.udir, "ssp245_em_RCMIP.txt")))
+            sfile.write(
+                self.get_top_of_file(os.path.join(self.udir, "ssp245_em_RCMIP.txt"))
+            )
         printout_frame.to_csv(fname, sep="\t", mode="a", float_format="%.8f")
