@@ -182,6 +182,7 @@ class SCENARIOFILEWRITER:
             print("In if test")
             yearsint = [np.int64(d.year) for d in years]
             scenarioframe.rename(lambda d: np.int64(d.year), axis="columns",  inplace=True)
+            print(scenarioframe.keys())
         self.years = np.arange(yearsint[0], yearsint[-1] + 1)
         for year in self.years:
             if year not in scenarioframe.columns:
