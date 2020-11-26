@@ -190,6 +190,9 @@ class SCENARIOFILEWRITER:
                 scenarioframe[year] = np.nan
         scenarioframe = scenarioframe.reindex(sorted(scenarioframe.columns), axis=1)
         interpol = scenarioframe.interpolate(axis=1)
+        if not isinstance(years[0], np.int64):
+            print("In if test")
+            interpol.rename(lambda d: np.int64(d.year), axis="columns",  inplace=True)
         return interpol
 
     def write_scenario_data(self, scenarioframe, odir):
