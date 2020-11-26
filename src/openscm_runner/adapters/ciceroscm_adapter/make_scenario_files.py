@@ -216,7 +216,7 @@ class SCENARIOFILEWRITER:
         # Setting conversion factors for components with data from scenarioframe
         for comp in self.components:
             if self.component_dict[comp][0] in avail_comps:
-                convfactor = self.get_unit_convfactor(comp, scenarioframe)
+                convfactor = self.get_unit_convfactor(comp, interpol)
                 printout_frame[comp] = (
                     interpol.T["Emissions|{}".format(self.component_dict[comp][0])]
                     * convfactor
