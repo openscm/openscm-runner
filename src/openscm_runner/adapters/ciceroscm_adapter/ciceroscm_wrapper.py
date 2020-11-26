@@ -42,6 +42,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         self.scen = scenariodata[startyear].keys()[0][1]
         self.model = scenariodata[startyear].keys()[0][0]
         self._make_dir_structure(self.scen)
+
         self._call_sfilewriter(scenariodata)
 
     def _call_sfilewriter(self, scenarios):
