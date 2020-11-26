@@ -152,6 +152,7 @@ class SCENARIOFILEWRITER:
         """
         # Find the unit and the original unit
         cicero_unit = self.units[self.components.index(comp)]
+        print(scenarioframe.keys())
         for row_index in scenarioframe[self.years[0]].keys():
             if row_index[3] == "Emissions|{}".format(self.component_dict[comp][0]):
                 unit = row_index[4]
@@ -208,7 +209,7 @@ class SCENARIOFILEWRITER:
         ]
         interpol = self.transform_scenarioframe(scenarioframe)
         printout_frame = pd.DataFrame(columns=self.components)
-        # Setting conversion factors for components with data from scenariofram
+        # Setting conversion factors for components with data from scenarioframe
         for comp in self.components:
             if self.component_dict[comp][0] in avail_comps:
                 convfactor = self.get_unit_convfactor(comp, scenarioframe)
