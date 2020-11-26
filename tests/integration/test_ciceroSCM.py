@@ -1,11 +1,11 @@
 import os
+from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 import numpy.testing as npt
 import pytest
 from scmdata import ScmRun
-import pandas as pd
-from pyam import IamDataFrame
+
 from openscm_runner.adapters import CICEROSCM
 from openscm_runner.adapters.ciceroscm_adapter import (
     make_scenario_files,
@@ -281,18 +281,7 @@ def test_make_scenario_files(test_scenarios):
         False,
         rtol=RTOL,
     )
-    """
-    sfilewriter = make_scenario_files.SCENARIOFILEWRITER(os.path.join("src", "openscm_runner", "adapters", "ciceroscm_adapter", "utils_templates"))
-    scenario = test_scenarios.filter(scenario="ssp126").as_pandas()
-    scenario['year'] = [pd.Timestamp(y) for y in scenario['year']]
-    scenarioIAM = IamDataFrame(scenario)
-    print(scenarioIAM.head())
-    interpol = sfilewriter.transform_scenarioframe(scenarioIAM.timeseries())
-    print(interpol.head())
-    npt.assert_equal(sfilewriter.transform_scenarioframe(scenarioIAM.timeseries()).shape, (23,86))
-    assert(False)
-    
-    """
+
 
 @pytest.mark.parametrize(
     "input,exp",
@@ -325,7 +314,7 @@ def test_parallel():
     result2 = _parallel_process._parallel_process(
         func=_self_function,
         configuration=runs2,
-        pool=None,
+        pool=ProcessPoolExecutor(max_workers=2),
         config_are_kwargs=False,
         front_serial=2,
         front_parallel=2,
