@@ -152,7 +152,6 @@ class SCENARIOFILEWRITER:
         """
         # Find the unit and the original unit
         cicero_unit = self.units[self.components.index(comp)]
-        print(scenarioframe.keys())
         for row_index in scenarioframe[scenarioframe.keys()[0]].keys():
             if row_index[3] == "Emissions|{}".format(self.component_dict[comp][0]):
                 unit = row_index[4]
@@ -178,22 +177,19 @@ class SCENARIOFILEWRITER:
         """
         scenarioframe = scenarioframe.reset_index((0, 1, 2, 4), drop=True)
         years = scenarioframe.keys()
-        print(type(years))
         if not isinstance(years[0], np.int64):
-            print("In if test")
             yearsint = [np.int64(d.year) for d in years]
-            scenarioframe.rename(lambda d: np.int64(d.year), axis="columns",  inplace=True)
-            print(scenarioframe.keys())
+            scenarioframe.rename(
+                lambda d: np.int64(d.year), axis="columns", inplace=True
+            )
+        else:
+            yearsint = years
         self.years = np.arange(yearsint[0], yearsint[-1] + 1)
         for year in self.years:
             if year not in scenarioframe.columns:
                 scenarioframe[year] = np.nan
         scenarioframe = scenarioframe.reindex(sorted(scenarioframe.columns), axis=1)
         interpol = scenarioframe.interpolate(axis=1)
-        if not isinstance(years[0], np.int64):
-            print("In if test")
-            print(interpol.keys())
-            #interpol.rename(lambda d: np.int64(d.year), axis="columns",  inplace=True)
         return interpol
 
     def write_scenario_data(self, scenarioframe, odir):
