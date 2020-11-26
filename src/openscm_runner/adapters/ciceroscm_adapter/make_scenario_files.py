@@ -153,7 +153,7 @@ class SCENARIOFILEWRITER:
         # Find the unit and the original unit
         cicero_unit = self.units[self.components.index(comp)]
         print(scenarioframe.keys())
-        for row_index in scenarioframe[self.years[0]].keys():
+        for row_index in scenarioframe[scenarioframe.keys()[0]].keys():
             if row_index[3] == "Emissions|{}".format(self.component_dict[comp][0]):
                 unit = row_index[4]
 
@@ -216,7 +216,7 @@ class SCENARIOFILEWRITER:
         # Setting conversion factors for components with data from scenarioframe
         for comp in self.components:
             if self.component_dict[comp][0] in avail_comps:
-                convfactor = self.get_unit_convfactor(comp, interpol)
+                convfactor = self.get_unit_convfactor(comp, scenarioframe)
                 printout_frame[comp] = (
                     interpol.T["Emissions|{}".format(self.component_dict[comp][0])]
                     * convfactor
