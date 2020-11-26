@@ -176,6 +176,13 @@ class SCENARIOFILEWRITER:
         Get rid of multiindex and interpolate scenarioframe
         """
         scenarioframe = scenarioframe.reset_index((0, 1, 2, 4), drop=True)
+        years = scenarioframe.keys()
+        print(type(years))
+        if not isinstance(years[0], np.int64):
+            print("In if test")
+            years = [np.int64(d.year) for d in years]
+            scenarioframe.rename(columns=years, axis="columns", inplace=True)
+        self.years = np.arange(years[0], years[-1] + 1)
         for year in self.years:
             if year not in scenarioframe.columns:
                 scenarioframe[year] = np.nan
@@ -188,18 +195,15 @@ class SCENARIOFILEWRITER:
         Take a scenariodataframe
         and writing out necessary emissions files
         """
-        self.years = np.arange(
-            int(scenarioframe.keys()[0]), int(scenarioframe.keys()[-1]) + 1
-        )
-        print(self.years)
         fname = os.path.join(
             odir,
             "inputfiles",
-            "{s}_em.txt".format(s=scenarioframe[self.years[0]].keys()[0][1]),
+            "{s}_em.txt".format(s=scenarioframe[scenarioframe.keys()[0]].keys()[0][1]),
         )
         logging.getLogger("pyam").setLevel(logging.ERROR)
         avail_comps = [
-            c[3].replace("Emissions|", "") for c in scenarioframe[self.years[0]].keys()
+            c[3].replace("Emissions|", "")
+            for c in scenarioframe[scenarioframe.keys()[0]].keys()
         ]
         interpol = self.transform_scenarioframe(scenarioframe)
         printout_frame = pd.DataFrame(columns=self.components)

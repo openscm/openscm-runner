@@ -4,7 +4,8 @@ import numpy as np
 import numpy.testing as npt
 import pytest
 from scmdata import ScmRun
-
+import pandas as pd
+from pyam import IamDataFrame
 from openscm_runner.adapters import CICEROSCM
 from openscm_runner.adapters.ciceroscm_adapter import (
     make_scenario_files,
@@ -246,7 +247,7 @@ def test_w_output_config(test_scenarios):
         )
 
 
-def test_make_scenario_files():
+def test_make_scenario_files(test_scenarios):
     npt.assert_string_equal(
         make_scenario_files.unit_name_converter("Mt C/yr"), "Tg C/yr"
     )
@@ -258,7 +259,7 @@ def test_make_scenario_files():
 
     _check_res(
         3.0 / 11 * 1000.0,
-        make_scenario_files.unit_conv_factor("Mg_C", "Tg CO2/yr", "CO2_lu"),
+        make_scenario_files.unit_conv_factor("Mg_C", "Gg CO2/yr", "CO2_lu"),
         False,
         rtol=RTOL,
     )
@@ -280,7 +281,18 @@ def test_make_scenario_files():
         False,
         rtol=RTOL,
     )
-
+    """
+    sfilewriter = make_scenario_files.SCENARIOFILEWRITER(os.path.join("src", "openscm_runner", "adapters", "ciceroscm_adapter", "utils_templates"))
+    scenario = test_scenarios.filter(scenario="ssp126").as_pandas()
+    scenario['year'] = [pd.Timestamp(y) for y in scenario['year']]
+    scenarioIAM = IamDataFrame(scenario)
+    print(scenarioIAM.head())
+    interpol = sfilewriter.transform_scenarioframe(scenarioIAM.timeseries())
+    print(interpol.head())
+    npt.assert_equal(sfilewriter.transform_scenarioframe(scenarioIAM.timeseries()).shape, (23,86))
+    assert(False)
+    
+    """
 
 @pytest.mark.parametrize(
     "input,exp",
