@@ -80,8 +80,8 @@ class CSCMREADER:
             # GMST
             "Surface Temperature (GMST)": "dT_glob",
             # ERFs
-            "Effective Radiative Forcing": "Total_forcing",
-            # "Effective Radiative Forcing|Anthropogenic", #Todo: find out how to add in
+            "Effective Radiative Forcing": "Total_forcing+sunvolc",
+            "Effective Radiative Forcing|Anthropogenic": "Total_forcing",  # Todo: find out how to add in
             "Effective Radiative Forcing|Aerosols": "Aerosols",
             "Effective Radiative Forcing|Aerosols|Direct Effect": "Aerosols|Direct Effect",
             "Effective Radiative Forcing|Aerosols|Direct Effect|BC": "BC",
@@ -124,6 +124,28 @@ class CSCMREADER:
             "dSL_ice(m)",
         )
         self.ohc_list = "OHCTOT"
+        self.volc_series = self.read_volc_series()
+        self.sun_series = self.read_sun_series()
+
+    def read_volc_series(self):
+        """
+        Read volcanic forcing timeseries from input
+        """
+        vfile = os.path.join(self.odir, "input_RF", "RFVOLC", "meanVOLCmnd_ipcc_NH.txt")
+        volc_series = pd.read_csv(
+            vfile, sep="\t", usecols=[0], index_col=False, header=None
+        )
+        volc_series.index = range(1750, 2501)
+        return volc_series
+
+    def read_sun_series(self):
+        """
+        Read solar forcing timeseries from input
+        """
+        sfile = os.path.join(self.odir, "input_RF", "RFSUN", "solar_IPCC.txt")
+        sun_series = pd.read_csv(sfile, sep="\t", index_col=False, header=None)
+        sun_series.index = range(1750, 2501)
+        return sun_series
 
     def read_variable_timeseries(self, scenario, variable, sfilewriter):
         """
@@ -174,6 +196,22 @@ class CSCMREADER:
             unit = "ZJ"
 
         return years, timeseries, unit
+
+    def get_volc_forcing(self, startyear, endyear):
+        """
+        Return volcanic forcing time series from startyear up to and including endyear
+        """
+        return self.volc_series.iloc[
+            startyear - 1750 : endyear - 1750 + 1
+        ].values.flatten()
+
+    def get_sun_forcing(self, startyear, endyear):
+        """
+        Return volcanic forcing time series from startyear up to and including endyear
+        """
+        return self.sun_series.iloc[
+            startyear - 1750 : endyear - 1750 + 1
+        ].values.flatten()
 
     def get_data_from_forc_file(self, folder, variable):
         """
@@ -227,6 +265,14 @@ class CSCMREADER:
             if variable == "GHG":
                 for comp in ghg_not_fgas:
                     timeseries = timeseries + df_temp[comp].to_numpy()
+        elif variable == "Total_forcing+sunvolc":
+            timeseries = df_temp["Total_forcing"].to_numpy()
+            timeseries = timeseries + self.get_volc_forcing(
+                years.to_numpy()[0], years.to_numpy()[-1]
+            )
+            timeseries = timeseries + self.get_sun_forcing(
+                years.to_numpy()[0], years.to_numpy()[-1]
+            )
         else:
             timeseries = df_temp[variable].to_numpy()
         return years, timeseries
