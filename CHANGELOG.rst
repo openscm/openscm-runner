@@ -26,6 +26,7 @@ Changed
 Fixed
 ~~~~~
 
+- (`#33 <https://github.com/openscm/openscm-runner/pull/33>`_) Stop FaIR trying to run aggregated CO2 emissions
 - (`#36 <https://github.com/openscm/openscm-runner/pull/36>`_) Hotfix CI after pandas 1.1.5 broke pylint
 
 v0.4.4 - 2020-11-12
