@@ -214,6 +214,9 @@ def scmdf_to_emissions(
 
     for var_df in scmrun.groupby("variable"):
         variable = var_df.get_unique_meta("variable", no_duplicates=True)
+        # for scenarios providing both aggregate fossil and AFOLU CO2, ignore the total
+        if variable.endswith("|CO2"):
+            continue
         in_unit = var_df.get_unique_meta("unit", no_duplicates=True)
         try:
             fair_col, fair_unit, context = _get_fair_col_unit_context(variable)
