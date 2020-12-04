@@ -2,6 +2,7 @@ import os.path
 
 import pyam
 import pytest
+from scmdata import ScmRun
 
 from openscm_runner.adapters import MAGICC7
 
@@ -29,6 +30,18 @@ def test_scenarios_2600(test_data_dir):
     )
 
     return scenarios
+
+
+@pytest.fixture(scope="session")
+def test_scenario_ssp370_world(test_data_dir):
+    scenario = ScmRun(
+        os.path.join(
+            test_data_dir, "rcmip-emissions-annual-means-v5-1-0-ssp370-world.csv"
+        ),
+        lowercase_cols=True,
+    )
+
+    return scenario
 
 
 @pytest.fixture(scope="session")
