@@ -1,5 +1,3 @@
-import pytest
-
 from openscm_runner.adapters.fair_adapter._scmdf_to_emissions import scmdf_to_emissions
 
 
