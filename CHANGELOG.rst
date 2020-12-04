@@ -18,6 +18,12 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Fixed
+~~~~~
+
+- (`#33 <https://github.com/openscm/openscm-runner/pull/33>`_) Stop FaIR trying to run aggregated CO2 emissions
+
+
 v0.4.4 - 2020-11-12
 -------------------
 
