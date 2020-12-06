@@ -66,7 +66,6 @@ class _AdapterTester(ABC):
         "Net Atmosphere to Ocean Flux|CO2",
     )
 
-    @staticmethod
     def _check_res(self, exp, check_val, raise_error):
         try:
             npt.assert_allclose(exp, check_val, rtol=self._rtol)

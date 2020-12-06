@@ -7,212 +7,204 @@ from openscm_runner import run
 from openscm_runner.adapters import MAGICC7
 from openscm_runner.utils import calculate_quantiles
 
-RTOL = 1e-5
+from base import _AdapterTester
 
 
-def _check_res(exp, check_val, raise_error, rtol=RTOL):
-    try:
-        npt.assert_allclose(exp, check_val, rtol=rtol)
-    except AssertionError:
-        if raise_error:
-            raise
+class TestMagicc7Adapter(_AdapterTester):
+    def test_run(self, test_scenarios, magicc7_is_available):
+        debug_run = False
 
-        print("exp: {}, check_val: {}".format(exp, check_val))
+        res = run(
+            climate_models_cfgs={
+                "MAGICC7": [
+                    {
+                        "core_climatesensitivity": 3,
+                        "rf_soxi_dir_wm2": -0.2,
+                        "out_temperature": 1,
+                        "out_forcing": 1,
+                        "out_dynamic_vars": [
+                            "DAT_AEROSOL_ERF",
+                            "DAT_HEATCONTENT_AGGREG_TOTAL",
+                            "DAT_CO2_AIR2LAND_FLUX",
+                        ],
+                        "out_ascii_binary": "BINARY",
+                        "out_binary_format": 2,
+                    },
+                    {
+                        "core_climatesensitivity": 2,
+                        "rf_soxi_dir_wm2": -0.1,
+                        "out_temperature": 1,
+                        "out_forcing": 1,
+                        "out_ascii_binary": "BINARY",
+                        "out_binary_format": 2,
+                    },
+                    {
+                        "core_climatesensitivity": 5,
+                        "rf_soxi_dir_wm2": -0.35,
+                        "out_temperature": 1,
+                        "out_forcing": 1,
+                        "out_ascii_binary": "BINARY",
+                        "out_binary_format": 2,
+                    },
+                ],
+            },
+            scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
+            output_variables=(
+                "Surface Air Temperature Change",
+                "Effective Radiative Forcing",
+                "Effective Radiative Forcing|Aerosols",
+                "Effective Radiative Forcing|CO2",
+                "Heat Content|Ocean",
+                "Net Atmosphere to Land Flux|CO2",
+            ),
+        )
 
+        assert isinstance(res, ScmRun)
+        assert res["run_id"].min() == 0
+        assert res["run_id"].max() == 8
+        assert res.get_unique_meta(
+            "climate_model", no_duplicates=True
+        ) == "MAGICC{}".format(MAGICC7.get_version())
+        assert set(res.get_unique_meta("variable")) == set(
+            [
+                "Surface Air Temperature Change",
+                "Effective Radiative Forcing",
+                "Effective Radiative Forcing|Aerosols",
+                "Effective Radiative Forcing|CO2",
+                "Heat Content|Ocean",
+                "Net Atmosphere to Land Flux|CO2",
+            ]
+        )
 
-def test_magicc7_run(test_scenarios, magicc7_is_available):
-    debug_run = False
+        # check ocean heat content unit conversion comes through correctly
+        self._check_res(
+            2508.737908,
+            res.filter(
+                unit="ZJ",
+                variable="Heat Content|Ocean",
+                region="World",
+                year=2100,
+                scenario="ssp126",
+            ).values.max(),
+            not debug_run,
+        )
 
-    res = run(
-        climate_models_cfgs={
-            "MAGICC7": [
-                {
-                    "core_climatesensitivity": 3,
-                    "rf_soxi_dir_wm2": -0.2,
-                    "out_temperature": 1,
-                    "out_forcing": 1,
-                    "out_dynamic_vars": [
-                        "DAT_AEROSOL_ERF",
-                        "DAT_HEATCONTENT_AGGREG_TOTAL",
-                        "DAT_CO2_AIR2LAND_FLUX",
-                    ],
-                    "out_ascii_binary": "BINARY",
-                    "out_binary_format": 2,
-                },
-                {
-                    "core_climatesensitivity": 2,
-                    "rf_soxi_dir_wm2": -0.1,
-                    "out_temperature": 1,
-                    "out_forcing": 1,
-                    "out_ascii_binary": "BINARY",
-                    "out_binary_format": 2,
-                },
-                {
-                    "core_climatesensitivity": 5,
-                    "rf_soxi_dir_wm2": -0.35,
-                    "out_temperature": 1,
-                    "out_forcing": 1,
-                    "out_ascii_binary": "BINARY",
-                    "out_binary_format": 2,
-                },
-            ],
-        },
-        scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
-        output_variables=(
-            "Surface Air Temperature Change",
-            "Effective Radiative Forcing",
-            "Effective Radiative Forcing|Aerosols",
-            "Effective Radiative Forcing|CO2",
-            "Heat Content|Ocean",
-            "Net Atmosphere to Land Flux|CO2",
-        ),
-    )
+        self._check_res(
+            0.472378,
+            res.filter(
+                unit="GtC / yr",
+                variable="Net Atmosphere to Land Flux|CO2",
+                region="World",
+                year=2100,
+                scenario="ssp126",
+            ).values.max(),
+            not debug_run,
+        )
 
-    assert isinstance(res, ScmRun)
-    assert res["run_id"].min() == 0
-    assert res["run_id"].max() == 8
-    assert res.get_unique_meta(
-        "climate_model", no_duplicates=True
-    ) == "MAGICC{}".format(MAGICC7.get_version())
-    assert set(res.get_unique_meta("variable")) == set(
-        [
-            "Surface Air Temperature Change",
-            "Effective Radiative Forcing",
-            "Effective Radiative Forcing|Aerosols",
-            "Effective Radiative Forcing|CO2",
-            "Heat Content|Ocean",
-            "Net Atmosphere to Land Flux|CO2",
-        ]
-    )
+        self._check_res(
+            2.756034,
+            res.filter(
+                variable="Surface Air Temperature Change",
+                region="World",
+                year=2100,
+                scenario="ssp126",
+            ).values.max(),
+            not debug_run,
+        )
+        self._check_res(
+            1.2195495,
+            res.filter(
+                variable="Surface Air Temperature Change",
+                region="World",
+                year=2100,
+                scenario="ssp126",
+            ).values.min(),
+            not debug_run,
+        )
 
-    # check ocean heat content unit conversion comes through correctly
-    _check_res(
-        2508.737908,
-        res.filter(
-            unit="ZJ",
-            variable="Heat Content|Ocean",
-            region="World",
-            year=2100,
-            scenario="ssp126",
-        ).values.max(),
-        not debug_run,
-        rtol=RTOL,
-    )
+        self._check_res(
+            5.5226571,
+            res.filter(
+                variable="Surface Air Temperature Change",
+                region="World",
+                year=2100,
+                scenario="ssp370",
+            ).values.max(),
+            not debug_run,
+        )
+        self._check_res(
+            2.733369581,
+            res.filter(
+                variable="Surface Air Temperature Change",
+                region="World",
+                year=2100,
+                scenario="ssp370",
+            ).values.min(),
+            not debug_run,
+        )
 
-    _check_res(
-        0.472378,
-        res.filter(
-            unit="GtC / yr",
-            variable="Net Atmosphere to Land Flux|CO2",
-            region="World",
-            year=2100,
-            scenario="ssp126",
-        ).values.max(),
-        not debug_run,
-        rtol=RTOL,
-    )
+        # check we can also calcluate quantiles
+        quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
 
-    _check_res(
-        2.756034,
-        res.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp126",
-        ).values.max(),
-        not debug_run,
-        rtol=RTOL,
-    )
-    _check_res(
-        1.2195495,
-        res.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp126",
-        ).values.min(),
-        not debug_run,
-        rtol=RTOL,
-    )
+        self._check_res(
+            1.27586919,
+            quantiles.filter(
+                variable="Surface Air Temperature Change",
+                region="World",
+                year=2100,
+                scenario="ssp126",
+                quantile=0.05,
+            ).values,
+            not debug_run,
+        )
+        self._check_res(
+            2.6587052,
+            quantiles.filter(
+                variable="Surface Air Temperature Change",
+                region="World",
+                year=2100,
+                scenario="ssp126",
+                quantile=0.95,
+            ).values,
+            not debug_run,
+        )
 
-    _check_res(
-        5.5226571,
-        res.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp370",
-        ).values.max(),
-        not debug_run,
-        rtol=RTOL,
-    )
-    _check_res(
-        2.733369581,
-        res.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp370",
-        ).values.min(),
-        not debug_run,
-        rtol=RTOL,
-    )
+        self._check_res(
+            2.83627686,
+            quantiles.filter(
+                variable="Surface Air Temperature Change",
+                region="World",
+                year=2100,
+                scenario="ssp370",
+                quantile=0.05,
+            ).values,
+            not debug_run,
+        )
+        self._check_res(
+            5.34663565,
+            quantiles.filter(
+                variable="Surface Air Temperature Change",
+                region="World",
+                year=2100,
+                scenario="ssp370",
+                quantile=0.95,
+            ).values,
+            not debug_run,
+        )
 
-    # check we can also calcluate quantiles
-    quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
+        if debug_run:
+            assert False, "Turn off debug"
 
-    _check_res(
-        1.27586919,
-        quantiles.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp126",
-            quantile=0.05,
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
-    _check_res(
-        2.6587052,
-        quantiles.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp126",
-            quantile=0.95,
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
+    def test_variable_naming(self, test_scenarios, magicc7_is_available, common_variables):
+        res = run(
+            climate_models_cfgs={"MAGICC7": ({"core_climatesensitivity": 3},)},
+            scenarios=test_scenarios.filter(scenario="ssp126"),
+            output_variables=common_variables,
+        )
 
-    _check_res(
-        2.83627686,
-        quantiles.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp370",
-            quantile=0.05,
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
-    _check_res(
-        5.34663565,
-        quantiles.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp370",
-            quantile=0.95,
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
-
-    if debug_run:
-        assert False, "Turn off debug"
+        missing_vars = set(common_variables) - set(res["variable"])
+        if missing_vars:
+            raise AssertionError(missing_vars)
 
 
 def test_write_scen_files_and_make_full_cfgs(test_scenarios, magicc7_is_available):
@@ -302,15 +294,3 @@ def test_return_config(test_scenarios, magicc7_is_available, out_config):
             assert set(ssp126.get_unique_meta(k)) == set(rf_total_runmoduses)
         else:
             raise NotImplementedError(k)
-
-
-def test_variable_naming(test_scenarios, magicc7_is_available, common_variables):
-    res = run(
-        climate_models_cfgs={"MAGICC7": ({"core_climatesensitivity": 3},)},
-        scenarios=test_scenarios.filter(scenario="ssp126"),
-        output_variables=common_variables,
-    )
-
-    missing_vars = set(common_variables) - set(res["variable"])
-    if missing_vars:
-        raise AssertionError(missing_vars)

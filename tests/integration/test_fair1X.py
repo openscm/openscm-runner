@@ -9,6 +9,7 @@ from openscm_runner.utils import calculate_quantiles
 
 from base import _AdapterTester
 
+
 class TestFairAdapter(_AdapterTester):
     def test_run(self, test_scenarios):
         res = run(
