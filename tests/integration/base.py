@@ -17,7 +17,6 @@ class _AdapterTester(ABC):
     """float: relative tolerance for numeric comparisons"""
     _rtol = 1e-5
 
-
     """
     tuple[str]: variable names which are expected to be used by all adapters
 
@@ -90,11 +89,7 @@ class _AdapterTester(ABC):
                 ],
             },
             scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
-            output_variables=(
-                "output",
-                "var",
-                "list",
-            ),
+            output_variables=("output", "var", "list",),
             out_config=None,
         )
 
@@ -105,11 +100,7 @@ class _AdapterTester(ABC):
         assert res.get_unique_meta("climate_model", no_duplicates=True) == "model_name"
 
         assert set(res.get_unique_meta("variable")) == set(
-            [
-                "expected",
-                "output",
-                "variables"
-            ]
+            ["expected", "output", "variables"]
         )
 
         # output value checks e.g.
@@ -136,7 +127,9 @@ class _AdapterTester(ABC):
             "Net Atmosphere to Ocean Flux|CO2",
             "Net Atmosphere to Land Flux|CO2",
         )
-        common_variables = [c for c in self._common_variables if c not in missing_variables]
+        common_variables = [
+            c for c in self._common_variables if c not in missing_variables
+        ]
 
         # run the model and request all common variables the model reportss
         res = run(
@@ -149,4 +142,3 @@ class _AdapterTester(ABC):
         missing_vars = set(common_variables) - set(res["variable"])
         if missing_vars:
             raise AssertionError(missing_vars)
-

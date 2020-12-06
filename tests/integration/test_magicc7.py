@@ -1,13 +1,11 @@
-import numpy.testing as npt
 import pymagicc.io
 import pytest
+from base import _AdapterTester
 from scmdata import ScmRun
 
 from openscm_runner import run
 from openscm_runner.adapters import MAGICC7
 from openscm_runner.utils import calculate_quantiles
-
-from base import _AdapterTester
 
 
 class TestMagicc7Adapter(_AdapterTester):
@@ -195,7 +193,9 @@ class TestMagicc7Adapter(_AdapterTester):
         if debug_run:
             assert False, "Turn off debug"
 
-    def test_variable_naming(self, test_scenarios, magicc7_is_available, common_variables):
+    def test_variable_naming(
+        self, test_scenarios, magicc7_is_available, common_variables
+    ):
         res = run(
             climate_models_cfgs={"MAGICC7": ({"core_climatesensitivity": 3},)},
             scenarios=test_scenarios.filter(scenario="ssp126"),

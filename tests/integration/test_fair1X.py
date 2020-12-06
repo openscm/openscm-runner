@@ -1,13 +1,12 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
+from base import _AdapterTester
 from scmdata import ScmRun
 
 from openscm_runner import run
 from openscm_runner.adapters import FAIR
 from openscm_runner.utils import calculate_quantiles
-
-from base import _AdapterTester
 
 
 class TestFairAdapter(_AdapterTester):
@@ -36,9 +35,9 @@ class TestFairAdapter(_AdapterTester):
         assert isinstance(res, ScmRun)
         assert res["run_id"].min() == 0
         assert res["run_id"].max() == 8
-        assert res.get_unique_meta("climate_model", no_duplicates=True) == "FaIRv{}".format(
-            FAIR.get_version()
-        )
+        assert res.get_unique_meta(
+            "climate_model", no_duplicates=True
+        ) == "FaIRv{}".format(FAIR.get_version())
 
         assert set(res.get_unique_meta("variable")) == set(
             [
@@ -154,7 +153,9 @@ class TestFairAdapter(_AdapterTester):
             "Net Atmosphere to Ocean Flux|CO2",
             "Net Atmosphere to Land Flux|CO2",
         )
-        common_variables = [c for c in self._common_variables if c not in missing_from_fair]
+        common_variables = [
+            c for c in self._common_variables if c not in missing_from_fair
+        ]
         res = run(
             climate_models_cfgs={"FaIR": ({"startyear": 1750},)},
             scenarios=test_scenarios.filter(scenario="ssp126"),
