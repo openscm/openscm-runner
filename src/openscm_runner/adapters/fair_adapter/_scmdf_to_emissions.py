@@ -238,12 +238,10 @@ def scmdf_to_emissions(
             continue
         # except we do want fossil and AFOLU separate for CO2
         what_am_i = variable.split("|")[1]
-        if variable.endswith(
-            (
-                "|MAGICC AFOLU",
-                "|MAGICC Fossil and Industrial"
-            )
-        ) and what_am_i != "CO2":
+        if (
+            variable.endswith(("|MAGICC AFOLU", "|MAGICC Fossil and Industrial"))
+            and what_am_i != "CO2"
+        ):
             continue
         in_unit = var_df.get_unique_meta("unit", no_duplicates=True)
         try:
