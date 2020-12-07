@@ -214,8 +214,37 @@ def scmdf_to_emissions(
 
     for var_df in scmrun.groupby("variable"):
         variable = var_df.get_unique_meta("variable", no_duplicates=True)
+        print(variable)
         # for scenarios providing both aggregate fossil and AFOLU CO2, ignore the total
         if variable.endswith("|CO2"):
+            continue
+        # we don't care about the split for most emitted species
+        if variable.endswith(
+            (
+                "|MAGICC AFOLU|Agricultural Waste Burning",
+                "|MAGICC AFOLU|Agriculture",
+                "|MAGICC AFOLU|Forest Burning",
+                "|MAGICC AFOLU|Grassland Burning",
+                "|MAGICC AFOLU|Peat Burning",
+                "|MAGICC Fossil and Industrial|Aircraft",
+                "|MAGICC Fossil and Industrial|Energy Sector",
+                "|MAGICC Fossil and Industrial|Industrial Sector",
+                "|MAGICC Fossil and Industrial|International Shipping",
+                "|MAGICC Fossil and Industrial|Residential Commercial Other",
+                "|MAGICC Fossil and Industrial|Solvents Production and Application",
+                "|MAGICC Fossil and Industrial|Transportation Sector",
+                "|MAGICC Fossil and Industrial|Waste",
+            )
+        ):
+            continue
+        # except we do want fossil and AFOLU separate for CO2
+        what_am_i = variable.split("|")[1]
+        if variable.endswith(
+            (
+                "|MAGICC AFOLU",
+                "|MAGICC Fossil and Industrial"
+            )
+        ) and what_am_i != "CO2":
             continue
         in_unit = var_df.get_unique_meta("unit", no_duplicates=True)
         try:
