@@ -8,6 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 from subprocess import CalledProcessError  # nosec
 
 import f90nml
+import pymagicc
 import scmdata
 
 from ...settings import config
@@ -105,8 +106,7 @@ def run_magicc_parallel(cfgs, output_vars, output_config):
         List of configurations with which to run MAGICC
 
     output_vars : list[str]
-        Variables to output (may require some fiddling with ``out_x``
-        variables in ``cfgs`` to get this right)
+        Variables to output
 
     output_config : tuple[str]
         Configuration to include in the output
@@ -120,10 +120,21 @@ def run_magicc_parallel(cfgs, output_vars, output_config):
     shared_manager = multiprocessing.Manager()
     shared_dict = shared_manager.dict()
     instances = _MagiccInstances(existing_instances=shared_dict)
+    magicc_internal_vars = [
+        "DAT_{}".format(
+            pymagicc.definitions.convert_magicc7_to_openscm_variables(v, inverse=True)
+        )
+        for v in output_vars
+    ]
 
     runs = [
         {
-            "cfg": {**cfg, "only": output_vars, "output_config": output_config},
+            "cfg": {
+                **cfg,
+                "only": output_vars,
+                "out_dynamic_vars": magicc_internal_vars,
+                "output_config": output_config,
+            },
             "run_func": _run_func,
             "setup_func": _setup_func,
             "instances": instances,

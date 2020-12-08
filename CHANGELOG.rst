@@ -18,6 +18,11 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Changed
+~~~~~~~
+
+- (`#31 <https://github.com/openscm/openscm-runner/pull/31>`_) Unified key variable naming across MAGICC and FaIR
+
 v0.4.4 - 2020-11-12
 -------------------
 

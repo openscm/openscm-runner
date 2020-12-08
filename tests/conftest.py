@@ -35,7 +35,7 @@ def test_scenarios_2600(test_data_dir):
 def magicc7_is_available():
     try:
         magicc_version = MAGICC7.get_version()
-        if magicc_version != "v7.4.2":
+        if magicc_version != "v7.4.2-23-g635c48cab":
             raise AssertionError(
                 "Wrong MAGICC version for tests ({})".format(magicc_version)
             )
