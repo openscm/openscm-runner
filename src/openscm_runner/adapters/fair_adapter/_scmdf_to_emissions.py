@@ -214,57 +214,17 @@ def scmdf_to_emissions(
 
     for var_df in scmrun.groupby("variable"):
         variable = var_df.get_unique_meta("variable", no_duplicates=True)
-        # for scenarios providing both aggregate fossil and AFOLU CO2, ignore the total
-        if variable.endswith("|CO2"):
-            continue
-        # we don't care about the split for most emitted species
-        if variable.endswith(
-            (
-                "|MAGICC AFOLU|Agricultural Waste Burning",
-                "|MAGICC AFOLU|Agriculture",
-                "|MAGICC AFOLU|Forest Burning",
-                "|MAGICC AFOLU|Grassland Burning",
-                "|MAGICC AFOLU|Peat Burning",
-                "|MAGICC Fossil and Industrial|Aircraft",
-                "|MAGICC Fossil and Industrial|Energy Sector",
-                "|MAGICC Fossil and Industrial|Industrial Sector",
-                "|MAGICC Fossil and Industrial|International Shipping",
-                "|MAGICC Fossil and Industrial|Residential Commercial Other",
-                "|MAGICC Fossil and Industrial|Solvents Production and Application",
-                "|MAGICC Fossil and Industrial|Transportation Sector",
-                "|MAGICC Fossil and Industrial|Waste",
-            )
-        ):
-            continue
-        # except we do want fossil and AFOLU separate for CO2
-        what_am_i = variable.split("|")[1]
+
+        # Skip aggregate emissions and emissons not handled by FaIR
         if (
-            variable.endswith(("|MAGICC AFOLU", "|MAGICC Fossil and Industrial"))
-            and what_am_i != "CO2"
+            variable.split("Emissions")[1]
+            not in EMISSIONS_SPECIES_UNITS_CONTEXT.species.values
         ):
             continue
+
         in_unit = var_df.get_unique_meta("unit", no_duplicates=True)
-        try:
-            fair_col, fair_unit, context = _get_fair_col_unit_context(variable)
-        except AssertionError:
-            if variable.endswith(
-                (
-                    "|HFC152a",
-                    "|HFC236fa",
-                    "|HFC365mfc",
-                    "|NF3",
-                    "|C3F8",
-                    "|C4F10",
-                    "|C5F12",
-                    "|C7F16",
-                    "|C8F18",
-                    "|cC4F8",
-                    "|SO2F2",
-                    "|CH2Cl2",
-                    "|CHCl3",
-                )
-            ):
-                continue
+
+        fair_col, fair_unit, context = _get_fair_col_unit_context(variable)
 
         if in_unit != fair_unit:
             var_df_fair_unit = var_df.convert_unit(fair_unit, context=context)
