@@ -17,9 +17,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dev dependencies
+      # why pandas 1.1.5 breaks pylint, I do not know
       run: |
         pip install --upgrade pip wheel
-        pip install -e .[dev] --use-feature=2020-resolver
+        pip install -e .[dev]
+        pip install pandas==1.1.4
     - name: Formatting and linters
       run: |
         black --check src tests setup.py --exclude openscm_runner/_version.py
@@ -61,7 +63,7 @@ jobs:
     - name: Install test dependencies
       run: |
         pip install --upgrade pip wheel
-        pip install -e .[tests] --use-feature=2020-resolver
+        pip install -e .[tests]
     - name: Test with pytest
       env:
         MIN_COVERAGE: 95
@@ -91,7 +93,7 @@ jobs:
     - name: Install notebook dependencies
       run: |
         pip install --upgrade pip wheel
-        pip install -e .[tests,notebooks] --use-feature=2020-resolver
+        pip install -e .[tests,notebooks]
     - name: Test notebooks with nbval
       run: |
           pytest notebooks -r a --nbval-lax --sanitize-with tests/notebook-tests.cfg --no-cov
@@ -139,7 +141,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip wheel
-        pip install -e .[dev] --use-feature=2020-resolver
+        pip install -e .[dev]
     - name: Create package
       run: python setup.py sdist bdist_wheel --universal
     - name: Publish package to PyPI

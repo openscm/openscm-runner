@@ -23,6 +23,11 @@ Changed
 
 - (`#31 <https://github.com/openscm/openscm-runner/pull/31>`_) Unified key variable naming across MAGICC and FaIR
 
+Fixed
+~~~~~
+
+- (`#36 <https://github.com/openscm/openscm-runner/pull/36>`_) Hotfix CI after pandas 1.1.5 broke pylint
+
 v0.4.4 - 2020-11-12
 -------------------
 
