@@ -17,9 +17,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dev dependencies
+      # why pandas 1.1.5 breaks pylint, I do not know
       run: |
         pip install --upgrade pip wheel
         pip install -e .[dev]
+        pip install pandas==1.1.4
     - name: Formatting and linters
       run: |
         black --check src tests setup.py --exclude openscm_runner/_version.py
