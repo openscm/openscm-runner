@@ -2,6 +2,7 @@ import os.path
 
 import pyam
 import pytest
+from scmdata import ScmRun
 
 from openscm_runner.adapters import MAGICC7
 
@@ -32,10 +33,22 @@ def test_scenarios_2600(test_data_dir):
 
 
 @pytest.fixture(scope="session")
+def test_scenario_ssp370_world(test_data_dir):
+    scenario = ScmRun(
+        os.path.join(
+            test_data_dir, "rcmip-emissions-annual-means-v5-1-0-ssp370-world.csv"
+        ),
+        lowercase_cols=True,
+    )
+
+    return scenario
+
+
+@pytest.fixture(scope="session")
 def magicc7_is_available():
     try:
         magicc_version = MAGICC7.get_version()
-        if magicc_version != "v7.4.2":
+        if magicc_version != "v7.4.2-23-g635c48cab":
             raise AssertionError(
                 "Wrong MAGICC version for tests ({})".format(magicc_version)
             )

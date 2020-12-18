@@ -18,8 +18,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install package
+      # install basic first, then install pre-releases afterwards so we don't
+      # pick up pre-releases of dependencies (e.g. pandas)
       run: |
         pip install --upgrade pip
+        pip install openscm-runner
         pip install openscm-runner --pre
     - name: Checkout repository
       uses: actions/checkout@v2

@@ -16,13 +16,30 @@ from ._run_magicc_parallel import run_magicc_parallel
 LOGGER = logging.getLogger(__name__)
 
 
-_VARIABLE_MAP = {}
+_VARIABLE_MAP = {
+    "Surface Air Temperature Change": "Surface Temperature",
+    "Atmospheric Concentrations|HFC4310mee": "Atmospheric Concentrations|HFC4310",
+    "Radiative Forcing|HFC4310mee": "Radiative Forcing|HFC4310",
+    "Effective Radiative Forcing|HFC4310mee": "Effective Radiative Forcing|HFC4310",
+}
 """
 dict[str: str] : Mapping from openscm_runner names to pymagicc names
 
 Should only be used as an emergency escape, if changes are needed
 they should really be made in pymagicc.
 """
+
+
+def _convert_to_pymagicc_var(in_var):
+    """
+    Convert an OpenSCM-Runner name to a Pymagicc name
+    """
+    if in_var in _VARIABLE_MAP:
+        return _VARIABLE_MAP[in_var]
+
+    out = pymagicc.definitions.convert_magicc7_to_openscm_variables(in_var)
+
+    return out
 
 
 class MAGICC7(_Adapter):
@@ -79,9 +96,7 @@ class MAGICC7(_Adapter):
 
         full_cfgs = self._write_scen_files_and_make_full_cfgs(magicc_scmdf, cfgs)
 
-        pymagicc_vars = [
-            _VARIABLE_MAP[v] if v in _VARIABLE_MAP else v for v in output_variables
-        ]
+        pymagicc_vars = [_convert_to_pymagicc_var(v) for v in output_variables]
         res = run_magicc_parallel(full_cfgs, pymagicc_vars, output_config)
 
         LOGGER.debug("Dropping todo metadata")

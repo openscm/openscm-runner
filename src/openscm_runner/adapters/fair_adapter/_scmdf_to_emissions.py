@@ -214,28 +214,17 @@ def scmdf_to_emissions(
 
     for var_df in scmrun.groupby("variable"):
         variable = var_df.get_unique_meta("variable", no_duplicates=True)
+
+        # Skip aggregate emissions and emissons not handled by FaIR
+        if (
+            variable.split("Emissions")[1]
+            not in EMISSIONS_SPECIES_UNITS_CONTEXT.species.values
+        ):
+            continue
+
         in_unit = var_df.get_unique_meta("unit", no_duplicates=True)
-        try:
-            fair_col, fair_unit, context = _get_fair_col_unit_context(variable)
-        except AssertionError:
-            if variable.endswith(
-                (
-                    "|HFC152a",
-                    "|HFC236fa",
-                    "|HFC365mfc",
-                    "|NF3",
-                    "|C3F8",
-                    "|C4F10",
-                    "|C5F12",
-                    "|C7F16",
-                    "|C8F18",
-                    "|cC4F8",
-                    "|SO2F2",
-                    "|CH2Cl2",
-                    "|CHCl3",
-                )
-            ):
-                continue
+
+        fair_col, fair_unit, context = _get_fair_col_unit_context(variable)
 
         if in_unit != fair_unit:
             var_df_fair_unit = var_df.convert_unit(fair_unit, context=context)

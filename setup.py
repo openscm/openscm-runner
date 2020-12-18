@@ -24,7 +24,7 @@ REQUIREMENTS = [
     "fair>=1.6.1,<2.0.0",
     "matplotlib==3.2.2",
     "pyam-iamc",
-    "pymagicc>=2.0.0rc8,<3",
+    "pymagicc>=2.0.0rc9,<3",
     "python-dotenv",
     "scmdata>=0.7.2",
     "tqdm",
@@ -34,7 +34,14 @@ REQUIREMENTS_NOTEBOOKS = [
     "notebook",
     "seaborn",
 ]
-REQUIREMENTS_TESTS = ["codecov", "coverage", "nbval", "pytest-cov", "pytest>=4.0"]
+REQUIREMENTS_TESTS = [
+    "codecov",
+    "coverage",
+    "nbval",
+    "pytest-cov",
+    "pytest>=4.0",
+    "xlrd",
+]
 REQUIREMENTS_DOCS = ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-click"]
 REQUIREMENTS_DEPLOY = ["twine>=1.11.0", "setuptools>=41.2", "wheel>=0.31.0"]
 
