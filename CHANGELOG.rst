@@ -21,6 +21,7 @@ master
 Changed
 ~~~~~~~
 
+- (`#38 <https://github.com/openscm/openscm-runner/pull/38>`_) Updated scmdata requirements to handle change to openscm-units
 - (`#31 <https://github.com/openscm/openscm-runner/pull/31>`_) Unified key variable naming across MAGICC and FaIR
 
 Fixed
