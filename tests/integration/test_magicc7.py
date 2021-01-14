@@ -194,8 +194,9 @@ class TestMagicc7Adapter(_AdapterTester):
             assert False, "Turn off debug"
 
     def test_variable_naming(
-        self, test_scenarios, magicc7_is_available, common_variables
+        self, test_scenarios, magicc7_is_available
     ):
+        common_variables = self._common_variables
         res = run(
             climate_models_cfgs={"MAGICC7": ({"core_climatesensitivity": 3},)},
             scenarios=test_scenarios.filter(scenario="ssp126"),
