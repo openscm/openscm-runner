@@ -71,8 +71,10 @@ def _run_func(magicc, cfg):
                 if k in magicc_out_cfg:
                     if magicc_out_cfg[k] != cfg[k]:
                         LOGGER.warning(
+                            "Parameter: %s. "
                             "MAGICC input config (via OpenSCM-Runner): %s. "
                             "MAGICC output config: %s.",
+                            k,
                             cfg[k],
                             magicc_out_cfg[k],
                         )

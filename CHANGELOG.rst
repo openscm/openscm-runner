@@ -27,6 +27,7 @@ Changed
 Fixed
 ~~~~~
 
+- (`#39 <https://github.com/openscm/openscm-runner/pull/39>`_) Include parameter name in the warning message emitted when MAGICC's output config doesn't match the input config specified via OpenSCM-Runner
 - (`#36 <https://github.com/openscm/openscm-runner/pull/36>`_) Hotfix CI after pandas 1.1.5 broke pylint
 - (`#37 <https://github.com/openscm/openscm-runner/pull/33>`_) Ensure FaIR ignores emissions input in scenarios not handled by FaIR, e.g. total CO2
 
