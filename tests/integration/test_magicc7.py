@@ -1,3 +1,5 @@
+import logging
+
 import pymagicc.io
 import pytest
 from base import _AdapterTester
@@ -295,3 +297,31 @@ def test_return_config(test_scenarios, magicc7_is_available, out_config):
             assert set(ssp126.get_unique_meta(k)) == set(rf_total_runmoduses)
         else:
             raise NotImplementedError(k)
+
+
+def test_return_config_clash_warning(test_scenarios, magicc7_is_available, caplog):
+    caplog.set_level(logging.ERROR)
+    caplog.set_level(
+        logging.WARNING,
+        logger="openscm_runner.adapters.magicc7._run_magicc_parallel"
+    )
+    run(
+        climate_models_cfgs={"MAGICC7": [{"pf_apply": 1, "PF_APPLY": 0}]},
+        scenarios=test_scenarios.filter(scenario=["ssp126"]),
+        output_variables=(
+            "Surface Air Temperature Change",
+        ),
+        out_config={"MAGICC7": ("pf_apply",)},
+    )
+
+    assert len(caplog.records) == 1
+    assert caplog.record_tuples == [
+        (
+            "openscm_runner.adapters.magicc7._run_magicc_parallel",
+            logging.WARNING,
+            (
+                "Parameter: pf_apply. MAGICC input config (via "
+                "OpenSCM-Runner): 1. MAGICC output config: 0."
+            )
+        )
+    ]
