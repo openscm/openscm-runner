@@ -11,7 +11,7 @@ AUTHORS = [
     ("Robert Gieseke", "robert.gieseke@pik-potsdam.de"),
     ("Jared Lewis", "jared.lewis@climate-energy-college.org"),
     ("Sven Willner", "sven.willner@pik-potsdam.de"),
-    ("Chris Smith", "c.j.smith1@leeds.ac.uk")
+    ("Chris Smith", "c.j.smith1@leeds.ac.uk"),
 ]
 URL = "https://github.com/openscm/openscm-runner"
 
