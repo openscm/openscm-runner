@@ -210,7 +210,7 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     data["Effective Radiative Forcing|Volcanic"] = forcing[:, 43]
     data["Effective Radiative Forcing|Solar"] = forcing[:, 44]
     data["Effective Radiative Forcing"] = np.sum(forcing, axis=1)
-    data["Effective Radiative Forcing|Anthropogenic"] = np.sum(forcing[:, :39], axis=1)
+    data["Effective Radiative Forcing|Anthropogenic"] = np.sum(forcing[:, :43], axis=1)
     data["Effective Radiative Forcing|Greenhouse Gases"] = np.sum(
         forcing[:, :31], axis=1
     )
