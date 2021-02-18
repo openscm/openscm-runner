@@ -21,7 +21,7 @@ master
 Changed
 ~~~~~~~
 
-- (`#41 <https://github.com/openscm/openscm-runner/pull/41>`_) Updated update frequency of :func:`run_magicc_parallel` to 5s
+- (`#41 <https://github.com/openscm/openscm-runner/pull/41>`_) Use consistent setting across all progress bars
 - (`#38 <https://github.com/openscm/openscm-runner/pull/38>`_) Updated scmdata requirements to handle change to openscm-units
 - (`#31 <https://github.com/openscm/openscm-runner/pull/31>`_) Unified key variable naming across MAGICC and FaIR
 
