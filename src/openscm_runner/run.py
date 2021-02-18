@@ -6,7 +6,7 @@ import logging
 import scmdata
 
 from .adapters import FAIR, MAGICC7
-from ..progress import progress
+from .progress import progress
 
 
 LOGGER = logging.getLogger(__name__)
