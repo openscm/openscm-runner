@@ -10,15 +10,19 @@ from tqdm.autonotebook import tqdm
 LOGGER = logging.getLogger(__name__)
 
 
+# TODO: handle configuration in a consistent manner
+_default_tqdm_params = {"mininterval": 5}
+
+
 def _run_serial(func, configs, config_are_kwargs, desc):
     LOGGER.debug("Entering _run_serial")
 
     if config_are_kwargs:
         LOGGER.debug("Treating config as kwargs")
-        res = [func(**a) for a in tqdm(configs, desc=desc)]
+        res = [func(**a) for a in tqdm(configs, desc=desc, **_default_tqdm_params)]
     else:
         LOGGER.debug("Treating config as args")
-        res = [func(a) for a in tqdm(configs, desc=desc)]
+        res = [func(a) for a in tqdm(configs, desc=desc, **_default_tqdm_params)]
 
     LOGGER.debug("Exiting _run_serial")
     return res
@@ -37,11 +41,11 @@ def _run_parallel(  # pylint:disable=too-many-arguments
         futures = [pool.submit(func, a) for a in configs]
 
     kwargs_tqdm = {
+        **_default_tqdm_params,
         "total": len(futures),
         "unit": "it",
         "unit_scale": True,
         "desc": desc,
-        "mininterval": mininterval,
     }
 
     LOGGER.debug("Waiting for jobs to complete")
@@ -81,7 +85,6 @@ def _parallel_process(  # pylint:disable=too-many-arguments
     front_serial=3,
     front_parallel=2,
     timeout=None,
-    mininterval=5,
 ):
     """
     Run a process in parallel with a progress bar.
@@ -116,10 +119,6 @@ def _parallel_process(  # pylint:disable=too-many-arguments
     timeout : float
         How long to wait for processes to complete before timing out. If
         ``None``, there is no timeout limit.
-
-    mininterval : int
-        Minimum interval between updating progress bar. Defaults to updating every
-        5s.
 
     Returns
     -------
@@ -158,7 +157,6 @@ def _parallel_process(  # pylint:disable=too-many-arguments
             config_are_kwargs=config_are_kwargs,
             desc="Front parallel",
             bar_start=front_serial,
-            mininterval=mininterval,
         )
 
     LOGGER.debug("Running rest of parallel jobs")
@@ -170,7 +168,6 @@ def _parallel_process(  # pylint:disable=too-many-arguments
         config_are_kwargs=config_are_kwargs,
         desc="Parallel runs",
         bar_start=front_serial + front_parallel,
-        mininterval=mininterval,
     )
 
     return front_serial_res + front_parallel_res + rest
