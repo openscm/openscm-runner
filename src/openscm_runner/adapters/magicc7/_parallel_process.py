@@ -158,6 +158,7 @@ def _parallel_process(  # pylint:disable=too-many-arguments
             config_are_kwargs=config_are_kwargs,
             desc="Front parallel",
             bar_start=front_serial,
+            mininterval=mininterval,
         )
 
     LOGGER.debug("Running rest of parallel jobs")
