@@ -25,7 +25,7 @@ def _run_serial(func, configs, config_are_kwargs, desc):
 
 
 def _run_parallel(  # pylint:disable=too-many-arguments
-    pool, timeout, func, configs, config_are_kwargs, desc, bar_start,
+    pool, timeout, func, configs, config_are_kwargs, desc, bar_start, mininterval
 ):
     LOGGER.debug("Entering _run_parallel")
 
@@ -41,6 +41,7 @@ def _run_parallel(  # pylint:disable=too-many-arguments
         "unit": "it",
         "unit_scale": True,
         "desc": desc,
+        "mininterval": mininterval,
     }
 
     LOGGER.debug("Waiting for jobs to complete")
@@ -80,6 +81,7 @@ def _parallel_process(  # pylint:disable=too-many-arguments
     front_serial=3,
     front_parallel=2,
     timeout=None,
+    mininterval=5,
 ):
     """
     Run a process in parallel with a progress bar.
@@ -114,6 +116,10 @@ def _parallel_process(  # pylint:disable=too-many-arguments
     timeout : float
         How long to wait for processes to complete before timing out. If
         ``None``, there is no timeout limit.
+
+    mininterval : int
+        Minimum interval between updating progress bar. Defaults to updating every
+        5s.
 
     Returns
     -------
@@ -163,6 +169,7 @@ def _parallel_process(  # pylint:disable=too-many-arguments
         config_are_kwargs=config_are_kwargs,
         desc="Parallel runs",
         bar_start=front_serial + front_parallel,
+        mininterval=mininterval,
     )
 
     return front_serial_res + front_parallel_res + rest
