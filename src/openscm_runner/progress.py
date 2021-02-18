@@ -1,5 +1,8 @@
-from tqdm.autonotebook import tqdm
+"""
+Progress bar wrapper
+"""
 
+from tqdm.autonotebook import tqdm
 
 # TODO: handle configuration in a consistent manner
 _default_tqdm_params = {
@@ -11,7 +14,7 @@ _default_tqdm_params = {
 
 def progress(*args, **kwargs):
     """
-    Wrapper around tqdm to provide consistent settings
+    Progress bar
 
     Uses ``tqdm.autonotebook`` to automatically use a native Jupyter widget
     when executing within a Jupyer Notebook.

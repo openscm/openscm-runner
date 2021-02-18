@@ -1,5 +1,6 @@
 from tqdm.autonotebook import tqdm
-from openscm_runner.progress import progress, _default_tqdm_params
+
+from openscm_runner.progress import _default_tqdm_params, progress
 
 
 def test_progress(monkeypatch):
