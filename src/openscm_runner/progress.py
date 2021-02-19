@@ -30,6 +30,7 @@ def progress(*args, **kwargs):
     Returns
     -------
     tqdm.auto_notebook.tqdm
+        tqdm instance with consistent configuration
     """
     kwargs = {**_default_tqdm_params, **kwargs}
     return tqdm(*args, **kwargs)
