@@ -42,7 +42,7 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
         updated_config[i]["output_vars"] = output_vars
 
     # this won't be appropriate in all cases - can we set an option for this?
-    ncpu = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
+    ncpu = multiprocessing.cpu_count() - 1
 
     with multiprocessing.Pool(ncpu) as pool:
         res = list(pool.imap(_single_fair_iteration, updated_config))
