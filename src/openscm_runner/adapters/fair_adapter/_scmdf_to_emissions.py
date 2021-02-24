@@ -28,9 +28,7 @@ class HistoricalWorldEmms:
                     "rcmip-emissions-annual-means-v5-1-0-historical-ssp245.csv",
                 ),
                 lowercase_cols=True,
-            ).interpolate(
-                [dt.datetime(y, 1, 1) for y in self._values["year"]]
-            )
+            ).interpolate([dt.datetime(y, 1, 1) for y in self._values["year"]])
 
         self._loaded = True
         return self._values
