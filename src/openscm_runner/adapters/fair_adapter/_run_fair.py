@@ -2,6 +2,7 @@
 Module for running FaIR
 """
 import logging
+import multiprocessing
 
 import numpy as np
 from fair.constants.general import EARTH_RADIUS, SECONDS_PER_YEAR
@@ -30,53 +31,63 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
         :obj:`ScmRun` instance with all results.
     """
     res = []
-
-    for cfg in cfgs:
-        scenario = cfg.pop("scenario")
-        model = cfg.pop("model")
-        run_id = cfg.pop("run_id")
-        factors = {}
-        factors["gmst"] = cfg.pop("gmst_factor")
-        factors["ohu"] = cfg.pop("ohu_factor")
-        startyear = cfg.pop("startyear")
-        # FaIR needs numpy arrays, not lists. json only does lists.
-        cfg_as_arrays = {}
-        for key, value in cfg.items():
-            if isinstance(value, list):
-                cfg_as_arrays[key] = np.asarray(value)
+    updated_config = []
+    for i in range(len(cfgs)):
+        updated_config.append({})
+        for key, value in cfgs[i].items():
+            if type(value)==list:
+                updated_config[i][key] = np.asarray(value)
             else:
-                cfg_as_arrays[key] = value
+                updated_config[i][key] = value
+        updated_config[i]['output_vars'] = output_vars
 
-        data, unit, nt = _process_output(
-            fair_scm(**cfg_as_arrays), output_vars, factors
-        )
+    # this won't be appropriate in all cases - can we set an option for this?
+    ncpu = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
 
-        data_scmrun = []
-        variables = []
-        units = []
-        for key, variable in data.items():
-            variables.append(key)
-            data_scmrun.append(variable)
-            units.append(unit[key])
-
-        tempres = ScmRun(
-            np.vstack(data_scmrun).T,
-            index=np.arange(startyear, startyear + nt),
-            columns={
-                "scenario": scenario,
-                "model": model,
-                "region": "World",
-                "variable": variables,
-                "unit": units,
-                "run_id": run_id,
-            },
-        )
-
-        res.append(tempres)
-
+    with multiprocessing.Pool(ncpu) as pool:
+        res = list(pool.imap(_single_fair_iteration, updated_config))
     res = run_append(res)
 
     return res
+
+
+
+def _single_fair_iteration(cfg):
+    scenario = cfg.pop("scenario")
+    model = cfg.pop("model")
+    run_id = cfg.pop("run_id")
+    factors = {}
+    factors["gmst"] = cfg.pop("gmst_factor")
+    factors["ohu"] = cfg.pop("ohu_factor")
+    startyear = cfg.pop("startyear")
+    output_vars = cfg.pop("output_vars")
+
+    data, unit, nt = _process_output(
+        fair_scm(**cfg), output_vars, factors
+    )
+
+    data_scmrun = []
+    variables = []
+    units = []
+    for key, variable in data.items():
+        variables.append(key)
+        data_scmrun.append(variable)
+        units.append(unit[key])
+
+    tempres = ScmRun(
+        np.vstack(data_scmrun).T,
+        index=np.arange(startyear, startyear + nt),
+        columns={
+            "scenario": scenario,
+            "model": model,
+            "region": "World",
+            "variable": variables,
+            "unit": units,
+            "run_id": run_id,
+        },
+    )
+
+    return tempres
 
 
 def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
