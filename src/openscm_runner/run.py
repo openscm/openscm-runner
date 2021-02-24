@@ -4,9 +4,9 @@ High-level run function
 import logging
 
 import scmdata
-from tqdm.autonotebook import tqdm
 
 from .adapters import FAIR, MAGICC7
+from .progress import progress
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,9 @@ def run(
     _check_out_config(out_config, climate_models_cfgs)
 
     res = []
-    for climate_model, cfgs in tqdm(climate_models_cfgs.items(), desc="Climate models"):
+    for climate_model, cfgs in progress(
+        climate_models_cfgs.items(), desc="Climate models"
+    ):
         if climate_model == "MAGICC7":
             runner = MAGICC7()
         elif climate_model.upper() == "FAIR":  # allow various capitalisations

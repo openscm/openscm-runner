@@ -7,8 +7,8 @@ from subprocess import check_output  # nosec
 
 import pymagicc
 from scmdata import ScmRun, run_append
-from tqdm.autonotebook import tqdm
 
+from ...progress import progress
 from ...settings import config
 from ..base import _Adapter
 from ._run_magicc_parallel import run_magicc_parallel
@@ -139,7 +139,7 @@ class MAGICC7(_Adapter):
         full_cfgs = []
         run_id_block = 0
 
-        for (scenario, model), smdf in tqdm(
+        for (scenario, model), smdf in progress(
             scenarios.timeseries().groupby(["scenario", "model"]),
             desc="Writing SCEN7 files",
         ):
