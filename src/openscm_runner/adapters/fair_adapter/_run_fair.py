@@ -32,10 +32,10 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
     """
     res = []
     updated_config = []
-    for i in range(len(cfgs)):
+    for i, cfg in enumerate(cfgs):
         updated_config.append({})
-        for key, value in cfgs[i].items():
-            if type(value) == list:
+        for key, value in cfg.items():
+            if isinstance(value, list):
                 updated_config[i][key] = np.asarray(value)
             else:
                 updated_config[i][key] = value
@@ -51,7 +51,7 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
     return res
 
 
-def _single_fair_iteration(cfg):
+def _single_fair_iteration(cfg):  # pylint: disable=R0914
     scenario = cfg.pop("scenario")
     model = cfg.pop("model")
     run_id = cfg.pop("run_id")
