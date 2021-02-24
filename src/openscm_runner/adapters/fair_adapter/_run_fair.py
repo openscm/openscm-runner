@@ -35,11 +35,11 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
     for i in range(len(cfgs)):
         updated_config.append({})
         for key, value in cfgs[i].items():
-            if type(value)==list:
+            if type(value) == list:
                 updated_config[i][key] = np.asarray(value)
             else:
                 updated_config[i][key] = value
-        updated_config[i]['output_vars'] = output_vars
+        updated_config[i]["output_vars"] = output_vars
 
     # this won't be appropriate in all cases - can we set an option for this?
     ncpu = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
@@ -49,7 +49,6 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
     res = run_append(res)
 
     return res
-
 
 
 def _single_fair_iteration(cfg):
@@ -62,9 +61,7 @@ def _single_fair_iteration(cfg):
     startyear = cfg.pop("startyear")
     output_vars = cfg.pop("output_vars")
 
-    data, unit, nt = _process_output(
-        fair_scm(**cfg), output_vars, factors
-    )
+    data, unit, nt = _process_output(fair_scm(**cfg), output_vars, factors)
 
     data_scmrun = []
     variables = []
