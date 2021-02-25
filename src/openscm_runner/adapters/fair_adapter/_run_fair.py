@@ -11,7 +11,6 @@ from scmdata import ScmRun, run_append
 
 from ...settings import config
 
-
 LOGGER = logging.getLogger(__name__)
 toa_to_joule = 4 * np.pi * EARTH_RADIUS ** 2 * SECONDS_PER_YEAR
 

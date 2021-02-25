@@ -146,7 +146,9 @@ def run_magicc_parallel(cfgs, output_vars, output_config):
 
     try:
         pool = ProcessPoolExecutor(
-            max_workers=int(config.get("MAGICC_WORKER_NUMBER", multiprocessing.cpu_count())),
+            max_workers=int(
+                config.get("MAGICC_WORKER_NUMBER", multiprocessing.cpu_count())
+            ),
             initializer=_init_magicc_worker,
             initargs=(shared_dict,),
         )
