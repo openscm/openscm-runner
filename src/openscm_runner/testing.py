@@ -4,12 +4,22 @@ Miscellaneous testing code
 import json
 
 import numpy.testing as npt
-import pytest
+
+try:
+    import pytest
+
+    has_pytest = True
+
+except ImportError:
+    has_pytest = False
 
 
 def _check_output(  # pylint: disable=too-many-locals
     res, expected_output_file, rtol, update
 ):
+    if not has_pytest:
+        raise ImportError("pytest not installed, run `pip install pytest`")
+
     with open(expected_output_file, "r") as filehandle:
         expected_output = json.load(filehandle)
 
