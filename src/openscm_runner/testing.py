@@ -29,7 +29,7 @@ def _check_output(  # pylint: disable=too-many-locals
 
             quantile = filter_kwargs.pop("quantile")
             res_to_check = res_cm.filter(**filter_kwargs)
-            if not res.empty:
+            if res.empty:
                 raise AssertionError
 
             res_val = float(
