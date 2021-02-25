@@ -9,6 +9,9 @@ from fair.constants.general import EARTH_RADIUS, SECONDS_PER_YEAR
 from fair.forward import fair_scm
 from scmdata import ScmRun, run_append
 
+from ...settings import config
+
+
 LOGGER = logging.getLogger(__name__)
 toa_to_joule = 4 * np.pi * EARTH_RADIUS ** 2 * SECONDS_PER_YEAR
 
@@ -41,11 +44,15 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
                 updated_config[i][key] = value
         updated_config[i]["output_vars"] = output_vars
 
-    # this won't be appropriate in all cases - can we set an option for this?
-    ncpu = multiprocessing.cpu_count() - 1
+    ncpu = int(config.get("FAIR_WORKER_NUMBER", multiprocessing.cpu_count()))
+    LOGGER.info("Running FaIR with %s workers", ncpu)
 
-    with multiprocessing.Pool(ncpu) as pool:
-        res = list(pool.imap(_single_fair_iteration, updated_config))
+    if ncpu > 1:
+        with multiprocessing.Pool(ncpu) as pool:
+            res = list(pool.imap(_single_fair_iteration, updated_config))
+    else:
+        res = [_single_fair_iteration(c) for c in updated_config]
+
     res = run_append(res)
 
     return res

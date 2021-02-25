@@ -10,7 +10,9 @@ from openscm_runner.utils import calculate_quantiles
 
 
 class TestFairAdapter(_AdapterTester):
-    def test_run(self, test_scenarios):
+    @pytest.mark.parametrize("nworkers", (1, 4))
+    def test_run(self, test_scenarios, monkeypatch, nworkers):
+        monkeypatch.setenv("FAIR_WORKER_NUMBER", "{}".format(nworkers))
         res = run(
             climate_models_cfgs={
                 "FaIR": [
@@ -212,7 +214,8 @@ def test_fair_ocean_factors(test_scenarios):
 
 
 def test_startyear(test_scenarios, test_scenarios_2600):
-    # we can't run different start years in the same ensemble as output files will differ in shape. There is a separate test to ensure this does raise an error.
+    # we can't run different start years in the same ensemble as output files will differ in shape.
+    # There is a separate test to ensure this does raise an error.
     res_1850 = run(
         climate_models_cfgs={"FaIR": [{"startyear": 1850}]},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
