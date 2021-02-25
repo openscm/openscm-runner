@@ -8,16 +8,16 @@ import numpy.testing as npt
 try:
     import pytest
 
-    has_pytest = True
+    HAS_PYTEST = True
 
 except ImportError:
-    has_pytest = False
+    HAS_PYTEST = False
 
 
 def _check_output(  # pylint: disable=too-many-locals
     res, expected_output_file, rtol, update
 ):
-    if not has_pytest:
+    if not HAS_PYTEST:
         raise ImportError("pytest not installed, run `pip install pytest`")
 
     with open(expected_output_file, "r") as filehandle:
