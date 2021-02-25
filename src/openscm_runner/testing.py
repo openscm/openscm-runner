@@ -1,10 +1,15 @@
+"""
+Miscellaneous testing code
+"""
 import json
 
 import numpy.testing as npt
 import pytest
 
 
-def _check_output(res, expected_output_file, rtol, update):
+def _check_output(  # pylint: disable=too-many-locals
+    res, expected_output_file, rtol, update
+):
     with open(expected_output_file, "r") as filehandle:
         expected_output = json.load(filehandle)
 
@@ -24,7 +29,9 @@ def _check_output(res, expected_output_file, rtol, update):
 
             quantile = filter_kwargs.pop("quantile")
             res_to_check = res_cm.filter(**filter_kwargs)
-            assert not res.empty
+            if not res.empty:
+                raise AssertionError
+
             res_val = float(
                 res_to_check.process_over(
                     ("climate_model", "run_id"), "quantile", q=quantile

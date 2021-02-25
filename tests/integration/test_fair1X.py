@@ -1,7 +1,6 @@
 import os.path
 
 import numpy as np
-import numpy.testing as npt
 import pytest
 from base import _AdapterTester
 from scmdata import ScmRun

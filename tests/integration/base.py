@@ -1,8 +1,6 @@
-import json
 from abc import ABC, abstractmethod
 
 import numpy.testing as npt
-import pytest
 from scmdata import ScmRun
 
 import openscm_runner.testing
