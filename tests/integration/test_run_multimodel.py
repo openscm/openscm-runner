@@ -21,7 +21,9 @@ def _check_res(exp, check_val, raise_error, rtol=RTOL):
         print("exp: {}, check_val: {}".format(exp, check_val))
 
 
-def test_multimodel_run(test_scenarios, magicc7_is_available, test_data_dir, update_expected_values):
+def test_multimodel_run(
+    test_scenarios, magicc7_is_available, test_data_dir, update_expected_values
+):
     expected_output_file = os.path.join(
         test_data_dir,
         "expected-integration-output",
@@ -118,4 +120,6 @@ def test_multimodel_run(test_scenarios, magicc7_is_available, test_data_dir, upd
     quantiles = calculate_quantiles(res, [0, 0.05, 0.17, 0.5, 0.83, 0.95, 1])
     assert "run_id" not in quantiles.meta
 
-    openscm_runner.testing._check_output(res, expected_output_file, rtol=RTOL, update=update_expected_values)
+    openscm_runner.testing._check_output(
+        res, expected_output_file, rtol=RTOL, update=update_expected_values
+    )

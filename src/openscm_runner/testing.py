@@ -15,7 +15,7 @@ def _check_output(res, expected_output_file, rtol, update):
         res_cm = res.filter(climate_model=climate_model)
 
         if update:
-                updated_output[climate_model] = []
+            updated_output[climate_model] = []
 
         for filter_kwargs, expected_val in checks:
             err_msg = "{}".format(filter_kwargs)
@@ -26,16 +26,14 @@ def _check_output(res, expected_output_file, rtol, update):
             res_to_check = res_cm.filter(**filter_kwargs)
             assert not res.empty
             res_val = float(
-                res_to_check.process_over(("climate_model", "run_id"), "quantile", q=quantile)
-                .values
+                res_to_check.process_over(
+                    ("climate_model", "run_id"), "quantile", q=quantile
+                ).values
             )
 
             try:
                 npt.assert_allclose(
-                    res_val,
-                    expected_val,
-                    rtol=rtol,
-                    err_msg=err_msg,
+                    res_val, expected_val, rtol=rtol, err_msg=err_msg,
                 )
                 if update:
                     new_val = expected_val
@@ -46,9 +44,7 @@ def _check_output(res, expected_output_file, rtol, update):
                     raise
 
             if update:
-                updated_output[climate_model].append((
-                    filter_kwargs_in, new_val
-                ))
+                updated_output[climate_model].append((filter_kwargs_in, new_val))
 
     if update:
         with open(expected_output_file, "w") as file_handle:

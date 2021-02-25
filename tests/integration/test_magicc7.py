@@ -12,7 +12,13 @@ from openscm_runner.utils import calculate_quantiles
 
 
 class TestMagicc7Adapter(_AdapterTester):
-    def test_run(self, test_scenarios, magicc7_is_available, test_data_dir, update_expected_values):
+    def test_run(
+        self,
+        test_scenarios,
+        magicc7_is_available,
+        test_data_dir,
+        update_expected_values,
+    ):
         expected_output_file = os.path.join(
             test_data_dir,
             "expected-integration-output",

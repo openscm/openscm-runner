@@ -13,7 +13,14 @@ from openscm_runner.utils import calculate_quantiles
 
 class TestFairAdapter(_AdapterTester):
     @pytest.mark.parametrize("nworkers", (1, 4))
-    def test_run(self, test_scenarios, monkeypatch, nworkers, test_data_dir, update_expected_values):
+    def test_run(
+        self,
+        test_scenarios,
+        monkeypatch,
+        nworkers,
+        test_data_dir,
+        update_expected_values,
+    ):
         expected_output_file = os.path.join(
             test_data_dir,
             "expected-integration-output",
@@ -66,7 +73,6 @@ class TestFairAdapter(_AdapterTester):
         assert "run_id" not in quantiles.meta
 
         self._check_output(res, expected_output_file, update_expected_values)
-
 
     def test_variable_naming(self, test_scenarios):
         missing_from_fair = (
