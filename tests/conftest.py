@@ -1,5 +1,7 @@
+import json
 import os.path
 
+import numpy.testing as npt
 import pyam
 import pytest
 from scmdata import ScmRun
