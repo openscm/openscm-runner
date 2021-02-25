@@ -109,7 +109,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
     quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
 
     _check_res(
-        1.3210385,
+        1.31448,
         quantiles.filter(
             variable="Surface Air Temperature Change",
             region="World",
@@ -121,7 +121,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
         rtol=RTOL,
     )
     _check_res(
-        2.56801998,
+        2.48715,
         quantiles.filter(
             variable="Surface Air Temperature Change",
             region="World",
@@ -134,7 +134,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
     )
 
     _check_res(
-        2.99063777,
+        2.97359,
         quantiles.filter(
             variable="Surface Air Temperature Change",
             region="World",
@@ -146,7 +146,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
         rtol=RTOL,
     )
     _check_res(
-        5.30347506,
+        5.18685,
         quantiles.filter(
             variable="Surface Air Temperature Change",
             region="World",
@@ -165,7 +165,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
     )
 
     _check_res(
-        1.27586919,
+        1.26457,
         quantiles_cm.filter(
             variable="Surface Air Temperature Change",
             region="World",
@@ -178,7 +178,7 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
         rtol=RTOL,
     )
     _check_res(
-        5.34663565,
+        5.20233,
         quantiles_cm.filter(
             variable="Surface Air Temperature Change",
             region="World",

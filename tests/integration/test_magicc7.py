@@ -78,7 +78,7 @@ class TestMagicc7Adapter(_AdapterTester):
 
         # check ocean heat content unit conversion comes through correctly
         self._check_res(
-            2508.737908,
+            2400.88,
             res.filter(
                 unit="ZJ",
                 variable="Heat Content|Ocean",
@@ -90,7 +90,7 @@ class TestMagicc7Adapter(_AdapterTester):
         )
 
         self._check_res(
-            0.472378,
+            0.456158,
             res.filter(
                 unit="GtC / yr",
                 variable="Net Atmosphere to Land Flux|CO2",
@@ -102,7 +102,7 @@ class TestMagicc7Adapter(_AdapterTester):
         )
 
         self._check_res(
-            2.756034,
+            2.64822,
             res.filter(
                 variable="Surface Air Temperature Change",
                 region="World",
@@ -112,7 +112,7 @@ class TestMagicc7Adapter(_AdapterTester):
             not debug_run,
         )
         self._check_res(
-            1.2195495,
+            1.21081,
             res.filter(
                 variable="Surface Air Temperature Change",
                 region="World",
@@ -123,7 +123,7 @@ class TestMagicc7Adapter(_AdapterTester):
         )
 
         self._check_res(
-            5.5226571,
+            5.367158,
             res.filter(
                 variable="Surface Air Temperature Change",
                 region="World",
@@ -133,7 +133,7 @@ class TestMagicc7Adapter(_AdapterTester):
             not debug_run,
         )
         self._check_res(
-            2.733369581,
+            2.72517,
             res.filter(
                 variable="Surface Air Temperature Change",
                 region="World",
@@ -147,7 +147,7 @@ class TestMagicc7Adapter(_AdapterTester):
         quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
 
         self._check_res(
-            1.27586919,
+            1.26457,
             quantiles.filter(
                 variable="Surface Air Temperature Change",
                 region="World",
@@ -158,7 +158,7 @@ class TestMagicc7Adapter(_AdapterTester):
             not debug_run,
         )
         self._check_res(
-            2.6587052,
+            2.55824,
             quantiles.filter(
                 variable="Surface Air Temperature Change",
                 region="World",
@@ -170,7 +170,7 @@ class TestMagicc7Adapter(_AdapterTester):
         )
 
         self._check_res(
-            2.83627686,
+            2.82454,
             quantiles.filter(
                 variable="Surface Air Temperature Change",
                 region="World",
@@ -181,7 +181,7 @@ class TestMagicc7Adapter(_AdapterTester):
             not debug_run,
         )
         self._check_res(
-            5.34663565,
+            5.20233,
             quantiles.filter(
                 variable="Surface Air Temperature Change",
                 region="World",
