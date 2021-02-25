@@ -14,7 +14,7 @@ except ImportError:
     HAS_PYTEST = False
 
 
-def _check_output(  # pylint: disable=too-many-locals
+def _check_output(  # pylint: disable=too-many-locals,too-many-branches
     res, expected_output_file, rtol, update
 ):
     if not HAS_PYTEST:
