@@ -1,7 +1,7 @@
 [run]
 branch = True
 source = openscm_runner
-omit = *_version.py,*adapters/magicc7*
+omit = *_version.py,*adapters/magicc7*,*testing.py
 
 [report]
 fail_under = 95
