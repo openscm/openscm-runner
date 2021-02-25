@@ -1,3 +1,5 @@
+import os.path
+
 import numpy as np
 import numpy.testing as npt
 import pytest
@@ -11,7 +13,13 @@ from openscm_runner.utils import calculate_quantiles
 
 class TestFairAdapter(_AdapterTester):
     @pytest.mark.parametrize("nworkers", (1, 4))
-    def test_run(self, test_scenarios, monkeypatch, nworkers):
+    def test_run(self, test_scenarios, monkeypatch, nworkers, test_data_dir, update_expected_values):
+        expected_output_file = os.path.join(
+            test_data_dir,
+            "expected-integration-output",
+            "expected_fair1X_test_run_output.json",
+        )
+
         monkeypatch.setenv("FAIR_WORKER_NUMBER", "{}".format(nworkers))
         res = run(
             climate_models_cfgs={
@@ -52,97 +60,13 @@ class TestFairAdapter(_AdapterTester):
             ]
         )
 
-        # these values are from the run-fair notebook
-        npt.assert_allclose(
-            2.003964892582933,
-            res.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-            ).values.max(),
-            rtol=self._rtol,
-        )
-        npt.assert_allclose(
-            1.6255017914500822,
-            res.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-            ).values.min(),
-            rtol=self._rtol,
-        )
-
-        npt.assert_allclose(
-            4.645930053608295,
-            res.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-            ).values.max(),
-            rtol=self._rtol,
-        )
-        npt.assert_allclose(
-            3.927009494888895,
-            res.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-            ).values.min(),
-            rtol=self._rtol,
-        )
-
         # check we can also calcluate quantiles
-        quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
+        assert "run_id" in res.meta
+        quantiles = calculate_quantiles(res, [0, 0.05, 0.17, 0.5, 0.83, 0.95, 1])
+        assert "run_id" not in quantiles.meta
 
-        npt.assert_allclose(
-            1.6410216803638293,
-            quantiles.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-                quantile=0.05,
-            ).values,
-            rtol=self._rtol,
-        )
-        npt.assert_allclose(
-            1.9816384713833952,
-            quantiles.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-                quantile=0.95,
-            ).values,
-            rtol=self._rtol,
-        )
+        self._check_output(res, expected_output_file, update_expected_values)
 
-        npt.assert_allclose(
-            3.9423565896925803,
-            quantiles.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-                quantile=0.05,
-            ).values,
-            rtol=self._rtol,
-        )
-        npt.assert_allclose(
-            4.58938509254004,
-            quantiles.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-                quantile=0.95,
-            ).values,
-            rtol=self._rtol,
-        )
 
     def test_variable_naming(self, test_scenarios):
         missing_from_fair = (

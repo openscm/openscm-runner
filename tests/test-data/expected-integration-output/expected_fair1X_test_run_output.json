@@ -1,0 +1,84 @@
+{
+    "FaIRv1.6.1": [
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 1
+            },
+            2.00396
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0
+            },
+            1.6255
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 1
+            },
+            4.64593
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0
+            },
+            3.92701
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05
+            },
+            1.64102
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.95
+            },
+            1.98164
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0.05
+            },
+            3.94236
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0.95
+            },
+            4.58939
+        ]
+    ]
+}
