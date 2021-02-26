@@ -21,7 +21,7 @@ master
 Changed
 ~~~~~~~
 
-- (`#43 <https://github.com/openscm/openscm-runner/pull/43>`_) Run FaIR in parallel
+- (`#43 <https://github.com/openscm/openscm-runner/pull/43>`_) Add ability to run FaIR in parallel
 
 v0.5.0 - 2021-02-24
 -------------------
