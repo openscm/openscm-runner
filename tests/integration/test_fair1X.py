@@ -335,7 +335,11 @@ def test_forcing_categories(test_scenarios):
     ]
 
     res = run(
-        climate_models_cfgs={"FaIR": [{},],},  # pylint: disable=E231
+        climate_models_cfgs={"FaIR":
+            [
+                {},
+            ],
+        },
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
         output_variables=tuple(forcing_categories),
         out_config=None,
