@@ -210,17 +210,16 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     data["Effective Radiative Forcing|Volcanic"] = forcing[:, 43]
     data["Effective Radiative Forcing|Solar"] = forcing[:, 44]
     data["Effective Radiative Forcing"] = np.sum(forcing, axis=1)
-    data["Effective Radiative Forcing|Anthropogenic"] = np.sum(forcing[:, :39], axis=1)
+    data["Effective Radiative Forcing|Anthropogenic"] = np.sum(forcing[:, :43], axis=1)
     data["Effective Radiative Forcing|Greenhouse Gases"] = np.sum(
         forcing[:, :31], axis=1
     )
     # This definition does not include ozone and H2O from CH4 oxidation
-    data["Effective Radiative Forcing|Greenhouse Gases|Kyoto Gases"] = np.sum(
-        forcing[:, :15], axis=1
-    )
+    data["Effective Radiative Forcing|Kyoto Gases"] = np.sum(forcing[:, :15], axis=1)
     data["Effective Radiative Forcing|CO2, CH4 and N2O"] = np.sum(
         forcing[:, :3], axis=1
     )
+    # What is the rigorous definition here? CFCs are not included but contain F
     data["Effective Radiative Forcing|F-Gases"] = np.sum(forcing[:, 3:15], axis=1)
     data["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = np.sum(
         forcing[:, 15:31], axis=1
@@ -229,6 +228,7 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
         forcing[:, 35:40], axis=1
     )
     data["Effective Radiative Forcing|Aerosols"] = np.sum(forcing[:, 35:41], axis=1)
+    data["Effective Radiative Forcing|Ozone"] = np.sum(forcing[:, 31:33], axis=1)
     data["Surface Air Temperature Change"] = temperature
     data["Surface Air Ocean Blended Temperature Change"] = temperature * factors["gmst"]
     data["Airborne Fraction"] = airborne_emissions
@@ -326,6 +326,7 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     unit["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Direct Effect"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols"] = "W/m**2"
+    unit["Effective Radiative Forcing|Ozone"] = "W/m**2"
     unit["Surface Air Temperature Change"] = "K"
     unit["Surface Air Ocean Blended Temperature Change"] = "K"
     unit["Airborne Fraction"] = "dimensionless"
