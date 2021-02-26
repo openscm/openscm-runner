@@ -215,9 +215,7 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
         forcing[:, :31], axis=1
     )
     # This definition does not include ozone and H2O from CH4 oxidation
-    data["Effective Radiative Forcing|Kyoto Gases"] = np.sum(
-        forcing[:, :15], axis=1
-    )
+    data["Effective Radiative Forcing|Kyoto Gases"] = np.sum(forcing[:, :15], axis=1)
     data["Effective Radiative Forcing|CO2, CH4 and N2O"] = np.sum(
         forcing[:, :3], axis=1
     )

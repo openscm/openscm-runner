@@ -273,72 +273,69 @@ def test_startyear(test_scenarios, test_scenarios_2600):
             out_config=None,
         )
 
+
 def test_forcing_categories(test_scenarios):
     forcing_categories = [
-            "Effective Radiative Forcing|CO2",
-            "Effective Radiative Forcing|CH4",
-            "Effective Radiative Forcing|N2O",
-            "Effective Radiative Forcing|CF4",
-            "Effective Radiative Forcing|C2F6",
-            "Effective Radiative Forcing|C6F14",
-            "Effective Radiative Forcing|HFC23",
-            "Effective Radiative Forcing|HFC32",
-            "Effective Radiative Forcing|HFC125",
-            "Effective Radiative Forcing|HFC134a",
-            "Effective Radiative Forcing|HFC143a",
-            "Effective Radiative Forcing|HFC227ea",
-            "Effective Radiative Forcing|HFC245fa",
-            "Effective Radiative Forcing|HFC4310mee",
-            "Effective Radiative Forcing|SF6",
-            "Effective Radiative Forcing|CFC11",
-            "Effective Radiative Forcing|CFC12",
-            "Effective Radiative Forcing|CFC113",
-            "Effective Radiative Forcing|CFC114",
-            "Effective Radiative Forcing|CFC115",
-            "Effective Radiative Forcing|CCl4",
-            "Effective Radiative Forcing|CH3CCl3",
-            "Effective Radiative Forcing|HCFC22",
-            "Effective Radiative Forcing|HCFC141b",
-            "Effective Radiative Forcing|HCFC142b",
-            "Effective Radiative Forcing|Halon1211",
-            "Effective Radiative Forcing|Halon1202",
-            "Effective Radiative Forcing|Halon1301",
-            "Effective Radiative Forcing|Halon2402",
-            "Effective Radiative Forcing|CH3Br",
-            "Effective Radiative Forcing|CH3Cl",
-            "Effective Radiative Forcing|Tropospheric Ozone",
-            "Effective Radiative Forcing|Stratospheric Ozone",
-            "Effective Radiative Forcing|CH4 Oxidation Stratospheric H2O",
-            "Effective Radiative Forcing|Contrails",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|SOx",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|Secondary Organic Aerosol",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|Nitrate",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|BC",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|OC",
-            "Effective Radiative Forcing|Aerosols|Indirect Effect",
-            "Effective Radiative Forcing|Black Carbon on Snow",
-            "Effective Radiative Forcing|Land-use Change",
-            "Effective Radiative Forcing|Volcanic",
-            "Effective Radiative Forcing|Solar",
-            "Effective Radiative Forcing",
-            "Effective Radiative Forcing|Anthropogenic",
-            "Effective Radiative Forcing|Greenhouse Gases",
-            "Effective Radiative Forcing|Kyoto Gases",
-            "Effective Radiative Forcing|CO2, CH4 and N2O",
-            "Effective Radiative Forcing|F-Gases",
-            "Effective Radiative Forcing|Montreal Protocol Halogen Gases",
-            "Effective Radiative Forcing|Aerosols|Direct Effect",
-            "Effective Radiative Forcing|Aerosols",
-            "Effective Radiative Forcing|Ozone",
-            "Effective Radiative Forcing",
-        ]
+        "Effective Radiative Forcing|CO2",
+        "Effective Radiative Forcing|CH4",
+        "Effective Radiative Forcing|N2O",
+        "Effective Radiative Forcing|CF4",
+        "Effective Radiative Forcing|C2F6",
+        "Effective Radiative Forcing|C6F14",
+        "Effective Radiative Forcing|HFC23",
+        "Effective Radiative Forcing|HFC32",
+        "Effective Radiative Forcing|HFC125",
+        "Effective Radiative Forcing|HFC134a",
+        "Effective Radiative Forcing|HFC143a",
+        "Effective Radiative Forcing|HFC227ea",
+        "Effective Radiative Forcing|HFC245fa",
+        "Effective Radiative Forcing|HFC4310mee",
+        "Effective Radiative Forcing|SF6",
+        "Effective Radiative Forcing|CFC11",
+        "Effective Radiative Forcing|CFC12",
+        "Effective Radiative Forcing|CFC113",
+        "Effective Radiative Forcing|CFC114",
+        "Effective Radiative Forcing|CFC115",
+        "Effective Radiative Forcing|CCl4",
+        "Effective Radiative Forcing|CH3CCl3",
+        "Effective Radiative Forcing|HCFC22",
+        "Effective Radiative Forcing|HCFC141b",
+        "Effective Radiative Forcing|HCFC142b",
+        "Effective Radiative Forcing|Halon1211",
+        "Effective Radiative Forcing|Halon1202",
+        "Effective Radiative Forcing|Halon1301",
+        "Effective Radiative Forcing|Halon2402",
+        "Effective Radiative Forcing|CH3Br",
+        "Effective Radiative Forcing|CH3Cl",
+        "Effective Radiative Forcing|Tropospheric Ozone",
+        "Effective Radiative Forcing|Stratospheric Ozone",
+        "Effective Radiative Forcing|CH4 Oxidation Stratospheric H2O",
+        "Effective Radiative Forcing|Contrails",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|SOx",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|Secondary Organic Aerosol",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|Nitrate",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|BC",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|OC",
+        "Effective Radiative Forcing|Aerosols|Indirect Effect",
+        "Effective Radiative Forcing|Black Carbon on Snow",
+        "Effective Radiative Forcing|Land-use Change",
+        "Effective Radiative Forcing|Volcanic",
+        "Effective Radiative Forcing|Solar",
+        "Effective Radiative Forcing",
+        "Effective Radiative Forcing|Anthropogenic",
+        "Effective Radiative Forcing|Greenhouse Gases",
+        "Effective Radiative Forcing|Kyoto Gases",
+        "Effective Radiative Forcing|CO2, CH4 and N2O",
+        "Effective Radiative Forcing|F-Gases",
+        "Effective Radiative Forcing|Montreal Protocol Halogen Gases",
+        "Effective Radiative Forcing|Aerosols|Direct Effect",
+        "Effective Radiative Forcing|Aerosols",
+        "Effective Radiative Forcing|Ozone",
+        "Effective Radiative Forcing",
+    ]
 
     res = run(
-        climate_models_cfgs={
-            "FaIR": [
-                {},
-            ],
-        },
+        climate_models_cfgs={"FaIR": [{},],},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
         output_variables=tuple(forcing_categories),
         out_config=None,
@@ -347,144 +344,145 @@ def test_forcing_categories(test_scenarios):
     # storing results in a dict makes this a bit more compact
     forcing = {}
     for variable in forcing_categories:
-        forcing[variable] = res.filter(
-            variable=variable,
-            region="World"
-        ).values
+        forcing[variable] = res.filter(variable=variable, region="World").values
 
     npt.assert_allclose(
-        forcing["Effective Radiative Forcing|CO2"] +
-        forcing["Effective Radiative Forcing|CH4"] +
-        forcing["Effective Radiative Forcing|N2O"] +
-        forcing["Effective Radiative Forcing|CF4"] +
-        forcing["Effective Radiative Forcing|C2F6"] +
-        forcing["Effective Radiative Forcing|C6F14"] +
-        forcing["Effective Radiative Forcing|HFC23"] +
-        forcing["Effective Radiative Forcing|HFC32"] +
-        forcing["Effective Radiative Forcing|HFC125"] +
-        forcing["Effective Radiative Forcing|HFC134a"] +
-        forcing["Effective Radiative Forcing|HFC143a"] +
-        forcing["Effective Radiative Forcing|HFC227ea"] +
-        forcing["Effective Radiative Forcing|HFC245fa"] +
-        forcing["Effective Radiative Forcing|HFC4310mee"] +
-        forcing["Effective Radiative Forcing|SF6"] +
-        forcing["Effective Radiative Forcing|CFC11"] +
-        forcing["Effective Radiative Forcing|CFC12"] +
-        forcing["Effective Radiative Forcing|CFC113"] +
-        forcing["Effective Radiative Forcing|CFC114"] +
-        forcing["Effective Radiative Forcing|CFC115"] +
-        forcing["Effective Radiative Forcing|CCl4"] +
-        forcing["Effective Radiative Forcing|CH3CCl3"] +
-        forcing["Effective Radiative Forcing|HCFC22"] +
-        forcing["Effective Radiative Forcing|HCFC141b"] +
-        forcing["Effective Radiative Forcing|HCFC142b"] +
-        forcing["Effective Radiative Forcing|Halon1211"] +
-        forcing["Effective Radiative Forcing|Halon1202"] +
-        forcing["Effective Radiative Forcing|Halon1301"] +
-        forcing["Effective Radiative Forcing|Halon2402"] +
-        forcing["Effective Radiative Forcing|CH3Br"] +
-        forcing["Effective Radiative Forcing|CH3Cl"],
-        forcing["Effective Radiative Forcing|Greenhouse Gases"]  # should this be "well mixed" greenhouse gases?
+        forcing["Effective Radiative Forcing|CO2"]
+        + forcing["Effective Radiative Forcing|CH4"]
+        + forcing["Effective Radiative Forcing|N2O"]
+        + forcing["Effective Radiative Forcing|CF4"]
+        + forcing["Effective Radiative Forcing|C2F6"]
+        + forcing["Effective Radiative Forcing|C6F14"]
+        + forcing["Effective Radiative Forcing|HFC23"]
+        + forcing["Effective Radiative Forcing|HFC32"]
+        + forcing["Effective Radiative Forcing|HFC125"]
+        + forcing["Effective Radiative Forcing|HFC134a"]
+        + forcing["Effective Radiative Forcing|HFC143a"]
+        + forcing["Effective Radiative Forcing|HFC227ea"]
+        + forcing["Effective Radiative Forcing|HFC245fa"]
+        + forcing["Effective Radiative Forcing|HFC4310mee"]
+        + forcing["Effective Radiative Forcing|SF6"]
+        + forcing["Effective Radiative Forcing|CFC11"]
+        + forcing["Effective Radiative Forcing|CFC12"]
+        + forcing["Effective Radiative Forcing|CFC113"]
+        + forcing["Effective Radiative Forcing|CFC114"]
+        + forcing["Effective Radiative Forcing|CFC115"]
+        + forcing["Effective Radiative Forcing|CCl4"]
+        + forcing["Effective Radiative Forcing|CH3CCl3"]
+        + forcing["Effective Radiative Forcing|HCFC22"]
+        + forcing["Effective Radiative Forcing|HCFC141b"]
+        + forcing["Effective Radiative Forcing|HCFC142b"]
+        + forcing["Effective Radiative Forcing|Halon1211"]
+        + forcing["Effective Radiative Forcing|Halon1202"]
+        + forcing["Effective Radiative Forcing|Halon1301"]
+        + forcing["Effective Radiative Forcing|Halon2402"]
+        + forcing["Effective Radiative Forcing|CH3Br"]
+        + forcing["Effective Radiative Forcing|CH3Cl"],
+        forcing[
+            "Effective Radiative Forcing|Greenhouse Gases"
+        ],  # should this be "well mixed" greenhouse gases?
     )
 
     npt.assert_allclose(
-        forcing["Effective Radiative Forcing|CO2"] +
-        forcing["Effective Radiative Forcing|CH4"] +
-        forcing["Effective Radiative Forcing|N2O"] +
-        forcing["Effective Radiative Forcing|CF4"] +
-        forcing["Effective Radiative Forcing|C2F6"] +
-        forcing["Effective Radiative Forcing|C6F14"] +
-        forcing["Effective Radiative Forcing|HFC23"] +
-        forcing["Effective Radiative Forcing|HFC32"] +
-        forcing["Effective Radiative Forcing|HFC125"] +
-        forcing["Effective Radiative Forcing|HFC134a"] +
-        forcing["Effective Radiative Forcing|HFC143a"] +
-        forcing["Effective Radiative Forcing|HFC227ea"] +
-        forcing["Effective Radiative Forcing|HFC245fa"] +
-        forcing["Effective Radiative Forcing|HFC4310mee"] +
-        forcing["Effective Radiative Forcing|SF6"],
-        forcing["Effective Radiative Forcing|Kyoto Gases"]
+        forcing["Effective Radiative Forcing|CO2"]
+        + forcing["Effective Radiative Forcing|CH4"]
+        + forcing["Effective Radiative Forcing|N2O"]
+        + forcing["Effective Radiative Forcing|CF4"]
+        + forcing["Effective Radiative Forcing|C2F6"]
+        + forcing["Effective Radiative Forcing|C6F14"]
+        + forcing["Effective Radiative Forcing|HFC23"]
+        + forcing["Effective Radiative Forcing|HFC32"]
+        + forcing["Effective Radiative Forcing|HFC125"]
+        + forcing["Effective Radiative Forcing|HFC134a"]
+        + forcing["Effective Radiative Forcing|HFC143a"]
+        + forcing["Effective Radiative Forcing|HFC227ea"]
+        + forcing["Effective Radiative Forcing|HFC245fa"]
+        + forcing["Effective Radiative Forcing|HFC4310mee"]
+        + forcing["Effective Radiative Forcing|SF6"],
+        forcing["Effective Radiative Forcing|Kyoto Gases"],
     )
 
     npt.assert_allclose(
-        forcing["Effective Radiative Forcing|CO2"] +
-        forcing["Effective Radiative Forcing|CH4"] +
-        forcing["Effective Radiative Forcing|N2O"],
-        forcing["Effective Radiative Forcing|CO2, CH4 and N2O"]
+        forcing["Effective Radiative Forcing|CO2"]
+        + forcing["Effective Radiative Forcing|CH4"]
+        + forcing["Effective Radiative Forcing|N2O"],
+        forcing["Effective Radiative Forcing|CO2, CH4 and N2O"],
     )
 
     npt.assert_allclose(
-        forcing["Effective Radiative Forcing|CF4"] +
-        forcing["Effective Radiative Forcing|C2F6"] +
-        forcing["Effective Radiative Forcing|C6F14"] +
-        forcing["Effective Radiative Forcing|HFC23"] +
-        forcing["Effective Radiative Forcing|HFC32"] +
-        forcing["Effective Radiative Forcing|HFC125"] +
-        forcing["Effective Radiative Forcing|HFC134a"] +
-        forcing["Effective Radiative Forcing|HFC143a"] +
-        forcing["Effective Radiative Forcing|HFC227ea"] +
-        forcing["Effective Radiative Forcing|HFC245fa"] +
-        forcing["Effective Radiative Forcing|HFC4310mee"] +
-        forcing["Effective Radiative Forcing|SF6"], 
-        forcing["Effective Radiative Forcing|F-Gases"]
+        forcing["Effective Radiative Forcing|CF4"]
+        + forcing["Effective Radiative Forcing|C2F6"]
+        + forcing["Effective Radiative Forcing|C6F14"]
+        + forcing["Effective Radiative Forcing|HFC23"]
+        + forcing["Effective Radiative Forcing|HFC32"]
+        + forcing["Effective Radiative Forcing|HFC125"]
+        + forcing["Effective Radiative Forcing|HFC134a"]
+        + forcing["Effective Radiative Forcing|HFC143a"]
+        + forcing["Effective Radiative Forcing|HFC227ea"]
+        + forcing["Effective Radiative Forcing|HFC245fa"]
+        + forcing["Effective Radiative Forcing|HFC4310mee"]
+        + forcing["Effective Radiative Forcing|SF6"],
+        forcing["Effective Radiative Forcing|F-Gases"],
     )
 
     npt.assert_allclose(
-        forcing["Effective Radiative Forcing|CFC11"] +
-        forcing["Effective Radiative Forcing|CFC12"] +
-        forcing["Effective Radiative Forcing|CFC113"] +
-        forcing["Effective Radiative Forcing|CFC114"] +
-        forcing["Effective Radiative Forcing|CFC115"] +
-        forcing["Effective Radiative Forcing|CCl4"] +
-        forcing["Effective Radiative Forcing|CH3CCl3"] +
-        forcing["Effective Radiative Forcing|HCFC22"] +
-        forcing["Effective Radiative Forcing|HCFC141b"] +
-        forcing["Effective Radiative Forcing|HCFC142b"] +
-        forcing["Effective Radiative Forcing|Halon1211"] +
-        forcing["Effective Radiative Forcing|Halon1202"] +
-        forcing["Effective Radiative Forcing|Halon1301"] +
-        forcing["Effective Radiative Forcing|Halon2402"] +
-        forcing["Effective Radiative Forcing|CH3Br"] +
-        forcing["Effective Radiative Forcing|CH3Cl"],
-        forcing["Effective Radiative Forcing|Montreal Protocol Halogen Gases"]
+        forcing["Effective Radiative Forcing|CFC11"]
+        + forcing["Effective Radiative Forcing|CFC12"]
+        + forcing["Effective Radiative Forcing|CFC113"]
+        + forcing["Effective Radiative Forcing|CFC114"]
+        + forcing["Effective Radiative Forcing|CFC115"]
+        + forcing["Effective Radiative Forcing|CCl4"]
+        + forcing["Effective Radiative Forcing|CH3CCl3"]
+        + forcing["Effective Radiative Forcing|HCFC22"]
+        + forcing["Effective Radiative Forcing|HCFC141b"]
+        + forcing["Effective Radiative Forcing|HCFC142b"]
+        + forcing["Effective Radiative Forcing|Halon1211"]
+        + forcing["Effective Radiative Forcing|Halon1202"]
+        + forcing["Effective Radiative Forcing|Halon1301"]
+        + forcing["Effective Radiative Forcing|Halon2402"]
+        + forcing["Effective Radiative Forcing|CH3Br"]
+        + forcing["Effective Radiative Forcing|CH3Cl"],
+        forcing["Effective Radiative Forcing|Montreal Protocol Halogen Gases"],
     )
 
     npt.assert_allclose(
-        forcing["Effective Radiative Forcing|Tropospheric Ozone"] +
-        forcing["Effective Radiative Forcing|Stratospheric Ozone"],
-        forcing["Effective Radiative Forcing|Ozone"]
+        forcing["Effective Radiative Forcing|Tropospheric Ozone"]
+        + forcing["Effective Radiative Forcing|Stratospheric Ozone"],
+        forcing["Effective Radiative Forcing|Ozone"],
     )
 
     npt.assert_allclose(
-        forcing["Effective Radiative Forcing|Aerosols|Direct Effect|SOx"] +
-        forcing["Effective Radiative Forcing|Aerosols|Direct Effect|Secondary Organic Aerosol"] +
-        forcing["Effective Radiative Forcing|Aerosols|Direct Effect|Nitrate"] +
-        forcing["Effective Radiative Forcing|Aerosols|Direct Effect|BC"] +
-        forcing["Effective Radiative Forcing|Aerosols|Direct Effect|OC"],
-        forcing["Effective Radiative Forcing|Aerosols|Direct Effect"]
+        forcing["Effective Radiative Forcing|Aerosols|Direct Effect|SOx"]
+        + forcing[
+            "Effective Radiative Forcing|Aerosols|Direct Effect|Secondary Organic Aerosol"
+        ]
+        + forcing["Effective Radiative Forcing|Aerosols|Direct Effect|Nitrate"]
+        + forcing["Effective Radiative Forcing|Aerosols|Direct Effect|BC"]
+        + forcing["Effective Radiative Forcing|Aerosols|Direct Effect|OC"],
+        forcing["Effective Radiative Forcing|Aerosols|Direct Effect"],
     )
 
     # If up to here is fine, then we only need to check previouly defined aggregates against "super-aggregates"
     npt.assert_allclose(
-        forcing["Effective Radiative Forcing|Aerosols|Direct Effect"] +
-        forcing["Effective Radiative Forcing|Aerosols|Indirect Effect"],
-        forcing["Effective Radiative Forcing|Aerosols"]
+        forcing["Effective Radiative Forcing|Aerosols|Direct Effect"]
+        + forcing["Effective Radiative Forcing|Aerosols|Indirect Effect"],
+        forcing["Effective Radiative Forcing|Aerosols"],
     )
 
     npt.assert_allclose(
-        forcing["Effective Radiative Forcing|Greenhouse Gases"] +
-        forcing["Effective Radiative Forcing|Ozone"] + 
-        forcing["Effective Radiative Forcing|CH4 Oxidation Stratospheric H2O"] +
-        forcing["Effective Radiative Forcing|Contrails"] +
-        forcing["Effective Radiative Forcing|Aerosols"] + 
-        forcing["Effective Radiative Forcing|Black Carbon on Snow"] +
-        forcing["Effective Radiative Forcing|Land-use Change"],
+        forcing["Effective Radiative Forcing|Greenhouse Gases"]
+        + forcing["Effective Radiative Forcing|Ozone"]
+        + forcing["Effective Radiative Forcing|CH4 Oxidation Stratospheric H2O"]
+        + forcing["Effective Radiative Forcing|Contrails"]
+        + forcing["Effective Radiative Forcing|Aerosols"]
+        + forcing["Effective Radiative Forcing|Black Carbon on Snow"]
+        + forcing["Effective Radiative Forcing|Land-use Change"],
+        forcing["Effective Radiative Forcing|Anthropogenic"],
+    )
+
+    npt.assert_allclose(
         forcing["Effective Radiative Forcing|Anthropogenic"]
-    )
-
-    npt.assert_allclose(
-        forcing["Effective Radiative Forcing|Anthropogenic"] +
-        forcing["Effective Radiative Forcing|Volcanic"] +
-        forcing["Effective Radiative Forcing|Solar"],
-        forcing["Effective Radiative Forcing"]
+        + forcing["Effective Radiative Forcing|Volcanic"]
+        + forcing["Effective Radiative Forcing|Solar"],
+        forcing["Effective Radiative Forcing"],
     )
