@@ -215,7 +215,7 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
         forcing[:, :31], axis=1
     )
     # This definition does not include ozone and H2O from CH4 oxidation
-    data["Effective Radiative Forcing|Greenhouse Gases|Kyoto Gases"] = np.sum(
+    data["Effective Radiative Forcing|Kyoto Gases"] = np.sum(
         forcing[:, :15], axis=1
     )
     data["Effective Radiative Forcing|CO2, CH4 and N2O"] = np.sum(
@@ -229,6 +229,7 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
         forcing[:, 35:40], axis=1
     )
     data["Effective Radiative Forcing|Aerosols"] = np.sum(forcing[:, 35:41], axis=1)
+    data["Effective Radiative Forcing|Ozone"] = np.sum(forcing[:, 31:33], axis=1)
     data["Surface Air Temperature Change"] = temperature
     data["Surface Air Ocean Blended Temperature Change"] = temperature * factors["gmst"]
     data["Airborne Fraction"] = airborne_emissions
@@ -326,6 +327,7 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     unit["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Direct Effect"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols"] = "W/m**2"
+    unit["Effective Radiative Forcing|Ozone"] = "W/m**2"
     unit["Surface Air Temperature Change"] = "K"
     unit["Surface Air Ocean Blended Temperature Change"] = "K"
     unit["Airborne Fraction"] = "dimensionless"
