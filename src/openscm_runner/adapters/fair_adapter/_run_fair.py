@@ -221,6 +221,7 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     data["Effective Radiative Forcing|CO2, CH4 and N2O"] = np.sum(
         forcing[:, :3], axis=1
     )
+    # What is the rigorous definition here? CFCs are not included but contain F
     data["Effective Radiative Forcing|F-Gases"] = np.sum(forcing[:, 3:15], axis=1)
     data["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = np.sum(
         forcing[:, 15:31], axis=1

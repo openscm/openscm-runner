@@ -323,7 +323,7 @@ def test_forcing_categories(test_scenarios):
             "Effective Radiative Forcing",
             "Effective Radiative Forcing|Anthropogenic",
             "Effective Radiative Forcing|Greenhouse Gases",
-            "Effective Radiative Forcing|Greenhouse Gases|Kyoto Gases",
+            "Effective Radiative Forcing|Kyoto Gases",
             "Effective Radiative Forcing|CO2, CH4 and N2O",
             "Effective Radiative Forcing|F-Gases",
             "Effective Radiative Forcing|Montreal Protocol Halogen Gases",
@@ -425,23 +425,7 @@ def test_forcing_categories(test_scenarios):
         forcing["Effective Radiative Forcing|HFC227ea"] +
         forcing["Effective Radiative Forcing|HFC245fa"] +
         forcing["Effective Radiative Forcing|HFC4310mee"] +
-        forcing["Effective Radiative Forcing|SF6"] +
-        forcing["Effective Radiative Forcing|CFC11"] +
-        forcing["Effective Radiative Forcing|CFC12"] +
-        forcing["Effective Radiative Forcing|CFC113"] +
-        forcing["Effective Radiative Forcing|CFC114"] +
-        forcing["Effective Radiative Forcing|CFC115"] +
-        forcing["Effective Radiative Forcing|CCl4"] +
-        forcing["Effective Radiative Forcing|CH3CCl3"] +
-        forcing["Effective Radiative Forcing|HCFC22"] +
-        forcing["Effective Radiative Forcing|HCFC141b"] +
-        forcing["Effective Radiative Forcing|HCFC142b"] +
-        forcing["Effective Radiative Forcing|Halon1211"] +
-        forcing["Effective Radiative Forcing|Halon1202"] +
-        forcing["Effective Radiative Forcing|Halon1301"] +
-        forcing["Effective Radiative Forcing|Halon2402"] +
-        forcing["Effective Radiative Forcing|CH3Br"] +
-        forcing["Effective Radiative Forcing|CH3Cl"],
+        forcing["Effective Radiative Forcing|SF6"], 
         forcing["Effective Radiative Forcing|F-Gases"]
     )
 
