@@ -23,9 +23,7 @@ def _check_res(exp, check_val, raise_error, rtol=RTOL):
 
 
 @pytest.mark.magicc
-def test_multimodel_run(
-    test_scenarios, test_data_dir, update_expected_values
-):
+def test_multimodel_run(test_scenarios, test_data_dir, update_expected_values):
     expected_output_file = os.path.join(
         test_data_dir,
         "expected-integration-output",

@@ -13,10 +13,7 @@ from openscm_runner.utils import calculate_quantiles
 @pytest.mark.magicc
 class TestMagicc7Adapter(_AdapterTester):
     def test_run(
-        self,
-        test_scenarios,
-        test_data_dir,
-        update_expected_values,
+        self, test_scenarios, test_data_dir, update_expected_values,
     ):
         expected_output_file = os.path.join(
             test_data_dir,
