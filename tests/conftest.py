@@ -44,17 +44,27 @@ def test_scenario_ssp370_world(test_data_dir):
     return scenario
 
 
-@pytest.fixture(scope="session")
-def magicc7_is_available():
-    try:
-        magicc_version = MAGICC7.get_version()
-        if magicc_version != "v7.5.1":
-            raise AssertionError(
-                "Wrong MAGICC version for tests ({})".format(magicc_version)
-            )
+try:
+    MAGICC_VERSION = MAGICC7.get_version()
+    if MAGICC_VERSION != "v7.5.1":
+        CORRECT_MAGICC_IS_AVAILABLE = False
+    else:
+        CORRECT_MAGICC_IS_AVAILABLE = True
 
-    except KeyError:
-        pytest.skip("MAGICC7 not available")
+except KeyError:
+    MAGICC_VERSION = None
+    CORRECT_MAGICC_IS_AVAILABLE = False
+
+
+def pytest_runtest_setup(item):
+    for mark in item.iter_markers():
+        if mark.name == "magicc" and not CORRECT_MAGICC_IS_AVAILABLE:
+            if MAGICC_VERSION is None:
+                pytest.skip("MAGICC7 not available")
+            else:
+                pytest.skip(
+                    "Wrong MAGICC version for tests ({})".format(MAGICC_VERSION)
+                )
 
 
 def pytest_addoption(parser):
