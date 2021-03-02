@@ -25,7 +25,7 @@ REQUIREMENTS = [
     "fair==1.6.2",
     "matplotlib==3.2.2",
     "pyam-iamc",
-    "pymagicc>=2.0.0rc9,<3",
+    "pymagicc>=2.0.0,<3",
     "python-dotenv",
     "scmdata>=0.7.4",
     "tqdm",

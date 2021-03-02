@@ -55,3 +55,17 @@ def magicc7_is_available():
 
     except KeyError:
         pytest.skip("MAGICC7 not available")
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--update-expected-values",
+        action="store_true",
+        default=False,
+        help="Overwrite expected values",
+    )
+
+
+@pytest.fixture
+def update_expected_values(request):
+    return request.config.getoption("--update-expected-values")

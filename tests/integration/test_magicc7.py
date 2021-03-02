@@ -1,4 +1,4 @@
-import logging
+import os.path
 
 import pymagicc.io
 import pytest
@@ -11,8 +11,18 @@ from openscm_runner.utils import calculate_quantiles
 
 
 class TestMagicc7Adapter(_AdapterTester):
-    def test_run(self, test_scenarios, magicc7_is_available):
-        debug_run = False
+    def test_run(
+        self,
+        test_scenarios,
+        magicc7_is_available,
+        test_data_dir,
+        update_expected_values,
+    ):
+        expected_output_file = os.path.join(
+            test_data_dir,
+            "expected-integration-output",
+            "expected_magicc7_test_run_output.json",
+        )
 
         res = run(
             climate_models_cfgs={
@@ -76,124 +86,12 @@ class TestMagicc7Adapter(_AdapterTester):
             ]
         )
 
-        # check ocean heat content unit conversion comes through correctly
-        self._check_res(
-            2400.88,
-            res.filter(
-                unit="ZJ",
-                variable="Heat Content|Ocean",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-            ).values.max(),
-            not debug_run,
-        )
-
-        self._check_res(
-            0.456158,
-            res.filter(
-                unit="GtC / yr",
-                variable="Net Atmosphere to Land Flux|CO2",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-            ).values.max(),
-            not debug_run,
-        )
-
-        self._check_res(
-            2.64822,
-            res.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-            ).values.max(),
-            not debug_run,
-        )
-        self._check_res(
-            1.21081,
-            res.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-            ).values.min(),
-            not debug_run,
-        )
-
-        self._check_res(
-            5.367158,
-            res.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-            ).values.max(),
-            not debug_run,
-        )
-        self._check_res(
-            2.72517,
-            res.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-            ).values.min(),
-            not debug_run,
-        )
-
         # check we can also calcluate quantiles
-        quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
+        assert "run_id" in res.meta
+        quantiles = calculate_quantiles(res, [0, 0.05, 0.17, 0.5, 0.83, 0.95, 1])
+        assert "run_id" not in quantiles.meta
 
-        self._check_res(
-            1.26457,
-            quantiles.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-                quantile=0.05,
-            ).values,
-            not debug_run,
-        )
-        self._check_res(
-            2.55824,
-            quantiles.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-                quantile=0.95,
-            ).values,
-            not debug_run,
-        )
-
-        self._check_res(
-            2.82454,
-            quantiles.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-                quantile=0.05,
-            ).values,
-            not debug_run,
-        )
-        self._check_res(
-            5.20233,
-            quantiles.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-                quantile=0.95,
-            ).values,
-            not debug_run,
-        )
-
-        if debug_run:
-            assert False, "Turn off debug"
+        self._check_output(res, expected_output_file, update_expected_values)
 
     def test_variable_naming(self, test_scenarios, magicc7_is_available):
         common_variables = self._common_variables
@@ -297,26 +195,18 @@ def test_return_config(test_scenarios, magicc7_is_available, out_config):
             raise NotImplementedError(k)
 
 
-def test_return_config_clash_warning(test_scenarios, magicc7_is_available, caplog):
-    caplog.set_level(logging.ERROR)
-    caplog.set_level(
-        logging.WARNING, logger="openscm_runner.adapters.magicc7._run_magicc_parallel"
-    )
-    run(
-        climate_models_cfgs={"MAGICC7": [{"pf_apply": 1, "PF_APPLY": 0}]},
-        scenarios=test_scenarios.filter(scenario=["ssp126"]),
-        output_variables=("Surface Air Temperature Change",),
-        out_config={"MAGICC7": ("pf_apply",)},
-    )
-
-    assert len(caplog.records) == 1
-    assert caplog.record_tuples == [
-        (
-            "openscm_runner.adapters.magicc7._run_magicc_parallel",
-            logging.WARNING,
-            (
-                "Parameter: pf_apply. MAGICC input config (via "
-                "OpenSCM-Runner): 1. MAGICC output config: 0."
-            ),
+@pytest.mark.parametrize(
+    "cfgs",
+    (
+        [{"pf_apply": 1, "PF_APPLY": 0}],
+        [{"pf_apply": 1}, {"pf_apply": 1, "PF_APPLY": 0}],
+    ),
+)
+def test_return_config_clash_error(test_scenarios, magicc7_is_available, cfgs):
+    with pytest.raises(ValueError):
+        run(
+            climate_models_cfgs={"MAGICC7": cfgs},
+            scenarios=test_scenarios.filter(scenario=["ssp126"]),
+            output_variables=("Surface Air Temperature Change",),
+            out_config={"MAGICC7": ("pf_apply",)},
         )
-    ]

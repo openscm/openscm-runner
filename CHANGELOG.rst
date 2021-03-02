@@ -21,6 +21,7 @@ master
 Changed
 ~~~~~~~
 
+- (`#45 <https://github.com/openscm/openscm-runner/pull/45>`_) Update regression tests so they can be more easily updated
 - (`#44 <https://github.com/openscm/openscm-runner/pull/44>`_) Updated tests to using MAGICCv7.5.1
 
 v0.5.1 - 2021-02-27
