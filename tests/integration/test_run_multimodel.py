@@ -2,6 +2,7 @@ import os.path
 
 import numpy as np
 import numpy.testing as npt
+import pytest
 from scmdata import ScmRun
 
 import openscm_runner.testing
@@ -21,8 +22,9 @@ def _check_res(exp, check_val, raise_error, rtol=RTOL):
         print("exp: {}, check_val: {}".format(exp, check_val))
 
 
+@pytest.mark.magicc
 def test_multimodel_run(
-    test_scenarios, magicc7_is_available, test_data_dir, update_expected_values
+    test_scenarios, test_data_dir, update_expected_values
 ):
     expected_output_file = os.path.join(
         test_data_dir,

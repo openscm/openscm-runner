@@ -10,11 +10,11 @@ from openscm_runner.adapters import MAGICC7
 from openscm_runner.utils import calculate_quantiles
 
 
+@pytest.mark.magicc
 class TestMagicc7Adapter(_AdapterTester):
     def test_run(
         self,
         test_scenarios,
-        magicc7_is_available,
         test_data_dir,
         update_expected_values,
     ):
@@ -93,7 +93,7 @@ class TestMagicc7Adapter(_AdapterTester):
 
         self._check_output(res, expected_output_file, update_expected_values)
 
-    def test_variable_naming(self, test_scenarios, magicc7_is_available):
+    def test_variable_naming(self, test_scenarios):
         common_variables = self._common_variables
         res = run(
             climate_models_cfgs={"MAGICC7": ({"core_climatesensitivity": 3},)},
@@ -106,7 +106,8 @@ class TestMagicc7Adapter(_AdapterTester):
             raise AssertionError(missing_vars)
 
 
-def test_write_scen_files_and_make_full_cfgs(test_scenarios, magicc7_is_available):
+@pytest.mark.magicc
+def test_write_scen_files_and_make_full_cfgs(test_scenarios):
     adapter = MAGICC7()
     test_scenarios_magiccdf = pymagicc.io.MAGICCData(test_scenarios)
     res = adapter._write_scen_files_and_make_full_cfgs(
@@ -143,6 +144,7 @@ def test_write_scen_files_and_make_full_cfgs(test_scenarios, magicc7_is_availabl
             assert scen_flag_val == "NONE"
 
 
+@pytest.mark.magicc
 @pytest.mark.parametrize(
     "out_config",
     (
@@ -151,7 +153,7 @@ def test_write_scen_files_and_make_full_cfgs(test_scenarios, magicc7_is_availabl
         ("rf_total_runmodus",),
     ),
 )
-def test_return_config(test_scenarios, magicc7_is_available, out_config):
+def test_return_config(test_scenarios, out_config):
     core_climatesensitivities = [2, 3]
     rf_total_runmoduses = ["ALL", "CO2"]
 
@@ -195,6 +197,7 @@ def test_return_config(test_scenarios, magicc7_is_available, out_config):
             raise NotImplementedError(k)
 
 
+@pytest.mark.magicc
 @pytest.mark.parametrize(
     "cfgs",
     (
@@ -202,7 +205,7 @@ def test_return_config(test_scenarios, magicc7_is_available, out_config):
         [{"pf_apply": 1}, {"pf_apply": 1, "PF_APPLY": 0}],
     ),
 )
-def test_return_config_clash_error(test_scenarios, magicc7_is_available, cfgs):
+def test_return_config_clash_error(test_scenarios, cfgs):
     with pytest.raises(ValueError):
         run(
             climate_models_cfgs={"MAGICC7": cfgs},
