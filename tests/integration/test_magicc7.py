@@ -196,10 +196,13 @@ def test_return_config(test_scenarios, magicc7_is_available, out_config):
             raise NotImplementedError(k)
 
 
-@pytest.mark.parametrize("cfgs", (
-    [{"pf_apply": 1, "PF_APPLY": 0}],
-    [{"pf_apply": 1}, {"pf_apply": 1, "PF_APPLY": 0}],
-))
+@pytest.mark.parametrize(
+    "cfgs",
+    (
+        [{"pf_apply": 1, "PF_APPLY": 0}],
+        [{"pf_apply": 1}, {"pf_apply": 1, "PF_APPLY": 0}],
+    ),
+)
 def test_return_config_clash_error(test_scenarios, magicc7_is_available, cfgs):
     with pytest.raises(ValueError):
         run(
