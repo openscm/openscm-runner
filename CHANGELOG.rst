@@ -18,6 +18,11 @@ The changes listed in this file are categorised as follows:
 master
 ------
 
+Changed
+~~~~~~~
+
+- (`#44 <https://github.com/openscm/openscm-runner/pull/44>`_) Updated tests to using MAGICCv7.5.1
+
 v0.5.1 - 2021-02-27
 -------------------
 
