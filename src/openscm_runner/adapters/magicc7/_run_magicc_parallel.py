@@ -72,8 +72,10 @@ def _run_func(magicc, cfg):
                 if k in magicc_out_cfg:
                     if magicc_out_cfg[k] != cfg[k]:
                         LOGGER.warning(
+                            "Parameter: %s. "
                             "MAGICC input config (via OpenSCM-Runner): %s. "
                             "MAGICC output config: %s.",
+                            k,
                             cfg[k],
                             magicc_out_cfg[k],
                         )
@@ -145,7 +147,9 @@ def run_magicc_parallel(cfgs, output_vars, output_config):
 
     try:
         pool = ProcessPoolExecutor(
-            max_workers=int(config.get("MAGICC_WORKER_NUMBER", os.cpu_count())),
+            max_workers=int(
+                config.get("MAGICC_WORKER_NUMBER", multiprocessing.cpu_count())
+            ),
             initializer=_init_magicc_worker,
             initargs=(shared_dict,),
         )

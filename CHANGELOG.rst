@@ -21,11 +21,37 @@ master
 Changed
 ~~~~~~~
 
+- (`#46 <https://github.com/openscm/openscm-runner/pull/46>`_) Use `pytest markers <https://docs.pytest.org/en/stable/example/markers.html>`_ for marking tests which rely on MAGICC rather than hack fixture solution
+- (`#45 <https://github.com/openscm/openscm-runner/pull/45>`_) Update regression tests so they can be more easily updated
+- (`#44 <https://github.com/openscm/openscm-runner/pull/44>`_) Updated tests to using MAGICCv7.5.1
+
+v0.5.1 - 2021-02-27
+-------------------
+
+Changed
+~~~~~~~
+
+- (`#43 <https://github.com/openscm/openscm-runner/pull/43>`_) Add ability to run FaIR in parallel
+
+Fixed
+~~~~~
+
+- (`#40 <https://github.com/openscm/openscm-runner/pull/40>`_) Report correct index from FaIR as the anthropogenic total ERF
+
+v0.5.0 - 2021-02-24
+-------------------
+
+Changed
+~~~~~~~
+
+- (`#41 <https://github.com/openscm/openscm-runner/pull/41>`_) Use consistent setting across all progress bars
+- (`#38 <https://github.com/openscm/openscm-runner/pull/38>`_) Updated scmdata requirements to handle change to openscm-units
 - (`#31 <https://github.com/openscm/openscm-runner/pull/31>`_) Unified key variable naming across MAGICC and FaIR
 
 Fixed
 ~~~~~
 
+- (`#39 <https://github.com/openscm/openscm-runner/pull/39>`_) Include parameter name in the warning message emitted when MAGICC's output config doesn't match the input config specified via OpenSCM-Runner
 - (`#36 <https://github.com/openscm/openscm-runner/pull/36>`_) Hotfix CI after pandas 1.1.5 broke pylint
 - (`#37 <https://github.com/openscm/openscm-runner/pull/33>`_) Ensure FaIR ignores emissions input in scenarios not handled by FaIR, e.g. total CO2
 

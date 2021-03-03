@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import numpy.testing as npt
 from scmdata import ScmRun
 
+import openscm_runner.testing
 from openscm_runner import run
 
 
@@ -73,6 +74,11 @@ class _AdapterTester(ABC):
                 raise
 
             print("exp: {}, check_val: {}".format(exp, check_val))
+
+    def _check_output(self, res, expected_output_file, update):
+        openscm_runner.testing._check_output(
+            res, expected_output_file, self._rtol, update
+        )
 
     @abstractmethod
     def test_run(self, test_scenarios):

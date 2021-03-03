@@ -1,7 +1,11 @@
+import os.path
+
 import numpy as np
 import numpy.testing as npt
+import pytest
 from scmdata import ScmRun
 
+import openscm_runner.testing
 from openscm_runner import run
 from openscm_runner.utils import calculate_quantiles
 
@@ -18,8 +22,13 @@ def _check_res(exp, check_val, raise_error, rtol=RTOL):
         print("exp: {}, check_val: {}".format(exp, check_val))
 
 
-def test_multimodel_run(test_scenarios, magicc7_is_available):
-    debug_run = False
+@pytest.mark.magicc
+def test_multimodel_run(test_scenarios, test_data_dir, update_expected_values):
+    expected_output_file = os.path.join(
+        test_data_dir,
+        "expected-integration-output",
+        "expected_run_multimodel_output.json",
+    )
 
     res = run(
         climate_models_cfgs={
@@ -106,117 +115,11 @@ def test_multimodel_run(test_scenarios, magicc7_is_available):
             ]
         )
 
-    quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
+    # check we can also calcluate quantiles
+    assert "run_id" in res.meta
+    quantiles = calculate_quantiles(res, [0, 0.05, 0.17, 0.5, 0.83, 0.95, 1])
+    assert "run_id" not in quantiles.meta
 
-    _check_res(
-        1.3210385,
-        quantiles.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp126",
-            quantile=0.05,
-        ).values,
-        not debug_run,
-        rtol=RTOL,
+    openscm_runner.testing._check_output(
+        res, expected_output_file, rtol=RTOL, update=update_expected_values
     )
-    _check_res(
-        2.56801998,
-        quantiles.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp126",
-            quantile=0.95,
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
-
-    _check_res(
-        2.99063777,
-        quantiles.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp370",
-            quantile=0.05,
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
-    _check_res(
-        5.30347506,
-        quantiles.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp370",
-            quantile=0.95,
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
-
-    quantiles_cm = calculate_quantiles(
-        res,
-        [0.05, 0.17, 0.5, 0.83, 0.95],
-        process_over_columns=("run_id", "ensemble_member"),
-    )
-
-    _check_res(
-        1.27586919,
-        quantiles_cm.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp126",
-            quantile=0.05,
-            climate_model="MAGICC*",
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
-    _check_res(
-        5.34663565,
-        quantiles_cm.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp370",
-            quantile=0.95,
-            climate_model="MAGICC*",
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
-
-    _check_res(
-        1.64102168,
-        quantiles_cm.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp126",
-            quantile=0.05,
-            climate_model="FaIR*",
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
-    _check_res(
-        4.58938509,
-        quantiles_cm.filter(
-            variable="Surface Air Temperature Change",
-            region="World",
-            year=2100,
-            scenario="ssp370",
-            quantile=0.95,
-            climate_model="FaIR*",
-        ).values,
-        not debug_run,
-        rtol=RTOL,
-    )
-
-    if debug_run:
-        assert False, "Turn off debug"

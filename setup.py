@@ -11,6 +11,7 @@ AUTHORS = [
     ("Robert Gieseke", "robert.gieseke@pik-potsdam.de"),
     ("Jared Lewis", "jared.lewis@climate-energy-college.org"),
     ("Sven Willner", "sven.willner@pik-potsdam.de"),
+    ("Chris Smith", "c.j.smith1@leeds.ac.uk"),
 ]
 URL = "https://github.com/openscm/openscm-runner"
 
@@ -21,12 +22,12 @@ SOURCE_DIR = "src"
 
 REQUIREMENTS = [
     "click",
-    "fair>=1.6.1,<2.0.0",
+    "fair==1.6.2",
     "matplotlib==3.2.2",
     "pyam-iamc",
-    "pymagicc>=2.0.0rc9,<3",
+    "pymagicc>=2.0.0,<3",
     "python-dotenv",
-    "scmdata>=0.7.2",
+    "scmdata>=0.7.4",
     "tqdm",
 ]
 REQUIREMENTS_NOTEBOOKS = [

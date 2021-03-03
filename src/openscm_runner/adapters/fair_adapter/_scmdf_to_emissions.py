@@ -22,16 +22,14 @@ class HistoricalWorldEmms:
     def values(self):
         """Emissions values from historical joint with ssp245"""
         if not self._loaded:
-            self._values = ScmRun(
+            tmp = ScmRun(
                 os.path.join(
                     os.path.dirname(__file__),
                     "rcmip-emissions-annual-means-v5-1-0-historical-ssp245.csv",
                 ),
                 lowercase_cols=True,
             )
-            self._values = self._values.interpolate(
-                [dt.datetime(y, 1, 1) for y in self._values["year"]]
-            )
+            self._values = tmp.interpolate([dt.datetime(y, 1, 1) for y in tmp["year"]])
 
         self._loaded = True
         return self._values

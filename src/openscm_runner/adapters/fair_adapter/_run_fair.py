@@ -2,11 +2,14 @@
 Module for running FaIR
 """
 import logging
+import multiprocessing
 
 import numpy as np
 from fair.constants.general import EARTH_RADIUS, SECONDS_PER_YEAR
 from fair.forward import fair_scm
 from scmdata import ScmRun, run_append
+
+from ...settings import config
 
 LOGGER = logging.getLogger(__name__)
 toa_to_joule = 4 * np.pi * EARTH_RADIUS ** 2 * SECONDS_PER_YEAR
@@ -30,53 +33,64 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
         :obj:`ScmRun` instance with all results.
     """
     res = []
-
-    for cfg in cfgs:
-        scenario = cfg.pop("scenario")
-        model = cfg.pop("model")
-        run_id = cfg.pop("run_id")
-        factors = {}
-        factors["gmst"] = cfg.pop("gmst_factor")
-        factors["ohu"] = cfg.pop("ohu_factor")
-        startyear = cfg.pop("startyear")
-        # FaIR needs numpy arrays, not lists. json only does lists.
-        cfg_as_arrays = {}
+    updated_config = []
+    for i, cfg in enumerate(cfgs):
+        updated_config.append({})
         for key, value in cfg.items():
             if isinstance(value, list):
-                cfg_as_arrays[key] = np.asarray(value)
+                updated_config[i][key] = np.asarray(value)
             else:
-                cfg_as_arrays[key] = value
+                updated_config[i][key] = value
+        updated_config[i]["output_vars"] = output_vars
 
-        data, unit, nt = _process_output(
-            fair_scm(**cfg_as_arrays), output_vars, factors
-        )
+    ncpu = int(config.get("FAIR_WORKER_NUMBER", multiprocessing.cpu_count()))
+    LOGGER.info("Running FaIR with %s workers", ncpu)
 
-        data_scmrun = []
-        variables = []
-        units = []
-        for key, variable in data.items():
-            variables.append(key)
-            data_scmrun.append(variable)
-            units.append(unit[key])
-
-        tempres = ScmRun(
-            np.vstack(data_scmrun).T,
-            index=np.arange(startyear, startyear + nt),
-            columns={
-                "scenario": scenario,
-                "model": model,
-                "region": "World",
-                "variable": variables,
-                "unit": units,
-                "run_id": run_id,
-            },
-        )
-
-        res.append(tempres)
+    if ncpu > 1:
+        with multiprocessing.Pool(ncpu) as pool:
+            res = list(pool.imap(_single_fair_iteration, updated_config))
+    else:
+        res = [_single_fair_iteration(c) for c in updated_config]
 
     res = run_append(res)
 
     return res
+
+
+def _single_fair_iteration(cfg):  # pylint: disable=R0914
+    scenario = cfg.pop("scenario")
+    model = cfg.pop("model")
+    run_id = cfg.pop("run_id")
+    factors = {}
+    factors["gmst"] = cfg.pop("gmst_factor")
+    factors["ohu"] = cfg.pop("ohu_factor")
+    startyear = cfg.pop("startyear")
+    output_vars = cfg.pop("output_vars")
+
+    data, unit, nt = _process_output(fair_scm(**cfg), output_vars, factors)
+
+    data_scmrun = []
+    variables = []
+    units = []
+    for key, variable in data.items():
+        variables.append(key)
+        data_scmrun.append(variable)
+        units.append(unit[key])
+
+    tempres = ScmRun(
+        np.vstack(data_scmrun).T,
+        index=np.arange(startyear, startyear + nt),
+        columns={
+            "scenario": scenario,
+            "model": model,
+            "region": "World",
+            "variable": variables,
+            "unit": units,
+            "run_id": run_id,
+        },
+    )
+
+    return tempres
 
 
 def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
@@ -210,17 +224,16 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     data["Effective Radiative Forcing|Volcanic"] = forcing[:, 43]
     data["Effective Radiative Forcing|Solar"] = forcing[:, 44]
     data["Effective Radiative Forcing"] = np.sum(forcing, axis=1)
-    data["Effective Radiative Forcing|Anthropogenic"] = np.sum(forcing[:, :39], axis=1)
+    data["Effective Radiative Forcing|Anthropogenic"] = np.sum(forcing[:, :43], axis=1)
     data["Effective Radiative Forcing|Greenhouse Gases"] = np.sum(
         forcing[:, :31], axis=1
     )
     # This definition does not include ozone and H2O from CH4 oxidation
-    data["Effective Radiative Forcing|Greenhouse Gases|Kyoto Gases"] = np.sum(
-        forcing[:, :15], axis=1
-    )
+    data["Effective Radiative Forcing|Kyoto Gases"] = np.sum(forcing[:, :15], axis=1)
     data["Effective Radiative Forcing|CO2, CH4 and N2O"] = np.sum(
         forcing[:, :3], axis=1
     )
+    # What is the rigorous definition here? CFCs are not included but contain F
     data["Effective Radiative Forcing|F-Gases"] = np.sum(forcing[:, 3:15], axis=1)
     data["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = np.sum(
         forcing[:, 15:31], axis=1
@@ -229,6 +242,7 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
         forcing[:, 35:40], axis=1
     )
     data["Effective Radiative Forcing|Aerosols"] = np.sum(forcing[:, 35:41], axis=1)
+    data["Effective Radiative Forcing|Ozone"] = np.sum(forcing[:, 31:33], axis=1)
     data["Surface Air Temperature Change"] = temperature
     data["Surface Air Ocean Blended Temperature Change"] = temperature * factors["gmst"]
     data["Airborne Fraction"] = airborne_emissions
@@ -326,6 +340,7 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     unit["Effective Radiative Forcing|Montreal Protocol Halogen Gases"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols|Direct Effect"] = "W/m**2"
     unit["Effective Radiative Forcing|Aerosols"] = "W/m**2"
+    unit["Effective Radiative Forcing|Ozone"] = "W/m**2"
     unit["Surface Air Temperature Change"] = "K"
     unit["Surface Air Ocean Blended Temperature Change"] = "K"
     unit["Airborne Fraction"] = "dimensionless"

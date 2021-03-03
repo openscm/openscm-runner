@@ -5,7 +5,7 @@ import logging
 import time
 from concurrent.futures import as_completed
 
-from tqdm.autonotebook import tqdm
+from ...progress import progress
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,17 +15,17 @@ def _run_serial(func, configs, config_are_kwargs, desc):
 
     if config_are_kwargs:
         LOGGER.debug("Treating config as kwargs")
-        res = [func(**a) for a in tqdm(configs, desc=desc)]
+        res = [func(**a) for a in progress(configs, desc=desc)]
     else:
         LOGGER.debug("Treating config as args")
-        res = [func(a) for a in tqdm(configs, desc=desc)]
+        res = [func(a) for a in progress(configs, desc=desc)]
 
     LOGGER.debug("Exiting _run_serial")
     return res
 
 
 def _run_parallel(  # pylint:disable=too-many-arguments
-    pool, timeout, func, configs, config_are_kwargs, desc, bar_start,
+    pool, timeout, func, configs, config_are_kwargs, desc, bar_start
 ):
     LOGGER.debug("Entering _run_parallel")
 
@@ -36,16 +36,9 @@ def _run_parallel(  # pylint:disable=too-many-arguments
         LOGGER.debug("Treating config as args")
         futures = [pool.submit(func, a) for a in configs]
 
-    kwargs_tqdm = {
-        "total": len(futures),
-        "unit": "it",
-        "unit_scale": True,
-        "desc": desc,
-    }
-
     LOGGER.debug("Waiting for jobs to complete")
-    for i, future in tqdm(
-        enumerate(as_completed(futures, timeout=timeout)), **kwargs_tqdm
+    for i, future in progress(
+        enumerate(as_completed(futures, timeout=timeout)), total=len(futures), desc=desc
     ):
         if future.exception() is not None:
             time.sleep(2)  # let buffer flush out

@@ -8,8 +8,8 @@ import fair
 import numpy as np
 import pandas as pd
 from scmdata import ScmRun
-from tqdm.autonotebook import tqdm
 
+from ...progress import progress
 from ..base import _Adapter
 from ._run_fair import run_fair
 from ._scmdf_to_emissions import scmdf_to_emissions
@@ -60,7 +60,7 @@ class FAIR(_Adapter):
         run_id_block = 0
         startyear = _check_startyear(cfgs)
 
-        for (scenario, model), smdf in tqdm(
+        for (scenario, model), smdf in progress(
             scenarios.timeseries().groupby(["scenario", "model"]),
             desc="Creating FaIR emissions inputs",
         ):
