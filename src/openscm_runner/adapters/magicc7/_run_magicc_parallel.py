@@ -13,7 +13,7 @@ import scmdata
 
 from ...settings import config
 from ._magicc_instances import _MagiccInstances
-from ._parallel_process import _parallel_process
+from ..utils._parallel_process import _parallel_process
 
 LOGGER = logging.getLogger(__name__)
 
