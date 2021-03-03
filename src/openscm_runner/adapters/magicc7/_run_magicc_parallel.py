@@ -12,8 +12,8 @@ import pymagicc
 import scmdata
 
 from ...settings import config
-from ._magicc_instances import _MagiccInstances
 from ..utils._parallel_process import _parallel_process
+from ._magicc_instances import _MagiccInstances
 
 LOGGER = logging.getLogger(__name__)
 
