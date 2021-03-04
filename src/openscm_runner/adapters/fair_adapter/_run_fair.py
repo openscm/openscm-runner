@@ -3,6 +3,7 @@ Module for running FaIR
 """
 import logging
 import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 from fair.constants.general import EARTH_RADIUS, SECONDS_PER_YEAR
@@ -10,6 +11,7 @@ from fair.forward import fair_scm
 from scmdata import ScmRun, run_append
 
 from ...settings import config
+from ..utils._parallel_process import _parallel_process
 
 LOGGER = logging.getLogger(__name__)
 toa_to_joule = 4 * np.pi * EARTH_RADIUS ** 2 * SECONDS_PER_YEAR
@@ -46,11 +48,17 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
     ncpu = int(config.get("FAIR_WORKER_NUMBER", multiprocessing.cpu_count()))
     LOGGER.info("Running FaIR with %s workers", ncpu)
 
+    parallel_process_kwargs = dict(
+        func=_single_fair_iteration,
+        configuration=updated_config,
+        config_are_kwargs=False,
+    )
     if ncpu > 1:
-        with multiprocessing.Pool(ncpu) as pool:
-            res = list(pool.imap(_single_fair_iteration, updated_config))
+
+        with ProcessPoolExecutor(ncpu) as pool:
+            res = _parallel_process(**parallel_process_kwargs, pool=pool,)
     else:
-        res = [_single_fair_iteration(c) for c in updated_config]
+        res = _parallel_process(**parallel_process_kwargs)
 
     res = run_append(res)
 
