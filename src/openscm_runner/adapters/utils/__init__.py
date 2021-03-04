@@ -1,3 +1,3 @@
 """
-Empty init file
+Utility functions for adapters
 """
