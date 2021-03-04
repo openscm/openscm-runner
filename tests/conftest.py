@@ -4,7 +4,7 @@ import pyam
 import pytest
 from scmdata import ScmRun
 
-from openscm_runner.adapters import MAGICC7
+from openscm_runner.adapters import CICEROSCM, MAGICC7
 
 TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test-data")
 
@@ -69,6 +69,30 @@ def pytest_runtest_setup(item):
                         MAGICC_VERSION, REQUIRED_MAGICC_VERSION
                     )
                 )
+
+
+@pytest.fixture(scope="session")
+def magicc7_is_available():
+    try:
+        magicc_version = MAGICC7.get_version()
+        if magicc_version != "v7.4.2-23-g635c48cab":
+            raise AssertionError(
+                "Wrong MAGICC version for tests ({})".format(magicc_version)
+            )
+
+    except KeyError:
+        pytest.skip("MAGICC7 not available")
+
+
+@pytest.fixture(scope="session")
+def ciceroscm_is_available():
+    try:
+        CICEROSCM.get_version()
+
+    except OSError:
+        pytest.skip("Cicero-SCM not available because of operating system")
+    except KeyError:
+        pytest.skip("Cicero-SCM not available")
 
 
 def pytest_addoption(parser):

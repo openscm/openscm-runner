@@ -16,8 +16,12 @@ LOGGER = logging.getLogger(__name__)
 
 def _execute_run(cfgs, output_variables, scenariodata):
     cscm = CiceroSCMWrapper(scenariodata)
+    try:
+        out = cscm.run_over_cfgs(cfgs, output_variables)
+    finally:
+        cscm.cleanup_tempdirs()
 
-    return cscm.run_over_cfgs(cfgs, output_variables)
+    return out
 
 
 def run_ciceroscm_parallel(scenarios, cfgs, output_vars):
@@ -42,30 +46,26 @@ def run_ciceroscm_parallel(scenarios, cfgs, output_vars):
         :obj:`ScmRun` instance with all results.
     """
     LOGGER.info("Entered _parallel_ciceroscm")
-    print(config.get("CICEROSCM_WORKER_NUMBER", os.cpu_count()))
     runs = [
-        {
-            "cfgs": cfgs,
-            "output_variables": output_vars,
-            "scenariodata": smdf,  # IamDataFrame(smdf),
-        }
+        {"cfgs": cfgs, "output_variables": output_vars, "scenariodata": smdf}
         for (scen, model), smdf in scenarios.timeseries().groupby(["scenario", "model"])
     ]
 
     try:
-        pool = ProcessPoolExecutor(
-            max_workers=4,  # int(config.get("CICEROSCM_WORKER_NUMBER", os.cpu_count())),
-            # initializer=_init_ciceroscm_worker,
-            # initargs=(shared_dict,),
-        )
+        max_workers = int(config.get("CICEROSCM_WORKER_NUMBER", os.cpu_count()))
+        LOGGER.info("Running in parallel with up to %d workers", max_workers)
+
+        pool = ProcessPoolExecutor(max_workers=max_workers,)
 
         result = _parallel_process(
             func=_execute_run,
             configuration=runs,
             pool=pool,
             config_are_kwargs=True,
-            front_serial=2,
-            front_parallel=2,
+            # no front runs as these defeat the purpose with Cicero-SCM (because
+            # it is only parallel on scenarios, not configs)
+            front_serial=0,
+            front_parallel=0,
         )
 
         LOGGER.info("Appending Cicero-SCM results into a single ScmRun")
