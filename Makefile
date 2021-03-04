@@ -67,7 +67,7 @@ docs: $(VENV_DIR)  ## build the docs
 	$(VENV_DIR)/bin/sphinx-build -M html docs/source docs/build
 
 test:  $(VENV_DIR) ## run the full testsuite
-	$(VENV_DIR)/bin/pytest --cov -rfsxEX --cov-report term-missing
+	$(VENV_DIR)/bin/pytest tests --cov -rfsxEX --cov-report term-missing
 
 test-testpypi-install: $(VENV_DIR)  ## test whether installing from test PyPI works
 	$(eval TEMPVENV := $(shell mktemp -d))
