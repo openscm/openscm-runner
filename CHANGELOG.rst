@@ -14,12 +14,6 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
-feature/parallel-process-common
-------
-Changed
--------
-- (`#47 <https://github.com/openscm/openscm-runner/pull/47>`_) Moved _parallel_process up from magicc to a common adapter utils. Use it for fair as well.
-
 
 master
 ------
