@@ -1,6 +1,7 @@
 """
 CICEROSCM_WRAPPER for parallelisation
 """
+import logging
 import os
 import shutil
 import subprocess  # nosec # have to use subprocess
@@ -10,10 +11,12 @@ from distutils import dir_util
 import pandas as pd
 from scmdata import ScmRun, run_append
 
-# from disutils import dir_util
+from ...settings import config
 from .make_scenario_files import SCENARIOFILEWRITER
 from .read_results import CSCMREADER
 from .write_parameter_files import PARAMETERFILEWRITER
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _ensure_dir_exists(path):
@@ -60,7 +63,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         and make an ScmRun with results
         """
         runs = []
-        for pamset in cfgs:
+        for i, pamset in enumerate(cfgs):
             self.pamfilewriter.write_parameterfile(
                 pamset, os.path.join(self.rundir, self.scen)
             )
@@ -91,7 +94,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                         columns={
                             "climate_model": "Cicero-SCM",
                             "model": self.model,
-                            "run_id": pamset["Index"],
+                            "run_id": pamset.get("Index", i),
                             "scenario": self.scen,
                             "region": ["World"],
                             "variable": [variable],
@@ -100,23 +103,25 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                     )
                 )
 
-        self._cleanup_tempdirs()
         return run_append(runs)
 
     def _setup_tempdirs(self):
         """
         Set up temporary directories to run and make output in
         """
-        self.rundir = tempfile.mkdtemp(prefix="ciceroscm-test-rundir-")
+        root_dir = config.get("CICEROSCM_WORKER_ROOT_DIR", None)
+        self.rundir = tempfile.mkdtemp(prefix="ciceroscm-", dir=root_dir)
+        LOGGER.info("Creating new Cicero-SCM instance: %s", self.rundir)
         dir_util.copy_tree(
             os.path.join(os.path.dirname(__file__), "utils_templates", "run_dir"),
             self.rundir,
         )
 
-    def _cleanup_tempdirs(self):
+    def cleanup_tempdirs(self):
         """
         Remove tempdirs after run
         """
+        LOGGER.info("Removing Cicero-SCM instance: %s", self.rundir)
         shutil.rmtree(self.rundir)
 
     def _make_dir_structure(self, scenario):
@@ -124,7 +129,6 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         Make directory structure for a scenario in which to put input and
         outputfiles for the run
         """
-        print(scenario)
         _ensure_dir_exists(self.rundir)
         _ensure_dir_exists(os.path.join(self.rundir, scenario))
         _ensure_dir_exists(os.path.join(self.rundir, scenario, "inputfiles"))

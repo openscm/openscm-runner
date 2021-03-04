@@ -2,8 +2,9 @@
 CICEROSCM adapter
 """
 import logging
+import os.path
+from subprocess import check_output  # nosec
 
-# from disutils import dir_util
 from ..base import _Adapter
 from ._run_ciceroscm_parallel import run_ciceroscm_parallel
 
@@ -35,6 +36,7 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
         """
         if output_config is not None:
             raise NotImplementedError("`output_config` not implemented for Cicero-SCM")
+
         runs = run_ciceroscm_parallel(scenarios, cfgs, output_variables)
 
         return runs
@@ -48,5 +50,20 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
         -------
         str
             The CICEROSCM version id
+
+        Raises
+        ------
+        OSError
+            The Cicero-SCM binary cannot be run on the operating system
         """
+        exec_call = os.path.join(
+            os.path.dirname(__file__), "utils_templates", "run_dir", "scm_vCH4fb"
+        )
+        try:
+            check_output(exec_call)
+        except OSError as orig_exc:
+            raise OSError(
+                "Cicero-SCM is not available on your operating system"
+            ) from orig_exc
+
         return "v2019vCH4"

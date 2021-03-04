@@ -23,6 +23,20 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
 
     def __init__(self, udir):
         self.udir = udir
+        self._pamset_defaults = {
+            "lambda": "0.540",
+            "akapa": "0.341",
+            "cpi": "0.556",
+            "W": "1.897",
+            "rlamdo": "16.618",
+            "beto": "3.225",
+            "mixed": "107.277",
+            "dirso2_forc": "-0.457",
+            "indso2_forc": "-0.514",
+            "bc_forc": "0.200",
+            "oc_forc": "-0.103",
+        }
+
         with open(
             os.path.join(self.udir, "pam_RCMIP_test_klimsensdefault.scm"), "r"
         ) as origfile:
@@ -47,33 +61,11 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
                 path=filedir_to_pamfile, scen=scen
             ),
         )
-        filedata = filedata.replace(
-            "lambda 0.540", "lambda {:.4}".format(pamset["lambda"])
-        )
-        filedata = filedata.replace(
-            "akapa 0.341", "akapa {:.4}".format(pamset["akapa"])
-        )
-        filedata = filedata.replace("cpi 0.556", "cpi {:.4}".format(pamset["cpi"]))
-        filedata = filedata.replace("W 1.897", "W {:.4}".format(pamset["W"]))
-        filedata = filedata.replace(
-            "rlamdo 16.618", "rlamdo {:.4}".format(pamset["rlamdo"])
-        )
-        filedata = filedata.replace("beto 3.225", "beto {:.4}".format(pamset["beto"]))
-        filedata = filedata.replace(
-            "mixed 107.277", "mixed {:.4}".format(pamset["mixed"])
-        )
-        filedata = filedata.replace(
-            "dirso2_forc -0.457", "dirso2_forc {:.4}".format((pamset["dirso2_forc"])),
-        )
-        filedata = filedata.replace(
-            "indso2_forc -0.514", "indso2_forc {:.4}".format((pamset["indso2_forc"])),
-        )
-        filedata = filedata.replace(
-            "bc_forc 0.200", "bc_forc {:.4}".format((pamset["bc_forc"]))
-        )
-        filedata = filedata.replace(
-            "oc_forc -0.103", "oc_forc {:.4}".format((pamset["oc_forc"]))
-        )
+        for k, value in self._pamset_defaults.items():
+            old = "{} {}".format(k, value)
+            new = "{} {:.4}".format(k, pamset.get(k, float(self._pamset_defaults[k])))
+            filedata = filedata.replace(old, new)
+
         with open(
             os.path.join(filedir, "inputfiles", "pam_current.scm"), "w"
         ) as scfile:

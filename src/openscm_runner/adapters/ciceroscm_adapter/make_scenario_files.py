@@ -128,6 +128,7 @@ class SCENARIOFILEWRITER:
         with open(ssp245_em_file) as semfile:
             filedata = semfile.read()
             top_of_file = filedata.split("\n{}".format(self.years[0]))[0]
+
         return top_of_file
 
     def initialize_units_comps(self, gasfile):
@@ -177,6 +178,7 @@ class SCENARIOFILEWRITER:
         """
         scenarioframe = scenarioframe.reset_index((0, 1, 2, 4), drop=True)
         years = scenarioframe.keys()
+
         if not isinstance(years[0], np.int64):
             yearsint = [np.int64(d.year) for d in years]
             scenarioframe.rename(
@@ -184,12 +186,15 @@ class SCENARIOFILEWRITER:
             )
         else:
             yearsint = years
+
         self.years = np.arange(yearsint[0], yearsint[-1] + 1)
         for year in self.years:
             if year not in scenarioframe.columns:
                 scenarioframe[year] = np.nan
+
         scenarioframe = scenarioframe.reindex(sorted(scenarioframe.columns), axis=1)
         interpol = scenarioframe.interpolate(axis=1)
+
         return interpol
 
     def write_scenario_data(self, scenarioframe, odir):

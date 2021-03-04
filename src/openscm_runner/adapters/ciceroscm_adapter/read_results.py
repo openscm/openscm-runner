@@ -76,9 +76,9 @@ class CSCMREADER:
     def __init__(self, odir):
         self.odir = odir
         self.variable_dict = {
-            "Surface Temperature": "dT_glob_air",
+            "Surface Air Temperature Change": "dT_glob_air",
             # GMST
-            "Surface Temperature (GMST)": "dT_glob",
+            "Surface Air Ocean Blended Temperature Change": "dT_glob",
             # ERFs
             "Effective Radiative Forcing": "Total_forcing+sunvolc",
             "Effective Radiative Forcing|Anthropogenic": "Total_forcing",  # Todo: find out how to add in
@@ -86,22 +86,22 @@ class CSCMREADER:
             "Effective Radiative Forcing|Aerosols|Direct Effect": "Aerosols|Direct Effect",
             "Effective Radiative Forcing|Aerosols|Direct Effect|BC": "BC",
             "Effective Radiative Forcing|Aerosols|Direct Effect|OC": "OC",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|Sulfur": "SO2",
+            "Effective Radiative Forcing|Aerosols|Direct Effect|SOx": "SO2",
             "Effective Radiative Forcing|Aerosols|Indirect Effect": "SO4_IND",
             "Effective Radiative Forcing|Greenhouse Gases": "GHG",
-            "Effective Radiative Forcing|F Gases": "Fgas",
+            "Effective Radiative Forcing|F-Gases": "Fgas",
             "Effective Radiative Forcing|HFC125": "HFC125",
             "Effective Radiative Forcing|HFC134a": "HFC134a",
             "Effective Radiative Forcing|HFC143a": "HFC143a",
             "Effective Radiative Forcing|HFC227ea": "HFC227ea",
             "Effective Radiative Forcing|HFC23": "HFC23",
-            "Effective Radiative Forcing|HFC245ca": "HFC245fa",
+            "Effective Radiative Forcing|HFC245fa": "HFC245fa",
             "Effective Radiative Forcing|HFC32": "HFC32",
-            "Effective Radiative Forcing|HFC4310": "HFC4310mee",
+            "Effective Radiative Forcing|HFC4310mee": "HFC4310mee",
             "Effective Radiative Forcing|CF4": "CF4",
             "Effective Radiative Forcing|C6F14": "C6F14",
             "Effective Radiative Forcing|C2F6": "C2F6",
-            "Effective Radiative Forcing|F-Gases|SF6": "SF6",
+            "Effective Radiative Forcing|SF6": "SF6",
             "Effective Radiative Forcing|CO2": "CO2",
             "Effective Radiative Forcing|CH4": "CH4",
             "Effective Radiative Forcing|N2O": "N2O",
