@@ -17,7 +17,8 @@ RTOL = 1e-5
 
 
 class TestCICEROSCMAdapter(_AdapterTester):
-    def test_run(self, test_scenarios, ciceroscm_is_available):
+    @pytest.mark.ciceroscm
+    def test_run(self, test_scenarios):
         debug_run = False
 
         res = run(
@@ -203,7 +204,8 @@ class TestCICEROSCMAdapter(_AdapterTester):
         if debug_run:
             assert False, "Turn off debug"
 
-    def test_variable_naming(self, test_scenarios, ciceroscm_is_available):
+    @pytest.mark.ciceroscm
+    def test_variable_naming(self, test_scenarios):
         missing_from_ciceroscm = (
             "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC AFOLU",
             "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC Fossil and Industrial",
@@ -228,7 +230,8 @@ class TestCICEROSCMAdapter(_AdapterTester):
         if missing_vars:
             raise AssertionError(missing_vars)
 
-    def test_w_out_config(self, test_scenarios, ciceroscm_is_available):
+    @pytest.mark.ciceroscm
+    def test_w_out_config(self, test_scenarios):
         with pytest.raises(NotImplementedError):
             run(
                 scenarios=test_scenarios.filter(scenario=["ssp126"]),
@@ -298,5 +301,6 @@ class TestCICEROSCMAdapter(_AdapterTester):
         assert write_parameter_files.splitall(input) == exp
 
 
-def test_get_version(ciceroscm_is_available):
+@pytest.mark.ciceroscm
+def test_get_version():
     assert CICEROSCM.get_version() == "v2019vCH4"

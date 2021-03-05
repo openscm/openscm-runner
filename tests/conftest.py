@@ -58,6 +58,16 @@ except KeyError:
     CORRECT_MAGICC_IS_AVAILABLE = False
 
 
+CICEROSCM_IS_AVAILABLE = False
+try:
+    CICEROSCM.get_version()
+    CICEROSCM_IS_AVAILABLE = True
+except OSError:
+    CICERO_OS_ERROR = True
+except KeyError:
+    CICERO_OS_ERROR = False
+
+
 def pytest_runtest_setup(item):
     for mark in item.iter_markers():
         if mark.name == "magicc" and not CORRECT_MAGICC_IS_AVAILABLE:
@@ -70,29 +80,11 @@ def pytest_runtest_setup(item):
                     )
                 )
 
-
-@pytest.fixture(scope="session")
-def magicc7_is_available():
-    try:
-        magicc_version = MAGICC7.get_version()
-        if magicc_version != "v7.4.2-23-g635c48cab":
-            raise AssertionError(
-                "Wrong MAGICC version for tests ({})".format(magicc_version)
-            )
-
-    except KeyError:
-        pytest.skip("MAGICC7 not available")
-
-
-@pytest.fixture(scope="session")
-def ciceroscm_is_available():
-    try:
-        CICEROSCM.get_version()
-
-    except OSError:
-        pytest.skip("Cicero-SCM not available because of operating system")
-    except KeyError:
-        pytest.skip("Cicero-SCM not available")
+        if mark.name == "ciceroscm" and not CICEROSCM_IS_AVAILABLE:
+            if CICERO_OS_ERROR:
+                pytest.skip("CICERO-SCM not available because of operating system")
+            else:
+                pytest.skip("CICERO-SCM not available")
 
 
 def pytest_addoption(parser):
