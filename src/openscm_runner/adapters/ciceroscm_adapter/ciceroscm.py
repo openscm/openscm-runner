@@ -4,7 +4,7 @@ CICEROSCM adapter
 import logging
 import os.path
 from subprocess import check_output  # nosec
-import pandas as pd
+
 from ..base import _Adapter
 from ._run_ciceroscm_parallel import run_ciceroscm_parallel
 
@@ -40,7 +40,6 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
             raise NotImplementedError("`output_config` not implemented for CICERO-SCM")
 
         runs = run_ciceroscm_parallel(scenarios, cfgs, output_variables)
-        pd.set_option("display.max_rows", None)
         LOGGER.info("Returning from CICERO-SCM")
         LOGGER.info(type(runs))
         return runs
