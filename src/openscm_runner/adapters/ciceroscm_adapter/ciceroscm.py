@@ -4,7 +4,7 @@ CICEROSCM adapter
 import logging
 import os.path
 from subprocess import check_output  # nosec
-
+import pandas as pd
 from ..base import _Adapter
 from ._run_ciceroscm_parallel import run_ciceroscm_parallel
 
