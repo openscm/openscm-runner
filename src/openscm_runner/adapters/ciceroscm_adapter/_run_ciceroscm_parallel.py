@@ -20,6 +20,7 @@ FRONT_SERIAL = 0
 FRONT_PARALLEL = 0
 """int: Number of front parallel runs to do before starting full parallel runs"""
 
+
 def _execute_run(cfgs, output_variables, scenariodata):
     cscm = CiceroSCMWrapper(scenariodata)
     try:
