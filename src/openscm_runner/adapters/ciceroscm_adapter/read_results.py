@@ -1,5 +1,5 @@
 """
-Module that reads in Cicero-SCM results
+Module that reads in CICERO-SCM results
 and returns data to append to SCMRun
 """
 import os
@@ -70,7 +70,7 @@ def get_data_from_rib_file(folder, variable):
 
 class CSCMREADER:
     """
-    Class to read Cicero-SCM output data
+    Class to read CICERO-SCM output data
     """
 
     def __init__(self, odir):
@@ -163,10 +163,13 @@ class CSCMREADER:
             years, timeseries = get_data_from_conc_file(
                 folder, self.variable_dict[variable]
             )
+            # TODO: check the units. They  are coming out as Pg_C, they should be ppm no?
             unit = sfilewriter.units[
                 sfilewriter.components.index(self.variable_dict[variable])
             ]
         elif "Emissions" in variable:
+            # TODO: update the units. They have to come out as e.g. Pg/C, not
+            # Pg_C (which can't be parsed by pint)
             years, timeseries = get_data_from_em_file(
                 folder, self.variable_dict[variable]
             )

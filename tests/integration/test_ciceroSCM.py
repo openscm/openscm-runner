@@ -18,8 +18,14 @@ RTOL = 1e-5
 
 class TestCICEROSCMAdapter(_AdapterTester):
     @pytest.mark.ciceroscm
-    def test_run(self, test_scenarios):
-        debug_run = False
+    def test_run(
+        self, test_scenarios, test_data_dir, update_expected_values,
+    ):
+        expected_output_file = os.path.join(
+            test_data_dir,
+            "expected-integration-output",
+            "expected_ciceroscm_test_run_output.json",
+        )
 
         res = run(
             scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
@@ -72,7 +78,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
         assert isinstance(res, ScmRun)
         assert res["run_id"].min() == 1
         assert res["run_id"].max() == 30040
-        assert res.get_unique_meta("climate_model", no_duplicates=True) == "Cicero-SCM"
+        assert res.get_unique_meta("climate_model", no_duplicates=True) == "CICERO-SCM"
 
         assert set(res.get_unique_meta("variable")) == set(
             [
@@ -89,120 +95,37 @@ class TestCICEROSCMAdapter(_AdapterTester):
             ]
         )
 
-        # check ocean heat content unit conversion comes through correctly
-        self._check_res(
-            904.474,
-            res.filter(
-                unit="ZJ",
-                variable="Heat Content|Ocean",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-            ).values.max(),
-            not debug_run,
-        )
-
-        self._check_res(
-            1.50177,
-            res.filter(
-                variable="Surface Air Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-            ).values.max(),
-            not debug_run,
-        )
-
-        self._check_res(
-            3.35742,
-            res.filter(
-                variable="Surface Air Ocean Blended Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-            ).values.max(),
-            not debug_run,
-        )
-        self._check_res(
-            -2.5292859114958564,
-            res.filter(
-                unit="ZJ/yr",
-                variable="Heat Uptake",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-            ).values.max(),
-            not debug_run,
-        )
-        self._check_res(
-            780.2869999999999,
-            res.filter(
-                variable="Atmospheric Concentrations|CO2",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-            ).values.max(),
-            not debug_run,
-        )
-        self._check_res(
-            22.5616,
-            res.filter(
-                variable="Emissions|CO2", region="World", year=2100, scenario="ssp370",
-            ).values.max(),
-            not debug_run,
-        )
         # check we can also calcluate quantiles
-        quantiles = calculate_quantiles(res, [0.05, 0.17, 0.5, 0.83, 0.95])
+        assert "run_id" in res.meta
+        quantiles = calculate_quantiles(res, [0, 0.05, 0.17, 0.5, 0.83, 0.95, 1])
+        assert "run_id" not in quantiles.meta
 
-        self._check_res(
-            1.1427785,
-            quantiles.filter(
-                variable="Surface Air Ocean Blended Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-                quantile=0.05,
-            ).values,
-            not debug_run,
-        )
+        self._check_output(res, expected_output_file, update_expected_values)
 
-        self._check_res(
-            1.4757515,
-            quantiles.filter(
-                variable="Surface Air Ocean Blended Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp126",
-                quantile=0.95,
-            ).values,
-            not debug_run,
-        )
+        # to add into the json file
 
-        self._check_res(
-            2.7883605,
-            quantiles.filter(
-                variable="Surface Air Ocean Blended Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-                quantile=0.05,
-            ).values,
-            not debug_run,
-        )
-
-        self._check_res(
-            3.3274695,
-            quantiles.filter(
-                variable="Surface Air Ocean Blended Temperature Change",
-                region="World",
-                year=2100,
-                scenario="ssp370",
-                quantile=0.95,
-            ).values,
-            not debug_run,
-        )
-        if debug_run:
-            assert False, "Turn off debug"
+        # [
+        #     {
+        #         "variable": "Atmospheric Concentrations|CO2",
+        #         "unit": "ppm",
+        #         "region": "World",
+        #         "year": 2100,
+        #         "scenario": "ssp370",
+        #         "quantile": 1
+        #     },
+        #     2400.88
+        # ],
+        # [
+        #     {
+        #         "variable": "Emissions|CO2",
+        #         "unit": "Pg/C",
+        #         "region": "World",
+        #         "year": 2100,
+        #         "scenario": "ssp370",
+        #         "quantile": 1
+        #     },
+        #     2400.88
+        # ],
 
     @pytest.mark.ciceroscm
     def test_variable_naming(self, test_scenarios):

@@ -35,7 +35,7 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
         cfgs is a list of indices to run
         """
         if output_config is not None:
-            raise NotImplementedError("`output_config` not implemented for Cicero-SCM")
+            raise NotImplementedError("`output_config` not implemented for CICERO-SCM")
 
         runs = run_ciceroscm_parallel(scenarios, cfgs, output_variables)
 
@@ -54,7 +54,7 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
         Raises
         ------
         OSError
-            The Cicero-SCM binary cannot be run on the operating system
+            The CICERO-SCM binary cannot be run on the operating system
         """
         exec_call = os.path.join(
             os.path.dirname(__file__), "utils_templates", "run_dir", "scm_vCH4fb"
@@ -63,7 +63,7 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
             check_output(exec_call)
         except OSError as orig_exc:
             raise OSError(
-                "Cicero-SCM is not available on your operating system"
+                "CICERO-SCM is not available on your operating system"
             ) from orig_exc
 
         return "v2019vCH4"

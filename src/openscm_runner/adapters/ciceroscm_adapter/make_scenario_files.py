@@ -145,7 +145,7 @@ class SCENARIOFILEWRITER:
                 self.components.append(row[0])
                 self.units.append(row[1])
         self.components.insert(1, "CO2_lu")
-        self.units.insert(1, "Pg_C")
+        self.units.insert(1, "Pg/C")
 
     def get_unit_convfactor(self, comp, scenarioframe):
         """

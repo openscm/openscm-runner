@@ -92,7 +92,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                     ScmRun(
                         pd.Series(timeseries, index=years),
                         columns={
-                            "climate_model": "Cicero-SCM",
+                            "climate_model": "CICERO-SCM",
                             "model": self.model,
                             "run_id": pamset.get("Index", i),
                             "scenario": self.scen,
@@ -111,7 +111,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         """
         root_dir = config.get("CICEROSCM_WORKER_ROOT_DIR", None)
         self.rundir = tempfile.mkdtemp(prefix="ciceroscm-", dir=root_dir)
-        LOGGER.info("Creating new Cicero-SCM instance: %s", self.rundir)
+        LOGGER.info("Creating new CICERO-SCM instance: %s", self.rundir)
         dir_util.copy_tree(
             os.path.join(os.path.dirname(__file__), "utils_templates", "run_dir"),
             self.rundir,
@@ -121,7 +121,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         """
         Remove tempdirs after run
         """
-        LOGGER.info("Removing Cicero-SCM instance: %s", self.rundir)
+        LOGGER.info("Removing CICERO-SCM instance: %s", self.rundir)
         shutil.rmtree(self.rundir)
 
     def _make_dir_structure(self, scenario):

@@ -1,5 +1,5 @@
 """
-Module that makes Cicero-SCM parameter files
+Module that makes CICERO-SCM parameter files
 """
 import os
 from pathlib import Path
