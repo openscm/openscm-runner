@@ -7,8 +7,6 @@ import os
 import numpy as np
 import pandas as pd
 
-# from .make_scenario_files import SCENARIOFILEWRITER
-
 
 def get_data_from_conc_file(folder, variable):
     """

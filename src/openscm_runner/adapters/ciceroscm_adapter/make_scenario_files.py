@@ -1,14 +1,15 @@
 """
 Module with functionality to make emission input files
 """
+
+# Todo: optimise to speed up reading and writing
+
 import csv
 import logging
 import os
 
 import numpy as np
 import pandas as pd
-
-# Method to convert the unit names form tonnes to grams
 
 
 def unit_name_converter(unit):
@@ -25,14 +26,10 @@ def unit_name_converter(unit):
     return unit
 
 
-# Method to find unit conversion factor
-
-
 def unit_conv_factor(cicero_unit, unit, comp):
     """
     Find conversion factor between two units
     """
-    # Todo: raise exception
     conv_dict = {"P": 1.0e15, "T": 1.0e12, "G": 1.0e9, "M": 1.0e6, "k": 1.0e3}
     conv_factor = conv_dict[unit[0]] / conv_dict[cicero_unit[0]]
     if unit[1:] != cicero_unit[1:]:
@@ -54,11 +51,13 @@ def unit_conv_factor(cicero_unit, unit, comp):
     return conv_factor
 
 
-def read_ssp245_em(ssp245_em_file):
+def _read_ssp245_em(ssp245_em_file):
     """
     Get default data from ssp245_RCMIP
     """
-    ssp245df = pd.read_csv(ssp245_em_file, delimiter="\t", index_col=0)
+    ssp245df = pd.read_csv(
+        ssp245_em_file, delimiter="\t", index_col=0
+    )  # TODO: use scmdata for a more stable and faster API
     ssp245df.rename(columns=lambda x: x.strip(), inplace=True)
     ssp245df.rename(index=lambda x: x.strip(), inplace=True)
     ssp245df.rename(columns={"CO2 .1": "CO2_lu"}, inplace=True)
@@ -118,7 +117,7 @@ class SCENARIOFILEWRITER:
         }  # Halon1212, CH3Cl
         self.initialize_units_comps(os.path.join(udir, "gases_v1RCMIP.txt"))
         self.years = np.arange(2015, 2101)  # TODO: get these numbers from scenarioframe
-        self.ssp245data = read_ssp245_em(os.path.join(udir, "ssp245_em_RCMIP.txt"))
+        self.ssp245data = _read_ssp245_em(os.path.join(udir, "ssp245_em_RCMIP.txt"))
         self.udir = udir
 
     def get_top_of_file(self, ssp245_em_file):
