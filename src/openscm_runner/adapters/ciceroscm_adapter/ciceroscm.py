@@ -40,7 +40,9 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
             raise NotImplementedError("`output_config` not implemented for CICERO-SCM")
 
         runs = run_ciceroscm_parallel(scenarios, cfgs, output_variables)
-
+        pd.set_option("display.max_rows", None)
+        LOGGER.info("Returning from CICERO-SCM")
+        LOGGER.info(runs.meta)
         return runs
 
     @classmethod
