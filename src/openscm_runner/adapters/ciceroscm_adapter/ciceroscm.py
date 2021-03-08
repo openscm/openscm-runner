@@ -34,14 +34,10 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
 
         cfgs is a list of indices to run
         """
-        LOGGER.info("Call to ciceroscm openscm-runner")
-        LOGGER.info(output_variables)
         if output_config is not None:
             raise NotImplementedError("`output_config` not implemented for CICERO-SCM")
 
         runs = run_ciceroscm_parallel(scenarios, cfgs, output_variables)
-        LOGGER.info("Returning from CICERO-SCM")
-        LOGGER.info(type(runs))
         return runs
 
     @classmethod

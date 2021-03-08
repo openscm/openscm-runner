@@ -150,7 +150,7 @@ class CSCMREADER:
         Read variable timeseries
         Connecting up to correct file type to get the data
         """
-        folder = os.path.join(self.odir, scenario, "outputfiles")
+        folder = os.path.join(self.odir, scenario.replace(" ", ""), "outputfiles")
         if variable not in self.variable_dict:
             return (
                 pd.Series([], dtype="float64"),
