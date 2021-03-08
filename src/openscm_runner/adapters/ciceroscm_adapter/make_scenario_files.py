@@ -204,7 +204,9 @@ class SCENARIOFILEWRITER:
         fname = os.path.join(
             odir,
             "inputfiles",
-            "{s}_em.txt".format(s=scenarioframe[scenarioframe.keys()[0]].keys()[0][1]),
+            "{s}_em.txt".format(
+                s=scenarioframe[scenarioframe.keys()[0]].keys()[0][1].replace(" ", "")
+            ),
         )
         logging.getLogger("pyam").setLevel(logging.ERROR)
         avail_comps = [
