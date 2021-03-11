@@ -7,6 +7,7 @@ Module with functionality to make emission input files
 import csv
 import logging
 import os
+import re
 
 import numpy as np
 import pandas as pd
@@ -205,7 +206,11 @@ class SCENARIOFILEWRITER:
             odir,
             "inputfiles",
             "{s}_em.txt".format(
-                s=scenarioframe[scenarioframe.keys()[0]].keys()[0][1].replace(" ", "")
+                s=re.sub(
+                    "[^a-zA-Z0-9_-]",
+                    "",
+                    scenarioframe[scenarioframe.keys()[0]].keys()[0][1],
+                )
             ),
         )
         logging.getLogger("pyam").setLevel(logging.ERROR)

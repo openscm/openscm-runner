@@ -3,6 +3,7 @@ CICEROSCM_WRAPPER for parallelisation
 """
 import logging
 import os
+import re
 import shutil
 import subprocess  # nosec # have to use subprocess
 import tempfile
@@ -44,7 +45,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         startyear = scenariodata.keys()[0]
         self.scen = scenariodata[startyear].keys()[0][1]
         self.model = scenariodata[startyear].keys()[0][0]
-        self._make_dir_structure(self.scen.replace(" ", ""))
+        self._make_dir_structure(re.sub("[^a-zA-Z0-9_-]", "", self.scen))
 
         self._call_sfilewriter(scenariodata)
 
@@ -53,7 +54,8 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         Call sfilwriter to write scenariodata file
         """
         self.sfilewriter.write_scenario_data(
-            scenarios, os.path.join(self.rundir, self.scen.replace(" ", "")),
+            scenarios,
+            os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", "", self.scen)),
         )
 
     def run_over_cfgs(self, cfgs, output_variables):
