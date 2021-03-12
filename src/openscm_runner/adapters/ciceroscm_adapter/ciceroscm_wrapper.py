@@ -67,14 +67,14 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         runs = []
         for i, pamset in enumerate(cfgs):
             self.pamfilewriter.write_parameterfile(
-                pamset, os.path.join(self.rundir, self.scen.replace(" ", ""))
+                pamset, os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", self.scen))
             )
             subprocess.check_call(
                 "{executable} {pamfile}".format(
                     executable=os.path.join(self.rundir, "scm_vCH4fb"),
                     pamfile=os.path.join(
                         self.rundir,
-                        self.scen.replace(" ", ""),
+                        re.sub("[^a-zA-Z0-9_-]", self.scen),
                         "inputfiles",
                         "pam_current.scm",
                     ),
