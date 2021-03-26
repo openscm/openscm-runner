@@ -1,7 +1,6 @@
 """
 Module for running MAGICC in parallel
 """
-# TODO: double check that import of _parallel_process still works
 import logging
 import multiprocessing
 import os.path

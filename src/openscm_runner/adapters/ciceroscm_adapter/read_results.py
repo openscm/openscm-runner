@@ -16,7 +16,7 @@ def get_data_from_conc_file(folder, variable):
     df_temp = pd.read_csv(os.path.join(folder, "temp_conc.txt"), delimiter=r"\s+")
     years = df_temp.Year[:]
     timeseries = df_temp[variable].to_numpy()
-    # Todo: Deal with units
+    # Todo: Deal with units?
     return years, timeseries
 
 
@@ -27,7 +27,6 @@ def get_data_from_em_file(folder, variable):
     df_temp = pd.read_csv(os.path.join(folder, "temp_em.txt"), delimiter=r"\s+")
     years = df_temp.Year[:]
     timeseries = df_temp[variable].to_numpy()
-    # Todo: Deal with units
     return years, timeseries
 
 
@@ -67,6 +66,13 @@ def get_data_from_rib_file(folder, variable):
     return years, timeseries
 
 
+def convert_cicero_unit(cicero_unit):
+    """
+    Convert cicero unit convetion for pint
+    """
+    return cicero_unit.replace("_", "/")
+
+
 class CSCMREADER:
     """
     Class to read CICERO-SCM output data
@@ -80,7 +86,7 @@ class CSCMREADER:
             "Surface Air Ocean Blended Temperature Change": "dT_glob",
             # ERFs
             "Effective Radiative Forcing": "Total_forcing+sunvolc",
-            "Effective Radiative Forcing|Anthropogenic": "Total_forcing",  # Todo: find out how to add in
+            "Effective Radiative Forcing|Anthropogenic": "Total_forcing",
             "Effective Radiative Forcing|Aerosols": "Aerosols",
             "Effective Radiative Forcing|Aerosols|Direct Effect": "Aerosols|Direct Effect",
             "Effective Radiative Forcing|Aerosols|Direct Effect|BC": "BC",
@@ -165,18 +171,21 @@ class CSCMREADER:
                 folder, self.variable_dict[variable]
             )
             # TODO: check the units. They  are coming out as Pg_C, they should be ppm no?
-            unit = sfilewriter.units[
-                sfilewriter.components.index(self.variable_dict[variable])
-            ]
+            # Have fixed to Pg/C etc, not sure how to go to ppm
+            unit = convert_cicero_unit(
+                sfilewriter.units[
+                    sfilewriter.components.index(self.variable_dict[variable])
+                ]
+            )
         elif "Emissions" in variable:
-            # TODO: update the units. They have to come out as e.g. Pg/C, not
-            # Pg_C (which can't be parsed by pint)
             years, timeseries = get_data_from_em_file(
                 folder, self.variable_dict[variable]
             )
-            unit = sfilewriter.units[
-                sfilewriter.components.index(self.variable_dict[variable])
-            ]
+            unit = convert_cicero_unit(
+                sfilewriter.units[
+                    sfilewriter.components.index(self.variable_dict[variable])
+                ]
+            )
         elif "Forcing" in variable:
             years, timeseries = self.get_data_from_forc_file(
                 folder, self.variable_dict[variable]

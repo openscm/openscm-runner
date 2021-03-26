@@ -2,7 +2,7 @@
 Module with functionality to make emission input files
 """
 
-# Todo: optimise to speed up reading and writing
+# TODO: optimise to speed up reading and writing
 
 import csv
 import logging
@@ -117,7 +117,7 @@ class SCENARIOFILEWRITER:
             "OC": ["OC", 1],
         }  # Halon1212, CH3Cl
         self.initialize_units_comps(os.path.join(udir, "gases_v1RCMIP.txt"))
-        self.years = np.arange(2015, 2101)  # TODO: get these numbers from scenarioframe
+        self.years = np.arange(2015, 2101)  # Temporary default values, is updated later
         self.ssp245data = _read_ssp245_em(os.path.join(udir, "ssp245_em_RCMIP.txt"))
         self.udir = udir
 
