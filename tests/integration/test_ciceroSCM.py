@@ -102,30 +102,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
 
         self._check_output(res, expected_output_file, update_expected_values)
 
-        # to add into the json file
-
-        # [
-        #     {
-        #         "variable": "Atmospheric Concentrations|CO2",
-        #         "unit": "ppm",
-        #         "region": "World",
-        #         "year": 2100,
-        #         "scenario": "ssp370",
-        #         "quantile": 1
-        #     },
-        #     2400.88
-        # ],
-        # [
-        #     {
-        #         "variable": "Emissions|CO2",
-        #         "unit": "Pg/C",
-        #         "region": "World",
-        #         "year": 2100,
-        #         "scenario": "ssp370",
-        #         "quantile": 1
-        #     },
-        #     2400.88
-        # ],
+        assert res.filter(variable="Atmospheric Concentrations|CO2").get_unique_meta("unit", True) == "ppm"
 
     @pytest.mark.ciceroscm
     def test_variable_naming(self, test_scenarios):

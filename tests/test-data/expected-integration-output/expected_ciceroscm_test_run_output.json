@@ -151,6 +151,28 @@
                 "quantile": 0.95
             },
             3.6048250000000004
+        ],
+        [
+            {
+                "variable": "Atmospheric Concentrations|CO2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "unit": "ppm",
+                "quantile": 1
+            },
+            240
+        ],
+        [
+            {
+                "variable": "Emissions|CO2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "unit": "Pg/C",
+                "quantile": 1
+            },
+            2400.88
         ]
     ]
 }
