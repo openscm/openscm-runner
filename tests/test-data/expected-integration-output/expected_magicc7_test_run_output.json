@@ -13,6 +13,39 @@
         ],
         [
             {
+                "variable": "Heat Uptake|Ocean",
+                "unit": "W/m^2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 1
+            },
+            0.8731463965417143
+        ],
+        [
+            {
+                "variable": "Heat Uptake",
+                "unit": "W/m^2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 1
+            },
+            1.0397117448003015
+        ],
+        [
+            {
+                "variable": "Effective Radiative Forcing",
+                "unit": "W/m^2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 1
+            },
+            3.1835989958489557
+        ],
+        [
+            {
                 "variable": "Net Atmosphere to Land Flux|CO2",
                 "unit": "GtC / yr",
                 "region": "World",
