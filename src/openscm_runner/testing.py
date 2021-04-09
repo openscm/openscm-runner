@@ -34,11 +34,17 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
 
         for filter_kwargs, expected_val in checks:
             err_msg = "{}".format(filter_kwargs)
+
             if update:
                 filter_kwargs_in = {**filter_kwargs}
 
+            check_units = filter_kwargs.pop("unit", None)
             quantile = filter_kwargs.pop("quantile")
             res_to_check = res_cm.filter(**filter_kwargs)
+
+            if check_units is not None:
+                res_to_check = res_to_check.convert_unit(check_units)
+
             if res_to_check.empty:
                 raise AssertionError
 
