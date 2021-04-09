@@ -2,6 +2,48 @@
     "FaIR*": [
         [
             {
+                "variable": "Heat Uptake",
+                "unit": "W/m**2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 1
+            },
+            2.00396
+        ],
+        [
+            {
+                "variable": "Heat Uptake",
+                "unit": "W/m**2",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0
+            },
+            1.6255
+        ],
+        [
+            {
+                "variable": "Effective Radiative Forcing",
+                "unit": "W/m**2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 1
+            },
+            2.00396
+        ],
+        [
+            {
+                "variable": "Effective Radiative Forcing",
+                "unit": "W/m**2",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0
+            },
+            1.6255
+        ],
+        [
+            {
                 "variable": "Surface Air Temperature Change",
                 "region": "World",
                 "year": 2100,

@@ -62,6 +62,7 @@ class TestMagicc7Adapter(_AdapterTester):
                 "Effective Radiative Forcing|Aerosols",
                 "Effective Radiative Forcing|CO2",
                 "Heat Content|Ocean",
+                "Heat Uptake",
                 "Net Atmosphere to Land Flux|CO2",
             ),
         )
@@ -79,6 +80,7 @@ class TestMagicc7Adapter(_AdapterTester):
                 "Effective Radiative Forcing|Aerosols",
                 "Effective Radiative Forcing|CO2",
                 "Heat Content|Ocean",
+                "Heat Uptake",
                 "Net Atmosphere to Land Flux|CO2",
             ]
         )
