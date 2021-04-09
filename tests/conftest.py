@@ -65,7 +65,9 @@ def pytest_runtest_setup(item):
                 pytest.skip("MAGICC7 not available")
             else:
                 pytest.skip(
-                    "Wrong MAGICC version for tests ({}), we require {}".format(MAGICC_VERSION, REQUIRED_MAGICC_VERSION)
+                    "Wrong MAGICC version for tests ({}), we require {}".format(
+                        MAGICC_VERSION, REQUIRED_MAGICC_VERSION
+                    )
                 )
 
 
