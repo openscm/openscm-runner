@@ -87,7 +87,9 @@ def test_multimodel_run(test_scenarios, test_data_dir, update_expected_values):
             "Surface Air Temperature Change",
             "Atmospheric Concentrations|CO2",
             "Heat Content|Ocean",
+            "Heat Content",
             "Heat Uptake|Ocean",
+            "Heat Uptake",
             "Effective Radiative Forcing",
             "Effective Radiative Forcing|Aerosols",
             "Effective Radiative Forcing|CO2",
@@ -110,7 +112,9 @@ def test_multimodel_run(test_scenarios, test_data_dir, update_expected_values):
                 "Effective Radiative Forcing|Aerosols",
                 "Effective Radiative Forcing|CO2",
                 "Heat Content|Ocean",
+                "Heat Content",
                 "Heat Uptake|Ocean",
+                "Heat Uptake",
                 "Atmospheric Concentrations|CO2",
             ]
         )
