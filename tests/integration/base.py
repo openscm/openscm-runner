@@ -80,6 +80,26 @@ class _AdapterTester(ABC):
             res, expected_output_file, self._rtol, update
         )
 
+    @staticmethod
+    def _check_heat_content_heat_uptake_consistency(res):
+        hc_deltas = ScmRun(
+            res.filter(variable="Heat Content", region="World")
+            .timeseries(time_axis="year")
+            .diff(axis="columns")
+        )
+        hc_deltas["unit"] = "{} / yr".format(hc_deltas.get_unique_meta("unit", True))
+
+        ratio = hc_deltas.divide(
+            res.filter(variable="Heat Uptake", region="World"),
+            op_cols={"variable": "Heat Content / Heat Uptake"},
+        )
+
+        earth_surface_area = 5.100536e14
+        npt.assert_allclose(
+            earth_surface_area,
+            ratio.convert_unit("m^2").timeseries(drop_all_nan_times=True),
+        )
+
     @abstractmethod
     def test_run(self, test_scenarios):
         """

@@ -2,6 +2,39 @@
     "*": [
         [
             {
+                "variable": "Effective Radiative Forcing",
+                "unit": "W/m^2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05
+            },
+            2.6164972285929933
+        ],
+        [
+            {
+                "variable": "Heat Uptake",
+                "unit": "W/m^2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05
+            },
+            0.3723902958029749
+        ],
+        [
+            {
+                "variable": "Heat Content",
+                "unit": "ZJ",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05
+            },
+            1460.5450708674623
+        ],
+        [
+            {
                 "variable": "Surface Air Temperature Change",
                 "region": "World",
                 "year": 2100,

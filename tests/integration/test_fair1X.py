@@ -41,6 +41,7 @@ class TestFairAdapter(_AdapterTester):
                 "Surface Air Temperature Change",
                 "Atmospheric Concentrations|CO2",
                 "Heat Content",
+                "Heat Uptake",
                 "Effective Radiative Forcing",
                 "Effective Radiative Forcing|Aerosols",
                 "Effective Radiative Forcing|CO2",
@@ -61,6 +62,7 @@ class TestFairAdapter(_AdapterTester):
                 "Surface Air Temperature Change",
                 "Atmospheric Concentrations|CO2",
                 "Heat Content",
+                "Heat Uptake",
                 "Effective Radiative Forcing",
                 "Effective Radiative Forcing|Aerosols",
                 "Effective Radiative Forcing|CO2",
@@ -71,6 +73,9 @@ class TestFairAdapter(_AdapterTester):
         assert "run_id" in res.meta
         quantiles = calculate_quantiles(res, [0, 0.05, 0.17, 0.5, 0.83, 0.95, 1])
         assert "run_id" not in quantiles.meta
+
+        # TODO CHECK: heat content is not zero in the first year in FaIR?
+        self._check_heat_content_heat_uptake_consistency(res)
 
         self._check_output(res, expected_output_file, update_expected_values)
 

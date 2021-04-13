@@ -44,9 +44,11 @@ def test_scenario_ssp370_world(test_data_dir):
     return scenario
 
 
+REQUIRED_MAGICC_VERSION = "v7.5.1"
+
 try:
     MAGICC_VERSION = MAGICC7.get_version()
-    if MAGICC_VERSION != "v7.5.1":
+    if MAGICC_VERSION != REQUIRED_MAGICC_VERSION:
         CORRECT_MAGICC_IS_AVAILABLE = False
     else:
         CORRECT_MAGICC_IS_AVAILABLE = True
@@ -63,7 +65,9 @@ def pytest_runtest_setup(item):
                 pytest.skip("MAGICC7 not available")
             else:
                 pytest.skip(
-                    "Wrong MAGICC version for tests ({})".format(MAGICC_VERSION)
+                    "Wrong MAGICC version for tests ({}), we require {}".format(
+                        MAGICC_VERSION, REQUIRED_MAGICC_VERSION
+                    )
                 )
 
 

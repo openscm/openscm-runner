@@ -21,6 +21,7 @@ master
 Changed
 ~~~~~~~
 
+- (`#50 <https://github.com/openscm/openscm-runner/pull/50>`_) Changed FaIR heat uptake units to be "W/m^2" rather than "ZJ/yr"
 - (`#47 <https://github.com/openscm/openscm-runner/pull/47>`_) Moved ``openscm_runner.adapters.magicc7._parallel_process`` to ``openscm_runner.adapters.utils._parallel_process``
 - (`#47 <https://github.com/openscm/openscm-runner/pull/47>`_) Added CI for Python3.9 and dropped required code coverage to 90%.
 - (`#46 <https://github.com/openscm/openscm-runner/pull/46>`_) Use `pytest markers <https://docs.pytest.org/en/stable/example/markers.html>`_ for marking tests which rely on MAGICC rather than hack fixture solution

@@ -258,8 +258,8 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     data["Heat Content"] = ohc
     data["Heat Content|Ocean"] = ohc * factors["ohu"]
     data["Net Energy Imbalance"] = heatflux
-    data["Heat Uptake"] = heatflux * toa_to_joule
-    data["Heat Uptake|Ocean"] = heatflux * toa_to_joule * factors["ohu"]
+    data["Heat Uptake"] = heatflux
+    data["Heat Uptake|Ocean"] = heatflux * factors["ohu"]
 
     unit["Atmospheric Concentrations|CO2"] = "ppm"
     unit["Atmospheric Concentrations|CH4"] = "ppb"
@@ -356,8 +356,8 @@ def _process_output(fair_output, output_vars, factors):  # pylint: disable=R0915
     unit["Heat Content"] = "J"
     unit["Heat Content|Ocean"] = "J"
     unit["Net Energy Imbalance"] = "W/m**2"
-    unit["Heat Uptake"] = "J/yr"
-    unit["Heat Uptake|Ocean"] = "J/yr"
+    unit["Heat Uptake"] = "W/m**2"
+    unit["Heat Uptake|Ocean"] = "W/m**2"
 
     nt = len(temperature)
 

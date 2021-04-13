@@ -61,7 +61,10 @@ class TestMagicc7Adapter(_AdapterTester):
                 "Effective Radiative Forcing",
                 "Effective Radiative Forcing|Aerosols",
                 "Effective Radiative Forcing|CO2",
+                "Heat Content",
                 "Heat Content|Ocean",
+                "Heat Uptake",
+                "Heat Uptake|Ocean",
                 "Net Atmosphere to Land Flux|CO2",
             ),
         )
@@ -78,7 +81,10 @@ class TestMagicc7Adapter(_AdapterTester):
                 "Effective Radiative Forcing",
                 "Effective Radiative Forcing|Aerosols",
                 "Effective Radiative Forcing|CO2",
+                "Heat Content",
                 "Heat Content|Ocean",
+                "Heat Uptake",
+                "Heat Uptake|Ocean",
                 "Net Atmosphere to Land Flux|CO2",
             ]
         )
@@ -87,6 +93,9 @@ class TestMagicc7Adapter(_AdapterTester):
         assert "run_id" in res.meta
         quantiles = calculate_quantiles(res, [0, 0.05, 0.17, 0.5, 0.83, 0.95, 1])
         assert "run_id" not in quantiles.meta
+
+        # a problem for another day...
+        # self._check_heat_content_heat_uptake_consistency(res)
 
         self._check_output(res, expected_output_file, update_expected_values)
 
