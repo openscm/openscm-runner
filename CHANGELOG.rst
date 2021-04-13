@@ -15,8 +15,8 @@ The changes listed in this file are categorised as follows:
     - Security: in case of vulnerabilities.
 
 
-master
-------
+v0.6.0 - 2021-04-13
+-------------------
 
 Changed
 ~~~~~~~
