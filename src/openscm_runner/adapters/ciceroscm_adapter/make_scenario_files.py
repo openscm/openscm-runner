@@ -73,6 +73,7 @@ class SCENARIOFILEWRITER:
     def __init__(self, udir):
         self.components = []
         self.units = []
+        self.concunits = []
 
         self.component_dict = {
             "CO2_lu": ["CO2|MAGICC AFOLU", 1],
@@ -144,8 +145,10 @@ class SCENARIOFILEWRITER:
                     continue
                 self.components.append(row[0])
                 self.units.append(row[1])
+                self.concunits.append(row[2])
         self.components.insert(1, "CO2_lu")
-        self.units.insert(1, "Pg/C")
+        self.units.insert(1, "Pg_C")
+        self.concunits.insert(1, "ppm")
 
     def get_unit_convfactor(self, comp, scenarioframe):
         """

@@ -68,9 +68,9 @@ def get_data_from_rib_file(folder, variable):
 
 def convert_cicero_unit(cicero_unit):
     """
-    Convert cicero unit convetion for pint
+    Convert cicero unit convention for pint
     """
-    return cicero_unit.replace("_", "/")
+    return "{} / yr".format(cicero_unit.replace("_", ""))
 
 
 class CSCMREADER:
@@ -170,13 +170,9 @@ class CSCMREADER:
             years, timeseries = get_data_from_conc_file(
                 folder, self.variable_dict[variable]
             )
-            # TODO: check the units. They  are coming out as Pg_C, they should be ppm no?
-            # Have fixed to Pg/C etc, not sure how to go to ppm
-            unit = convert_cicero_unit(
-                sfilewriter.units[
-                    sfilewriter.components.index(self.variable_dict[variable])
-                ]
-            )
+            unit = sfilewriter.concunits[
+                sfilewriter.components.index(self.variable_dict[variable])
+            ]
         elif "Emissions" in variable:
             years, timeseries = get_data_from_em_file(
                 folder, self.variable_dict[variable]
