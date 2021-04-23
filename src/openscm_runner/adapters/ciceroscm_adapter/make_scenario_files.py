@@ -14,6 +14,8 @@ import pandas as pd
 
 from ._utils import _get_unique_index_values
 
+LOGGER = logging.getLogger(__name__)
+
 
 def unit_name_converter(unit):
     """
@@ -236,6 +238,11 @@ class SCENARIOFILEWRITER:
                 scenarioframe, "variable", assert_all_same=False
             )
         ]
+        ciceroscm_comps = [self.component_dict[v][0] for v in self.component_dict]
+        not_used_comps = set(avail_comps) - set(ciceroscm_comps)
+        if not_used_comps:
+            LOGGER.warning("%s not used by CICERO-SCM", not_used_comps)
+
         interpol = self.transform_scenarioframe(scenarioframe)
         printout_frame = pd.DataFrame(columns=self.components)
         # Setting conversion factors for components with data from scenarioframe
