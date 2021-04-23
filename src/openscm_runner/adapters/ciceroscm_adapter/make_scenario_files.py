@@ -254,6 +254,7 @@ class SCENARIOFILEWRITER:
                     * convfactor
                 )
             else:
+                LOGGER.warning("No %s data available, using ssp245", comp)
                 printout_frame[comp] = (
                     self.ssp245data[comp]
                     .loc[str(self.years[0]) : str(self.years[-1])]
