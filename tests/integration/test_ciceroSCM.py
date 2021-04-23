@@ -127,6 +127,22 @@ class TestCICEROSCMAdapter(_AdapterTester):
             == "PgC / yr"
         )
 
+        # check that emissions were passed through correctly
+        npt.assert_allclose(
+            res.filter(variable="Emissions|CO2", year=2100, scenario="ssp126")
+            .convert_unit("PgC/yr")
+            .values,
+            -2.3503,
+            rtol=1e-4,
+        )
+        npt.assert_allclose(
+            res.filter(variable="Emissions|CO2", year=2100, scenario="ssp370")
+            .convert_unit("PgC/yr")
+            .values,
+            22.562,
+            rtol=1e-4,
+        )
+
         self._check_output(res, expected_output_file, update_expected_values)
 
     @pytest.mark.ciceroscm
