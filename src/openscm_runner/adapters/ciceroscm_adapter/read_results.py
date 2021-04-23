@@ -16,7 +16,6 @@ def get_data_from_conc_file(folder, variable):
     df_temp = pd.read_csv(os.path.join(folder, "temp_conc.txt"), delimiter=r"\s+")
     years = df_temp.Year[:]
     timeseries = df_temp[variable].to_numpy()
-    # Todo: Deal with units?
     return years, timeseries
 
 
