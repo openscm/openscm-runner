@@ -71,6 +71,8 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 "Effective Radiative Forcing|Greenhouse Gases",
                 "Heat Uptake",
                 "Atmospheric Concentrations|CO2",
+                "Atmospheric Concentrations|CH4",
+                "Atmospheric Concentrations|N2O",
                 "Emissions|CO2",
             ),
             out_config=None,
@@ -91,6 +93,8 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 "Effective Radiative Forcing|Greenhouse Gases",
                 "Heat Uptake",
                 "Atmospheric Concentrations|CO2",
+                "Atmospheric Concentrations|CH4",
+                "Atmospheric Concentrations|N2O",
                 "Emissions|CO2",
             ]
         )
@@ -105,6 +109,18 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 "unit", True
             )
             == "ppm"
+        )
+        assert (
+            res.filter(variable="Atmospheric Concentrations|CH4").get_unique_meta(
+                "unit", True
+            )
+            == "ppb"
+        )
+        assert (
+            res.filter(variable="Atmospheric Concentrations|N2O").get_unique_meta(
+                "unit", True
+            )
+            == "ppb"
         )
         assert (
             res.filter(variable="Emissions|CO2").get_unique_meta("unit", True)
