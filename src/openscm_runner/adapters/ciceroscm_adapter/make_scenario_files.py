@@ -244,7 +244,8 @@ class SCENARIOFILEWRITER:
             LOGGER.warning("%s not used by CICERO-SCM", not_used_comps)
 
         interpol = self.transform_scenarioframe(scenarioframe)
-        printout_frame = pd.DataFrame(columns=self.components)
+        printout_frame = pd.DataFrame(columns=self.components, index=self.years,)
+
         # Setting conversion factors for components with data from scenarioframe
         for comp in self.components:
             if self.component_dict[comp][0] in avail_comps:
@@ -265,6 +266,7 @@ class SCENARIOFILEWRITER:
             sfile.write(
                 self.get_top_of_file(os.path.join(self.udir, "ssp245_em_RCMIP.txt"))
             )
+            sfile.write("\n")
 
         printout_frame.to_csv(
             fname, sep="\t", mode="a", float_format="%.8f", header=False

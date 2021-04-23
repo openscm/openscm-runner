@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import numpy.testing as npt
 import pytest
 from base import _AdapterTester
@@ -141,16 +142,46 @@ class TestCICEROSCMAdapter(_AdapterTester):
         )
 
         # check that emissions were passed through correctly
-        for (scen, exp_val) in (("ssp126", -2.3503), ("ssp370", 22.562)):
-            res_scen_2100_co2_emms = res.filter(
-                variable="Emissions|CO2", year=2100, scenario=scen
-            ).convert_unit("PgC/yr")
-            if res_scen_2100_co2_emms.empty:
-                raise AssertionError("No CO2 emissions data for {}".format(scen))
+        for (scen, variable, unit, exp_val) in (
+            ("ssp126", "Emissions|CO2", "PgC/yr", -2.3503),
+            ("ssp370", "Emissions|CO2", "PgC/yr", 22.562),
+        ):
+            res_scen_2100_emms = res.filter(
+                variable=variable, year=2100, scenario=scen
+            ).convert_unit(unit)
+            if res_scen_2100_emms.empty:
+                raise AssertionError("No {} data for {}".format(variable, scen))
 
             npt.assert_allclose(
-                res_scen_2100_co2_emms.values, exp_val, rtol=1e-4,
+                res_scen_2100_emms.values, exp_val, rtol=1e-4,
             )
+
+        for (scen, variable) in (
+            ("ssp126", "Effective Radiative Forcing|Aerosols"),
+            ("ssp370", "Effective Radiative Forcing|Aerosols"),
+        ):
+            res_scen_2015_emms = res.filter(variable=variable, year=2015, scenario=scen)
+            if res_scen_2015_emms.empty:
+                raise AssertionError("No CO2 emissions data for {}".format(scen))
+
+            assert not np.equal(res_scen_2015_emms.values, 0).all()
+
+        ssp245_ghg_erf_2015 = res.filter(
+            variable="Effective Radiative Forcing|Greenhouse Gases",
+            year=2015,
+            scenario="ssp245",
+            run_id=1,
+        )
+        ssp245_ghg_erf_2014 = res.filter(
+            variable="Effective Radiative Forcing|Greenhouse Gases",
+            year=2014,
+            scenario="ssp245",
+            run_id=1,
+        )
+        # check that jump in GHG ERF isn't there
+        assert (
+            ssp245_ghg_erf_2015.values.squeeze() - ssp245_ghg_erf_2014.values.squeeze()
+        ) < 0.1
 
         self._check_output(res, expected_output_file, update_expected_values)
 
