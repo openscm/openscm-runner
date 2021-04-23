@@ -24,6 +24,9 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
     def __init__(self, udir):
         self.udir = udir
         self._pamset_defaults = {
+            "model_end": 2500,
+            "scenario_start": 2015,
+            "scenario_end": 2500,
             "lambda": "0.540",
             "akapa": "0.341",
             "cpi": "0.556",
@@ -63,7 +66,12 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
         )
         for k, value in self._pamset_defaults.items():
             old = "{} {}".format(k, value)
-            new = "{} {:.4}".format(k, pamset.get(k, float(self._pamset_defaults[k])))
+            if k in ("model_end", "scenario_start", "scenario_end"):
+                new = "{} {}".format(k, pamset.get(k, self._pamset_defaults[k]))
+            else:
+                new = "{} {:.4}".format(
+                    k, pamset.get(k, float(self._pamset_defaults[k]))
+                )
             filedata = filedata.replace(old, new)
 
         with open(

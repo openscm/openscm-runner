@@ -43,6 +43,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
             climate_models_cfgs={
                 "CICEROSCM": [
                     {
+                        "model_end": 2100,
                         "Index": 30040,
                         "lambda": 0.540,
                         "akapa": 0.341,
@@ -57,6 +58,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
                         "oc_forc": -0.103,
                     },
                     {
+                        "model_end": 2100,
                         "Index": 1,
                         "lambda": 0.3925,
                         "akapa": 0.2421,
@@ -186,6 +188,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 climate_models_cfgs={
                     "CiceroSCM": [
                         {
+                            "model_end": 2100,
                             "Index": 30040,
                             "lambda": 0.540,
                             "akapa": 0.341,

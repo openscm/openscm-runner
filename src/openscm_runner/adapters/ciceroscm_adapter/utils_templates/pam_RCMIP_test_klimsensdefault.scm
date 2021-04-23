@@ -5,7 +5,7 @@ emission_file 'input/ssp434_em_RCMIP.txt'
 scenario_file 'input/ssp434_em_RCMIP.txt'
 model_end 2500
 emission_start 1751
-scenario_start 2000
+scenario_start 2015
 scenario_end 2500
 read_sunvol 1 '! 1: include sunvolc RF, 0: without'
 lambda 0.540   !ECS/3.71
