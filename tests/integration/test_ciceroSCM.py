@@ -18,14 +18,25 @@ RTOL = 1e-5
 
 class TestCICEROSCMAdapter(_AdapterTester):
     @pytest.mark.ciceroscm
+    @pytest.mark.parametrize("shuffle_column_order", (True, False))
     def test_run(
-        self, test_scenarios, test_data_dir, update_expected_values,
+        self,
+        test_scenarios,
+        test_data_dir,
+        update_expected_values,
+        shuffle_column_order,
     ):
         expected_output_file = os.path.join(
             test_data_dir,
             "expected-integration-output",
             "expected_ciceroscm_test_run_output.json",
         )
+
+        if shuffle_column_order:
+            tmp = test_scenarios.data
+            cols = tmp.columns.tolist()
+            tmp = tmp[cols[1:] + cols[:1]]
+            test_scenarios = ScmRun(test_scenarios)
 
         res = run(
             scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
@@ -128,20 +139,16 @@ class TestCICEROSCMAdapter(_AdapterTester):
         )
 
         # check that emissions were passed through correctly
-        npt.assert_allclose(
-            res.filter(variable="Emissions|CO2", year=2100, scenario="ssp126")
-            .convert_unit("PgC/yr")
-            .values,
-            -2.3503,
-            rtol=1e-4,
-        )
-        npt.assert_allclose(
-            res.filter(variable="Emissions|CO2", year=2100, scenario="ssp370")
-            .convert_unit("PgC/yr")
-            .values,
-            22.562,
-            rtol=1e-4,
-        )
+        for (scen, exp_val) in (("ssp126", -2.3503), ("ssp370", 22.562)):
+            res_scen_2100_co2_emms = res.filter(
+                variable="Emissions|CO2", year=2100, scenario=scen
+            ).convert_unit("PgC/yr")
+            if res_scen_2100_co2_emms.empty:
+                raise AssertionError("No CO2 emissions data for {}".format(scen))
+
+            npt.assert_allclose(
+                res_scen_2100_co2_emms.values, exp_val, rtol=1e-4,
+            )
 
         self._check_output(res, expected_output_file, update_expected_values)
 
