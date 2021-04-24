@@ -172,7 +172,7 @@ class SCENARIOFILEWRITER:
         if unit != cicero_unit:
             if unit[0:2] == cicero_unit[0:2]:
                 if not (
-                    any([v in unit for v in ["CO", "VOC", "NH3", "NOx"]])
+                    any(v in unit for v in ("CO", "VOC", "NH3", "NOx"))
                     and cicero_unit.startswith("Mt")
                 ):
                     unit = cicero_unit
