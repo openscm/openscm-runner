@@ -172,8 +172,8 @@ class SCENARIOFILEWRITER:
         if unit != cicero_unit:
             if unit[0:2] == cicero_unit[0:2]:
                 if not (
-                    unit in ("Mt CO/yr", "Mt VOC/yr", "Mt NH3/yr")
-                    and cicero_unit == "Mt"
+                    any([v in unit for v in ["CO", "VOC", "NH3", "NOx"]])
+                    and cicero_unit.startswith("Mt")
                 ):
                     unit = cicero_unit
             else:
@@ -244,7 +244,7 @@ class SCENARIOFILEWRITER:
             LOGGER.warning("%s not used by CICERO-SCM", not_used_comps)
 
         interpol = self.transform_scenarioframe(scenarioframe)
-        printout_frame = pd.DataFrame(columns=self.components, index=self.years,)
+        printout_frame = pd.DataFrame(columns=self.components, index=self.years)
 
         # Setting conversion factors for components with data from scenarioframe
         for comp in self.components:
@@ -262,12 +262,11 @@ class SCENARIOFILEWRITER:
                     .to_numpy()
                 )
 
+        printout_frame = printout_frame.astype(float).reset_index()
+        printout_frame_fmt = ["%d"] + ["%.8f"] * (printout_frame.shape[1] - 1)
         with open(fname, "w") as sfile:
             sfile.write(
                 self.get_top_of_file(os.path.join(self.udir, "ssp245_em_RCMIP.txt"))
             )
             sfile.write("\n")
-
-        printout_frame.to_csv(
-            fname, sep="\t", mode="a", float_format="%.8f", header=False
-        )
+            np.savetxt(sfile, printout_frame, fmt=printout_frame_fmt, delimiter=" \t ")
