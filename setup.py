@@ -29,6 +29,7 @@ REQUIREMENTS = [
     "python-dotenv",
     "scmdata>=0.7.4",
     "tqdm",
+    "xarray>=0.17,<0.18",  # temporary pin while scmdata is broken
 ]
 REQUIREMENTS_NOTEBOOKS = [
     "ipywidgets",
