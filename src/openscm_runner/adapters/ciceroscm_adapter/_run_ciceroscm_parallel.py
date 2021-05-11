@@ -58,12 +58,10 @@ def run_ciceroscm_parallel(scenarios, cfgs, output_vars):
         for (scen, model), smdf in scenarios.timeseries().groupby(["scenario", "model"])
     ]
 
-    try:
-        max_workers = int(config.get("CICEROSCM_WORKER_NUMBER", os.cpu_count()))
-        LOGGER.info("Running in parallel with up to %d workers", max_workers)
+    max_workers = int(config.get("CICEROSCM_WORKER_NUMBER", os.cpu_count()))
+    LOGGER.info("Running in parallel with up to %d workers", max_workers)
 
-        pool = ProcessPoolExecutor(max_workers=max_workers,)
-
+    with ProcessPoolExecutor(max_workers=max_workers) as pool:
         result = _parallel_process(
             func=_execute_run,
             configuration=runs,
@@ -75,11 +73,7 @@ def run_ciceroscm_parallel(scenarios, cfgs, output_vars):
             front_parallel=FRONT_PARALLEL,
         )
 
-        LOGGER.info("Appending CICERO-SCM results into a single ScmRun")
-        result = scmdata.run_append([r for r in result if r is not None])
-
-    finally:
-        LOGGER.info("Shutting down parallel pool")
-        pool.shutdown()
+    LOGGER.info("Appending CICERO-SCM results into a single ScmRun")
+    result = scmdata.run_append([r for r in result if r is not None])
 
     return result
