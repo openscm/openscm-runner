@@ -250,10 +250,26 @@ class SCENARIOFILEWRITER:
         for comp in self.components:
             if self.component_dict[comp][0] in avail_comps:
                 convfactor = self.get_unit_convfactor(comp, scenarioframe)
-                printout_frame[comp] = (
-                    interpol.T["Emissions|{}".format(self.component_dict[comp][0])]
-                    * convfactor
-                )
+                if (
+                    self.component_dict[comp][0] in ("BC", "OC")
+                    and "BMB_AEROS_{}".format(self.component_dict[comp][0])
+                    not in avail_comps
+                ):
+                    printout_frame[comp] = (
+                        interpol.T["Emissions|{}".format(self.component_dict[comp][0])]
+                        * convfactor
+                    ).to_numpy() - self.ssp245data[
+                        "BMB_AEROS_{}".format(self.component_dict[comp][0])
+                    ].loc[
+                        str(self.years[0]) : str(self.years[-1])
+                    ].to_numpy().astype(
+                        np.float
+                    )
+                else:
+                    printout_frame[comp] = (
+                        interpol.T["Emissions|{}".format(self.component_dict[comp][0])]
+                        * convfactor
+                    )
             else:
                 LOGGER.warning("No %s data available, using ssp245", comp)
                 printout_frame[comp] = (

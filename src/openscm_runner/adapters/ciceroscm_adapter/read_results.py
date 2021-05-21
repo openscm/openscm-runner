@@ -110,6 +110,8 @@ class CSCMREADER:
             "Effective Radiative Forcing|CH4": "CH4",
             "Effective Radiative Forcing|N2O": "N2O",
             "Emissions|CO2": "CO2",
+            "Emissions|CH4": "CH4",
+            "Emissions|N2O": "N2O",
             # Heat uptake
             "Heat Uptake": "RIB_glob",
             "Heat Content|Ocean": "OHCTOT",
