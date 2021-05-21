@@ -21,6 +21,14 @@ from .write_parameter_files import PARAMETERFILEWRITER
 LOGGER = logging.getLogger(__name__)
 
 
+def follow(thefile):
+    while True:
+        line = thefile.readline()
+        if not line or not line.endswith("\n"):
+            continue
+        yield line
+
+
 class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
     """
     CICEROSCM Wrapper for parallel runs
@@ -121,6 +129,11 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         Remove tempdirs after run
         """
         LOGGER.info("Removing CICERO-SCM instance: %s", self.rundir)
+        natemis_ch4 = open(
+            "{}/input_OTHER/NATEMIS/natemis_ch4.txt".format(self.rundir), "r"
+        )
+        bottom = follow(natemis_ch4)
+        LOGGER.info("Bottom of natemis file: %s", bottom)
         shutil.rmtree(self.rundir)
 
     def _make_dir_structure(self, scenario):
