@@ -8,7 +8,7 @@ import shutil
 import subprocess  # nosec # have to use subprocess
 import tempfile
 from distutils import dir_util
-import time
+
 import pandas as pd
 from scmdata import ScmRun, run_append
 
@@ -115,7 +115,6 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
             os.path.join(os.path.dirname(__file__), "utils_templates", "run_dir"),
             self.rundir,
         )
-        time.sleep(5)
 
     def cleanup_tempdirs(self):
         """
