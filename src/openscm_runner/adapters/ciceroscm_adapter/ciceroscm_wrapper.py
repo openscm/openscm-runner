@@ -8,7 +8,7 @@ import shutil
 import subprocess  # nosec # have to use subprocess
 import tempfile
 from distutils import dir_util
-
+import time
 import pandas as pd
 from scmdata import ScmRun, run_append
 
@@ -19,14 +19,6 @@ from .read_results import CSCMREADER
 from .write_parameter_files import PARAMETERFILEWRITER
 
 LOGGER = logging.getLogger(__name__)
-
-
-def follow(thefile):
-    while True:
-        line = thefile.readline()
-        if not line or not line.endswith("\n"):
-            continue
-        yield line
 
 
 class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
@@ -123,17 +115,13 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
             os.path.join(os.path.dirname(__file__), "utils_templates", "run_dir"),
             self.rundir,
         )
+        time.sleep(5)
 
     def cleanup_tempdirs(self):
         """
         Remove tempdirs after run
         """
         LOGGER.info("Removing CICERO-SCM instance: %s", self.rundir)
-        natemis_ch4 = open(
-            "{}/input_OTHER/NATEMIS/natemis_ch4.txt".format(self.rundir), "r"
-        )
-        bottom = follow(natemis_ch4)
-        LOGGER.info("Bottom of natemis file: %s", bottom)
         shutil.rmtree(self.rundir)
 
     def _make_dir_structure(self, scenario):
