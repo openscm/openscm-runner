@@ -220,6 +220,24 @@ class TestCICEROSCMAdapter(_AdapterTester):
         assert (
             ssp245_ghg_erf_2015.values.squeeze() - ssp245_ghg_erf_2014.values.squeeze()
         ) < 0.1
+        ssp245_ch4_conc_2015 = res.filter(
+            variable="Atmospheric Concentrations|CH4",
+            year=2015,
+            scenario="ssp245",
+            run_id=1,
+        )
+        ssp245_ch4_conc_2014 = res.filter(
+            variable="Atmospheric Concentrations|CH4",
+            year=2014,
+            scenario="ssp245",
+            run_id=1,
+        )
+        # ch
+        # check that jump in GHG ERF isn't there
+        assert (
+            ssp245_ch4_conc_2014.values.squeeze()
+            - ssp245_ch4_conc_2015.values.squeeze()
+        ) < 0.1
 
         self._check_output(res, expected_output_file, update_expected_values)
 
