@@ -50,6 +50,11 @@ def unit_conv_factor(cicero_unit, unit, comp):
             conv_factor = (
                 conv_factor * 0.304
             )  # Nitrogen mass fraction in NOx (approximated by NO2)
+        elif unit[1:] == "t NO2/yr" and cicero_unit[1:] == "t_N" and comp == "NOx":
+            conv_factor = (
+                conv_factor * 0.304
+            )  # Nitrogen mass fraction in NOx (approximated by NO2)
+
         elif unit[1:] == "g SO2/yr" and cicero_unit[1:] == "g_S" and comp == "SO2":
             conv_factor = conv_factor * 0.501  # Sulphur mass fraction in SO2
 
