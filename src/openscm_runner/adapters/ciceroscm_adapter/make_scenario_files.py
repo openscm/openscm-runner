@@ -128,13 +128,12 @@ class SCENARIOFILEWRITER:
                     # atom, admittedly this isn't immediately obvious and
                     # arguably is a bug in openscm-units)
                     unit = "TgN2ON"
+                elif "_" in unit:
+                    unit = unit.replace("_", "")
                 else:
-                    if "_" in unit:
-                        unit = unit.replace("_", "")
-                    else:
-                        unit = "{}{}".format(
-                            unit, component.replace("-", "").replace("BMB_AEROS_", "")
-                        )
+                    unit = "{}{}".format(
+                        unit, component.replace("-", "").replace("BMB_AEROS_", "")
+                    )
 
                 unit = "{} / yr".format(unit)
 
