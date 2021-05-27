@@ -178,11 +178,9 @@ class CSCMREADER:
             years, timeseries = get_data_from_em_file(
                 folder, self.variable_dict[variable]
             )
-            unit = convert_cicero_unit(
-                sfilewriter.units[
-                    sfilewriter.components.index(self.variable_dict[variable])
-                ]
-            )
+            unit = sfilewriter.units[
+                sfilewriter.components.index(self.variable_dict[variable])
+            ]
         elif "Forcing" in variable:
             years, timeseries = self.get_data_from_forc_file(
                 folder, self.variable_dict[variable]

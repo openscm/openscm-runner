@@ -10,55 +10,12 @@ import os
 import re
 
 import numpy as np
+import openscm_units
 import pandas as pd
 
 from ._utils import _get_unique_index_values
 
 LOGGER = logging.getLogger(__name__)
-
-
-def unit_name_converter(unit):
-    """
-    Convert unit names between tonnes and grammes
-    """
-    uprefix = unit[0:2]
-    if uprefix == "Mt":
-        return "Tg{}".format(unit[2:])
-    if uprefix == "kt":
-        return "Gg{}".format(unit[2:])
-    if uprefix == "Gt":
-        return "Pg{}".format(unit[2:])
-    return unit
-
-
-def unit_conv_factor(cicero_unit, unit, comp):
-    """
-    Find conversion factor between two units
-    """
-    conv_dict = {"P": 1.0e15, "T": 1.0e12, "G": 1.0e9, "M": 1.0e6, "k": 1.0e3}
-    conv_factor = conv_dict[unit[0]] / conv_dict[cicero_unit[0]]
-    if unit[1:] != cicero_unit[1:]:
-        if (
-            unit[1:] == "g CO2/yr"
-            and cicero_unit[1:] == "g_C"
-            and (comp in ("CO2", "CO2_lu"))
-        ):
-            conv_factor = conv_factor * 3.0 / 11  # Carbon mass fraction in CO2
-        elif unit[1:] == "g N2O/yr" and cicero_unit[1:] == "g_N" and comp == "N2O":
-            conv_factor = conv_factor * 0.636  # Nitrogen mass fraction in N2O
-        elif unit[1:] == "t NOx/yr" and cicero_unit[1:] == "t_N" and comp == "NOx":
-            conv_factor = (
-                conv_factor * 0.304
-            )  # Nitrogen mass fraction in NOx (approximated by NO2)
-        elif unit[1:] == "t NO2/yr" and cicero_unit[1:] == "t_N" and comp == "NOx":
-            conv_factor = (
-                conv_factor * 0.304
-            )  # Nitrogen mass fraction in NOx (approximated by NO2)
-
-        elif unit[1:] == "g SO2/yr" and cicero_unit[1:] == "g_S" and comp == "SO2":
-            conv_factor = conv_factor * 0.501  # Sulphur mass fraction in SO2
-
-    return conv_factor
 
 
 def _read_ssp245_em(ssp245_em_file):
@@ -152,11 +109,31 @@ class SCENARIOFILEWRITER:
             for row in gasreader:
                 if row[1] == "X":
                     continue
-                self.components.append(row[0])
-                self.units.append(row[1])
+                    
+                component = row[0]
+                unit = row[1]
+
+                if component == "N2O" and unit == "Tg_N":
+                    # in openscm-units, to get the mass of nitrogen, have
+                    # to use the unit "Tg N2ON" (converting to "Tg N" just
+                    # converts using the mass fraction of a single nitrogen
+                    # atom, admittedly this isn't immediately obvious and
+                    # arguably is a bug in openscm-units)
+                    unit = "TgN2ON"
+                else:
+                    if "_" in unit:
+                        unit = unit.replace("_", "")
+                    else:
+                        unit = "{}{}".format(unit, component.replace("-", "").replace("BMB_AEROS_", ""))
+                    
+                unit = "{} / yr".format(unit)
+                
+                self.components.append(component)
+                self.units.append(unit)
                 self.concunits.append(row[2])
+
         self.components.insert(1, "CO2_lu")
-        self.units.insert(1, "Pg_C")
+        self.units.insert(1, "PgC / yr")
         self.concunits.insert(1, "ppm")
 
     def get_unit_convfactor(self, comp, scenarioframe):
@@ -172,20 +149,9 @@ class SCENARIOFILEWRITER:
             ],
             "unit",
         )
+        with openscm_units.unit_registry.context("NOx_conversions"):
+            conv_factor = openscm_units.unit_registry(unit).to(cicero_unit).magnitude
 
-        # Getting units on the same form T/g
-        if unit != cicero_unit:
-            if unit[0:2] == cicero_unit[0:2]:
-                if not (
-                    any(v in unit for v in ("CO", "VOC", "NH3", "NOx", "NO2"))
-                    and cicero_unit.startswith("Mt")
-                ):
-                    unit = cicero_unit
-            else:
-                unit = unit_name_converter(unit)
-        conv_factor = 1
-        if unit != cicero_unit:
-            conv_factor = unit_conv_factor(cicero_unit, unit, comp)
         return conv_factor
 
     def transform_scenarioframe(self, scenarioframe):
@@ -285,6 +251,7 @@ class SCENARIOFILEWRITER:
 
         printout_frame = printout_frame.astype(float).reset_index()
         printout_frame_fmt = ["%d"] + ["%.8f"] * (printout_frame.shape[1] - 1)
+
         with open(fname, "w") as sfile:
             sfile.write(
                 self.get_top_of_file(os.path.join(self.udir, "ssp245_em_RCMIP.txt"))
