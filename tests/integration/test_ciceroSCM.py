@@ -159,8 +159,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
             ("ssp370", "Emissions|CO2", "PgC/yr", 22.562),
             ("ssp126", "Emissions|CH4", "TgCH4/yr", 122.195),
             ("ssp370", "Emissions|CH4", "TgCH4/yr", 777.732),
-            ("ssp126", "Emissions|N2O", "TgN2ON/yr", 5.318
-            ),
+            ("ssp126", "Emissions|N2O", "TgN2ON/yr", 5.318),
             ("ssp370", "Emissions|N2O", "TgN2ON/yr", 13.144),
         ):
             res_scen_2100_emms = res.filter(
@@ -298,36 +297,20 @@ class TestCICEROSCMAdapter(_AdapterTester):
             )
 
     def test_make_scenario_files(self, test_scenarios):
-        npt.assert_string_equal(
-            make_scenario_files.unit_name_converter("Mt C/yr"), "Tg C/yr"
+        npt.assert_allclose(
+            3.0 / 11.0 * 1000.0,
+            make_scenario_files._unit_conv_factor("Gg CO2/yr", "Mg C/ yr"),
         )
-        npt.assert_string_equal(
-            make_scenario_files.unit_name_converter("kt N2O"), "Gg N2O"
+        npt.assert_allclose(
+            28 / 44 / 1.0e12,
+            make_scenario_files._unit_conv_factor("kg N2O / yr", "Pg N2ON / yr"),
         )
-        npt.assert_string_equal(
-            make_scenario_files.unit_name_converter("Gt tests"), "Pg tests"
+        npt.assert_allclose(
+            14 / 46 / 1.0e12,
+            make_scenario_files._unit_conv_factor("kt NOx / yr", "Pt N / yr"),
         )
-        npt.assert_string_equal(make_scenario_files.unit_name_converter("Test"), "Test")
-
-        self._check_res(
-            3.0 / 11 * 1000.0,
-            make_scenario_files.unit_conv_factor("Mg_C", "Gg CO2/yr", "CO2_lu"),
-            False,
-        )
-        self._check_res(
-            0.636 / 1.0e12,
-            make_scenario_files.unit_conv_factor("Pg_N", "kg N2O/yr", "N2O"),
-            False,
-        )
-        self._check_res(
-            0.304 / 1.0e12,
-            make_scenario_files.unit_conv_factor("Pt_N", "kt NOx/yr", "NOx"),
-            False,
-        )
-        self._check_res(
-            0.501,
-            make_scenario_files.unit_conv_factor("Tg_S", "Tg SO2/yr", "SO2"),
-            False,
+        npt.assert_allclose(
+            0.5, make_scenario_files._unit_conv_factor("Tg SO2 / yr", "Tg S / yr"),
         )
 
     @pytest.mark.parametrize(

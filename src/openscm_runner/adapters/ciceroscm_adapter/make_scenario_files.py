@@ -28,7 +28,15 @@ def _read_ssp245_em(ssp245_em_file):
     ssp245df.rename(columns=lambda x: x.strip(), inplace=True)
     ssp245df.rename(index=lambda x: x.strip(), inplace=True)
     ssp245df.rename(columns={"CO2 .1": "CO2_lu"}, inplace=True)
+
     return ssp245df
+
+
+def _unit_conv_factor(unit, cicero_unit):
+    with openscm_units.unit_registry.context("NOx_conversions"):
+        conv_factor = openscm_units.unit_registry(unit).to(cicero_unit).magnitude
+
+    return conv_factor
 
 
 class SCENARIOFILEWRITER:
@@ -109,7 +117,7 @@ class SCENARIOFILEWRITER:
             for row in gasreader:
                 if row[1] == "X":
                     continue
-                    
+
                 component = row[0]
                 unit = row[1]
 
@@ -124,10 +132,12 @@ class SCENARIOFILEWRITER:
                     if "_" in unit:
                         unit = unit.replace("_", "")
                     else:
-                        unit = "{}{}".format(unit, component.replace("-", "").replace("BMB_AEROS_", ""))
-                    
+                        unit = "{}{}".format(
+                            unit, component.replace("-", "").replace("BMB_AEROS_", "")
+                        )
+
                 unit = "{} / yr".format(unit)
-                
+
                 self.components.append(component)
                 self.units.append(unit)
                 self.concunits.append(row[2])
@@ -149,10 +159,8 @@ class SCENARIOFILEWRITER:
             ],
             "unit",
         )
-        with openscm_units.unit_registry.context("NOx_conversions"):
-            conv_factor = openscm_units.unit_registry(unit).to(cicero_unit).magnitude
 
-        return conv_factor
+        return _unit_conv_factor(unit, cicero_unit)
 
     def transform_scenarioframe(self, scenarioframe):
         """
