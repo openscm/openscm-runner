@@ -67,11 +67,9 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
         for k, value in self._pamset_defaults.items():
             old = "{} {}".format(k, value)
             if k in ("model_end", "scenario_start", "scenario_end"):
-                new = "{} {}".format(k, pamset.get(k, self._pamset_defaults[k]))
+                new = "{} {}".format(k, pamset.get(k, value))
             else:
-                new = "{} {:.4}".format(
-                    k, pamset.get(k, float(self._pamset_defaults[k]))
-                )
+                new = "{} {:.4}".format(k, pamset.get(k, float(value)))
             filedata = filedata.replace(old, new)
 
         with open(

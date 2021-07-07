@@ -22,12 +22,12 @@ def _read_ssp245_em(ssp245_em_file):
     """
     Get default data from ssp245_RCMIP
     """
-    ssp245df = pd.read_csv(
-        ssp245_em_file, delimiter="\t", index_col=0
-    )  # TODO: use scmdata for a more stable and faster API
-    ssp245df.rename(columns=lambda x: x.strip(), inplace=True)
-    ssp245df.rename(index=lambda x: x.strip(), inplace=True)
-    ssp245df.rename(columns={"CO2 .1": "CO2_lu"}, inplace=True)
+    ssp245df = (
+        pd.read_csv(ssp245_em_file, delimiter="\t", index_col=0)
+        .rename(columns=lambda x: x.strip())
+        .rename(index=lambda x: x.strip())
+        .rename(columns={"CO2 .1": "CO2_lu"}, inplace=True)
+    )
 
     return ssp245df
 
@@ -216,7 +216,7 @@ class SCENARIOFILEWRITER:
                 scenarioframe, "variable", assert_all_same=False
             )
         ]
-        ciceroscm_comps = [self.component_dict[v][0] for v in self.component_dict]
+        ciceroscm_comps = [v[0] for v in self.component_dict.values()]
         not_used_comps = set(avail_comps) - set(ciceroscm_comps)
         if not_used_comps:
             LOGGER.warning("%s not used by CICERO-SCM", not_used_comps)

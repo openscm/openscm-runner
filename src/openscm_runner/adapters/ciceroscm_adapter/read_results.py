@@ -15,7 +15,7 @@ def get_data_from_conc_file(folder, variable):
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_conc.txt"), delimiter=r"\s+")
     years = df_temp.Year[:]
-    timeseries = df_temp[variable].to_numpy()
+    timeseries = df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
@@ -25,7 +25,7 @@ def get_data_from_em_file(folder, variable):
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_em.txt"), delimiter=r"\s+")
     years = df_temp.Year[:]
-    timeseries = df_temp[variable].to_numpy()
+    timeseries = df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
@@ -35,7 +35,7 @@ def get_data_from_temp_file(folder, variable):
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_temp.txt"), delimiter=r"\s+")
     years = df_temp.Year[:]
-    timeseries = df_temp[variable].to_numpy()
+    timeseries = df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
@@ -47,7 +47,10 @@ def get_data_from_ohc_file(folder, variable):
     years = df_temp.Year[:]
     # Units are 10^22J and output should be 10^21J = ZJ
     conv_factor = 10.0
-    timeseries = df_temp[variable].to_numpy() * conv_factor
+    timeseries = (
+        df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
+        * conv_factor
+    )
     return years, timeseries
 
 
@@ -61,7 +64,10 @@ def get_data_from_rib_file(folder, variable):
     sea_surface_fraction = 0.61 * 0.5 + 0.81 * 0.5
     earth_surface = 5.101e14
     conv_factor = s_pr_yr * sea_surface_fraction * earth_surface / 1.0e21
-    timeseries = df_temp[variable].to_numpy() * conv_factor
+    timeseries = (
+        df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
+        * conv_factor
+    )
     return years, timeseries
 
 
@@ -261,11 +267,9 @@ class CSCMREADER:
         years = df_temp.Year[:]
         if variable in forc_sums:
             timeseries = np.zeros(len(years))
-            for comp in self.variable_dict:
-                if variable in comp and self.variable_dict[comp] not in forc_sums:
-                    timeseries = (
-                        timeseries + df_temp[self.variable_dict[comp]].to_numpy()
-                    )
+            for comp, value in self.variable_dict.items():
+                if variable in comp and value not in forc_sums:
+                    timeseries = timeseries + df_temp[value].to_numpy()
         elif variable in ("Fgas", "GHG"):
             timeseries = np.zeros(len(years))
             for comp in fgas_list:

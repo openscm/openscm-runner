@@ -149,7 +149,7 @@ def run_magicc_parallel(cfgs, output_vars, output_config):
             config.get("MAGICC_WORKER_NUMBER", multiprocessing.cpu_count())
         )
         LOGGER.info("Running in parallel with up to %d workers", max_workers)
-        pool = ProcessPoolExecutor(
+        pool = ProcessPoolExecutor(  # pylint:disable=consider-using-with # need to handle shared_manager too
             max_workers=max_workers,
             initializer=_init_magicc_worker,
             initargs=(shared_dict,),

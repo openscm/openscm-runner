@@ -21,12 +21,13 @@ def _get_natural_emissions_and_forcing(startyear, nt):
     natural_df = pd.read_csv(
         os.path.join(os.path.dirname(__file__), "natural-emissions-and-forcing.csv",),
     )
+    ndf_values = natural_df.values
 
     n_index_columns = 7
     start_index = startyear - 1750 + n_index_columns
-    ch4_n2o = natural_df.values[0:2, start_index : start_index + nt].T
-    solar_forcing = natural_df.values[2, start_index : start_index + nt].T
-    volcanic_forcing = natural_df.values[3, start_index : start_index + nt].T
+    ch4_n2o = ndf_values[0:2, start_index : start_index + nt].T
+    solar_forcing = ndf_values[2, start_index : start_index + nt].T
+    volcanic_forcing = ndf_values[3, start_index : start_index + nt].T
 
     return {
         "ch4_n2o": ch4_n2o,
