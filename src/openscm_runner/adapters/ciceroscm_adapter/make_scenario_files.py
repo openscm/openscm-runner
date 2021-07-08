@@ -26,7 +26,7 @@ def _read_ssp245_em(ssp245_em_file):
         pd.read_csv(ssp245_em_file, delimiter="\t", index_col=0)
         .rename(columns=lambda x: x.strip())
         .rename(index=lambda x: x.strip())
-        .rename(columns={"CO2 .1": "CO2_lu"}, inplace=True)
+        .rename(columns={"CO2 .1": "CO2_lu"})
     )
 
     return ssp245df
