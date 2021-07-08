@@ -14,6 +14,14 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
+v0.7.1 - 2021-07-09
+-------------------
+
+Added
+~~~~~
+
+- Include LICENSE, CHANGELOG and README in distribution
+
 v0.7.0 - 2021-07-09
 -------------------
 
