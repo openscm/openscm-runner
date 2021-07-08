@@ -14,14 +14,16 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
-
-v0.6.0 - 2021-04-13
+v0.7.0 - 2021-07-09
 -------------------
 
 Added
 ~~~~~
 
-- (`#24 <https://github.com/openscm/openscm-runner/pull/24>`_) Adapter for the CICERO-SCM model (<@marit please insert reference etc. here if you want>), see ``openscm_runner.adapters.CICEROSCM``
+- (`#24 <https://github.com/openscm/openscm-runner/pull/24>`_) Adapter for the CICERO-SCM model, see ``openscm_runner.adapters.CICEROSCM``
+
+v0.6.0 - 2021-04-13
+-------------------
 
 Changed
 ~~~~~~~
