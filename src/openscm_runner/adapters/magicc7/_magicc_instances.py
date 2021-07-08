@@ -94,8 +94,8 @@ class _MagiccInstances:
             # ensure pymagicc will behave itself
             pymagicc.config.config["EXECUTABLE_7"] = config["MAGICC_EXECUTABLE_7"]
             magicc = pymagicc.MAGICC7(strict=False, **kwargs_init)
+            LOGGER.info("Creating new magicc instance: %s - %s", key, magicc.root_dir)
             magicc.create_copy()
-            LOGGER.info("Created new magicc instance: %s - %s", key, magicc.root_dir)
 
             self.instances[key] = magicc
             if init_callback_kwargs is None:

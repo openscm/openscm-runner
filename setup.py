@@ -29,6 +29,7 @@ REQUIREMENTS = [
     "python-dotenv",
     "scmdata>=0.7.4",
     "tqdm",
+    "xarray>=0.17,<0.18",  # temporary pin while scmdata is broken
 ]
 REQUIREMENTS_NOTEBOOKS = [
     "ipywidgets",
@@ -75,7 +76,60 @@ REQUIREMENTS_EXTRAS = {
 # no tests/docs in `src` so don't need exclude
 PACKAGES = find_packages(SOURCE_DIR)
 PACKAGE_DIR = {"": SOURCE_DIR}
-PACKAGE_DATA = {"openscm_runner": [os.path.join("adapters", "fair_adapter", "*.csv")]}
+PACKAGE_DATA = {
+    "openscm_runner": [
+        os.path.join("adapters", "fair_adapter", "*.csv"),
+        os.path.join("adapters", "ciceroscm_adapter", "utils_templates", "*.txt"),
+        os.path.join(
+            "adapters",
+            "ciceroscm_adapter",
+            "utils_templates",
+            "pam_RCMIP_test_klimsensdefault.scm",
+        ),
+        os.path.join(
+            "adapters", "ciceroscm_adapter", "utils_templates", "run_dir", "*.txt"
+        ),
+        os.path.join(
+            "adapters", "ciceroscm_adapter", "utils_templates", "run_dir", "scm_vCH4fb"
+        ),
+        os.path.join(
+            "adapters",
+            "ciceroscm_adapter",
+            "utils_templates",
+            "run_dir",
+            "input_OTHER",
+            "NATEMIS",
+            "*.txt",
+        ),
+        os.path.join(
+            "adapters",
+            "ciceroscm_adapter",
+            "utils_templates",
+            "run_dir",
+            "input_RF",
+            "RFLUC",
+            "*.txt",
+        ),
+        os.path.join(
+            "adapters",
+            "ciceroscm_adapter",
+            "utils_templates",
+            "run_dir",
+            "input_RF",
+            "RFSUN",
+            "*.txt",
+        ),
+        os.path.join(
+            "adapters",
+            "ciceroscm_adapter",
+            "utils_templates",
+            "run_dir",
+            "input_RF",
+            "RFVOLC",
+            "*.txt",
+        ),
+    ]
+}
 
 # Get the long description from the README file
 with open(README, "r") as f:
@@ -123,9 +177,9 @@ setup(
         "License :: OSI Approved :: BSD License",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
     keywords=["openscm", "runner", "python", "repo", "simple", "climate", "model"],
     packages=PACKAGES,

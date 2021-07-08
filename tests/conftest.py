@@ -4,7 +4,7 @@ import pyam
 import pytest
 from scmdata import ScmRun
 
-from openscm_runner.adapters import MAGICC7
+from openscm_runner.adapters import CICEROSCM, MAGICC7
 
 TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test-data")
 
@@ -58,6 +58,16 @@ except KeyError:
     CORRECT_MAGICC_IS_AVAILABLE = False
 
 
+CICEROSCM_IS_AVAILABLE = False
+try:
+    CICEROSCM.get_version()
+    CICEROSCM_IS_AVAILABLE = True
+except OSError:
+    CICERO_OS_ERROR = True
+except KeyError:
+    CICERO_OS_ERROR = False
+
+
 def pytest_runtest_setup(item):
     for mark in item.iter_markers():
         if mark.name == "magicc" and not CORRECT_MAGICC_IS_AVAILABLE:
@@ -69,6 +79,12 @@ def pytest_runtest_setup(item):
                         MAGICC_VERSION, REQUIRED_MAGICC_VERSION
                     )
                 )
+
+        if mark.name == "ciceroscm" and not CICEROSCM_IS_AVAILABLE:
+            if CICERO_OS_ERROR:
+                pytest.skip("CICERO-SCM not available because of operating system")
+            else:
+                pytest.skip("CICERO-SCM not available")
 
 
 def pytest_addoption(parser):

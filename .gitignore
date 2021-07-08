@@ -16,6 +16,9 @@ scripts/*.json
 # header files
 *.h
 
+#backup files
+*~
+
 # Fortran module files
 *.mod
 *.smod
