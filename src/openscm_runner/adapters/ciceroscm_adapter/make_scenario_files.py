@@ -34,8 +34,9 @@ def _read_ssp245_em(ssp245_em_file):
 
 def _unit_conv_factor(unit, cicero_unit):
     with openscm_units.unit_registry.context("NOx_conversions"):
-        if unit == "GgH1211":
-            unit ="GgHalon1211"
+        LOGGER.info("Unit is %s "%unit)
+        if "H1211" in unit:
+            unit.replace("H1211", "Halon1211")
         conv_factor = openscm_units.unit_registry(unit).to(cicero_unit).magnitude
 
     return conv_factor
