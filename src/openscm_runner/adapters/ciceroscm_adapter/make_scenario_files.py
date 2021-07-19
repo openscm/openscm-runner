@@ -37,7 +37,9 @@ def _unit_conv_factor(unit, cicero_unit):
         
         if cicero_unit[:4] == "GgH1":
             LOGGER.info("Unit is %s, cicero_unit is %s"%(unit,cicero_unit))
-            conv_factor = openscm_units.unit_registry(unit).to(cicero_unit.replace("GgH1", "GgHalon1")).magnitude            
+            conv_factor = openscm_units.unit_registry(unit).to(cicero_unit.replace("GgH1", "GgHalon1")).magnitude            elif cicero_unit[:4] == "GgH2":
+            LOGGER.info("Unit is %s, cicero_unit is %s"%(unit,cicero_unit))
+            conv_factor = openscm_units.unit_registry(unit).to(cicero_unit.replace("GgH2", "GgHalon2")).magnitude            
         else:
             conv_factor = openscm_units.unit_registry(unit).to(cicero_unit).magnitude
 
