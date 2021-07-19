@@ -36,9 +36,10 @@ def _unit_conv_factor(unit, cicero_unit):
     with openscm_units.unit_registry.context("NOx_conversions"):
         
         if "H1211" in cicero_unit:
-            LOGGER.info("Unit is %s "%unit)
-            cicero_unit.replace("H1211", "Halon1211")
-        conv_factor = openscm_units.unit_registry(unit).to(cicero_unit).magnitude
+            LOGGER.info("Unit is %s, cicero_unit is %s"%(unit,cicero_unit))
+            conv_factor = openscm_units.unit_registry(unit).to(cicero_unit.replace("H1211", "Halon1211")).magnitude            
+        else:
+            conv_factor = openscm_units.unit_registry(unit).to(cicero_unit).magnitude
 
     return conv_factor
 
