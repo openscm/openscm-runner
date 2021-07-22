@@ -20,7 +20,7 @@ master
 Changed
 ~~~~~~~
 
-- (`#53 <https://github.com/openscm/openscm-runner/pull/53>`_) Loosened requirements
+- (`#53 <https://github.com/openscm/openscm-runner/pull/53>`_) Loosened requirements and updated CI to run jobs in parallel
 
 v0.7.1 - 2021-07-09
 -------------------
