@@ -52,8 +52,6 @@ jobs:
           fi
 
   build:
-    needs: linting-and-docs
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -83,7 +81,6 @@ jobs:
           fi
 
   test-notebooks:
-    needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -109,7 +106,6 @@ jobs:
         pytest notebooks -r a --nbval --sanitize-with tests/notebook-tests.cfg --no-cov
 
   test-install:
-    needs: test-notebooks
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -129,7 +125,7 @@ jobs:
         python scripts/test_install.py
 
   deploy-pypi:
-    needs: test-install
+    needs: [linting-and-docs,build,test-notebooks,test-install]
     if: startsWith(github.ref, 'refs/tags/v')
 
     runs-on: ubuntu-latest

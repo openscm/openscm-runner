@@ -14,6 +14,14 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
+master
+------
+
+Changed
+~~~~~~~
+
+- (`#53 <https://github.com/openscm/openscm-runner/pull/53>`_) Loosened requirements and updated CI to run jobs in parallel
+
 v0.7.1 - 2021-07-09
 -------------------
 
