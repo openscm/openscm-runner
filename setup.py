@@ -23,13 +23,12 @@ SOURCE_DIR = "src"
 REQUIREMENTS = [
     "click",
     "fair==1.6.2",
-    "matplotlib==3.2.2",
     "pyam-iamc",
     "pymagicc>=2.0.0,<3",
     "python-dotenv",
     "scmdata>=0.7.4",
     "tqdm",
-    "xarray>=0.17,<0.18",  # temporary pin while scmdata is broken
+    "xarray",
 ]
 REQUIREMENTS_NOTEBOOKS = [
     "ipywidgets",
