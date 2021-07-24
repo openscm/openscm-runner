@@ -35,13 +35,13 @@ def _read_ssp245_em(ssp245_em_file):
 def _unit_conv_factor(unit, cicero_unit):
     with openscm_units.unit_registry.context("NOx_conversions"):
 
-        if cicero_unit[:4] == "GgH1":
+        if cicero_unit.startswith("GgH1"):
             conv_factor = (
                 openscm_units.unit_registry(unit)
                 .to(cicero_unit.replace("GgH1", "GgHalon1"))
                 .magnitude
             )
-        elif cicero_unit[:4] == "GgH2":
+        elif cicero_unit.startswith("GgH2"):
             conv_factor = (
                 openscm_units.unit_registry(unit)
                 .to(cicero_unit.replace("GgH2", "GgHalon2"))

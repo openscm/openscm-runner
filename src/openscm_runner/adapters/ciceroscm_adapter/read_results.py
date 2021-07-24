@@ -195,7 +195,6 @@ class CSCMREADER:
                 folder, self.variable_dict[variable]
             )
             unit = "W/m^2"
-            # unit = "ZJ/yr"
 
         elif self.variable_dict[variable] in self.ohc_list:
             years, timeseries = get_data_from_ohc_file(
