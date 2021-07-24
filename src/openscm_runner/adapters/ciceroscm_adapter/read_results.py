@@ -60,14 +60,6 @@ def get_data_from_rib_file(folder, variable):
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_rib.txt"), delimiter=r"\s+")
     years = df_temp.Year[:]
-    # s_pr_yr = 3600 * 24 * 365
-    # sea_surface_fraction = 0.61 * 0.5 + 0.81 * 0.5
-    # earth_surface = 5.101e14
-    # conv_factor = s_pr_yr * sea_surface_fraction * earth_surface / 1.0e21
-    # timeseries = (
-    #    df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
-    #    * conv_factor
-    # )
     timeseries = df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
