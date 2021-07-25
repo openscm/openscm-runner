@@ -158,7 +158,7 @@ class CSCMREADER:
         Connecting up to correct file type to get the data
         """
         folder = os.path.join(
-            self.odir, re.sub("[^a-zA-Z0-9_-]", "", scenario)[:50], "outputfiles"
+            self.odir, re.sub("[^a-zA-Z0-9_-]", "", scenario)[:55], "outputfiles"
         )
         if variable not in self.variable_dict:
             return (

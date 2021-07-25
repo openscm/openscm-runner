@@ -17,6 +17,7 @@ from ._utils import _get_unique_index_values
 from .make_scenario_files import SCENARIOFILEWRITER
 from .read_results import CSCMREADER
 from .write_parameter_files import PARAMETERFILEWRITER
+import sys
 
 LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +39,8 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
 
         self.scen = _get_unique_index_values(scenariodata, "scenario")
         self.model = _get_unique_index_values(scenariodata, "model")
-        self._make_dir_structure(re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50])
-
+        print(re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:55])
+        self._make_dir_structure(re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:55])
         self._call_sfilewriter(scenariodata)
 
     def _call_sfilewriter(self, scenarios):
@@ -48,7 +49,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         """
         self.sfilewriter.write_scenario_data(
             scenarios,
-            os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50]),
+            os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:55]),
         )
 
     def run_over_cfgs(self, cfgs, output_variables):
@@ -61,13 +62,13 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         for i, pamset in enumerate(cfgs):
             self.pamfilewriter.write_parameterfile(
                 pamset,
-                os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50]),
+                os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:55]),
             )
             call = "{executable} {pamfile}".format(
                 executable=os.path.join(self.rundir, "scm_vCH4fb"),
                 pamfile=os.path.join(
                     self.rundir,
-                    re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50],
+                    re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:55],
                     "inputfiles",
                     "pam_current.scm",
                 ),
