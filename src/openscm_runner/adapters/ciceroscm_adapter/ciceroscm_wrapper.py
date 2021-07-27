@@ -122,7 +122,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         Remove tempdirs after run
         """
         LOGGER.info("Removing CICERO-SCM instance: %s", self.rundir)
-        # shutil.rmtree(self.rundir)
+        shutil.rmtree(self.rundir)
 
     def _make_dir_structure(self, scenario):
         """
