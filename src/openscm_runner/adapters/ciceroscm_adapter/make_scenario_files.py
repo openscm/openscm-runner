@@ -219,8 +219,8 @@ class SCENARIOFILEWRITER:
                 s=re.sub(
                     "[^a-zA-Z0-9_-]",
                     "",
-                    _get_unique_index_values(scenarioframe, "scenario")[:50],
-                )
+                    _get_unique_index_values(scenarioframe, "scenario"),
+                )[:50]
             ),
         )
         logging.getLogger("pyam").setLevel(logging.ERROR)
