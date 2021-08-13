@@ -9,14 +9,12 @@ import tempfile
 from ...settings import config
 
 try:
-    import f90nml
     import pymagicc
 
-    has_pymagicc = True
+    HAS_PYMAGICC = True
 except ImportError:
-    f90nml = None
     pymagicc = None
-    has_pymagicc = False
+    HAS_PYMAGICC = False
 
 
 LOGGER = logging.getLogger(__name__)

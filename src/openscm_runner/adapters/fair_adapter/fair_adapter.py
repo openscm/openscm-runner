@@ -10,11 +10,10 @@ from scmdata import ScmRun
 
 from ...progress import progress
 from ..base import _Adapter
-from ._run_fair import has_fair, run_fair
+from ._run_fair import HAS_FAIR, run_fair
 from ._scmdf_to_emissions import scmdf_to_emissions
 
-
-if has_fair:
+if HAS_FAIR:
     import fair
 
 
@@ -45,7 +44,7 @@ class FAIR(_Adapter):
     """
 
     def _init_model(self, *args, **kwargs):
-        if not has_fair:
+        if not HAS_FAIR:
             raise ImportError("fair is not installed. Run 'pip install fair'")
 
     def _run(self, scenarios, cfgs, output_variables, output_config):

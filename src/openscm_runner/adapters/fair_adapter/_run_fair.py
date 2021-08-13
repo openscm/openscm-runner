@@ -14,10 +14,9 @@ from ..utils._parallel_process import _parallel_process
 try:
     from fair.forward import fair_scm
 
-    has_fair = True
+    HAS_FAIR = True
 except ImportError:
-    fair = None
-    has_fair = False
+    HAS_FAIR = False
 
 LOGGER = logging.getLogger(__name__)
 

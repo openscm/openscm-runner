@@ -5,23 +5,22 @@ import pytest
 from openscm_runner import run
 
 
-@patch("openscm_runner.adapters.fair_adapter.fair_adapter.has_fair", False)
+@patch("openscm_runner.adapters.fair_adapter.fair_adapter.HAS_FAIR", False)
 def test_no_fair():
     with pytest.raises(
         ImportError, match="fair is not installed. Run 'pip install fair'"
     ):
         run(
-            climate_models_cfgs={"fair": ["config list"]},
-            scenarios="not used",
+            climate_models_cfgs={"fair": ["config list"]}, scenarios="not used",
         )
 
 
-@patch("openscm_runner.adapters.magicc7.magicc7.has_pymagicc", False)
+@patch("openscm_runner.adapters.magicc7.magicc7.HAS_PYMAGICC", False)
 def test_no_pymagicc():
     with pytest.raises(
-        ImportError, match="pymagicc is not installed. Run 'conda install pymagicc' or 'pip install pymagicc'"
+        ImportError,
+        match="pymagicc is not installed. Run 'conda install pymagicc' or 'pip install pymagicc'",
     ):
         run(
-            climate_models_cfgs={"MAGICC7": ["config list"]},
-            scenarios="not used",
+            climate_models_cfgs={"MAGICC7": ["config list"]}, scenarios="not used",
         )
