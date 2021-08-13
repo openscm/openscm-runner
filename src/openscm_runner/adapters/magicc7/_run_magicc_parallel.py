@@ -11,14 +11,8 @@ import scmdata
 
 from ...settings import config
 from ..utils._parallel_process import _parallel_process
-from ._compat import HAS_PYMAGICC, pymagicc
+from ._compat import f90nml, pymagicc
 from ._magicc_instances import _MagiccInstances
-
-if HAS_PYMAGICC:
-    import f90nml
-else:
-    f90nml = None  # pylint:disable=invalid-name
-
 
 LOGGER = logging.getLogger(__name__)
 
