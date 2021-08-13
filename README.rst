@@ -43,6 +43,22 @@ OpenSCM-Runner can be installed with pip
 
     pip install openscm-runner
 
+To install the dependencies required by all models known to OpenSCM-Runner, add additional dependencies using
+
+.. code:: bash
+
+    pip install openscm-runner[models]
+
+
+To only install the dependencies required by a specific model, use one of the following instead
+
+.. code:: bash
+
+    # MAGICC
+    pip install openscm-runner[magicc]
+    # FaIR
+    pip install openscm-runner[fair]
+
 If you also want to run the example notebooks install additional
 dependencies using
 
@@ -55,6 +71,21 @@ dependencies using
 .. code:: bash
 
     conda install -c conda-forge openscm-runner
+
+Note that the above only installs base dependencies. To install all the requirements for MAGICC, use the below
+
+.. code:: bash
+
+    # MAGICC
+    conda install -c conda-forge openscm-runner pymagicc
+
+To install all the requirements for FaIR, use the below
+
+.. code:: bash
+
+    conda install -c conda-forge openscm-runner pip
+    # FaIR is only available via pip
+    pip install fair
 
 .. sec-end-installation
 

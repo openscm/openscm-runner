@@ -7,12 +7,11 @@ import os.path
 from concurrent.futures import ProcessPoolExecutor
 from subprocess import CalledProcessError  # nosec
 
-import f90nml
-import pymagicc
 import scmdata
 
 from ...settings import config
 from ..utils._parallel_process import _parallel_process
+from ._compat import f90nml, pymagicc
 from ._magicc_instances import _MagiccInstances
 
 LOGGER = logging.getLogger(__name__)
@@ -149,7 +148,7 @@ def run_magicc_parallel(cfgs, output_vars, output_config):
             config.get("MAGICC_WORKER_NUMBER", multiprocessing.cpu_count())
         )
         LOGGER.info("Running in parallel with up to %d workers", max_workers)
-        pool = ProcessPoolExecutor(  # pylint:disable=consider-using-with # need to handle shared_manager too
+        pool = ProcessPoolExecutor(  # need to handle shared_manager too
             max_workers=max_workers,
             initializer=_init_magicc_worker,
             initargs=(shared_dict,),
