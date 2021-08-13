@@ -14,8 +14,8 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
-master
-------
+v0.8.1 - 2021-08-13
+-------------------
 
 Changed
 ~~~~~~~
