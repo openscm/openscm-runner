@@ -6,9 +6,18 @@ import multiprocessing
 import shutil
 import tempfile
 
-import pymagicc
-
 from ...settings import config
+
+try:
+    import f90nml
+    import pymagicc
+
+    has_pymagicc = True
+except ImportError:
+    f90nml = None
+    pymagicc = None
+    has_pymagicc = False
+
 
 LOGGER = logging.getLogger(__name__)
 

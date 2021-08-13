@@ -26,7 +26,6 @@ REQUIREMENTS = [
     "python-dotenv",
     "scmdata>=0.7.4",
     "tqdm",
-    "xarray",
 ]
 REQUIREMENTS_FAIR = ["fair"]
 REQUIREMENTS_MAGICC = ["pymagicc>=2.0.0,<3"]

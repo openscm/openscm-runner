@@ -7,13 +7,11 @@ import os.path
 from concurrent.futures import ProcessPoolExecutor
 from subprocess import CalledProcessError  # nosec
 
-import f90nml
-import pymagicc
 import scmdata
 
 from ...settings import config
 from ..utils._parallel_process import _parallel_process
-from ._magicc_instances import _MagiccInstances
+from ._magicc_instances import f90nml, pymagicc, _MagiccInstances
 
 LOGGER = logging.getLogger(__name__)
 
