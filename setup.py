@@ -22,14 +22,16 @@ SOURCE_DIR = "src"
 
 REQUIREMENTS = [
     "click",
-    "fair==1.6.2",
     "pyam-iamc",
-    "pymagicc>=2.0.0,<3",
     "python-dotenv",
     "scmdata>=0.7.4",
     "tqdm",
     "xarray",
 ]
+REQUIREMENTS_FAIR = ["fair"]
+REQUIREMENTS_MAGICC = ["pymagicc>=2.0.0,<3"]
+REQUIREMENTS_MODELS = REQUIREMENTS_FAIR + REQUIREMENTS_MAGICC
+
 REQUIREMENTS_NOTEBOOKS = [
     "ipywidgets",
     "notebook",
@@ -62,6 +64,7 @@ REQUIREMENTS_DEV = [
     *REQUIREMENTS_DOCS,
     *REQUIREMENTS_NOTEBOOKS,
     *REQUIREMENTS_TESTS,
+    *REQUIREMENTS_MODELS
 ]
 
 REQUIREMENTS_EXTRAS = {
@@ -70,6 +73,9 @@ REQUIREMENTS_EXTRAS = {
     "docs": REQUIREMENTS_DOCS,
     "notebooks": REQUIREMENTS_NOTEBOOKS,
     "tests": REQUIREMENTS_TESTS,
+    "fair": REQUIREMENTS_FAIR,
+    "magicc": REQUIREMENTS_MAGICC,
+    "models": REQUIREMENTS_MODELS,
 }
 
 # no tests/docs in `src` so don't need exclude
