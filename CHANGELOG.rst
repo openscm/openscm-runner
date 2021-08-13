@@ -14,6 +14,14 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
+master
+------
+
+Changed
+~~~~~~~
+
+- (`#54 <https://github.com/openscm/openscm-runner/pull/54>`_) Made model dependencies optionally installable (allows conda package to be made)
+
 v0.7.2 - 2021-07-22
 -------------------
 
