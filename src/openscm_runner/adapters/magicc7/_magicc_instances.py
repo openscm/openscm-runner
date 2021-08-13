@@ -7,15 +7,7 @@ import shutil
 import tempfile
 
 from ...settings import config
-
-try:
-    import pymagicc
-
-    HAS_PYMAGICC = True
-except ImportError:
-    pymagicc = None
-    HAS_PYMAGICC = False
-
+from ._compat import pymagicc
 
 LOGGER = logging.getLogger(__name__)
 

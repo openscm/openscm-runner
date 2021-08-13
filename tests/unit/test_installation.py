@@ -5,7 +5,7 @@ import pytest
 from openscm_runner import run
 
 
-@patch("openscm_runner.adapters.fair_adapter.fair_adapter.HAS_FAIR", False)
+@patch("openscm_runner.adapters.fair_adapter.fair_adapter.fair", None)
 def test_no_fair():
     with pytest.raises(
         ImportError, match="fair is not installed. Run 'pip install fair'"
@@ -15,7 +15,7 @@ def test_no_fair():
         )
 
 
-@patch("openscm_runner.adapters.magicc7.magicc7.HAS_PYMAGICC", False)
+@patch("openscm_runner.adapters.magicc7.magicc7.pymagicc", None)
 def test_no_pymagicc():
     with pytest.raises(
         ImportError,

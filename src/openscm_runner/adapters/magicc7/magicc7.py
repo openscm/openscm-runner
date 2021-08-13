@@ -10,7 +10,7 @@ from scmdata import ScmRun, run_append
 from ...progress import progress
 from ...settings import config
 from ..base import _Adapter
-from ._magicc_instances import HAS_PYMAGICC, pymagicc
+from ._compat import pymagicc
 from ._run_magicc_parallel import run_magicc_parallel
 
 LOGGER = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class MAGICC7(_Adapter):
         """
         Initialise the MAGICC7 adapter
         """
-        if not HAS_PYMAGICC:
+        if pymagicc is None:
             raise ImportError(
                 "pymagicc is not installed. Run 'conda install pymagicc' or 'pip install pymagicc'"
             )

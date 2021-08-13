@@ -11,8 +11,8 @@ import scmdata
 
 from ...settings import config
 from ..utils._parallel_process import _parallel_process
-from ._magicc_instances import _MagiccInstances, HAS_PYMAGICC, pymagicc
-
+from ._compat import HAS_PYMAGICC, pymagicc
+from ._magicc_instances import _MagiccInstances
 
 if HAS_PYMAGICC:
     import f90nml

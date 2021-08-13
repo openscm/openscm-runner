@@ -10,13 +10,13 @@ from scmdata import ScmRun, run_append
 
 from ...settings import config
 from ..utils._parallel_process import _parallel_process
+from ._compat import HAS_FAIR
 
-try:
+if HAS_FAIR:
     from fair.forward import fair_scm
+else:
+    fair_scm = None  # pylint: disable=invalid-name
 
-    HAS_FAIR = True
-except ImportError:
-    HAS_FAIR = False
 
 LOGGER = logging.getLogger(__name__)
 
