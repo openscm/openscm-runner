@@ -22,6 +22,7 @@ SOURCE_DIR = "src"
 
 REQUIREMENTS = [
     "click",
+    "openscm-units>=0.5.0",
     "pyam-iamc",
     "python-dotenv",
     "scmdata>=0.7.4",
