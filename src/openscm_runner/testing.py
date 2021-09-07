@@ -20,7 +20,7 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
     if not HAS_PYTEST:
         raise ImportError("pytest not installed, run `pip install pytest`")
 
-    with open(expected_output_file, "r") as filehandle:
+    with open(expected_output_file, "r", encoding="ascii") as filehandle:
         expected_output = json.load(filehandle)
 
     if update:
@@ -70,7 +70,7 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
                 updated_output[climate_model].append((filter_kwargs_in, new_val))
 
     if update:
-        with open(expected_output_file, "w") as file_handle:
+        with open(expected_output_file, "w", encoding="ascii") as file_handle:
             json.dump(updated_output, file_handle, indent=4)
 
         pytest.skip("Updated {}".format(expected_output_file))

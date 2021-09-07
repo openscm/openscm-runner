@@ -100,7 +100,7 @@ class SCENARIOFILEWRITER:
         """
         Get the top of the emission file which will be equal for all scenarios
         """
-        with open(ssp245_em_file) as semfile:
+        with open(ssp245_em_file, encoding="ascii") as semfile:
             filedata = semfile.read()
             top_of_file = filedata.split("\n{}".format(self.years[0]))[0]
 
@@ -111,7 +111,7 @@ class SCENARIOFILEWRITER:
         Get the list of gas components and units
         from the gases file:
         """
-        with open(gasfile, "r") as txt_rcpfile:
+        with open(gasfile, "r", encoding="ascii") as txt_rcpfile:
             gasreader = csv.reader(txt_rcpfile, delimiter="\t")
             next(gasreader)
             for row in gasreader:
@@ -259,7 +259,7 @@ class SCENARIOFILEWRITER:
         printout_frame = printout_frame.astype(float).reset_index()
         printout_frame_fmt = ["%d"] + ["%.8f"] * (printout_frame.shape[1] - 1)
 
-        with open(fname, "w") as sfile:
+        with open(fname, "w", encoding="ascii") as sfile:
             sfile.write(
                 self.get_top_of_file(os.path.join(self.udir, "ssp245_em_RCMIP.txt"))
             )

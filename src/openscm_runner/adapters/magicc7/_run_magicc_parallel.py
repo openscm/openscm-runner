@@ -27,7 +27,9 @@ def _inject_pymagicc_compatible_magcfg_user(magicc):
         Instance of :obj:`pymagicc.MAGICC7` to setup
     """
     LOGGER.info("Writing Pymagicc compatible MAGCFG_USER.CFG in %s", magicc.run_dir)
-    with open(os.path.join(magicc.run_dir, "MAGCFG_USER.CFG"), "w") as file_handle:
+    with open(
+        os.path.join(magicc.run_dir, "MAGCFG_USER.CFG"), "w", encoding="ascii"
+    ) as file_handle:
         f90nml.write({"nml_allcfgs": {"file_tuningmodel_1": "PYMAGICC"}}, file_handle)
 
 
