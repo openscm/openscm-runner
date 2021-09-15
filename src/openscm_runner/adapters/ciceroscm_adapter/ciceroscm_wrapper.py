@@ -17,7 +17,6 @@ from ._utils import _get_unique_index_values
 from .make_scenario_files import SCENARIOFILEWRITER
 from .read_results import CSCMREADER
 from .write_parameter_files import PARAMETERFILEWRITER
-import sys
 
 LOGGER = logging.getLogger(__name__)
 
