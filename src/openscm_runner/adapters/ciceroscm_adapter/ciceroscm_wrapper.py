@@ -38,7 +38,6 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
 
         self.scen = _get_unique_index_values(scenariodata, "scenario")
         self.model = _get_unique_index_values(scenariodata, "model")
-        print(re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50])
         self._make_dir_structure(re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50])
         self._call_sfilewriter(scenariodata)
 
