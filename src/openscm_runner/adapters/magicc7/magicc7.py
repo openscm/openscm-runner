@@ -5,12 +5,12 @@ import logging
 import os
 from subprocess import check_output  # nosec
 
-import pymagicc
 from scmdata import ScmRun, run_append
 
 from ...progress import progress
 from ...settings import config
 from ..base import _Adapter
+from ._compat import pymagicc
 from ._run_magicc_parallel import run_magicc_parallel
 
 LOGGER = logging.getLogger(__name__)
@@ -54,6 +54,10 @@ class MAGICC7(_Adapter):
         """
         Initialise the MAGICC7 adapter
         """
+        if pymagicc is None:
+            raise ImportError(
+                "pymagicc is not installed. Run 'conda install pymagicc' or 'pip install pymagicc'"
+            )
         super().__init__()
         self.magicc_scenario_setup = {
             "file_emisscen_2": "NONE",
@@ -69,6 +73,30 @@ class MAGICC7(_Adapter):
     def _init_model(self):  # pylint:disable=arguments-differ
         pass
 
+    @staticmethod
+    def _convert_to_magicc_units(scenarios):
+        magicc_scmdf = pymagicc.io.MAGICCData(scenarios)
+        emms_units = pymagicc.definitions.MAGICC7_EMISSIONS_UNITS
+        emms_units["openscm_variable"] = emms_units["magicc_variable"].apply(
+            lambda x: pymagicc.definitions.convert_magicc7_to_openscm_variables(
+                "{}_EMIS".format(x)
+            )
+        )
+        emms_units = emms_units.set_index("openscm_variable")
+        for variable in magicc_scmdf["variable"].unique():
+            magicc_unit = emms_units.loc[variable, "emissions_unit"]
+            if "NOx" in variable:
+                context = "NOx_conversions"
+            elif "NH3" in variable:
+                context = "NH3_conversions"
+            else:
+                context = None
+            magicc_scmdf = magicc_scmdf.convert_unit(
+                magicc_unit, variable=variable, context=context,
+            )
+
+        return magicc_scmdf
+
     def _run(self, scenarios, cfgs, output_variables, output_config):
         # TODO: add use of historical data properly  # pylint:disable=fixme
         LOGGER.warning("Historical data has not been checked")
@@ -80,20 +108,7 @@ class MAGICC7(_Adapter):
             .replace("VOC", "NMVOC")
         )
 
-        magicc_scmdf = pymagicc.io.MAGICCData(magicc_df)
-        emms_units = pymagicc.definitions.MAGICC7_EMISSIONS_UNITS
-        emms_units["openscm_variable"] = emms_units["magicc_variable"].apply(
-            lambda x: pymagicc.definitions.convert_magicc7_to_openscm_variables(
-                "{}_EMIS".format(x)
-            )
-        )
-        emms_units = emms_units.set_index("openscm_variable")
-        for variable in magicc_scmdf["variable"].unique():
-            magicc_unit = emms_units.loc[variable, "emissions_unit"]
-            magicc_scmdf = magicc_scmdf.convert_unit(
-                magicc_unit, variable=variable, context="NOx_conversions"
-            )
-
+        magicc_scmdf = self._convert_to_magicc_units(magicc_df)
         full_cfgs = self._write_scen_files_and_make_full_cfgs(magicc_scmdf, cfgs)
 
         pymagicc_vars = [_convert_to_pymagicc_var(v) for v in output_variables]

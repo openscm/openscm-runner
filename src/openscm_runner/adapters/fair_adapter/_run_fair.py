@@ -6,15 +6,13 @@ import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
-from fair.constants.general import EARTH_RADIUS, SECONDS_PER_YEAR
-from fair.forward import fair_scm
 from scmdata import ScmRun, run_append
 
 from ...settings import config
 from ..utils._parallel_process import _parallel_process
+from ._compat import fair_scm
 
 LOGGER = logging.getLogger(__name__)
-toa_to_joule = 4 * np.pi * EARTH_RADIUS ** 2 * SECONDS_PER_YEAR
 
 
 def run_fair(cfgs, output_vars):  # pylint: disable=R0914

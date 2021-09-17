@@ -6,9 +6,8 @@ import multiprocessing
 import shutil
 import tempfile
 
-import pymagicc
-
 from ...settings import config
+from ._compat import pymagicc
 
 LOGGER = logging.getLogger(__name__)
 
