@@ -312,6 +312,14 @@ class TestCICEROSCMAdapter(_AdapterTester):
         npt.assert_allclose(
             0.5, make_scenario_files._unit_conv_factor("Tg SO2 / yr", "Tg S / yr"),
         )
+        npt.assert_allclose(
+            1.0,
+            make_scenario_files._unit_conv_factor("Gg  Halon1211 / yr", "GgH1211 / yr"),
+        )
+        npt.assert_allclose(
+            1.0,
+            make_scenario_files._unit_conv_factor("Gg  Halon2402 / yr", "GgH2402 / yr"),
+        )
 
     @pytest.mark.parametrize(
         "input,exp",
