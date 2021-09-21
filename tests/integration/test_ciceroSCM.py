@@ -343,10 +343,8 @@ class TestCICEROSCMAdapter(_AdapterTester):
     def test_run_long_scenario_name(
         self, name, test_scenarios,
     ):
-        starting_scenario = (
-            test_scenarios
-            .filter(scenario="ssp126")
-            .rename({"scenario": {"ssp126": name}})
+        starting_scenario = test_scenarios.filter(scenario="ssp126").rename(
+            {"scenario": {"ssp126": name}}
         )
 
         res = run(
@@ -356,6 +354,8 @@ class TestCICEROSCMAdapter(_AdapterTester):
         )
 
         assert res.get_unique_meta("scenario", True) == name
+        assert (1.4 < res.filter(year=2100).values < 1.6).all()
+        # any other tests you want to add
 
 
 @pytest.mark.ciceroscm
