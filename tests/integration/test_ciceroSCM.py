@@ -343,8 +343,11 @@ class TestCICEROSCMAdapter(_AdapterTester):
     def test_run_long_scenario_name(
         self, name, test_scenarios,
     ):
-        starting_scenario = test_scenarios.filter(scenario="ssp126")
-        starting_scenario["scenario"] = name
+        starting_scenario = (
+            test_scenarios
+            .filter(scenario="ssp126")
+            .rename({"scenario": {"ssp126": name}})
+        )
 
         res = run(
             scenarios=starting_scenario,
