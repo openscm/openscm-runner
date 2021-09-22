@@ -14,8 +14,18 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
+2021-09-17
+-------------------
+
+Fixed
+~~~~~~~
+
+- (`#52 <https://github.com/openscm/openscm-runner/pull/52>` _) Fixing CICERO-SCM bugs with converting halon units and handling of very long scenario names
+
+
 v0.9.0 - 2021-09-07
 -------------------
+
 
 Changed
 ~~~~~~~
@@ -52,7 +62,7 @@ v0.7.0 - 2021-07-09
 Added
 ~~~~~
 
-- (`#24 <https://github.com/openscm/openscm-runner/pull/24>`_) Adapter for the CICERO-SCM model, see ``openscm_runner.adapters.CICEROSCM``
+- (`#24 <https://github.com/openscm/openscm-runner/pull/24>`_) Adapter for the CICERO-SCM model (https://doi.org/10.1088/1748-9326/aa5b0a), see ``openscm_runner.adapters.CICEROSCM``
 
 v0.6.0 - 2021-04-13
 -------------------

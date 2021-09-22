@@ -60,14 +60,7 @@ def get_data_from_rib_file(folder, variable):
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_rib.txt"), delimiter=r"\s+")
     years = df_temp.Year[:]
-    s_pr_yr = 3600 * 24 * 365
-    sea_surface_fraction = 0.61 * 0.5 + 0.81 * 0.5
-    earth_surface = 5.101e14
-    conv_factor = s_pr_yr * sea_surface_fraction * earth_surface / 1.0e21
-    timeseries = (
-        df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
-        * conv_factor
-    )
+    timeseries = df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
@@ -165,7 +158,7 @@ class CSCMREADER:
         Connecting up to correct file type to get the data
         """
         folder = os.path.join(
-            self.odir, re.sub("[^a-zA-Z0-9_-]", "", scenario), "outputfiles"
+            self.odir, re.sub("[^a-zA-Z0-9_-]", "", scenario)[:50], "outputfiles"
         )
         if variable not in self.variable_dict:
             return (
@@ -201,7 +194,7 @@ class CSCMREADER:
             years, timeseries = get_data_from_rib_file(
                 folder, self.variable_dict[variable]
             )
-            unit = "ZJ/yr"
+            unit = "W/m^2"
 
         elif self.variable_dict[variable] in self.ohc_list:
             years, timeseries = get_data_from_ohc_file(

@@ -74,13 +74,13 @@
         [
             {
                 "variable": "Heat Uptake",
-                "unit": "ZJ/yr",
+                "unit": "W/m^2",
                 "region": "World",
                 "year": 2100,
                 "scenario": "ssp126",
                 "quantile": 1
             },
-            -2.5561833665607363
+            -0.223806
         ],
         [
             {

@@ -312,6 +312,14 @@ class TestCICEROSCMAdapter(_AdapterTester):
         npt.assert_allclose(
             0.5, make_scenario_files._unit_conv_factor("Tg SO2 / yr", "Tg S / yr"),
         )
+        npt.assert_allclose(
+            1.0,
+            make_scenario_files._unit_conv_factor("Gg  Halon1211 / yr", "GgH1211 / yr"),
+        )
+        npt.assert_allclose(
+            1.0,
+            make_scenario_files._unit_conv_factor("Gg  Halon2402 / yr", "GgH2402 / yr"),
+        )
 
     @pytest.mark.parametrize(
         "input,exp",
@@ -322,6 +330,32 @@ class TestCICEROSCMAdapter(_AdapterTester):
     )
     def test_write_parameter_files(self, input, exp):
         assert write_parameter_files.splitall(input) == exp
+
+    @pytest.mark.ciceroscm
+    @pytest.mark.parametrize(
+        "name",
+        (
+            "some super super super super super super super super super super long scenario name which should not explode",
+            "another name with some special | . characters which should also work",
+            # any other names you want to test
+        ),
+    )
+    def test_run_long_scenario_name(
+        self, name, test_scenarios,
+    ):
+        starting_scenario = test_scenarios.filter(scenario="ssp126").rename(
+            {"scenario": {"ssp126": name}}
+        )
+
+        res = run(
+            scenarios=starting_scenario,
+            climate_models_cfgs={"CICEROSCM": [{}]},
+            output_variables=("Surface Air Temperature Change",),
+        )
+
+        assert res.get_unique_meta("scenario", True) == name
+        assert (1.4 < res.filter(year=2100).values < 1.6).all()
+        # any other tests you want to add
 
 
 @pytest.mark.ciceroscm

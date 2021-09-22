@@ -34,7 +34,21 @@ def _read_ssp245_em(ssp245_em_file):
 
 def _unit_conv_factor(unit, cicero_unit):
     with openscm_units.unit_registry.context("NOx_conversions"):
-        conv_factor = openscm_units.unit_registry(unit).to(cicero_unit).magnitude
+
+        if cicero_unit.startswith("GgH1"):
+            conv_factor = (
+                openscm_units.unit_registry(unit)
+                .to(cicero_unit.replace("GgH1", "GgHalon1"))
+                .magnitude
+            )
+        elif cicero_unit.startswith("GgH2"):
+            conv_factor = (
+                openscm_units.unit_registry(unit)
+                .to(cicero_unit.replace("GgH2", "GgHalon2"))
+                .magnitude
+            )
+        else:
+            conv_factor = openscm_units.unit_registry(unit).to(cicero_unit).magnitude
 
     return conv_factor
 
@@ -206,7 +220,7 @@ class SCENARIOFILEWRITER:
                     "[^a-zA-Z0-9_-]",
                     "",
                     _get_unique_index_values(scenarioframe, "scenario"),
-                )
+                )[:50]
             ),
         )
         logging.getLogger("pyam").setLevel(logging.ERROR)
