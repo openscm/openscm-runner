@@ -167,7 +167,7 @@ class SCENARIOFILEWRITER:
         unit = _get_unique_index_values(
             scenarioframe[
                 scenarioframe.index.get_level_values("variable")
-                == "Emissions|{self.component_dict[comp][0]}"
+                == f"Emissions|{self.component_dict[comp][0]}"
             ],
             "unit",
         )
@@ -236,7 +236,7 @@ class SCENARIOFILEWRITER:
                 convfactor = self.get_unit_convfactor(comp, scenarioframe)
                 if (
                     self.component_dict[comp][0] in ("BC", "OC")
-                    and "BMB_AEROS_{self.component_dict[comp][0]}" not in avail_comps
+                    and f"BMB_AEROS_{self.component_dict[comp][0]}" not in avail_comps
                 ):
                     printout_frame[comp] = (
                         interpol.T[f"Emissions|{self.component_dict[comp][0]}"]
