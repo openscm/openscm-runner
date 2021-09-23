@@ -15,7 +15,7 @@ The changes listed in this file are categorised as follows:
     - Security: in case of vulnerabilities.
 
 v0.9.1 - 2021-09-23
-----------
+-------------------
 
 Fixed
 ~~~~~

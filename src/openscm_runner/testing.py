@@ -33,7 +33,7 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
             updated_output[climate_model] = []
 
         for filter_kwargs, expected_val in checks:
-            err_msg = "{}".format(filter_kwargs)
+            err_msg = f"{filter_kwargs}"
 
             if update:
                 filter_kwargs_in = {**filter_kwargs}
@@ -73,4 +73,4 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
         with open(expected_output_file, "w", encoding="ascii") as file_handle:
             json.dump(updated_output, file_handle, indent=4)
 
-        pytest.skip("Updated {}".format(expected_output_file))
+        pytest.skip(f"Updated {expected_output_file}")
