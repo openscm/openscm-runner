@@ -24,8 +24,8 @@ def _check_out_config(out_config, climate_models_cfgs):
         for key, value in out_config.items():
             if not isinstance(value, tuple):
                 raise TypeError(
-                    "`out_config` values must be tuples, this isn't the case for "
-                    "climate_model: '{}'".format(key)
+                    f"`out_config` values must be tuples, this isn't the case for "
+                    f"climate_model: '{key}'"
                 )
 
 
@@ -82,7 +82,7 @@ def run(
             runner = CICEROSCM()
         else:
             raise NotImplementedError(
-                "No adapter available for {}".format(climate_model)
+                f"No adapter available for {climate_model}"
             )
 
         if out_config is not None and climate_model in out_config:
@@ -110,9 +110,7 @@ def run(
         climate_model = model_res.get_unique_meta("climate_model")
         if model_meta != key_meta:  # noqa
             raise AssertionError(
-                "{} meta: {}, expected meta: {}".format(
-                    climate_model, model_meta, key_meta
-                )
+                f"{climate_model} meta: {model_meta}, expected meta: {key_meta}"
             )
 
     if len(res) == 1:

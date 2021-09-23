@@ -116,7 +116,7 @@ class SCENARIOFILEWRITER:
         """
         with open(ssp245_em_file, encoding="ascii") as semfile:
             filedata = semfile.read()
-            top_of_file = filedata.split("\n{}".format(self.years[0]))[0]
+            top_of_file = filedata.split(f"\n{self.years[0]}")[0]
 
         return top_of_file
 
@@ -145,11 +145,10 @@ class SCENARIOFILEWRITER:
                 elif "_" in unit:
                     unit = unit.replace("_", "")
                 else:
-                    unit = "{}{}".format(
-                        unit, component.replace("-", "").replace("BMB_AEROS_", "")
-                    )
+                    comp_str = component.replace("-", "").replace("BMB_AEROS_", "")
+                    unit = f"{unit}{comp_str}"
 
-                unit = "{} / yr".format(unit)
+                unit = f"{unit} / yr"
 
                 self.components.append(component)
                 self.units.append(unit)
@@ -168,7 +167,7 @@ class SCENARIOFILEWRITER:
         unit = _get_unique_index_values(
             scenarioframe[
                 scenarioframe.index.get_level_values("variable")
-                == "Emissions|{}".format(self.component_dict[comp][0])
+                == "Emissions|{self.component_dict[comp][0]}"
             ],
             "unit",
         )
@@ -212,16 +211,15 @@ class SCENARIOFILEWRITER:
         Take a scenariodataframe
         and writing out necessary emissions files
         """
+        scenario = re.sub(
+            "[^a-zA-Z0-9_-]",
+            "",
+            _get_unique_index_values(scenarioframe, "scenario"),
+        )[:50]
         fname = os.path.join(
             odir,
             "inputfiles",
-            "{s}_em.txt".format(
-                s=re.sub(
-                    "[^a-zA-Z0-9_-]",
-                    "",
-                    _get_unique_index_values(scenarioframe, "scenario"),
-                )[:50]
-            ),
+            f"{scenario}_em.txt",
         )
         logging.getLogger("pyam").setLevel(logging.ERROR)
         avail_comps = [
@@ -244,14 +242,14 @@ class SCENARIOFILEWRITER:
                 convfactor = self.get_unit_convfactor(comp, scenarioframe)
                 if (
                     self.component_dict[comp][0] in ("BC", "OC")
-                    and "BMB_AEROS_{}".format(self.component_dict[comp][0])
+                    and "BMB_AEROS_{self.component_dict[comp][0]}"
                     not in avail_comps
                 ):
                     printout_frame[comp] = (
-                        interpol.T["Emissions|{}".format(self.component_dict[comp][0])]
+                        interpol.T[f"Emissions|{self.component_dict[comp][0]}"]
                         * convfactor
                     ).to_numpy() - self.ssp245data[
-                        "BMB_AEROS_{}".format(self.component_dict[comp][0])
+                        f"BMB_AEROS_{self.component_dict[comp][0]}"
                     ].loc[
                         str(self.years[0]) : str(self.years[-1])
                     ].to_numpy().astype(
@@ -259,7 +257,7 @@ class SCENARIOFILEWRITER:
                     )
                 else:
                     printout_frame[comp] = (
-                        interpol.T["Emissions|{}".format(self.component_dict[comp][0])]
+                        interpol.T[f"Emissions|{self.component_dict[comp][0]}"]
                         * convfactor
                     )
             else:

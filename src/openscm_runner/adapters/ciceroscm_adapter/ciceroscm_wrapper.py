@@ -62,15 +62,15 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                 pamset,
                 os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50]),
             )
-            call = "{executable} {pamfile}".format(
-                executable=os.path.join(self.rundir, "scm_vCH4fb"),
-                pamfile=os.path.join(
-                    self.rundir,
-                    re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50],
-                    "inputfiles",
-                    "pam_current.scm",
-                ),
+            executable = os.path.join(self.rundir, "scm_vCH4fb")
+            pamfile = os.path.join(
+                self.rundir,
+                re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50],
+                "inputfiles",
+                "pam_current.scm",
             )
+            call = f"{executable} {pamfile}"
+
             LOGGER.debug("Call, %s", call)
             subprocess.check_call(
                 call, cwd=self.rundir, shell=True,  # nosec # have to use subprocess

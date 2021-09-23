@@ -79,7 +79,7 @@ class MAGICC7(_Adapter):
         emms_units = pymagicc.definitions.MAGICC7_EMISSIONS_UNITS
         emms_units["openscm_variable"] = emms_units["magicc_variable"].apply(
             lambda x: pymagicc.definitions.convert_magicc7_to_openscm_variables(
-                "{}_EMIS".format(x)
+                f"{x}_EMIS"
             )
         )
         emms_units = emms_units.set_index("openscm_variable")
@@ -116,7 +116,7 @@ class MAGICC7(_Adapter):
 
         LOGGER.debug("Dropping todo metadata")
         res = res.drop_meta("todo")
-        res["climate_model"] = "MAGICC{}".format(self.get_version())
+        res["climate_model"] = f"MAGICC{self.get_version()}"
 
         res = self._fix_pint_incompatible_units(res)
         LOGGER.debug("Mapping variables to OpenSCM conventions")
@@ -161,12 +161,10 @@ class MAGICC7(_Adapter):
             writer = pymagicc.io.MAGICCData(smdf)
             writer["todo"] = "SET"
             writer.metadata = {
-                "header": "SCEN7 file written by openscm_runner for the {} scenario".format(
-                    scenario
-                )
+                "header": f"SCEN7 file written by openscm_runner for the {scenario} scenario"
             }
             scen_file_name = (
-                "{}_{}.SCEN7".format(scenario, model)
+                f"{scenario}_{model}.SCEN7"
                 .upper()
                 .replace("/", "-")
                 .replace("\\", "-")
@@ -197,7 +195,7 @@ class MAGICC7(_Adapter):
         ] * len(cfgs)
         if len(full_cfgs) != exp_shape:
             raise AssertionError(
-                "Expected {} configs got {}".format(exp_shape, len(full_cfgs))
+                f"Expected {exp_shape} configs got {len(full_cfgs)}"
             )
         return full_cfgs
 

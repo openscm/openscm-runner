@@ -60,18 +60,17 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
         )
         filedata = filedata.replace("../input_RCP/", "")
         filedata = filedata.replace("input/ssp434_conc_", "ssp245_conc_")
+
         filedata = filedata.replace(
             "input/ssp434_em_RCMIP.txt",
-            "{path}/inputfiles/{scen}_em.txt".format(
-                path=filedir_to_pamfile, scen=scen
-            ),
+            f"{filedir_to_pamfile}/inputfiles/{scen}_em.txt"
         )
         for k, value in self._pamset_defaults.items():
-            old = "{} {}".format(k, value)
+            old = f"{k} {value}"
             if k in ("model_end", "scenario_start", "scenario_end"):
-                new = "{} {}".format(k, pamset.get(k, value))
+                new = f"{k} {pamset.get(k, value)}"
             else:
-                new = "{} {:.4}".format(k, pamset.get(k, float(value)))
+                new = f"{k} {pamset.get(k, float(value)):.4}"
             filedata = filedata.replace(old, new)
 
         with open(
