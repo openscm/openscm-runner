@@ -164,8 +164,7 @@ class MAGICC7(_Adapter):
                 "header": f"SCEN7 file written by openscm_runner for the {scenario} scenario"
             }
             scen_file_name = (
-                f"{scenario}_{model}.SCEN7"
-                .upper()
+                f"{scenario}_{model}.SCEN7".upper()
                 .replace("/", "-")
                 .replace("\\", "-")
                 .replace(" ", "-")
@@ -194,9 +193,7 @@ class MAGICC7(_Adapter):
             0
         ] * len(cfgs)
         if len(full_cfgs) != exp_shape:
-            raise AssertionError(
-                f"Expected {exp_shape} configs got {len(full_cfgs)}"
-            )
+            raise AssertionError(f"Expected {exp_shape} configs got {len(full_cfgs)}")
         return full_cfgs
 
     @classmethod

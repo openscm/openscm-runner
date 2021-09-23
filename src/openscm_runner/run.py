@@ -81,9 +81,7 @@ def run(
         elif climate_model.upper() == "CICEROSCM":  # allow various capitalisations
             runner = CICEROSCM()
         else:
-            raise NotImplementedError(
-                f"No adapter available for {climate_model}"
-            )
+            raise NotImplementedError(f"No adapter available for {climate_model}")
 
         if out_config is not None and climate_model in out_config:
             output_config_cm = out_config[climate_model]

@@ -63,7 +63,7 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
 
         filedata = filedata.replace(
             "input/ssp434_em_RCMIP.txt",
-            f"{filedir_to_pamfile}/inputfiles/{scen}_em.txt"
+            f"{filedir_to_pamfile}/inputfiles/{scen}_em.txt",
         )
         for k, value in self._pamset_defaults.items():
             old = f"{k} {value}"

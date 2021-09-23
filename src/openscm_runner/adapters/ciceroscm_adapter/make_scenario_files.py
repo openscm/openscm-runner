@@ -212,15 +212,9 @@ class SCENARIOFILEWRITER:
         and writing out necessary emissions files
         """
         scenario = re.sub(
-            "[^a-zA-Z0-9_-]",
-            "",
-            _get_unique_index_values(scenarioframe, "scenario"),
+            "[^a-zA-Z0-9_-]", "", _get_unique_index_values(scenarioframe, "scenario"),
         )[:50]
-        fname = os.path.join(
-            odir,
-            "inputfiles",
-            f"{scenario}_em.txt",
-        )
+        fname = os.path.join(odir, "inputfiles", f"{scenario}_em.txt",)
         logging.getLogger("pyam").setLevel(logging.ERROR)
         avail_comps = [
             c.replace("Emissions|", "")
@@ -242,8 +236,7 @@ class SCENARIOFILEWRITER:
                 convfactor = self.get_unit_convfactor(comp, scenarioframe)
                 if (
                     self.component_dict[comp][0] in ("BC", "OC")
-                    and "BMB_AEROS_{self.component_dict[comp][0]}"
-                    not in avail_comps
+                    and "BMB_AEROS_{self.component_dict[comp][0]}" not in avail_comps
                 ):
                     printout_frame[comp] = (
                         interpol.T[f"Emissions|{self.component_dict[comp][0]}"]

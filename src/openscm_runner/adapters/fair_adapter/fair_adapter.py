@@ -86,7 +86,9 @@ class FAIR(_Adapter):
             )
             num_timesteps = emissions.shape[0]
 
-            natural_components = _get_natural_emissions_and_forcing(startyear, num_timesteps)
+            natural_components = _get_natural_emissions_and_forcing(
+                startyear, num_timesteps
+            )
             ch4_n2o = natural_components["ch4_n2o"]
             solar_forcing = natural_components["solar_forcing"]
             volcanic_forcing = natural_components["volcanic_forcing"]
