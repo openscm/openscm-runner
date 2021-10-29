@@ -63,7 +63,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                 os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50]),
             )
             call = "{executable} {pamfile}".format(
-                executable=os.path.join(self.rundir, "scm_vCH4fb"),
+                executable=os.path.join(self.rundir, "scm_vCH4fb_bfx"),
                 pamfile=os.path.join(
                     self.rundir,
                     re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50],
