@@ -14,6 +14,9 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
+master
+------
+
 Changed
 ~~~~~~~
 
