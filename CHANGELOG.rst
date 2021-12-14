@@ -14,6 +14,14 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
+master
+------
+
+Changed
+~~~~~~~
+
+- (`#58 <https://github.com/openscm/openscm-runner/pull/58>`_) Update README for FaIR conda install
+
 v0.9.1 - 2021-09-23
 -------------------
 
