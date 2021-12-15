@@ -7,7 +7,7 @@ OpenSCM Runner
 | |PyPI|         | |PyPI Version|  |
 +----------------+-----------------+
 
-Work in progress.
+TODO: add conda badge
 
 Brief summary
 +++++++++++++
@@ -37,7 +37,27 @@ OpenSCM-Runner is free software under a BSD 3-Clause License, see
 Installation
 ------------
 
-OpenSCM-Runner can be installed with pip
+OpenSCM-Runner can be installed with conda
+
+.. code:: bash
+
+    conda install -c conda-forge openscm-runner
+
+Note that the above only installs base dependencies. To install all the requirements for MAGICC, use the below
+
+.. code:: bash
+
+    # MAGICC
+    conda install -c conda-forge openscm-runner pymagicc
+
+To install all the requirements for FaIR, use the below
+
+.. code:: bash
+
+    # FaIR
+    conda install -c conda-forge -c chrisroadmap openscm-runner fair
+
+OpenSCM-Runner can also be installed with pip
 
 .. code:: bash
 
@@ -65,26 +85,6 @@ dependencies using
 .. code:: bash
 
     pip install openscm-runner[notebooks]
-
-**Coming soon** OpenSCM-Runner can also be installed with conda
-
-.. code:: bash
-
-    conda install -c conda-forge openscm-runner
-
-Note that the above only installs base dependencies. To install all the requirements for MAGICC, use the below
-
-.. code:: bash
-
-    # MAGICC
-    conda install -c conda-forge openscm-runner pymagicc
-
-To install all the requirements for FaIR, use the below
-
-.. code:: bash
-
-    # FaIR
-    conda install -c conda-forge -c chrisroadmap openscm-runner fair
 
 .. sec-end-installation
 
