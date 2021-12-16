@@ -1,13 +1,49 @@
 OpenSCM Runner
 ==============
 
-+----------------+-----------------+
-| |CI CD|        | |PyPI Install|  |
-+----------------+-----------------+
-| |PyPI|         | |PyPI Version|  |
-+----------------+-----------------+
++-------------------+----------------+--------+
+| Repository health |    |CI CD|     | |Docs| |
++-------------------+----------------+--------+
 
-TODO: add conda badge
++------+------------------+----------------+------------------+
+| Pypi |  |PyPI Install|  |     |PyPI|     |  |PyPI Version|  |
++------+------------------+----------------+------------------+
+
++-------+-----------------+-------------------+-----------------+
+| Conda | |conda install| | |conda platforms| | |conda version| |
++-------+-----------------+-------------------+-----------------+
+
++-----------------+----------------+---------------+-----------+
+|   Other info    | |Contributors| | |Last Commit| | |License| |
++-----------------+----------------+---------------+-----------+
+
+.. sec-begin-links
+
+.. |CI CD| image:: https://github.com/openscm/openscm-runner/workflows/OpenSCM-Runner%20CI-CD/badge.svg
+    :target: https://github.com/openscm/openscm-runner/actions?query=workflow%3A%22OpenSCM-Runner+CI-CD%22
+.. |Docs| image:: https://readthedocs.org/projects/openscm-runner/badge/?version=latest
+    :target: https://openscm-runner.readthedocs.io/en/latest/?badge=latest
+.. |PyPI Install| image:: https://github.com/openscm/openscm-runner/workflows/Test%20PyPI%20install/badge.svg
+    :target: https://github.com/openscm/openscm-runner/actions?query=workflow%3A%22Test+PyPI+install%22
+.. |PyPI| image:: https://img.shields.io/pypi/pyversions/openscm-runner.svg
+    :target: https://pypi.org/project/openscm-runner/
+.. |PyPI Version| image:: https://img.shields.io/pypi/v/openscm-runner.svg
+    :target: https://pypi.org/project/openscm-runner/
+.. |conda install| image:: https://github.com/openscm/openscm-runner/workflows/Test%20conda%20install/badge.svg
+    :target: https://github.com/openscm/openscm-runner/actions?query=workflow%3A%22Test+conda+install%22
+.. |conda platforms| image:: https://img.shields.io/conda/pn/conda-forge/openscm-runner.svg
+    :target: https://anaconda.org/conda-forge/openscm-runner
+.. |conda version| image:: https://img.shields.io/conda/vn/conda-forge/openscm-runner.svg
+    :target: https://anaconda.org/conda-forge/openscm-runner
+.. |Contributors| image:: https://img.shields.io/github/contributors/openscm/openscm-runner.svg
+    :target: https://github.com/openscm/openscm-runner/graphs/contributors
+.. |Last Commit| image:: https://img.shields.io/github/last-commit/openscm/openscm-runner.svg
+    :target: https://github.com/openscm/openscm-runner/commits/master
+.. |License| image:: https://img.shields.io/github/license/openscm/openscm-runner.svg
+    :target: https://github.com/openscm/openscm-runner/blob/master/LICENSE
+
+.. sec-end-links
+
 
 Brief summary
 +++++++++++++
@@ -98,16 +134,3 @@ Contributing
 ------------
 
 Please see the `Development section of the docs <https://openscm-runner.readthedocs.io/en/latest/development.html>`_.
-
-.. sec-begin-links
-
-.. |CI CD| image:: https://github.com/openscm/openscm-runner/workflows/OpenSCM-Runner%20CI-CD/badge.svg
-    :target: https://github.com/openscm/openscm-runner/actions?query=workflow%3A%22OpenSCM-Runner+CI-CD%22
-.. |PyPI Install| image:: https://github.com/openscm/openscm-runner/workflows/Test%20PyPI%20install/badge.svg
-    :target: https://github.com/openscm/openscm-runner/actions?query=workflow%3A%22Test+PyPI+install%22
-.. |PyPI| image:: https://img.shields.io/pypi/pyversions/openscm-runner.svg
-    :target: https://pypi.org/project/openscm-runner/
-.. |PyPI Version| image:: https://img.shields.io/pypi/v/openscm-runner.svg
-    :target: https://pypi.org/project/openscm-runner/
-
-.. sec-end-links
