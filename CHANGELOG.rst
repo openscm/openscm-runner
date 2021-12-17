@@ -15,7 +15,7 @@ The changes listed in this file are categorised as follows:
     - Security: in case of vulnerabilities.
 
 2021-12-16
--------------------
+----------
 
 Fixed
 ~~~~~~~
