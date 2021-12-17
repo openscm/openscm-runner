@@ -123,10 +123,9 @@ def run_magicc_parallel(cfgs, output_vars, output_config):
     shared_manager = multiprocessing.Manager()
     shared_dict = shared_manager.dict()
     instances = _MagiccInstances(existing_instances=shared_dict)
+
     magicc_internal_vars = [
-        "DAT_{}".format(
-            pymagicc.definitions.convert_magicc7_to_openscm_variables(v, inverse=True)
-        )
+        f"DAT_{pymagicc.definitions.convert_magicc7_to_openscm_variables(v, inverse=True)}"
         for v in output_vars
     ]
 

@@ -68,7 +68,7 @@ def convert_cicero_unit(cicero_unit):
     """
     Convert cicero unit convention for pint
     """
-    return "{} / yr".format(cicero_unit.replace("_", ""))
+    return f"{cicero_unit.replace('_', '')} / yr"
 
 
 class CSCMREADER:

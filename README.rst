@@ -83,9 +83,8 @@ To install all the requirements for FaIR, use the below
 
 .. code:: bash
 
-    conda install -c conda-forge openscm-runner pip
-    # FaIR is only available via pip
-    pip install fair
+    # FaIR
+    conda install -c conda-forge -c chrisroadmap openscm-runner fair
 
 .. sec-end-installation
 

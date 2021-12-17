@@ -24,12 +24,22 @@ Fixed
 
 
 2021-09-17
+
+------
+
+Changed
+~~~~~~~
+
+- (`#58 <https://github.com/openscm/openscm-runner/pull/58>`_) Update README for FaIR conda install
+
+v0.9.1 - 2021-09-23
+
 -------------------
 
 Fixed
-~~~~~~~
+~~~~~
 
-- (`#52 <https://github.com/openscm/openscm-runner/pull/52>` _) Fixing CICERO-SCM bugs with converting halon units and handling of very long scenario names
+- (`#52 <https://github.com/openscm/openscm-runner/pull/52>`_) Fixed CICERO-SCM bugs with converting halon units and handling of very long scenario names
 
 
 v0.9.0 - 2021-09-07

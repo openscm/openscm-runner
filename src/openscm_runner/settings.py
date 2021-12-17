@@ -124,6 +124,7 @@ class ConfigLoader:
         Parameters
         ----------
         conf: dict
+            Configuration to use to update the config
         """
         conf = {k.upper(): v for k, v in conf.items()}
         self._config.update(conf)
