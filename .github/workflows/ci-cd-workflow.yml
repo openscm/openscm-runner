@@ -125,8 +125,8 @@ jobs:
         python scripts/test_install.py
 
   deploy-pypi:
-    needs: [linting-and-docs,build,test-notebooks,test-install]
-    if: startsWith(github.ref, 'refs/tags/v')
+    # needs: [linting-and-docs,build,test-notebooks,test-install]
+    # if: startsWith(github.ref, 'refs/tags/v')
 
     runs-on: ubuntu-latest
     strategy:
@@ -145,9 +145,19 @@ jobs:
         pip install --upgrade pip wheel
         pip install -e .[dev]
     - name: Create package
-      run: python setup.py sdist bdist_wheel --universal
-    - name: Publish package to PyPI
-      uses: pypa/gh-action-pypi-publish@master
-      with:
-        user: __token__
-        password: ${{ secrets.pypi_password }}
+      run: |
+        python setup.py sdist bdist_wheel --universal
+        for f in adapters/fair_adapter/natural-emissions-and-forcing.csv adapters/ciceroscm_adapter/utils_templates/gases_v1RCMIP.txt adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFSUN/solar_IPCC.txt
+        do
+          if ! tar -tvf dist/openscm-runner*.tar.gz | grep "$f"
+          then
+              echo
+              echo "${f} csv not correctly packaged"
+              exit 1
+          fi
+        done
+    # - name: Publish package to PyPI
+    #   uses: pypa/gh-action-pypi-publish@master
+    #   with:
+    #     user: __token__
+    #     password: ${{ secrets.pypi_password }}

@@ -4,6 +4,7 @@ Test that all of our modules can be imported
 Thanks https://stackoverflow.com/a/25562415/10473080
 """
 import importlib
+import os.path
 import pkgutil
 
 import openscm_runner
@@ -22,8 +23,12 @@ def import_submodules(package_name):
 
 
 import_submodules("openscm_runner")
-# make sure csv was included
-openscm_runner.adapters.fair_adapter.fair_adapter._get_natural_emissions_and_forcing(
-    1750, 4
-)
+
+# make sure csvs etc. are included
+openscm_runner_root = os.path.dirname(openscm_runner.__file__)
+assert os.path.isfile(os.path.join(openscm_runner_root, "adapters/fair_adapter/natural-emissions-and-forcing.csv"))
+assert os.path.isfile(os.path.join(openscm_runner_root, "adapters/ciceroscm_adapter/utils_templates/gases_v1RCMIP.txt"))
+assert os.path.isfile(os.path.join(openscm_runner_root, "adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb"))
+assert os.path.isfile(os.path.join(openscm_runner_root, "adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFSUN/solar_IPCC.txt"))
+
 print(openscm_runner.__version__)
