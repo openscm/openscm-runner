@@ -144,6 +144,7 @@ jobs:
       run: |
         pip install --upgrade pip wheel
         pip install -e .[dev]
+        pip uninstall setuptools-scm -y
     - name: Create package
       run: |
         python setup.py sdist bdist_wheel --universal
