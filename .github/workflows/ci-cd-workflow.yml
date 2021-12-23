@@ -142,10 +142,8 @@ jobs:
       run: |
         pip install --upgrade pip wheel
         pip install -e .[dev]
-        pip uninstall setuptools-scm -y
     - name: Create package
       run: |
-        rm -rf src/openscm_runner.egg-info
         python setup.py sdist bdist_wheel --universal
         for f in adapters/fair_adapter/natural-emissions-and-forcing.csv adapters/ciceroscm_adapter/utils_templates/gases_v1RCMIP.txt adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFSUN/solar_IPCC.txt
         do
