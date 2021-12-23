@@ -13,6 +13,6 @@ except ImportError:
 
 try:
     __version__ = _version("openscm_runner")
-except Exception:
-    # package is not installed
-    pass
+except Exception:  # pylint: disable=broad-except
+    # Local copy, not installed with setuptools
+    __version__ = "unknown"

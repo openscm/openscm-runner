@@ -26,9 +26,28 @@ import_submodules("openscm_runner")
 
 # make sure csvs etc. are included
 openscm_runner_root = os.path.dirname(openscm_runner.__file__)
-assert os.path.isfile(os.path.join(openscm_runner_root, "adapters/fair_adapter/natural-emissions-and-forcing.csv"))
-assert os.path.isfile(os.path.join(openscm_runner_root, "adapters/ciceroscm_adapter/utils_templates/gases_v1RCMIP.txt"))
-assert os.path.isfile(os.path.join(openscm_runner_root, "adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb"))
-assert os.path.isfile(os.path.join(openscm_runner_root, "adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFSUN/solar_IPCC.txt"))
+assert os.path.isfile(
+    os.path.join(
+        openscm_runner_root, "adapters/fair_adapter/natural-emissions-and-forcing.csv"
+    )
+)
+assert os.path.isfile(
+    os.path.join(
+        openscm_runner_root,
+        "adapters/ciceroscm_adapter/utils_templates/gases_v1RCMIP.txt",
+    )
+)
+assert os.path.isfile(
+    os.path.join(
+        openscm_runner_root,
+        "adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb",
+    )
+)
+assert os.path.isfile(
+    os.path.join(
+        openscm_runner_root,
+        "adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFSUN/solar_IPCC.txt",
+    )
+)
 
 print(openscm_runner.__version__)
