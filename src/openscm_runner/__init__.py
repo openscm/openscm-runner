@@ -3,8 +3,16 @@ OpenSCM-Runner, a thin wrapper to run simple climate models with a unified inter
 
 See README and docs for more info.
 """
-from ._version import get_versions
 from .run import run  # noqa: F401
 
-__version__ = get_versions()["version"]
-del get_versions
+try:
+    from importlib.metadata import version as _version
+except ImportError:
+    # no recourse if the fallback isn't there either...
+    from importlib_metadata import version as _version
+
+try:
+    __version__ = _version("openscm_runner")
+except Exception:  # pylint: disable=broad-except
+    # Local copy, not installed with setuptools
+    __version__ = "unknown"

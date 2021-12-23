@@ -98,7 +98,7 @@ test-install: $(VENV_DIR)  ## test installing works
 virtual-environment:  ## update venv, create a new venv if it doesn't exist
 	make $(VENV_DIR)
 
-$(VENV_DIR): setup.py
+$(VENV_DIR): setup.py setup.cfg pyproject.toml
 	[ -d $(VENV_DIR) ] || python3 -m venv $(VENV_DIR)
 
 	$(VENV_DIR)/bin/pip install --upgrade pip wheel
