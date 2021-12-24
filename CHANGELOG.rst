@@ -25,7 +25,7 @@ Changed
 Fixed
 ~~~~~
 
-- (`#61 <https://github.com/openscm/openscm-runner/pull/61>`_) Packing (now uses setuptools-scm) and hence includes all required files in source distributions (which should also fix the conda distribution)
+- (`#61 <https://github.com/openscm/openscm-runner/pull/61>`_) Packaging now uses setuptools-scm and hence includes all required files in source distributions (which should also fix the conda distribution)
 
 v0.9.1 - 2021-09-23
 -------------------
