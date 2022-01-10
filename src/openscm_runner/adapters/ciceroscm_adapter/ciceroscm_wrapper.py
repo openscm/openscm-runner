@@ -68,7 +68,6 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                 re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50],
                 "inputfiles",
                 "pam_current.scm",
-
             )
             call = f"{executable} {pamfile}"
 
