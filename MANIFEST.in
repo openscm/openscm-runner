@@ -1,6 +1,0 @@
-include README.rst
-include LICENSE
-include CHANGELOG.rst
-
-include versioneer.py
-include src/openscm_runner/_version.py

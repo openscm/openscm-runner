@@ -5,14 +5,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Path setup --------------------------------------------------------------
-
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-sys.path.append(os.path.join(os.path.dirname(__file__), "../../src/openscm_runner"))
-from _version import get_versions  # isort:skip # append path before
-
+from importlib.metadata import version
 
 # -- Project information -----------------------------------------------------
 
@@ -22,10 +15,10 @@ copyright_year = "2020"
 copyright = "{}, {}".format(copyright_year, authors)
 author = authors
 
-# The short X.Y version
-version = get_versions()["version"].split("+")[0]
 # The full version, including alpha/beta/rc tags
-release = get_versions()["version"]
+release = version("openscm_runner")
+# The short X.Y version
+version = ".".join(release.split(".")[:2])
 
 
 # -- General configuration ---------------------------------------------------
