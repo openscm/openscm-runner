@@ -40,7 +40,7 @@ assert os.path.isfile(
 assert os.path.isfile(
     os.path.join(
         openscm_runner_root,
-        "adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb",
+        "adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb_bfx",
     )
 )
 assert os.path.isfile(
