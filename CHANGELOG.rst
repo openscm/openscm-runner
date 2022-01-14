@@ -20,7 +20,7 @@ master
 Fixed
 ~~~~~
 
-- (`#52 <https://github.com/openscm/openscm-runner/pull/57>`_) Updating CICERO-SCM fortran binary which confused OHC and OHC down to 700 meters in output. Also adding missing components to radiative imbalance. Updating tests to match new version.
+- (`#57 <https://github.com/openscm/openscm-runner/pull/57>`_) Updating CICERO-SCM fortran binary which confused OHC and OHC down to 700 meters in output. Also adding missing components to radiative imbalance. Updating tests to match new version.
 
 v0.9.2 - 2021-12-23
 -------------------
