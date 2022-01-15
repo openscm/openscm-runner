@@ -14,6 +14,14 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
+master
+------
+
+Fixed
+~~~~~
+
+- (`#57 <https://github.com/openscm/openscm-runner/pull/57>`_) Updating CICERO-SCM fortran binary which confused OHC and OHC down to 700 meters in output. Also adding missing components to radiative imbalance. Updating tests to match new version.
+
 v0.9.2 - 2021-12-23
 -------------------
 
@@ -21,6 +29,7 @@ Added
 ~~~~~
 
 - (`#59 <https://github.com/openscm/openscm-runner/pull/59>`_) Conda install instructions
+
 
 Changed
 ~~~~~~~
@@ -40,10 +49,8 @@ Fixed
 
 - (`#52 <https://github.com/openscm/openscm-runner/pull/52>`_) Fixed CICERO-SCM bugs with converting halon units and handling of very long scenario names
 
-
 v0.9.0 - 2021-09-07
 -------------------
-
 
 Changed
 ~~~~~~~

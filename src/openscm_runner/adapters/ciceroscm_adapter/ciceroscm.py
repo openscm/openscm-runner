@@ -56,7 +56,7 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
             The CICERO-SCM binary cannot be run on the operating system
         """
         exec_call = os.path.join(
-            os.path.dirname(__file__), "utils_templates", "run_dir", "scm_vCH4fb"
+            os.path.dirname(__file__), "utils_templates", "run_dir", "scm_vCH4fb_bfx"
         )
         try:
             check_output(exec_call)
