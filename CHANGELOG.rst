@@ -14,13 +14,13 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
-master
-------
+v0.9.3 - 2022-01-19
+-------------------
 
 Fixed
 ~~~~~
 
-- (`#57 <https://github.com/openscm/openscm-runner/pull/57>`_) Updating CICERO-SCM fortran binary which confused OHC and OHC down to 700 meters in output. Also adding missing components to radiative imbalance. Updating tests to match new version.
+- (`#57 <https://github.com/openscm/openscm-runner/pull/57>`_) Updated CICERO-SCM fortran binary which confused OHC and OHC down to 700 meters in output and added missing components to radiative imbalance.
 
 v0.9.2 - 2021-12-23
 -------------------
