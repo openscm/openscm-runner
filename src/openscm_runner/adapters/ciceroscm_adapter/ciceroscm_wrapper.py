@@ -3,6 +3,7 @@ CICEROSCM_WRAPPER for parallelisation
 """
 import logging
 import os
+import platform
 import re
 import shutil
 import subprocess  # nosec # have to use subprocess
@@ -19,6 +20,17 @@ from .read_results import CSCMREADER
 from .write_parameter_files import PARAMETERFILEWRITER
 
 LOGGER = logging.getLogger(__name__)
+
+
+def get_executable(rundir):
+    """
+    Get the right executable for the operating system
+    """
+    if platform.system() == "Widows":
+        executable = os.path.join(rundir, "scm_vCH4fb_bfx.exe")
+    else:
+        executable = os.path.join(rundir, "scm_vCH4fb_bfx")
+    return executable
 
 
 class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
@@ -62,7 +74,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                 pamset,
                 os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50]),
             )
-            executable = os.path.join(self.rundir, "scm_vCH4fb_bfx")
+            executable = get_executable(self.rundir)
             pamfile = os.path.join(
                 self.rundir,
                 re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50],

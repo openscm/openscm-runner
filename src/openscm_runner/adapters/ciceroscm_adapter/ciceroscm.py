@@ -3,6 +3,7 @@ CICEROSCM adapter
 """
 import logging
 import os.path
+import platform
 from subprocess import check_output  # nosec
 
 from ..base import _Adapter
@@ -55,8 +56,12 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
         OSError
             The CICERO-SCM binary cannot be run on the operating system
         """
+        if platform.system() == "Windows":
+            cicero_binary = "scm_vCH4fb_bfx.exe"
+        else:
+            cicero_binary = "scm_vCH4fb_bfx"
         exec_call = os.path.join(
-            os.path.dirname(__file__), "utils_templates", "run_dir", "scm_vCH4fb_bfx"
+            os.path.dirname(__file__), "utils_templates", "run_dir", cicero_binary
         )
         try:
             check_output(exec_call)
