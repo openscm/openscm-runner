@@ -71,13 +71,7 @@ jobs:
       env:
         MIN_COVERAGE: 90
       run: |
-          pytest tests -r a --cov=openscm_runner --cov-report=''
-          if ! coverage report --fail-under=${MIN_COVERAGE} --show-missing
-          then
-              echo
-              echo "Error: Test coverage has to be at least ${MIN_COVERAGE}"
-              exit 1
-          fi
+          pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=${MIN_COVERAGE}
 
   test-notebooks:
     runs-on: ubuntu-latest
