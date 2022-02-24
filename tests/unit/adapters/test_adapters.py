@@ -1,8 +1,10 @@
 import pytest
 
 from openscm_runner.adapters import (
+    get_adapter,
     get_adapters_classes,
     register_adapter_class,
+    MAGICC7,
     _registered_adapters,
 )
 from openscm_runner.adapters.base import _Adapter
@@ -10,6 +12,12 @@ from openscm_runner.adapters.base import _Adapter
 
 class CustomAdapter(_Adapter):
     model_name = "Custom"
+
+    def _init_model(self, *args, **kwargs):
+        pass
+
+    def _run(self, scenarios, cfgs, output_variables, output_config):
+        pass
 
 
 @pytest.fixture()
@@ -58,3 +66,21 @@ def test_register_adapters_invalid(custom_adapters, cls, msg):
         register_adapter_class(cls)
 
     assert cls not in get_adapters_classes()
+
+
+def test_registering_existing_adapter(custom_adapters):
+    msg = "An adapter with the same model_name has already been registered"
+    with pytest.raises(ValueError, match=msg):
+        register_adapter_class(MAGICC7)
+
+
+def test_get_adapter(custom_adapters):
+    msg = "No adapter available for custom"
+    with pytest.raises(NotImplementedError, match=msg):
+        get_adapter("custom")
+
+    register_adapter_class(CustomAdapter)
+
+    adapter = get_adapter("custom")
+
+    assert isinstance(adapter, CustomAdapter)
