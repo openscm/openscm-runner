@@ -26,6 +26,11 @@ def get_adapter(climate_model):
 
         This parameter is case-insensitive
 
+    Raises
+    ------
+    NotImplementedError
+        A matching adapter could not be found
+
     Returns
     -------
     openscm_runner.adapters.base._Adapter
@@ -79,7 +84,7 @@ def register_adapter_class(adapter_cls: Type[_Adapter]):
     if adapter_cls.model_name is None or not isinstance(adapter_cls.model_name, str):
         raise ValueError("Cannot determine model_name")
 
-    if any([adapter_cls.model_name.upper() == name for name in existing_names]):
+    if any(adapter_cls.model_name.upper() == name for name in existing_names):
         raise ValueError(
             "An adapter with the same model_name has already been registered"
         )
