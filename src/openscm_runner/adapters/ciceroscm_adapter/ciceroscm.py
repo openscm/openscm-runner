@@ -16,6 +16,8 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
     Adapter for CICEROSCM
     """
 
+    model_name = "CiceroSCM"
+
     def __init__(self):  # pylint: disable=useless-super-delegation
         """
         Initialise the CICEROSCM adapter

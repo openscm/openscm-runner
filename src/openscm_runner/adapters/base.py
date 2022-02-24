@@ -9,6 +9,9 @@ class _Adapter(ABC):  # pylint: disable=too-few-public-methods
     Base class for adapters
     """
 
+    # Case-insensitive name of the simple climate model
+    model_name = None
+
     def __init__(self, *args, **kwargs):
         """
         Initialise the adapter
