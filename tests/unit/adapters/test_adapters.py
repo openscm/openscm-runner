@@ -1,11 +1,11 @@
 import pytest
 
 from openscm_runner.adapters import (
+    MAGICC7,
+    _registered_adapters,
     get_adapter,
     get_adapters_classes,
     register_adapter_class,
-    MAGICC7,
-    _registered_adapters,
 )
 from openscm_runner.adapters.base import _Adapter
 
