@@ -5,7 +5,7 @@ import logging
 
 import scmdata
 
-from .adapters.utils import get_adapter
+from .adapters import get_adapter
 from .progress import progress
 
 LOGGER = logging.getLogger(__name__)
