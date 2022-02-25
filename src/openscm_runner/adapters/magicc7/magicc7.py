@@ -50,6 +50,8 @@ class MAGICC7(_Adapter):
     emissions passed from the user are used.
     """
 
+    model_name = "MAGICC7"
+
     def __init__(self):
         """
         Initialise the MAGICC7 adapter
