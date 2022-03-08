@@ -41,6 +41,8 @@ class FAIR(_Adapter):
     Adapter for running FAIR
     """
 
+    model_name = "FaIR"
+
     def _init_model(self, *args, **kwargs):
         if fair is None:
             raise ImportError("fair is not installed. Run 'pip install fair'")

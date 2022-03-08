@@ -14,6 +14,14 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
+Unreleased
+----------
+
+Added
+~~~~~
+
+- (`#64 <https://github.com/openscm/openscm-runner/pull/64>`_) Allow for the registration of adapters at runtime. Adapters now require a unique ``model_name``
+
 v0.9.3 - 2022-01-19
 -------------------
 

@@ -5,7 +5,7 @@ import logging
 
 import scmdata
 
-from .adapters import CICEROSCM, FAIR, MAGICC7
+from .adapters import get_adapter
 from .progress import progress
 
 LOGGER = logging.getLogger(__name__)
@@ -74,14 +74,7 @@ def run(
     for climate_model, cfgs in progress(
         climate_models_cfgs.items(), desc="Climate models"
     ):
-        if climate_model == "MAGICC7":
-            runner = MAGICC7()
-        elif climate_model.upper() == "FAIR":  # allow various capitalisations
-            runner = FAIR()
-        elif climate_model.upper() == "CICEROSCM":  # allow various capitalisations
-            runner = CICEROSCM()
-        else:
-            raise NotImplementedError(f"No adapter available for {climate_model}")
+        runner = get_adapter(climate_model)
 
         if out_config is not None and climate_model in out_config:
             output_config_cm = out_config[climate_model]
