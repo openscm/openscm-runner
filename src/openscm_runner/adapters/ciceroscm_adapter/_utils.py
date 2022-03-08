@@ -48,7 +48,7 @@ def _get_executable(rundir):
     """
     Get the right executable for the operating system
     """
-    if platform.system() == "Widows":
+    if platform.system() == "Windows":
         executable = os.path.join(rundir, "scm_vCH4fb_bfx.exe")
     else:
         executable = os.path.join(rundir, "scm_vCH4fb_bfx")
