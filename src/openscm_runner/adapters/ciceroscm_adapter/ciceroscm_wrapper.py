@@ -50,7 +50,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         pam_min = os.path.join(self.rundir, "1", "inputfiles", "pam_current.scm")
         executable = _get_executable(self.rundir)
         call_string = f"{executable} {pam_min}"
-        max_length_1 = 127 - len(call_string)
+        max_length_1 = 255 - len(call_string)- 50
         max_length_2 = int(
             np.floor(
                 (127 - len(os.path.join("./", "12345", "inputfiles", "12345_conc.txt")))
