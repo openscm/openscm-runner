@@ -50,7 +50,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         pam_min = os.path.join(self.rundir, "1", "inputfiles", "pam_current.scm")
         executable = _get_executable(self.rundir)
         call_string = f"{executable} {pam_min}"
-        max_length_1 = 255 - len(call_string)- 60
+        max_length_1 = 255 - len(call_string) - 60
         max_length_2 = int(
             np.floor(
                 (127 - len(os.path.join("./", "12345", "inputfiles", "12345_conc.txt")))
@@ -60,8 +60,6 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         max_length = np.amin([max_length_1, max_length_2])
         if max_length < 0:
             max_length == 1
-        print(f"{max_length_1} {max_length_2} {max_length}")
-        # sys.exit(4)
         return re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:max_length]
 
     def _call_sfilewriter(self, scenarios):
