@@ -59,7 +59,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         )
         max_length = np.amin([max_length_1, max_length_2])
         if max_length < 0:
-            max_length == 1
+            max_length = 1
         return re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:max_length]
 
     def _call_sfilewriter(self, scenarios):
