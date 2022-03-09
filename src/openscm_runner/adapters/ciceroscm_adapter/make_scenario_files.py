@@ -7,7 +7,6 @@ Module with functionality to make emission input files
 import csv
 import logging
 import os
-import re
 
 import numpy as np
 import openscm_units
@@ -206,14 +205,11 @@ class SCENARIOFILEWRITER:
 
         return interpol
 
-    def write_scenario_data(self, scenarioframe, odir):
+    def write_scenario_data(self, scenarioframe, odir, scenario):
         """
         Take a scenariodataframe
         and writing out necessary emissions files
         """
-        scenario = re.sub(
-            "[^a-zA-Z0-9_-]", "", _get_unique_index_values(scenarioframe, "scenario"),
-        )[:50]
         fname = os.path.join(odir, "inputfiles", f"{scenario}_em.txt",)
         logging.getLogger("pyam").setLevel(logging.ERROR)
         avail_comps = [

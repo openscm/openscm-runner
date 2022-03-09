@@ -47,13 +47,14 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         """
         Cut the scenario name and get rid of special characters so run can work
         """
-        pam_min = os.path.join(self.rundir, "1", "inputfiles", "pam_current.scm")
+        pam_min = os.path.join(self.rundir, "123456", "inputfiles", "pam_current.scm")
         executable = _get_executable(self.rundir)
         call_string = f"{executable} {pam_min}"
-        max_length_1 = 256 - len(call_string)
+        max_length_1 = 255 - len(call_string)
         max_length_2 = int(
             np.floor(
-                (128 - len(os.path.join("./", "12", "inputfiles", "12_conc.txt"))) / 2.0
+                (127 - len(os.path.join("./", "12345", "inputfiles", "12345_conc.txt")))
+                / 2.0
             )
         )
         max_length = np.amin([max_length_1, max_length_2])
@@ -66,7 +67,9 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         Call sfilwriter to write scenariodata file
         """
         self.sfilewriter.write_scenario_data(
-            scenarios, os.path.join(self.rundir, self.local_scenarioname),
+            scenarios,
+            os.path.join(self.rundir, self.local_scenarioname),
+            self.local_scenarioname,
         )
 
     def run_over_cfgs(self, cfgs, output_variables):
@@ -96,7 +99,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                     timeseries,
                     unit,
                 ) = self.resultsreader.read_variable_timeseries(
-                    self.scen, variable, self.sfilewriter
+                    self.local_scenarioname, variable, self.sfilewriter,
                 )
                 if years.empty:  # pragma: no cover
                     continue  # pragma: no cover
