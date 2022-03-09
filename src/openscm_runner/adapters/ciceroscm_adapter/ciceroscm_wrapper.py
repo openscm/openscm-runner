@@ -57,7 +57,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                 / 2.0
             )
         )
-        max_length = np.amin([max_length_1, max_length_2])
+        max_length = int(np.amin([max_length_1, max_length_2]))
         if max_length < 0:
             max_length = 1
         return re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:max_length]
