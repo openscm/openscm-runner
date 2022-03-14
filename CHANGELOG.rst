@@ -20,12 +20,7 @@ Unreleased
 Added
 ~~~~~
 
-- (`#63 <https://github.com/openscm/openscm-runner/pull/63>`_) Adding a windows binary for cicero-scm. Cicero-scm can now also be run on Windows.
-
-
-Added
-~~~~~
-
+- (`#63 <https://github.com/openscm/openscm-runner/pull/63>`_) Added a windows binary for cicero-scm so it can also be run on Windows
 - (`#64 <https://github.com/openscm/openscm-runner/pull/64>`_) Allow for the registration of adapters at runtime. Adapters now require a unique ``model_name``
 
 v0.9.3 - 2022-01-19
