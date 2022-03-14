@@ -14,8 +14,8 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
-Unreleased
-----------
+v0.10.0 - 2022-03-15
+--------------------
 
 Added
 ~~~~~
