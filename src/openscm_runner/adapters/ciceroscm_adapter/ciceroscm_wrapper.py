@@ -9,11 +9,12 @@ import subprocess  # nosec # have to use subprocess
 import tempfile
 from distutils import dir_util
 
+import numpy as np
 import pandas as pd
 from scmdata import ScmRun, run_append
 
 from ...settings import config
-from ._utils import _get_unique_index_values
+from ._utils import _get_executable, _get_unique_index_values
 from .make_scenario_files import SCENARIOFILEWRITER
 from .read_results import CSCMREADER
 from .write_parameter_files import PARAMETERFILEWRITER
@@ -30,16 +31,36 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         """
         Intialise CICEROSCM wrapper
         """
-        self.udir = os.path.join(os.path.dirname(__file__), "utils_templates")
-        self.sfilewriter = SCENARIOFILEWRITER(self.udir)
-        self.pamfilewriter = PARAMETERFILEWRITER(self.udir)
+        udir = os.path.join(os.path.dirname(__file__), "utils_templates")
+        self.sfilewriter = SCENARIOFILEWRITER(udir)
+        self.pamfilewriter = PARAMETERFILEWRITER(udir)
         self._setup_tempdirs()
         self.resultsreader = CSCMREADER(self.rundir)
 
         self.scen = _get_unique_index_values(scenariodata, "scenario")
         self.model = _get_unique_index_values(scenariodata, "model")
-        self._make_dir_structure(re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50])
+        self.local_scenarioname = self.get_usable_scenario_name()
+        self._make_dir_structure(self.local_scenarioname)
         self._call_sfilewriter(scenariodata)
+
+    def get_usable_scenario_name(self):
+        """
+        Cut the scenario name and get rid of special characters so run can work
+        """
+        pam_min = os.path.join(self.rundir, "1", "inputfiles", "pam_current.scm")
+        executable = _get_executable(self.rundir)
+        call_string = f"{executable} {pam_min}"
+        max_length_1 = 255 - len(call_string) - 60
+        max_length_2 = int(
+            np.floor(
+                (127 - len(os.path.join("./", "12345", "inputfiles", "12345_conc.txt")))
+                / 2.0
+            )
+        )
+        max_length = int(np.amin([max_length_1, max_length_2]))
+        if max_length < 0:
+            max_length = 1
+        return re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:max_length]
 
     def _call_sfilewriter(self, scenarios):
         """
@@ -47,7 +68,8 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         """
         self.sfilewriter.write_scenario_data(
             scenarios,
-            os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50]),
+            os.path.join(self.rundir, self.local_scenarioname),
+            self.local_scenarioname,
         )
 
     def run_over_cfgs(self, cfgs, output_variables):
@@ -59,15 +81,11 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         runs = []
         for i, pamset in enumerate(cfgs):
             self.pamfilewriter.write_parameterfile(
-                pamset,
-                os.path.join(self.rundir, re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50]),
+                pamset, os.path.join(self.rundir, self.local_scenarioname),
             )
-            executable = os.path.join(self.rundir, "scm_vCH4fb_bfx")
+            executable = _get_executable(self.rundir)
             pamfile = os.path.join(
-                self.rundir,
-                re.sub("[^a-zA-Z0-9_-]", "", self.scen)[:50],
-                "inputfiles",
-                "pam_current.scm",
+                self.rundir, self.local_scenarioname, "inputfiles", "pam_current.scm",
             )
             call = f"{executable} {pamfile}"
 
@@ -81,7 +99,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                     timeseries,
                     unit,
                 ) = self.resultsreader.read_variable_timeseries(
-                    self.scen, variable, self.sfilewriter
+                    self.local_scenarioname, variable, self.sfilewriter,
                 )
                 if years.empty:  # pragma: no cover
                     continue  # pragma: no cover
