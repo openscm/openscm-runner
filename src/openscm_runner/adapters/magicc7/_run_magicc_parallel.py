@@ -60,7 +60,7 @@ def _run_func(magicc, cfg):
 
         res = magicc.run(**cfg)
         if res.metadata["stderr"]:
-            LOGGER.info("magicc run stderr: %s", res.metadata["stderr"])
+            LOGGER.warning("magicc run stderr: %s", res.metadata["stderr"])
             LOGGER.info("cfg: %s", cfg)
 
         res["scenario"] = scenario
