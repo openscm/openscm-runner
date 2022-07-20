@@ -83,7 +83,7 @@ def _run_func(magicc, cfg):
         return res
     except CalledProcessError as exc:
         # Swallow the exception, but return None
-        LOGGER.debug("magicc run failed: %s", exc.stderr)
+        LOGGER.error("magicc run failed: %s", exc.stderr)
         LOGGER.debug("cfg: %s", cfg)
 
         return None
