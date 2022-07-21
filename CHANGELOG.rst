@@ -13,6 +13,7 @@ The changes listed in this file are categorised as follows:
     - Removed: now removed features
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
+
 Unreleased
 ----------
 
@@ -20,6 +21,7 @@ Changed
 ~~~~~~~
 
 - (`#66 <https://github.com/openscm/openscm-runner/pull/66>`_) Log MAGICC7 errors more prominently.
+- (`#68 <https://github.com/openscm/openscm-runner/pull/68>`_) MAGICC7 adapter: automatically create a temporary directory when MAGICC_WORKER_ROOT_DIR is not specified.
 
 Unreleased
 ----------
