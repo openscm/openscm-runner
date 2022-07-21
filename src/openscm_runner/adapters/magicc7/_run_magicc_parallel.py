@@ -43,7 +43,7 @@ class TemporaryDirectory:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._td is not None:
-            self.__exit__(exc_type, exc_val, exc_tb)
+            self._td.__exit__(exc_type, exc_val, exc_tb)
 
     def __repr__(self):
         if self._td is None:
