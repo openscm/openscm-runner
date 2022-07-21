@@ -4,6 +4,7 @@ Module for running MAGICC in parallel
 import logging
 import multiprocessing
 import os.path
+import typing
 from concurrent.futures import ProcessPoolExecutor
 from subprocess import CalledProcessError  # nosec
 
@@ -52,7 +53,9 @@ def _init_magicc_worker(dict_shared_instances):
     )
 
 
-def _run_func(magicc, cfg):
+def _run_func(
+    magicc: pymagicc.MAGICC7, cfg: dict[str, typing.Any]
+) -> typing.Union[None, dict[str, typing.Any]]:
     try:
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
@@ -89,7 +92,15 @@ def _run_func(magicc, cfg):
         return None
 
 
-def _execute_run(cfg, run_func, setup_func, instances):
+def _execute_run(
+    cfg: dict[str, typing.Any],
+    run_func: typing.Callable[
+        [pymagicc.MAGICC7, dict[str, typing.Any]],
+        typing.Union[None, dict[str, typing.Any]],
+    ],
+    setup_func,
+    instances: _MagiccInstances,
+):
     magicc = instances.get(
         root_dir=config["MAGICC_WORKER_ROOT_DIR"],
         init_callback=setup_func,
@@ -99,7 +110,11 @@ def _execute_run(cfg, run_func, setup_func, instances):
     return run_func(magicc, cfg)
 
 
-def run_magicc_parallel(cfgs, output_vars, output_config):
+def run_magicc_parallel(
+    cfgs: typing.Iterable[dict[str, typing.Any]],
+    output_vars: typing.Iterable[str],
+    output_config: typing.Iterable[str],
+):
     """
     Run MAGICC in parallel using compact out files
 
