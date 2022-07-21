@@ -4,6 +4,7 @@ Module for running MAGICC in parallel
 import logging
 import multiprocessing
 import os.path
+import tempfile
 import typing
 from concurrent.futures import ProcessPoolExecutor
 from subprocess import CalledProcessError  # nosec
@@ -16,6 +17,43 @@ from ._compat import f90nml, pymagicc
 from ._magicc_instances import _MagiccInstances
 
 LOGGER = logging.getLogger(__name__)
+
+
+class TemporaryDirectory:
+    """A temporary directory context manager which works like
+    tempfile.TemporaryDirectory but supports existing directories.
+
+    If instantiated without a directory, behaves exactly like
+    tempfile.TemporaryDirectory. If instantiated with an explicit directory
+    name, will use this directory instead and will *not* delete the directory
+    when exiting the context.
+    """
+    def __init__(self, tempdir: typing.Union[None, str] = None, **kwargs):
+        if tempdir is None:
+            self._td = tempfile.TemporaryDirectory(**kwargs)
+        else:
+            self._td = None
+            self._tempdir = tempdir
+
+    def __enter__(self) -> str:
+        if self._td is None:
+            return self._tempdir
+        else:
+            return self._td.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._td is not None:
+            self.__exit__(exc_type, exc_val, exc_tb)
+
+    def __repr__(self):
+        if self._td is None:
+            return f"<TemporaryDirectory {self._tempdir}>"
+        else:
+            return repr(self._td)
+
+    def cleanup(self):
+        if self._td is not None:
+            self._td.cleanup()
 
 
 def _inject_pymagicc_compatible_magcfg_user(magicc):
@@ -98,11 +136,12 @@ def _execute_run(
         [pymagicc.MAGICC7, dict[str, typing.Any]],
         typing.Union[None, dict[str, typing.Any]],
     ],
-    setup_func,
+    setup_func: typing.Callable,
     instances: _MagiccInstances,
+    root_dir: str,
 ):
     magicc = instances.get(
-        root_dir=config["MAGICC_WORKER_ROOT_DIR"],
+        root_dir=root_dir,
         init_callback=setup_func,
         init_callback_kwargs={},
     )
@@ -144,22 +183,23 @@ def run_magicc_parallel(
         for v in output_vars
     ]
 
-    runs = [
-        {
-            "cfg": {
-                **cfg,
-                "only": output_vars,
-                "out_dynamic_vars": magicc_internal_vars,
-                "output_config": output_config,
-            },
-            "run_func": _run_func,
-            "setup_func": _setup_func,
-            "instances": instances,
-        }
-        for cfg in cfgs
-    ]
+    with TemporaryDirectory(tempdir=config.get("MAGICC_WORKER_ROOT_DIR", None)) as root_dir:
+        runs = [
+            {
+                "cfg": {
+                    **cfg,
+                    "only": output_vars,
+                    "out_dynamic_vars": magicc_internal_vars,
+                    "output_config": output_config,
+                },
+                "run_func": _run_func,
+                "setup_func": _setup_func,
+                "instances": instances,
+                "root_dir": root_dir,
+            }
+            for cfg in cfgs
+        ]
 
-    try:
         max_workers = int(
             config.get("MAGICC_WORKER_NUMBER", multiprocessing.cpu_count())
         )
@@ -169,23 +209,23 @@ def run_magicc_parallel(
             initializer=_init_magicc_worker,
             initargs=(shared_dict,),
         )
+        try:
+            res = _parallel_process(
+                func=_execute_run,
+                configuration=runs,
+                pool=pool,
+                config_are_kwargs=True,
+                front_serial=2,
+                front_parallel=2,
+            )
 
-        res = _parallel_process(
-            func=_execute_run,
-            configuration=runs,
-            pool=pool,
-            config_are_kwargs=True,
-            front_serial=2,
-            front_parallel=2,
-        )
+            LOGGER.info("Appending results into a single ScmRun")
+            res = scmdata.run_append([r for r in res if r is not None])
 
-        LOGGER.info("Appending results into a single ScmRun")
-        res = scmdata.run_append([r for r in res if r is not None])
+        finally:
+            instances.cleanup()
+            LOGGER.info("Shutting down parallel pool")
+            shared_manager.shutdown()
+            pool.shutdown()
 
-    finally:
-        instances.cleanup()
-        LOGGER.info("Shutting down parallel pool")
-        shared_manager.shutdown()
-        pool.shutdown()
-
-    return res
+        return res
