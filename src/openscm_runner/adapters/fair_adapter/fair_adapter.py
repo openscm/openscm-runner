@@ -62,7 +62,7 @@ class FAIR(_Adapter):
 
         return res
 
-    def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0201,R0914
+    def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0914
         full_cfgs = []
         run_id_block = 0
         startyear = _check_startyear(cfgs)
