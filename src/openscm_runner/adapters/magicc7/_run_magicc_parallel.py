@@ -19,7 +19,7 @@ from ._magicc_instances import _MagiccInstances
 LOGGER = logging.getLogger(__name__)
 
 
-class TemporaryDirectory:
+class TemporaryDirectoryIfNeeded:
     """A temporary directory context manager which works like
     tempfile.TemporaryDirectory but supports existing directories.
 
@@ -47,11 +47,13 @@ class TemporaryDirectory:
 
     def __repr__(self):
         if self._td is None:
-            return f"<TemporaryDirectory {self._tempdir}>"
+            return f"<TemporaryDirectoryIfNeeded {self._tempdir}>"
         else:
             return repr(self._td)
 
     def cleanup(self):
+        """Delete the temporary directory if it was created. Does not delete
+        the directory if an existing directory was used."""
         if self._td is not None:
             self._td.cleanup()
 
@@ -183,7 +185,7 @@ def run_magicc_parallel(
         for v in output_vars
     ]
 
-    with TemporaryDirectory(tempdir=config.get("MAGICC_WORKER_ROOT_DIR", None)) as root_dir:
+    with TemporaryDirectoryIfNeeded(tempdir=config.get("MAGICC_WORKER_ROOT_DIR", None)) as root_dir:
         runs = [
             {
                 "cfg": {
