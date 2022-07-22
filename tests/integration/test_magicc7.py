@@ -78,19 +78,17 @@ class TestMagicc7Adapter(_AdapterTester):
         assert res.get_unique_meta(
             "climate_model", no_duplicates=True
         ) == "MAGICC{}".format(MAGICC7.get_version())
-        assert set(res.get_unique_meta("variable")) == set(
-            [
-                "Surface Air Temperature Change",
-                "Effective Radiative Forcing",
-                "Effective Radiative Forcing|Aerosols",
-                "Effective Radiative Forcing|CO2",
-                "Heat Content",
-                "Heat Content|Ocean",
-                "Heat Uptake",
-                "Heat Uptake|Ocean",
-                "Net Atmosphere to Land Flux|CO2",
-            ]
-        )
+        assert set(res.get_unique_meta("variable")) == {
+            "Surface Air Temperature Change",
+            "Effective Radiative Forcing",
+            "Effective Radiative Forcing|Aerosols",
+            "Effective Radiative Forcing|CO2",
+            "Heat Content",
+            "Heat Content|Ocean",
+            "Heat Uptake",
+            "Heat Uptake|Ocean",
+            "Net Atmosphere to Land Flux|CO2",
+        }
 
         # check we can also calcluate quantiles
         assert "run_id" in res.meta

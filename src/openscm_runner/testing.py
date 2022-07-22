@@ -36,7 +36,6 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
 
         for filter_kwargs, expected_val in checks:
             err_msg = f"{filter_kwargs}"
-
             filter_kwargs_in = {**filter_kwargs}
             check_units = filter_kwargs.pop("unit", None)
             quantile = filter_kwargs.pop("quantile")
@@ -68,7 +67,6 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
                     raise
 
             updated_output[climate_model].append((filter_kwargs_in, new_val))
-
     if update:
         with open(expected_output_file, "w", encoding="ascii") as file_handle:
             json.dump(updated_output, file_handle, indent=4)
@@ -76,7 +74,7 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
         pytest.skip(f"Updated {expected_output_file}")
 
 
-class _AdapterTester(ABC):
+class _AdapterTester(ABC):  # nosec
     """
     Base class for testing adapters.
 
@@ -84,6 +82,7 @@ class _AdapterTester(ABC):
     implements all abstract methods.
     """
 
+    # pylint: disable=pointless-string-statement
     """float: relative tolerance for numeric comparisons"""
     _rtol = 1e-5
 
@@ -142,7 +141,7 @@ class _AdapterTester(ABC):
             if raise_error:
                 raise
 
-            print("exp: {}, check_val: {}".format(exp, check_val))
+            print(f"exp: {exp}, check_val: {check_val}")
 
     def _check_output(self, res, expected_output_file, update):
         _check_output(res, expected_output_file, self._rtol, update)
@@ -154,9 +153,9 @@ class _AdapterTester(ABC):
             .timeseries(time_axis="year")
             .diff(axis="columns")
         )
-        hc_deltas["unit"] = "{} / yr".format(hc_deltas.get_unique_meta("unit", True))
+        hc_deltas["unit"] = f"{hc_deltas.get_unique_meta('unit', True)} / yr"
 
-        ratio = hc_deltas.divide(
+        ratio = hc_deltas.divide(  # pylint: disable=no-member
             res.filter(variable="Heat Uptake", region="World"),
             op_cols={"variable": "Heat Content / Heat Uptake"},
         )
@@ -191,14 +190,17 @@ class _AdapterTester(ABC):
         )
 
         assert isinstance(res, ScmRun)
-        assert res["run_id"].min() == 0
+        assert res["run_id"].min() == 0  # pylint: disable=compare-to-zero
+        assert res["run_id"].min() == 0  # pylint: disable=compare-to-zero
         assert res["run_id"].max() == 8
 
         assert res.get_unique_meta("climate_model", no_duplicates=True) == "model_name"
 
-        assert set(res.get_unique_meta("variable")) == set(
-            ["expected", "output", "variables"]
-        )
+        assert set(res.get_unique_meta("variable")) == {
+            "expected",
+            "output",
+            "variables",
+        }
 
         # output value checks e.g.
         npt.assert_allclose(
