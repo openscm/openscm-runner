@@ -29,6 +29,7 @@ class TemporaryDirectoryIfNeeded:
     name, will use this directory instead and will *not* delete the directory
     when exiting the context.
     """
+
     def __init__(self, tempdir: typing.Union[None, str] = None, **kwargs):
         if tempdir is None:
             self._td = tempfile.TemporaryDirectory(**kwargs)
@@ -37,20 +38,21 @@ class TemporaryDirectoryIfNeeded:
             self._tempdir = tempdir
 
     def __enter__(self) -> str:
+        """Create temporary directory if needed."""
         if self._td is None:
             return self._tempdir
-        else:
-            return self._td.__enter__()
+        return self._td.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Delete directory if temporary directory was created."""
         if self._td is not None:
             self._td.__exit__(exc_type, exc_val, exc_tb)
 
     def __repr__(self):
+        """Human-readable representation."""
         if self._td is None:
             return f"<TemporaryDirectoryIfNeeded {self._tempdir}>"
-        else:
-            return repr(self._td)
+        return repr(self._td)
 
     def cleanup(self):
         """
@@ -189,7 +191,9 @@ def run_magicc_parallel(
         for v in output_vars
     ]
 
-    with TemporaryDirectoryIfNeeded(tempdir=config.get("MAGICC_WORKER_ROOT_DIR", None)) as root_dir:
+    with TemporaryDirectoryIfNeeded(
+        tempdir=config.get("MAGICC_WORKER_ROOT_DIR", None)
+    ) as root_dir:
         runs = [
             {
                 "cfg": {
