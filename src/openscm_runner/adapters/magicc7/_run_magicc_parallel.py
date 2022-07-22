@@ -101,7 +101,7 @@ def _init_magicc_worker(dict_shared_instances):
 
 
 def _run_func(
-    magicc: pymagicc.MAGICC7, cfg: dict[str, typing.Any]
+    magicc: "pymagicc.MAGICC7", cfg: dict[str, typing.Any]
 ) -> typing.Union[None, dict[str, typing.Any]]:
     try:
         scenario = cfg.pop("scenario")
@@ -142,7 +142,7 @@ def _run_func(
 def _execute_run(
     cfg: dict[str, typing.Any],
     run_func: typing.Callable[
-        [pymagicc.MAGICC7, dict[str, typing.Any]],
+        ["pymagicc.MAGICC7", dict[str, typing.Any]],
         typing.Union[None, dict[str, typing.Any]],
     ],
     setup_func: typing.Callable,

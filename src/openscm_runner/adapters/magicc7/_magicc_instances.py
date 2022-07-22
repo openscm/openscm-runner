@@ -62,7 +62,7 @@ class _MagiccInstances:
         root_dir: typing.Union[None, str] = None,
         init_callback: typing.Union[None, typing.Callable] = None,
         init_callback_kwargs: typing.Union[None, dict] = None,
-    ) -> pymagicc.MAGICC7:
+    ) -> "pymagicc.MAGICC7":
         """
         Get a MAGICC object which is ready to run (always uses ``strict=False``)
 
