@@ -56,7 +56,10 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
 
             try:
                 npt.assert_allclose(
-                    res_val, expected_val, rtol=rtol, err_msg=err_msg,
+                    res_val,
+                    expected_val,
+                    rtol=rtol,
+                    err_msg=err_msg,
                 )
                 if update:
                     new_val = expected_val

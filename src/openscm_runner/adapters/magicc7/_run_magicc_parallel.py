@@ -35,7 +35,8 @@ def _inject_pymagicc_compatible_magcfg_user(magicc):
 
 def _setup_func(magicc):
     LOGGER.info(
-        "Setting up MAGICC worker in %s", magicc.root_dir,
+        "Setting up MAGICC worker in %s",
+        magicc.root_dir,
     )
 
     magicc.set_config()

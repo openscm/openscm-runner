@@ -81,17 +81,23 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         runs = []
         for i, pamset in enumerate(cfgs):
             self.pamfilewriter.write_parameterfile(
-                pamset, os.path.join(self.rundir, self.local_scenarioname),
+                pamset,
+                os.path.join(self.rundir, self.local_scenarioname),
             )
             executable = _get_executable(self.rundir)
             pamfile = os.path.join(
-                self.rundir, self.local_scenarioname, "inputfiles", "pam_current.scm",
+                self.rundir,
+                self.local_scenarioname,
+                "inputfiles",
+                "pam_current.scm",
             )
             call = f"{executable} {pamfile}"
 
             LOGGER.debug("Call, %s", call)
             subprocess.check_call(
-                call, cwd=self.rundir, shell=True,  # nosec # have to use subprocess
+                call,
+                cwd=self.rundir,
+                shell=True,  # nosec # have to use subprocess
             )
             for variable in output_variables:
                 (
@@ -99,7 +105,9 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
                     timeseries,
                     unit,
                 ) = self.resultsreader.read_variable_timeseries(
-                    self.local_scenarioname, variable, self.sfilewriter,
+                    self.local_scenarioname,
+                    variable,
+                    self.sfilewriter,
                 )
                 if years.empty:  # pragma: no cover
                     continue  # pragma: no cover

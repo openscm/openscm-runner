@@ -54,7 +54,10 @@ def run_fair(cfgs, output_vars):  # pylint: disable=R0914
     if ncpu > 1:
 
         with ProcessPoolExecutor(ncpu) as pool:
-            res = _parallel_process(**parallel_process_kwargs, pool=pool,)
+            res = _parallel_process(
+                **parallel_process_kwargs,
+                pool=pool,
+            )
     else:
         res = _parallel_process(**parallel_process_kwargs)
 

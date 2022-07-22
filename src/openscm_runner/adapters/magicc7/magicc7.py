@@ -94,7 +94,9 @@ class MAGICC7(_Adapter):
             else:
                 context = None
             magicc_scmdf = magicc_scmdf.convert_unit(
-                magicc_unit, variable=variable, context=context,
+                magicc_unit,
+                variable=variable,
+                context=context,
             )
 
         return magicc_scmdf

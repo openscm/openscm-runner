@@ -210,7 +210,11 @@ class SCENARIOFILEWRITER:
         Take a scenariodataframe
         and writing out necessary emissions files
         """
-        fname = os.path.join(odir, "inputfiles", f"{scenario}_em.txt",)
+        fname = os.path.join(
+            odir,
+            "inputfiles",
+            f"{scenario}_em.txt",
+        )
         logging.getLogger("pyam").setLevel(logging.ERROR)
         avail_comps = [
             c.replace("Emissions|", "")
