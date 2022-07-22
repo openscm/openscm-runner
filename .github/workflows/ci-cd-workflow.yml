@@ -28,7 +28,7 @@ jobs:
         pip install -e .[dev]
     - name: Formatting and linters
       run: |
-        black --check src tests setup.py --exclude openscm_runner/_version.py
+        black --check src tests setup.py
         isort --check-only --quiet --recursive src tests setup.py
         pydocstyle src
         bandit -c .bandit.yml -r src

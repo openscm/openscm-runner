@@ -11,7 +11,8 @@ def test_no_fair():
         ImportError, match="fair is not installed. Run 'pip install fair'"
     ):
         run(
-            climate_models_cfgs={"fair": ["config list"]}, scenarios="not used",
+            climate_models_cfgs={"fair": ["config list"]},
+            scenarios="not used",
         )
 
 
@@ -22,5 +23,6 @@ def test_no_pymagicc():
         match="pymagicc is not installed. Run 'conda install pymagicc' or 'pip install pymagicc'",
     ):
         run(
-            climate_models_cfgs={"MAGICC7": ["config list"]}, scenarios="not used",
+            climate_models_cfgs={"MAGICC7": ["config list"]},
+            scenarios="not used",
         )
