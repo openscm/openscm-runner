@@ -13,6 +13,7 @@ The changes listed in this file are categorised as follows:
     - Removed: now removed features
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
+
 Unreleased
 ----------
 
@@ -20,13 +21,6 @@ Changed
 ~~~~~~~
 
 - (`#66 <https://github.com/openscm/openscm-runner/pull/66>`_) Log MAGICC7 errors more prominently.
-
-Unreleased
-----------
-
-Changed
-~~~~~~~
-
 - (`#69 <https://github.com/openscm/openscm-runner/pull/69>`_) Updated dependency ``black`` to ``v22.3.0`` and pin ``isort`` and ``pylint`` for consistent pull requests
 
 
