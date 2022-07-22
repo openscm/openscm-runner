@@ -60,7 +60,7 @@ def _run_func(magicc, cfg):
 
         res = magicc.run(**cfg)
         if res.metadata["stderr"]:
-            LOGGER.info("magicc run stderr: %s", res.metadata["stderr"])
+            LOGGER.warning("magicc run stderr: %s", res.metadata["stderr"])
             LOGGER.info("cfg: %s", cfg)
 
         res["scenario"] = scenario
@@ -70,21 +70,20 @@ def _run_func(magicc, cfg):
             magicc_out_cfg = res.metadata["parameters"]["allcfgs"]
             for k in output_config:
                 res[k] = cfg[k]
-                if k in magicc_out_cfg:
-                    if magicc_out_cfg[k] != cfg[k]:
-                        LOGGER.warning(
-                            "Parameter: %s. "
-                            "MAGICC input config (via OpenSCM-Runner): %s. "
-                            "MAGICC output config: %s.",
-                            k,
-                            cfg[k],
-                            magicc_out_cfg[k],
-                        )
+                if k in magicc_out_cfg and magicc_out_cfg[k] != cfg[k]:
+                    LOGGER.warning(
+                        "Parameter: %s. "
+                        "MAGICC input config (via OpenSCM-Runner): %s. "
+                        "MAGICC output config: %s.",
+                        k,
+                        cfg[k],
+                        magicc_out_cfg[k],
+                    )
 
         return res
     except CalledProcessError as exc:
         # Swallow the exception, but return None
-        LOGGER.debug("magicc run failed: %s", exc.stderr)
+        LOGGER.error("magicc run failed: %s", exc.stderr)
         LOGGER.debug("cfg: %s", cfg)
 
         return None
