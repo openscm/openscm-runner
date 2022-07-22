@@ -20,7 +20,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class TemporaryDirectoryIfNeeded:
-    """A temporary directory context manager which works like
+    """
+    A temporary directory context manager which works like
     tempfile.TemporaryDirectory but supports existing directories.
 
     If instantiated without a directory, behaves exactly like
@@ -52,8 +53,11 @@ class TemporaryDirectoryIfNeeded:
             return repr(self._td)
 
     def cleanup(self):
-        """Delete the temporary directory if it was created. Does not delete
-        the directory if an existing directory was used."""
+        """
+        Delete the temporary directory if it was created.
+
+        Does not delete the directory if an existing directory was used.
+        """
         if self._td is not None:
             self._td.cleanup()
 
