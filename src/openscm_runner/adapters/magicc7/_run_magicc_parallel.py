@@ -32,6 +32,7 @@ class TemporaryDirectoryIfNeeded:
 
     def __init__(self, tempdir: typing.Union[None, str] = None, **kwargs):
         if tempdir is None:
+            # pylint: disable-next=consider-using-with
             self._td = tempfile.TemporaryDirectory(**kwargs)
         else:
             self._td = None
