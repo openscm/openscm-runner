@@ -3,7 +3,6 @@ import os
 import numpy as np
 import numpy.testing as npt
 import pytest
-from base import _AdapterTester
 from scmdata import ScmRun
 
 from openscm_runner import run
@@ -12,6 +11,7 @@ from openscm_runner.adapters.ciceroscm_adapter import (
     make_scenario_files,
     write_parameter_files,
 )
+from openscm_runner.testing import _AdapterTester
 from openscm_runner.utils import calculate_quantiles
 
 RTOL = 1e-5
