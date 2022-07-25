@@ -101,8 +101,8 @@ def _init_magicc_worker(dict_shared_instances):
 
 
 def _run_func(
-    magicc: "pymagicc.MAGICC7", cfg: dict[str, typing.Any]
-) -> typing.Union[None, dict[str, typing.Any]]:
+    magicc: "pymagicc.MAGICC7", cfg: typing.Dict[str, typing.Any]
+) -> typing.Union[None, typing.Dict[str, typing.Any]]:
     try:
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
@@ -140,10 +140,10 @@ def _run_func(
 
 
 def _execute_run(
-    cfg: dict[str, typing.Any],
+    cfg: typing.Dict[str, typing.Any],
     run_func: typing.Callable[
-        ["pymagicc.MAGICC7", dict[str, typing.Any]],
-        typing.Union[None, dict[str, typing.Any]],
+        ["pymagicc.MAGICC7", typing.Dict[str, typing.Any]],
+        typing.Union[None, typing.Dict[str, typing.Any]],
     ],
     setup_func: typing.Callable,
     instances: _MagiccInstances,
@@ -159,7 +159,7 @@ def _execute_run(
 
 
 def run_magicc_parallel(
-    cfgs: typing.Iterable[dict[str, typing.Any]],
+    cfgs: typing.Iterable[typing.Dict[str, typing.Any]],
     output_vars: typing.Iterable[str],
     output_config: typing.Iterable[str],
 ):
