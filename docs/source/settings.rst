@@ -42,4 +42,5 @@ MAGICC_WORKER_ROOT_DIR
 ++++++++++++++++++++++
 
 Where should the MAGICC workers be located on the filesystem (you need about
-500Mb space per worker at the moment)
+500Mb space per worker at the moment).
+If you don't specify the MAGICC_WORKER_ROOT_DIR, a temporary directory will automatically be created in Python's default location and will be deleted automatically as well.

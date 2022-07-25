@@ -21,6 +21,7 @@ Changed
 ~~~~~~~
 
 - (`#66 <https://github.com/openscm/openscm-runner/pull/66>`_) Log MAGICC7 errors more prominently.
+- (`#68 <https://github.com/openscm/openscm-runner/pull/68>`_) MAGICC7 adapter: automatically create a temporary directory when MAGICC_WORKER_ROOT_DIR is not specified.
 - (`#69 <https://github.com/openscm/openscm-runner/pull/69>`_) Updated dependency ``black`` to ``v22.3.0`` and pin ``isort`` and ``pylint`` for consistent pull requests
 
 
