@@ -67,7 +67,8 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Download MAGICC
+    - name: Download MAGICC non-windows
+      if: runner.os != 'Windows'
       run: |
         mkdir -p bin/magicc/magicc-v7.5.3
         wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
