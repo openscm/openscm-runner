@@ -67,12 +67,20 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Download MAGICC non-windows
+      if: runner.os != 'Windows'
+      run: |
+        mkdir -p bin/magicc/magicc-v7.5.3
+        wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+        tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
     - name: Install test dependencies
       run: |
         pip install --upgrade pip wheel
         pip install -e .[tests,models]
     - name: Test with pytest non-windows
       if: runner.os != 'Windows'
+      env:
+        MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
       run: |
           pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=$MIN_COVERAGE
     - name: Test with pytest windows
