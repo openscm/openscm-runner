@@ -101,6 +101,11 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Download MAGICC
+      run: |
+        mkdir -p bin/magicc/magicc-v7.5.3
+        wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+        tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
     - name: Install notebook dependencies
       run: |
         pip install --upgrade pip wheel

@@ -17,6 +17,11 @@ The changes listed in this file are categorised as follows:
 Unreleased
 ----------
 
+Added
+~~~~~
+
+- (`#72 <https://github.com/openscm/openscm-runner/pull/72>`_) Add notebook showing how to run MAGICC
+
 Changed
 ~~~~~~~
 
