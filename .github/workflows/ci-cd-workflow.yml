@@ -79,7 +79,7 @@ jobs:
     - name: Test with pytest non-windows
       if: runner.os != 'Windows'
       env:
-        MAGICC_EXECUTABLE_7=bin/magicc/magicc-v7.5.3/bin/magicc
+        MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
       run: |
           pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=$MIN_COVERAGE
     - name: Test with pytest windows
