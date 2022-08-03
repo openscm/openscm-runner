@@ -86,9 +86,9 @@ jobs:
       if: runner.os == 'macOS'
       env:
         MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc-darwin-amd64
-        MIN_COVERAGE: 80 # Due to no CICERO binary being available
       run: |
-          pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=$MIN_COVERAGE
+          # Not testing coverage for macOS due to the CIRERO binary being unavailable
+          pytest tests -r a
     - name: Test with pytest Windows
       if: runner.os == 'Windows'
       run: |
