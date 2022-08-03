@@ -53,6 +53,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        # no mac binary for CICERO so fails code coverage
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: [3.7, 3.8, 3.9]
     env:
@@ -71,20 +72,25 @@ jobs:
         mkdir -p bin/magicc/magicc-v7.5.3
         wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
         tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
+    - name: Install test dependencies
+      run: |
+        pip install --upgrade pip wheel
+        pip install -e .[tests,models]
     - name: Set environment variables Linux
       if: runner.os == "Linux"
       env:
         MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
+      run: |
+          pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=$env:MIN_COVERAGE
     - name: Set environment variables macOS
       if: runner.os == "macOS"
       env:
         MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc-darwin-amd64
         MIN_COVERAGE: 80 # Due to no CICERO binary being available
-    - name: Install test dependencies
       run: |
-        pip install --upgrade pip wheel
-        pip install -e .[tests,models]
-    - name: Test with pytest
+          pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=$env:MIN_COVERAGE
+    - name: Test with pytest Windows
+      if: runner.os == "Windows"
       run: |
           pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=$env:MIN_COVERAGE
 
