@@ -5,7 +5,7 @@ import logging
 
 import scmdata
 
-from .adapters import CICEROSCM, FAIR, MAGICC7
+from .adapters import CICEROSCM, CICEROSCMPY, FAIR, MAGICC7
 from .progress import progress
 
 LOGGER = logging.getLogger(__name__)
@@ -80,6 +80,8 @@ def run(
             runner = FAIR()
         elif climate_model.upper() == "CICEROSCM":  # allow various capitalisations
             runner = CICEROSCM()
+        elif climate_model.upper() == "CICEROSCMPY":  # allow various capitalisations
+            runner = CICEROSCMPY()
         else:
             raise NotImplementedError(
                 "No adapter available for {}".format(climate_model)

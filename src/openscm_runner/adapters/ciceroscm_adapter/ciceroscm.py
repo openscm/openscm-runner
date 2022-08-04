@@ -26,7 +26,7 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
     def _init_model(self):  # pylint: disable=arguments-differ
         pass
 
-    def _run(self, scenarios, cfgs, output_variables, output_config):
+    def _run(self, scenarios, cfgs, output_variables, out_config):
         """
         Run the model.
 
@@ -34,7 +34,7 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
 
         cfgs is a list of indices to run
         """
-        if output_config is not None:
+        if out_config is not None:
             raise NotImplementedError("`output_config` not implemented for CICERO-SCM")
 
         runs = run_ciceroscm_parallel(scenarios, cfgs, output_variables)
