@@ -7,9 +7,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 import scmdata
 
-from ...settings import config
-from ..utils._parallel_process import _parallel_process
-from .ciceroscm_wrapper import CiceroSCMWrapper
+from ....settings import config
+from ...utils._parallel_process import _parallel_process
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,17 +20,7 @@ FRONT_PARALLEL = 0
 """int: Number of front parallel runs to do before starting full parallel runs"""
 
 
-def _execute_run(cfgs, output_variables, scenariodata):
-    cscm = CiceroSCMWrapper(scenariodata)
-    try:
-        out = cscm.run_over_cfgs(cfgs, output_variables)
-    finally:
-        cscm.cleanup_tempdirs()
-
-    return out
-
-
-def run_ciceroscm_parallel(scenarios, cfgs, output_vars):
+def run_ciceroscm_parallel(scenarios, cfgs, output_vars, _execute_run):
     """
     Run CICEROSCM in parallel
 

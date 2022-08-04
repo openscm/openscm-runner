@@ -8,7 +8,6 @@ from scmdata import ScmRun
 
 from openscm_runner import run
 from openscm_runner.adapters import CICEROSCMPY
-from openscm_runner.adapters.ciceroscm_py_adapter import make_scenario_data
 from openscm_runner.utils import calculate_quantiles
 
 RTOL = 1e-5
@@ -101,7 +100,10 @@ class TestCICEROSCMAdapter(_AdapterTester):
         assert isinstance(res, ScmRun)
         assert res["run_id"].min() == 1
         assert res["run_id"].max() == 30040
-        assert res.get_unique_meta("climate_model", no_duplicates=True) == "CICERO-SCM"
+        assert (
+            res.get_unique_meta("climate_model", no_duplicates=True) == "CICERO-SCM-PY"
+        )
+        print(res.meta)
 
         assert set(res.get_unique_meta("variable")) == set(
             [
@@ -312,32 +314,6 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 output_variables=("Surface Air Temperature Change",),
                 out_config={"CiceroSCMPY": ("With ECS",)},
             )
-
-    def test_make_scenario_data(self, test_scenarios):
-        npt.assert_allclose(
-            3.0 / 11.0 * 1000.0,
-            make_scenario_data._unit_conv_factor("Gg CO2/yr", "Mg C/ yr"),
-        )
-        npt.assert_allclose(
-            28 / 44 / 1.0e12,
-            make_scenario_data._unit_conv_factor("kg N2O / yr", "Pg N2ON / yr"),
-        )
-        npt.assert_allclose(
-            14 / 46 / 1.0e12,
-            make_scenario_data._unit_conv_factor("kt NOx / yr", "Pt N / yr"),
-        )
-        npt.assert_allclose(
-            0.5,
-            make_scenario_data._unit_conv_factor("Tg SO2 / yr", "Tg S / yr"),
-        )
-        npt.assert_allclose(
-            1.0,
-            make_scenario_data._unit_conv_factor("Gg  Halon1211 / yr", "GgH1211 / yr"),
-        )
-        npt.assert_allclose(
-            1.0,
-            make_scenario_data._unit_conv_factor("Gg  Halon2402 / yr", "GgH2402 / yr"),
-        )
 
 
 @pytest.mark.ciceroscm

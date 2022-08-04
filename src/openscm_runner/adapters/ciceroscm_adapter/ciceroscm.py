@@ -6,10 +6,20 @@ import os.path
 from subprocess import check_output  # nosec
 
 from ..base import _Adapter
-from ._run_ciceroscm_parallel import run_ciceroscm_parallel
+from ..utils.cicero_utils._run_ciceroscm_parallel import run_ciceroscm_parallel
 from ._utils import _get_executable
+from .ciceroscm_wrapper import CiceroSCMWrapper
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _execute_run(cfgs, output_variables, scenariodata):
+    cscm = CiceroSCMWrapper(scenariodata)
+    try:
+        out = cscm.run_over_cfgs(cfgs, output_variables)
+    finally:
+        cscm.cleanup_tempdirs()
+    return out
 
 
 class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
@@ -40,7 +50,7 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
         if output_config is not None:
             raise NotImplementedError("`output_config` not implemented for CICERO-SCM")
 
-        runs = run_ciceroscm_parallel(scenarios, cfgs, output_variables)
+        runs = run_ciceroscm_parallel(scenarios, cfgs, output_variables, _execute_run)
         return runs
 
     @classmethod

@@ -14,7 +14,8 @@ import pandas as pd
 from scmdata import ScmRun, run_append
 
 from ...settings import config
-from ._utils import _get_executable, _get_unique_index_values
+from ..utils.cicero_utils._utils import _get_unique_index_values
+from ._utils import _get_executable
 from .make_scenario_files import SCENARIOFILEWRITER
 from .read_results import CSCMREADER
 from .write_parameter_files import PARAMETERFILEWRITER

@@ -7,8 +7,8 @@ import os
 import pandas as pd
 from scmdata import ScmRun, run_append
 
+from ..utils.cicero_utils._utils import _get_unique_index_values
 from ._compat import cscmpy
-from ._utils import _get_unique_index_values
 from .make_scenario_data import SCENARIODATAGETTER
 from .read_results import CSCMREADER
 
@@ -61,7 +61,7 @@ class CSCMPYWrapper:  # pylint: disable=too-few-public-methods
         """
         runs = []
         for i, pamset in enumerate(cfgs):
-            self.cscm._run(
+            self.cscm._run(  # pylint: disable=protected-access
                 {"results_as_dict": True},
                 pamset_udm=pamset["pamset_udm"],
                 pamset_emiconc=pamset["pamset_emiconc"],
@@ -76,7 +76,7 @@ class CSCMPYWrapper:  # pylint: disable=too-few-public-methods
                     ScmRun(
                         pd.Series(timeseries, index=years),
                         columns={
-                            "climate_model": "CICERO-SCM",
+                            "climate_model": "CICERO-SCM-PY",
                             "model": self.model,
                             "run_id": pamset.get("Index", i),
                             "scenario": self.scen,

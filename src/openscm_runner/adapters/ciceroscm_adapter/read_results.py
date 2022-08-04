@@ -4,15 +4,9 @@ and returns data to append to SCMRun
 """
 import os
 
-import numpy as np
 import pandas as pd
 
-from ..utils._common_cicero_utils import (
-    fgas_list,
-    forc_sums,
-    ghg_not_fgas,
-    openscm_to_cscm_dict,
-)
+from ..utils._common_cicero_utils import get_data_from_forc_common, openscm_to_cscm_dict
 
 
 def get_data_from_conc_file(folder, variable):
@@ -190,26 +184,13 @@ class CSCMREADER:
         """
         df_temp = pd.read_csv(os.path.join(folder, "temp_forc.txt"), delimiter=r"\s+")
         years = df_temp.Year[:]
-        if variable in forc_sums:
-            timeseries = np.zeros(len(years))
-            for comp, value in self.variable_dict.items():
-                if variable in comp and value not in forc_sums:
-                    timeseries = timeseries + df_temp[value].to_numpy()
-        elif variable in ("Fgas", "GHG"):
-            timeseries = np.zeros(len(years))
-            for comp in fgas_list:
-                timeseries = timeseries + df_temp[comp].to_numpy()
-            if variable == "GHG":
-                for comp in ghg_not_fgas:
-                    timeseries = timeseries + df_temp[comp].to_numpy()
-        elif variable == "Total_forcing+sunvolc":
-            timeseries = df_temp["Total_forcing"].to_numpy()
-            timeseries = timeseries + self.get_volc_forcing(
-                years.to_numpy()[0], years.to_numpy()[-1]
+        if variable == "Total_forcing+sunvolc":
+            volc = self.get_volc_forcing(years.to_numpy()[0], years.to_numpy()[-1])
+            sun = self.get_sun_forcing(years.to_numpy()[0], years.to_numpy()[-1])
+            return get_data_from_forc_common(
+                df_temp, variable, self.variable_dict, volc, sun
             )
-            timeseries = timeseries + self.get_sun_forcing(
-                years.to_numpy()[0], years.to_numpy()[-1]
-            )
-        else:
-            timeseries = df_temp[variable].to_numpy()
+        years, timeseries = get_data_from_forc_common(
+            df_temp, variable, self.variable_dict
+        )
         return years, timeseries

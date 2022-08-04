@@ -4,9 +4,19 @@ CICEROSCMPY adapter
 import logging
 
 from ..base import _Adapter
-from ._run_cscmpy_parallel import run_cscmpy_parallel
+from ..utils.cicero_utils._run_ciceroscm_parallel import run_ciceroscm_parallel
+from .cscmpy_wrapper import CSCMPYWrapper
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _execute_run(cfgs, output_variables, scenariodata):
+    cscm = CSCMPYWrapper(scenariodata)
+    try:
+        out = cscm.run_over_cfgs(cfgs, output_variables)
+    finally:
+        LOGGER.info("Finished run")
+    return out
 
 
 class CICEROSCMPY(_Adapter):  # pylint: disable=too-few-public-methods
@@ -37,7 +47,7 @@ class CICEROSCMPY(_Adapter):  # pylint: disable=too-few-public-methods
         if output_config is not None:
             raise NotImplementedError("`output_config` not implemented for CICERO-SCM")
 
-        runs = run_cscmpy_parallel(scenarios, cfgs, output_variables)
+        runs = run_ciceroscm_parallel(scenarios, cfgs, output_variables, _execute_run)
         return runs
 
     @classmethod
