@@ -16,18 +16,21 @@ from ._scmdf_to_emissions import scmdf_to_emissions
 
 
 @functools.lru_cache()
-def _get_natural_emissions_and_forcing(startyear, nt):
+def _get_natural_emissions_and_forcing(startyear, num_timesteps):
     # TODO: somebody who knows what they are doing to use scmdata
     natural_df = pd.read_csv(
-        os.path.join(os.path.dirname(__file__), "natural-emissions-and-forcing.csv",),
+        os.path.join(
+            os.path.dirname(__file__),
+            "natural-emissions-and-forcing.csv",
+        ),
     )
     ndf_values = natural_df.values
 
     n_index_columns = 7
     start_index = startyear - 1750 + n_index_columns
-    ch4_n2o = ndf_values[0:2, start_index : start_index + nt].T
-    solar_forcing = ndf_values[2, start_index : start_index + nt].T
-    volcanic_forcing = ndf_values[3, start_index : start_index + nt].T
+    ch4_n2o = ndf_values[0:2, start_index : start_index + num_timesteps].T
+    solar_forcing = ndf_values[2, start_index : start_index + num_timesteps].T
+    volcanic_forcing = ndf_values[3, start_index : start_index + num_timesteps].T
 
     return {
         "ch4_n2o": ch4_n2o,
@@ -41,6 +44,8 @@ class FAIR(_Adapter):
     Adapter for running FAIR
     """
 
+    model_name = "FaIR"
+
     def _init_model(self, *args, **kwargs):
         if fair is None:
             raise ImportError("fair is not installed. Run 'pip install fair'")
@@ -53,11 +58,11 @@ class FAIR(_Adapter):
         full_cfgs = self._make_full_cfgs(fair_df, cfgs)
 
         res = run_fair(full_cfgs, output_variables)
-        res["climate_model"] = "FaIRv{}".format(self.get_version())
+        res["climate_model"] = f"FaIRv{self.get_version()}"
 
         return res
 
-    def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0201,R0914
+    def _make_full_cfgs(self, scenarios, cfgs):  # pylint: disable=R0914
         full_cfgs = []
         run_id_block = 0
         startyear = _check_startyear(cfgs)
@@ -72,12 +77,11 @@ class FAIR(_Adapter):
 
             if startyear < 1750:
                 raise ValueError(
-                    "startyear must be 1750 or later (%d specified)" % startyear
+                    f"startyear must be 1750 or later ({startyear} specified)"
                 )
             if endyear > 2500:
                 raise ValueError(
-                    "endyear must be 2500 or earlier (%d implied by scenario data)"
-                    % endyear
+                    f"endyear must be 2500 or earlier ({endyear} implied by scenario data)"
                 )
             emissions = scmdf_to_emissions(
                 smdf_in,
@@ -85,9 +89,11 @@ class FAIR(_Adapter):
                 scen_startyear=scen_startyear,
                 endyear=endyear,
             )
-            nt = emissions.shape[0]
+            num_timesteps = emissions.shape[0]
 
-            natural_components = _get_natural_emissions_and_forcing(startyear, nt)
+            natural_components = _get_natural_emissions_and_forcing(
+                startyear, num_timesteps
+            )
             ch4_n2o = natural_components["ch4_n2o"]
             solar_forcing = natural_components["solar_forcing"]
             volcanic_forcing = natural_components["volcanic_forcing"]

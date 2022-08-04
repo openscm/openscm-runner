@@ -173,15 +173,21 @@ def test_startyear(test_scenarios, test_scenarios_2600):
     )
 
     gsat2100_start1850 = res_1850.filter(
-        variable="Surface Air Temperature Change", region="World", year=2100,
+        variable="Surface Air Temperature Change",
+        region="World",
+        year=2100,
     ).values
 
     gsat2100_start1750 = res_1750.filter(
-        variable="Surface Air Temperature Change", region="World", year=2100,
+        variable="Surface Air Temperature Change",
+        region="World",
+        year=2100,
     ).values
 
     gsat2100_startdefault = res_default.filter(
-        variable="Surface Air Temperature Change", region="World", year=2100,
+        variable="Surface Air Temperature Change",
+        region="World",
+        year=2100,
     ).values
 
     assert gsat2100_start1850 != gsat2100_start1750

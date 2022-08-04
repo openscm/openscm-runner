@@ -7,6 +7,7 @@ from subprocess import check_output  # nosec
 
 from ..base import _Adapter
 from ._run_ciceroscm_parallel import run_ciceroscm_parallel
+from ._utils import _get_executable
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,6 +16,8 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
     """
     Adapter for CICEROSCM
     """
+
+    model_name = "CiceroSCM"
 
     def __init__(self):  # pylint: disable=useless-super-delegation
         """
@@ -55,11 +58,11 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
         OSError
             The CICERO-SCM binary cannot be run on the operating system
         """
-        exec_call = os.path.join(
-            os.path.dirname(__file__), "utils_templates", "run_dir", "scm_vCH4fb"
+        executable = _get_executable(
+            os.path.join(os.path.dirname(__file__), "utils_templates", "run_dir")
         )
         try:
-            check_output(exec_call)
+            check_output(executable)
         except OSError as orig_exc:
             raise OSError(
                 "CICERO-SCM is not available on your operating system"

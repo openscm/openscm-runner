@@ -3,7 +3,6 @@ Module that reads in CICERO-SCM results
 and returns data to append to SCMRun
 """
 import os
-import re
 
 import numpy as np
 import pandas as pd
@@ -75,7 +74,7 @@ def convert_cicero_unit(cicero_unit):
     """
     Convert cicero unit convention for pint
     """
-    return "{} / yr".format(cicero_unit.replace("_", ""))
+    return f"{cicero_unit.replace('_', '')} / yr"
 
 
 class CSCMREADER:
@@ -124,9 +123,7 @@ class CSCMREADER:
         Read variable timeseries
         Connecting up to correct file type to get the data
         """
-        folder = os.path.join(
-            self.odir, re.sub("[^a-zA-Z0-9_-]", "", scenario)[:50], "outputfiles"
-        )
+        folder = os.path.join(self.odir, scenario, "outputfiles")
         if variable not in self.variable_dict:
             return (
                 pd.Series([], dtype="float64"),

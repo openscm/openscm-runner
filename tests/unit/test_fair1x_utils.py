@@ -10,6 +10,8 @@ def test_emissions_to_ignore(test_scenario_ssp370_world):
     emissions = scmdf_to_emissions(test_scenario_ssp370_world)
 
     npt.assert_allclose(
-        emissions[0, 1], 2.59244179e-03, rtol=1e-5,
+        emissions[0, 1],
+        2.59244179e-03,
+        rtol=1e-5,
     )
     assert emissions.shape[1] == 40

@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.9]
 
     steps:
     - name: Checkout repository
@@ -23,14 +23,12 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dev dependencies
-      # why pandas 1.1.5 breaks pylint, I do not know
       run: |
         pip install --upgrade pip wheel
         pip install -e .[dev]
-        pip install pandas==1.1.4
     - name: Formatting and linters
       run: |
-        black --check src tests setup.py --exclude openscm_runner/_version.py
+        black --check src tests setup.py
         isort --check-only --quiet --recursive src tests setup.py
         pydocstyle src
         bandit -c .bandit.yml -r src
@@ -52,10 +50,14 @@ jobs:
           fi
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        # no mac binary for CICERO so fails code coverage
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: [3.7, 3.8, 3.9]
+    env:
+      MIN_COVERAGE: 90
 
     steps:
     - name: Checkout repository
@@ -64,21 +66,33 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Download MAGICC non-windows
+      if: runner.os != 'Windows'
+      run: |
+        mkdir -p bin/magicc/magicc-v7.5.3
+        wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+        tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
     - name: Install test dependencies
       run: |
         pip install --upgrade pip wheel
         pip install -e .[tests,models]
-    - name: Test with pytest
+    - name: Test with pytest Linux
+      if: runner.os == 'Linux'
       env:
-        MIN_COVERAGE: 90
+        MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
       run: |
-          pytest tests -r a --cov=openscm_runner --cov-report=''
-          if ! coverage report --fail-under=${MIN_COVERAGE} --show-missing
-          then
-              echo
-              echo "Error: Test coverage has to be at least ${MIN_COVERAGE}"
-              exit 1
-          fi
+          pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=$MIN_COVERAGE
+    - name: Test with pytest macOS
+      if: runner.os == 'macOS'
+      env:
+        MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc-darwin-amd64
+      run: |
+          # Not testing coverage for macOS due to the CIRERO binary being unavailable
+          pytest tests -r a
+    - name: Test with pytest Windows
+      if: runner.os == 'Windows'
+      run: |
+          pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=$env:MIN_COVERAGE
 
   test-notebooks:
     runs-on: ubuntu-latest
@@ -93,6 +107,11 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Download MAGICC
+      run: |
+        mkdir -p bin/magicc/magicc-v7.5.3
+        wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+        tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
     - name: Install notebook dependencies
       run: |
         pip install --upgrade pip wheel
@@ -145,7 +164,17 @@ jobs:
         pip install --upgrade pip wheel
         pip install -e .[dev]
     - name: Create package
-      run: python setup.py sdist bdist_wheel --universal
+      run: |
+        python setup.py sdist bdist_wheel --universal
+        for f in adapters/fair_adapter/natural-emissions-and-forcing.csv adapters/ciceroscm_adapter/utils_templates/gases_v1RCMIP.txt adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFSUN/solar_IPCC.txt
+        do
+          if ! tar -tvf dist/openscm-runner*.tar.gz | grep "$f"
+          then
+              echo
+              echo "${f} csv not correctly packaged"
+              exit 1
+          fi
+        done
     - name: Publish package to PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:

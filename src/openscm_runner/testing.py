@@ -23,21 +23,17 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
     with open(expected_output_file, "r", encoding="ascii") as filehandle:
         expected_output = json.load(filehandle)
 
-    if update:
-        updated_output = {}
+    updated_output = {}
 
     for climate_model, checks in expected_output.items():
         res_cm = res.filter(climate_model=climate_model)
 
-        if update:
-            updated_output[climate_model] = []
+        updated_output[climate_model] = []
 
         for filter_kwargs, expected_val in checks:
-            err_msg = "{}".format(filter_kwargs)
+            err_msg = f"{filter_kwargs}"
 
-            if update:
-                filter_kwargs_in = {**filter_kwargs}
-
+            filter_kwargs_in = {**filter_kwargs}
             check_units = filter_kwargs.pop("unit", None)
             quantile = filter_kwargs.pop("quantile")
             res_to_check = res_cm.filter(**filter_kwargs)
@@ -46,7 +42,7 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
                 res_to_check = res_to_check.convert_unit(check_units)
 
             if res_to_check.empty:
-                raise AssertionError
+                raise AssertionError(err_msg)
 
             res_val = float(
                 res_to_check.process_over(
@@ -56,21 +52,21 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
 
             try:
                 npt.assert_allclose(
-                    res_val, expected_val, rtol=rtol, err_msg=err_msg,
+                    res_val,
+                    expected_val,
+                    rtol=rtol,
+                    err_msg=err_msg,
                 )
-                if update:
-                    new_val = expected_val
+                new_val = expected_val
             except AssertionError:
-                if update:
-                    new_val = res_val
-                else:
+                new_val = res_val
+                if not update:
                     raise
 
-            if update:
-                updated_output[climate_model].append((filter_kwargs_in, new_val))
+            updated_output[climate_model].append((filter_kwargs_in, new_val))
 
     if update:
         with open(expected_output_file, "w", encoding="ascii") as file_handle:
             json.dump(updated_output, file_handle, indent=4)
 
-        pytest.skip("Updated {}".format(expected_output_file))
+        pytest.skip(f"Updated {expected_output_file}")

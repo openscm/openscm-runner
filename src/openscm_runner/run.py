@@ -5,7 +5,7 @@ import logging
 
 import scmdata
 
-from .adapters import CICEROSCM, CICEROSCMPY, FAIR, MAGICC7
+from .adapters import get_adapter
 from .progress import progress
 
 LOGGER = logging.getLogger(__name__)
@@ -24,8 +24,8 @@ def _check_out_config(out_config, climate_models_cfgs):
         for key, value in out_config.items():
             if not isinstance(value, tuple):
                 raise TypeError(
-                    "`out_config` values must be tuples, this isn't the case for "
-                    "climate_model: '{}'".format(key)
+                    f"`out_config` values must be tuples, this isn't the case for "
+                    f"climate_model: '{key}'"
                 )
 
 
@@ -74,18 +74,7 @@ def run(
     for climate_model, cfgs in progress(
         climate_models_cfgs.items(), desc="Climate models"
     ):
-        if climate_model == "MAGICC7":
-            runner = MAGICC7()
-        elif climate_model.upper() == "FAIR":  # allow various capitalisations
-            runner = FAIR()
-        elif climate_model.upper() == "CICEROSCM":  # allow various capitalisations
-            runner = CICEROSCM()
-        elif climate_model.upper() == "CICEROSCMPY":  # allow various capitalisations
-            runner = CICEROSCMPY()
-        else:
-            raise NotImplementedError(
-                "No adapter available for {}".format(climate_model)
-            )
+        runner = get_adapter(climate_model)
 
         if out_config is not None and climate_model in out_config:
             output_config_cm = out_config[climate_model]
@@ -112,9 +101,7 @@ def run(
         climate_model = model_res.get_unique_meta("climate_model")
         if model_meta != key_meta:  # noqa
             raise AssertionError(
-                "{} meta: {}, expected meta: {}".format(
-                    climate_model, model_meta, key_meta
-                )
+                f"{climate_model} meta: {model_meta}, expected meta: {key_meta}"
             )
 
     if len(res) == 1:

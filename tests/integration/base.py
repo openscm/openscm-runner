@@ -115,7 +115,11 @@ class _AdapterTester(ABC):
                 ],
             },
             scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
-            output_variables=("output", "var", "list",),
+            output_variables=(
+                "output",
+                "var",
+                "list",
+            ),
             out_config=None,
         )
 

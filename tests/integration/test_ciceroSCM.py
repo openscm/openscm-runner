@@ -169,7 +169,9 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 raise AssertionError("No {} data for {}".format(variable, scen))
 
             npt.assert_allclose(
-                res_scen_2100_emms.values, exp_val, rtol=1e-4,
+                res_scen_2100_emms.values,
+                exp_val,
+                rtol=1e-4,
             )
         for (scen, variable, unit, exp_val14, exp_val16) in (
             ("ssp126", "Emissions|CH4", "TgCH4/yr", 387.874, 379.956),
@@ -190,10 +192,14 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 raise AssertionError("No {} data for {}".format(variable, scen))
 
             npt.assert_allclose(
-                res_scen_2014_emms.values, exp_val14, rtol=1e-4,
+                res_scen_2014_emms.values,
+                exp_val14,
+                rtol=1e-4,
             )
             npt.assert_allclose(
-                res_scen_2016_emms.values, exp_val16, rtol=1e-4,
+                res_scen_2016_emms.values,
+                exp_val16,
+                rtol=1e-4,
             )
         for (scen, variable) in (
             ("ssp126", "Effective Radiative Forcing|Aerosols"),
@@ -310,7 +316,8 @@ class TestCICEROSCMAdapter(_AdapterTester):
             make_scenario_files._unit_conv_factor("kt NOx / yr", "Pt N / yr"),
         )
         npt.assert_allclose(
-            0.5, make_scenario_files._unit_conv_factor("Tg SO2 / yr", "Tg S / yr"),
+            0.5,
+            make_scenario_files._unit_conv_factor("Tg SO2 / yr", "Tg S / yr"),
         )
         npt.assert_allclose(
             1.0,
@@ -341,7 +348,9 @@ class TestCICEROSCMAdapter(_AdapterTester):
         ),
     )
     def test_run_long_scenario_name(
-        self, name, test_scenarios,
+        self,
+        name,
+        test_scenarios,
     ):
         starting_scenario = test_scenarios.filter(scenario="ssp126").rename(
             {"scenario": {"ssp126": name}}

@@ -14,18 +14,71 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
-2021-09-17
+Unreleased
+----------
+
+Added
+~~~~~
+
+- (`#74 <https://github.com/openscm/openscm-runner/pull/74>`_) Run tests on macOS as part of CI
+- (`#72 <https://github.com/openscm/openscm-runner/pull/72>`_) Add notebook showing how to run MAGICC
+
+Changed
+~~~~~~~
+
+- (`#71 <https://github.com/openscm/openscm-runner/pull/71>`_) Run MAGICC as part of CI by using MAGICC binary downloaded from `magicc.org <https://magicc.org/download/magicc7>`_
+- (`#70 <https://github.com/openscm/openscm-runner/pull/70>`_) Updated the integration tests to use MAGICC v7.5.3 which is publicly available.
+- (`#66 <https://github.com/openscm/openscm-runner/pull/66>`_) Log MAGICC7 errors more prominently.
+- (`#68 <https://github.com/openscm/openscm-runner/pull/68>`_) MAGICC7 adapter: automatically create a temporary directory when MAGICC_WORKER_ROOT_DIR is not specified.
+- (`#69 <https://github.com/openscm/openscm-runner/pull/69>`_) Updated dependency ``black`` to ``v22.3.0`` and pin ``isort`` and ``pylint`` for consistent pull requests
+
+
+v0.10.0 - 2022-03-15
+--------------------
+
+Added
+~~~~~
+
+- (`#63 <https://github.com/openscm/openscm-runner/pull/63>`_) Added a windows binary for cicero-scm so it can also be run on Windows
+- (`#64 <https://github.com/openscm/openscm-runner/pull/64>`_) Allow for the registration of adapters at runtime. Adapters now require a unique ``model_name``
+
+v0.9.3 - 2022-01-19
 -------------------
 
 Fixed
+~~~~~
+
+- (`#57 <https://github.com/openscm/openscm-runner/pull/57>`_) Updated CICERO-SCM fortran binary which confused OHC and OHC down to 700 meters in output and added missing components to radiative imbalance.
+
+v0.9.2 - 2021-12-23
+-------------------
+
+Added
+~~~~~
+
+- (`#59 <https://github.com/openscm/openscm-runner/pull/59>`_) Conda install instructions
+
+
+Changed
 ~~~~~~~
 
-- (`#52 <https://github.com/openscm/openscm-runner/pull/52>` _) Fixing CICERO-SCM bugs with converting halon units and handling of very long scenario names
+- (`#58 <https://github.com/openscm/openscm-runner/pull/58>`_) Update README for FaIR conda install
 
+Fixed
+~~~~~
+
+- (`#61 <https://github.com/openscm/openscm-runner/pull/61>`_) Packaging now uses setuptools-scm and hence includes all required files in source distributions (which should also fix the conda distribution)
+
+v0.9.1 - 2021-09-23
+-------------------
+
+Fixed
+~~~~~
+
+- (`#52 <https://github.com/openscm/openscm-runner/pull/52>`_) Fixed CICERO-SCM bugs with converting halon units and handling of very long scenario names
 
 v0.9.0 - 2021-09-07
 -------------------
-
 
 Changed
 ~~~~~~~

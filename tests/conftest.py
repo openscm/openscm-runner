@@ -44,7 +44,7 @@ def test_scenario_ssp370_world(test_data_dir):
     return scenario
 
 
-REQUIRED_MAGICC_VERSION = "v7.5.1"
+REQUIRED_MAGICC_VERSION = "v7.5.3"
 
 try:
     MAGICC_VERSION = MAGICC7.get_version()

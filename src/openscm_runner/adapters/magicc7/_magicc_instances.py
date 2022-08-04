@@ -5,6 +5,7 @@ import logging
 import multiprocessing
 import shutil
 import tempfile
+import typing
 
 from ...settings import config
 from ._compat import pymagicc
@@ -56,7 +57,12 @@ class _MagiccInstances:
     def _generate_magicc_root(root_dir):
         return tempfile.mkdtemp(prefix="pymagicc-", dir=root_dir)
 
-    def get(self, root_dir=None, init_callback=None, init_callback_kwargs=None):
+    def get(
+        self,
+        root_dir: typing.Union[None, str] = None,
+        init_callback: typing.Union[None, typing.Callable] = None,
+        init_callback_kwargs: typing.Union[None, dict] = None,
+    ) -> "pymagicc.MAGICC7":
         """
         Get a MAGICC object which is ready to run (always uses ``strict=False``)
 
