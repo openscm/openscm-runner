@@ -24,7 +24,9 @@ class CSCMPYWrapper:  # pylint: disable=too-few-public-methods
         """
         Intialise CICEROSCM wrapper
         """
-        self.udir = os.path.join(os.path.dirname(__file__), "utils_templates")
+        self.udir = os.path.join(
+            os.path.dirname(__file__), "..", "ciceroscm_adapter", "utils_templates"
+        )
         self.sdatagetter = SCENARIODATAGETTER(self.udir)
         nystart = 1750  # TODO: get rid of hardcoding for these
         nyend = 2100  # TODO: get rid of hardcoding for these
