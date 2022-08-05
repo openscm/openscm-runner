@@ -5,7 +5,10 @@ and returns data to append to SCMRun
 import numpy as np
 import pandas as pd
 
-from ..utils._common_cicero_utils import get_data_from_forc_common, openscm_to_cscm_dict
+from ..utils.cicero_utils.cicero_forcing_postprocessing_common import (
+    get_data_from_forc_common,
+    openscm_to_cscm_dict,
+)
 
 
 def get_data_from_conc(results, variable):

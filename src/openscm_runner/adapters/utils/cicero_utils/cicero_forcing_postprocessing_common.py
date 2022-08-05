@@ -1,6 +1,8 @@
 """
-Module with various common utilities
-for both CICERO-SCM implementations
+Module with common values and methods
+for postprocessing output
+from both CICERO-SCM implementations
+particularly making forcing sums
 to avoid code duplication
 """
 import numpy as np
