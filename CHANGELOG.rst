@@ -26,6 +26,7 @@ Added
 Changed
 ~~~~~~~
 
+- (`#77 <https://github.com/openscm/openscm-runner/pull/77>`_) Use environment for running CI so forks can access secrets too
 - (`#71 <https://github.com/openscm/openscm-runner/pull/71>`_) Run MAGICC as part of CI by using MAGICC binary downloaded from `magicc.org <https://magicc.org/download/magicc7>`_
 - (`#70 <https://github.com/openscm/openscm-runner/pull/70>`_) Updated the integration tests to use MAGICC v7.5.3 which is publicly available.
 - (`#66 <https://github.com/openscm/openscm-runner/pull/66>`_) Log MAGICC7 errors more prominently.
