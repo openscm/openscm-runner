@@ -1,5 +1,5 @@
 """
-Handling of compatibility of fair imports with different states of installation
+Handling of compatibility of ciceroscm imports with different states of installation
 """
 # pylint:disable=unused-import
 try:

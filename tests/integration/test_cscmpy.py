@@ -103,7 +103,6 @@ class TestCICEROSCMAdapter(_AdapterTester):
         assert (
             res.get_unique_meta("climate_model", no_duplicates=True) == "CICERO-SCM-PY"
         )
-        print(res.meta)
 
         assert set(res.get_unique_meta("variable")) == set(
             [

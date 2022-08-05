@@ -1,4 +1,4 @@
 """
-Module supporting the CICEROSCM adapter
+Module supporting the CICEROSCM Python adapter
 """
 from .ciceroscmpy import CICEROSCMPY  # noqa: F401
