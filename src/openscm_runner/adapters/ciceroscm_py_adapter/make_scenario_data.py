@@ -34,14 +34,14 @@ class SCENARIODATAGETTER(COMMONSFILEWRITER):
     Class to write scenariofiles:
     """
 
-    def __init__(self, udir):
+    def __init__(self, udir, syear=2015, eyear=2100):
         """
         Intialise scenario data getter
         """
-        super().__init__(udir)
+        super().__init__(udir, syear, eyear)
         self.ssp245data = _read_ssp245_em(os.path.join(udir, "ssp245_em_RCMIP.txt"))
 
-    def get_scenario_data(self, scenarioframe):
+    def get_scenario_data(self, scenarioframe, nystart):
         """
         Get printoutframe, and adding ssp245 data to
         get a frame for running
@@ -52,7 +52,7 @@ class SCENARIODATAGETTER(COMMONSFILEWRITER):
         )
         final_frame = pd.concat(
             [
-                self.ssp245data.iloc[: (self.years[0] - 1750)]
+                self.ssp245data.iloc[nystart - 1750 : (self.years[0] - 1750)]
                 .astype(float)
                 .rename(columns={"Component": "Index"}),
                 printout_frame,

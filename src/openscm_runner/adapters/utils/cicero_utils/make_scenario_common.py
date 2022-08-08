@@ -92,13 +92,15 @@ class COMMONSFILEWRITER:
     Class to write scenariofiles:
     """
 
-    def __init__(self, udir):
+    def __init__(self, udir, syear=2015, eyear=2100):
         self.components = []
         self.units = []
         self.concunits = []
 
         self.initialize_units_comps(os.path.join(udir, "gases_v1RCMIP.txt"))
-        self.years = np.arange(2015, 2101)  # Temporary default values, is updated later
+        self.years = np.arange(
+            syear, eyear
+        )  # Temporary default values, is updated later
         self.udir = udir
 
     def initialize_units_comps(self, gasfile):

@@ -15,35 +15,56 @@ from .read_results import CSCMREADER
 LOGGER = logging.getLogger(__name__)
 
 
+def get_start_end_years(scenariodata):
+    """
+    Get end year, reasonable startyear
+    and reasonable emissions start from
+    scenariodata
+    """
+    scenarioframe = scenariodata.reset_index(
+        ("model", "region", "scenario", "unit"), drop=True
+    )
+    years = scenarioframe.columns
+    if isinstance(years[0], pd.Timestamp):
+        nyend = int(years[-1].year)
+        emstart = int(years[0].year)
+    else:
+        nyend = int(years[-1])
+        emstart = int(years[0])
+    return nyend, emstart
+
+
 class CSCMPYWrapper:  # pylint: disable=too-few-public-methods
     """
     CICEROSCM Wrapper for parallel runs
     """
 
-    def __init__(self, scenariodata):
+    def __init__(self, scenariodata, nystart=1750):
         """
         Intialise CICEROSCM wrapper
         """
         self.udir = os.path.join(
             os.path.dirname(__file__), "..", "ciceroscm_adapter", "utils_templates"
         )
-        self.sdatagetter = SCENARIODATAGETTER(self.udir)
-        nystart = 1750  # TODO: get rid of hardcoding for these
-        nyend = 2100  # TODO: get rid of hardcoding for these
-        emstart = 1850  # TODO: get rid of hardcoding for these
+        nyend, emstart = get_start_end_years(
+            scenariodata
+        )  # Get nyend and emstart from scenariodata
+        self.sdatagetter = SCENARIODATAGETTER(self.udir, nystart, nyend)
         self.resultsreader = CSCMREADER(nystart, nyend)
         self.cscm = cscmpy.CICEROSCM(
             {
                 "gaspam_file": os.path.join(
                     os.path.dirname(__file__), "gases_vupdate_2022_AR6.txt"
                 ),  # TODO set from cfgs
-                "nyend": nyend,  # TODO set from cfgs or scenariodata
+                "nyend": nyend,
                 "nystart": nystart,
                 "emstart": emstart,
                 "concentrations_file": os.path.join(
                     self.udir, "run_dir", "ssp245_conc_RCMIP.txt"
                 ),
-                "emissions_data": self.sdatagetter.get_scenario_data(scenariodata),
+                "emissions_data": self.sdatagetter.get_scenario_data(
+                    scenariodata, nystart
+                ),
                 "nat_ch4_file": os.path.join(
                     self.udir, "run_dir", "input_OTHER", "NATEMIS", "natemis_ch4.txt"
                 ),  # TODO set from cfgs
@@ -74,6 +95,7 @@ class CSCMPYWrapper:  # pylint: disable=too-few-public-methods
                 )
                 if isinstance(years, pd.DataFrame) and years.empty:  # pragma: no cover
                     continue  # pragma: no cover
+                print(variable)
                 runs.append(
                     ScmRun(
                         pd.Series(timeseries, index=years),
