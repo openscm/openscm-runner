@@ -220,6 +220,12 @@ class TestCICEROSCMAdapter(_AdapterTester):
             scenario="ssp245",
             run_id=1,
         )
+        test_length = res.filter(
+            variable="Effective Radiative Forcing|Greenhouse Gases",
+            scenario="ssp245",
+            run_id=1,
+        )
+        assert len(test_length.values[0]) == 351
         # check that jump in GHG ERF isn't there
         assert (
             ssp245_ghg_erf_2015.values.squeeze() - ssp245_ghg_erf_2014.values.squeeze()
@@ -280,6 +286,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
                     "CiceroSCM": [
                         {
                             "model_end": 2100,
+                            "scenario_end": 2100,
                             "Index": 30040,
                             "lambda": 0.540,
                             "akapa": 0.341,

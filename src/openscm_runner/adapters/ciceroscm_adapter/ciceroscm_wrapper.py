@@ -23,6 +23,21 @@ from .write_parameter_files import PARAMETERFILEWRITER
 LOGGER = logging.getLogger(__name__)
 
 
+def get_endyear(scenariodata):
+    """
+    Get end year from scenariodata
+    """
+    scenarioframe = scenariodata.reset_index(
+        ("model", "region", "scenario", "unit"), drop=True
+    )
+    years = scenarioframe.columns
+    if isinstance(years[0], pd.Timestamp):
+        endyear = int(years[-1].year)
+    else:
+        endyear = int(years[-1])
+    return endyear
+
+
 class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
     """
     CICEROSCM Wrapper for parallel runs
@@ -36,7 +51,7 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         self.sfilewriter = SCENARIOFILEWRITER(udir)
         self.pamfilewriter = PARAMETERFILEWRITER(udir)
         self._setup_tempdirs()
-        self.resultsreader = CSCMREADER(self.rundir)
+        self.resultsreader = CSCMREADER(self.rundir, get_endyear(scenariodata))
 
         self.scen = _get_unique_index_values(scenariodata, "scenario")
         self.model = _get_unique_index_values(scenariodata, "model")

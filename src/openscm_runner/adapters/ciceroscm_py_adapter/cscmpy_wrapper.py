@@ -71,6 +71,7 @@ class CSCMPYWrapper:  # pylint: disable=too-few-public-methods
                 "nat_n2o_file": os.path.join(
                     self.udir, "run_dir", "input_OTHER", "NATEMIS", "natemis_n2o.txt"
                 ),  # TODO set from cfgs
+                "sunvolc": 1,
             }
         )
         self.scen = _get_unique_index_values(scenariodata, "scenario")

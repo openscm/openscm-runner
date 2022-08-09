@@ -12,58 +12,68 @@ from ..utils.cicero_utils.cicero_forcing_postprocessing_common import (
 )
 
 
-def get_data_from_conc_file(folder, variable):
+def get_data_from_conc_file(folder, variable, endyear):
     """
     Get data from concentration files
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_conc.txt"), delimiter=r"\s+")
-    years = df_temp.Year[:]
-    timeseries = df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
+    years = df_temp.Year[: endyear - df_temp.Year[0] + 1]
+    timeseries = df_temp[variable].to_numpy()[
+        : len(years)
+    ]  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
-def get_data_from_em_file(folder, variable):
+def get_data_from_em_file(folder, variable, endyear):
     """
     Get data from emissions files
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_em.txt"), delimiter=r"\s+")
-    years = df_temp.Year[:]
-    timeseries = df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
+    years = df_temp.Year[: endyear - df_temp.Year[0] + 1]
+    timeseries = df_temp[variable].to_numpy()[
+        : len(years)
+    ]  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
-def get_data_from_temp_file(folder, variable):
+def get_data_from_temp_file(folder, variable, endyear):
     """
     Get data from temperature files
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_temp.txt"), delimiter=r"\s+")
-    years = df_temp.Year[:]
-    timeseries = df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
+    years = df_temp.Year[: endyear - df_temp.Year[0] + 1]
+    timeseries = df_temp[variable].to_numpy()[
+        : len(years)
+    ]  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
-def get_data_from_ohc_file(folder, variable):
+def get_data_from_ohc_file(folder, variable, endyear):
     """
     Get data from ocean heat content files
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_ohc.txt"), delimiter=r"\s+")
-    years = df_temp.Year[:]
+    years = df_temp.Year[: endyear - df_temp.Year[0] + 1]
     # Units are 10^22J and output should be 10^21J = ZJ
     conv_factor = 10.0
     timeseries = (
-        df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
+        df_temp[variable].to_numpy()[
+            : len(years)
+        ]  # pylint:disable=unsubscriptable-object
         * conv_factor
     )
     return years, timeseries
 
 
-def get_data_from_rib_file(folder, variable):
+def get_data_from_rib_file(folder, variable, endyear):
     """
     Get data from rib files
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_rib.txt"), delimiter=r"\s+")
-    years = df_temp.Year[:]
-    timeseries = df_temp[variable].to_numpy()  # pylint:disable=unsubscriptable-object
+    years = df_temp.Year[: endyear - df_temp.Year[0] + 1]
+    timeseries = df_temp[variable].to_numpy()[
+        : len(years)
+    ]  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
@@ -79,10 +89,9 @@ class CSCMREADER:
     Class to read CICERO-SCM output data
     """
 
-    def __init__(self, odir):
+    def __init__(self, odir, endyear):
         self.odir = odir
         self.variable_dict = openscm_to_cscm_dict
-        self.rib_list = "RIB_glob"
         self.temp_list = (
             "dT_glob",
             "dT_glob_air",
@@ -94,6 +103,7 @@ class CSCMREADER:
         self.ohc_list = "OHCTOT"
         self.volc_series = self.read_volc_series()
         self.sun_series = self.read_sun_series()
+        self.endyear = endyear
 
     def read_volc_series(self):
         """
@@ -129,14 +139,14 @@ class CSCMREADER:
             )
         if "Concentration" in variable:
             years, timeseries = get_data_from_conc_file(
-                folder, self.variable_dict[variable]
+                folder, self.variable_dict[variable], self.endyear
             )
             unit = sfilewriter.concunits[
                 sfilewriter.components.index(self.variable_dict[variable])
             ]
         elif "Emissions" in variable:
             years, timeseries = get_data_from_em_file(
-                folder, self.variable_dict[variable]
+                folder, self.variable_dict[variable], self.endyear
             )
             unit = sfilewriter.units[
                 sfilewriter.components.index(self.variable_dict[variable])
@@ -148,21 +158,20 @@ class CSCMREADER:
             unit = "W/m^2"
         elif self.variable_dict[variable] in self.temp_list:
             years, timeseries = get_data_from_temp_file(
-                folder, self.variable_dict[variable]
+                folder, self.variable_dict[variable], self.endyear
             )
             unit = "K"
-        elif self.variable_dict[variable] in self.rib_list:
+        elif self.variable_dict[variable] == "RIB_glob":
             years, timeseries = get_data_from_rib_file(
-                folder, self.variable_dict[variable]
+                folder, self.variable_dict[variable], self.endyear
             )
             unit = "W/m^2"
 
         elif self.variable_dict[variable] in self.ohc_list:
             years, timeseries = get_data_from_ohc_file(
-                folder, self.variable_dict[variable]
+                folder, self.variable_dict[variable], self.endyear
             )
             unit = "ZJ"
-
         return years, timeseries, unit
 
     def get_volc_forcing(self, startyear, endyear):
@@ -186,14 +195,18 @@ class CSCMREADER:
         Get data from forcing files
         """
         df_temp = pd.read_csv(os.path.join(folder, "temp_forc.txt"), delimiter=r"\s+")
-        years = df_temp.Year[:]
+        years = df_temp.Year[: self.endyear - df_temp.Year[0] + 1]
         if variable == "Total_forcing+sunvolc":
             volc = self.get_volc_forcing(years.to_numpy()[0], years.to_numpy()[-1])
             sun = self.get_sun_forcing(years.to_numpy()[0], years.to_numpy()[-1])
             return get_data_from_forc_common(
-                df_temp, variable, self.variable_dict, volc, sun
+                df_temp[: self.endyear - df_temp.Year[0] + 1],
+                variable,
+                self.variable_dict,
+                volc,
+                sun,
             )
         years, timeseries = get_data_from_forc_common(
-            df_temp, variable, self.variable_dict
+            df_temp[: self.endyear - df_temp.Year[0] + 1], variable, self.variable_dict
         )
         return years, timeseries
