@@ -317,4 +317,4 @@ class TestCICEROSCMAdapter(_AdapterTester):
 
 @pytest.mark.ciceroscm
 def test_get_version():
-    assert CICEROSCMPY.get_version() == "version-unknown"
+    assert CICEROSCMPY.get_version() == "1.0.0"

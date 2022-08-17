@@ -5,6 +5,7 @@ import logging
 
 from ..base import _Adapter
 from ..utils.cicero_utils._run_ciceroscm_parallel import run_ciceroscm_parallel
+from ._compat import cscmpy
 from .cscmpy_wrapper import CSCMPYWrapper
 
 LOGGER = logging.getLogger(__name__)
@@ -60,5 +61,4 @@ class CICEROSCMPY(_Adapter):  # pylint: disable=too-few-public-methods
         str
             The CICEROSCM version id
         """
-        # return ciceroscmpy.__version__
-        return "version-unknown"
+        return cscmpy.__version__
