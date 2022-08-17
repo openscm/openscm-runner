@@ -89,6 +89,7 @@ jobs:
         MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc-darwin-amd64
       run: |
           # Not testing coverage for macOS due to the CIRERO binary being unavailable
+          export DYLD_LIBRARY_PATH=/opt/homebrew/opt/gfortran@11/lib/gcc/current:$DYLD_LIBRARY_PATH
           pytest tests -r a
     - name: Test with pytest Windows
       if: runner.os == 'Windows'
