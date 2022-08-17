@@ -88,11 +88,12 @@ jobs:
       env:
         MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc-darwin-amd64
       run: |
+          # Locate the gfortran library
+          find / -name libgfortran.*.dylib
+          GFORTRAN_LIBS=$(find / -name libgfortran.*.dylib -name libgfortran.*.dylib | head -n 1 | xargs dirname)
+          echo $GFORTRAN_LIBS
+          export DYLD_LIBRARY_PATH=$GFORTRAN_LIBS:$DYLD_LIBRARY_PATH
           # Not testing coverage for macOS due to the CIRERO binary being unavailable
-          brew --prefix gfortran@11
-          GFORTRAN_PREFIX=$(brew --prefix gfortran@11)/../gfortran
-          ls /opt/homebrew/opt
-          export DYLD_LIBRARY_PATH=$GFORTRAN_PREFIX/lib/gcc/current:$DYLD_LIBRARY_PATH
           pytest tests -r a
     - name: Test with pytest Windows
       if: runner.os == 'Windows'
