@@ -88,9 +88,8 @@ jobs:
       env:
         MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc-darwin-amd64
       run: |
-          # Locate the gfortran library
-          find / -name libgfortran.*.dylib
-          GFORTRAN_LIBS=$(find / -name libgfortran.*.dylib -name libgfortran.*.dylib | head -n 1 | xargs dirname)
+          # Locate the gfortran library. The location can change when the image is updated
+          GFORTRAN_LIBS=$(find /usr/local/Cellar/gcc@11 -name libgfortran.5.dylib | head -n 1 | xargs dirname)
           echo $GFORTRAN_LIBS
           export DYLD_LIBRARY_PATH=$GFORTRAN_LIBS:$DYLD_LIBRARY_PATH
           # Not testing coverage for macOS due to the CIRERO binary being unavailable
