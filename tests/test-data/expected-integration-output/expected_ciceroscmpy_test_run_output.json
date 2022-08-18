@@ -1,0 +1,178 @@
+{
+    "CICERO-SCM-PY": [
+        [
+            {
+                "variable": "Heat Content|Ocean",
+                "unit": "ZJ",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 1
+            },
+            346.1578264751314
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 1
+            },
+            -0.1740737306234469
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05
+            },
+            -0.2097507440981213
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.95
+            },
+            -0.17595146817474555
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0.05
+            },
+            3.321170271098667
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0.95
+            },
+            3.9964019497746186
+        ],
+        [
+            {
+                "variable": "Surface Air Ocean Blended Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 1
+            },
+            -0.14281200459971824
+        ],
+        [
+            {
+                "variable": "Heat Uptake",
+                "unit": "W/m^2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 1
+            },
+            -0.3400230652020227
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0
+            },
+            -0.21162848164941997
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 1
+            },
+            4.033914820812171
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0
+            },
+            3.2836574000611143
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05
+            },
+            -0.2097507440981213
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.95
+            },
+            -0.17595146817474555
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0.05
+            },
+            3.321170271098667
+        ],
+        [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0.95
+            },
+            3.9964019497746186
+        ],
+        [
+            {
+                "variable": "Atmospheric Concentrations|CO2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "unit": "ppm",
+                "quantile": 1
+            },
+            779.4291548818361
+        ],
+        [
+            {
+                "variable": "Emissions|CO2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "unit": "PgC / yr",
+                "quantile": 1
+            },
+            22.5616
+        ]
+    ]
+}

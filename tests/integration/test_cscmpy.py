@@ -6,8 +6,7 @@ import pytest
 from scmdata import ScmRun
 
 from openscm_runner import run
-from openscm_runner.adapters import CICEROSCM
-from openscm_runner.adapters.ciceroscm_adapter import write_parameter_files
+from openscm_runner.adapters import CICEROSCMPY
 from openscm_runner.testing import _AdapterTester
 from openscm_runner.utils import calculate_quantiles
 
@@ -27,7 +26,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
         expected_output_file = os.path.join(
             test_data_dir,
             "expected-integration-output",
-            "expected_ciceroscm_test_run_output.json",
+            "expected_ciceroscmpy_test_run_output.json",
         )
 
         if shuffle_column_order:
@@ -39,36 +38,44 @@ class TestCICEROSCMAdapter(_AdapterTester):
         res = run(
             scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
             climate_models_cfgs={
-                "CICEROSCM": [
+                "CICEROSCMPY": [
                     {
                         "model_end": 2100,
                         "Index": 30040,
-                        "lambda": 0.540,
-                        "akapa": 0.341,
-                        "cpi": 0.556,
-                        "W": 1.897,
-                        "rlamdo": 16.618,
-                        "beto": 3.225,
-                        "mixed": 107.277,
-                        "dirso2_forc": -0.457,
-                        "indso2_forc": -0.514,
-                        "bc_forc": 0.200,
-                        "oc_forc": -0.103,
+                        "pamset_udm": {
+                            "lambda": 0.540,
+                            "akapa": 0.341,
+                            "cpi": 0.556,
+                            "W": 1.897,
+                            "rlamdo": 16.618,
+                            "beto": 3.225,
+                            "mixed": 107.277,
+                        },
+                        "pamset_emiconc": {
+                            "qdirso2": -0.457,
+                            "qindso2": -0.514,
+                            "qbc": 0.200,
+                            "qoc": -0.103,
+                        },
                     },
                     {
                         "model_end": 2100,
                         "Index": 1,
-                        "lambda": 0.3925,
-                        "akapa": 0.2421,
-                        "cpi": 0.3745,
-                        "W": 0.8172,
-                        "rlamdo": 16.4599,
-                        "beto": 4.4369,
-                        "mixed": 35.4192,
-                        "dirso2_forc": -0.3428,
-                        "indso2_forc": -0.3856,
-                        "bc_forc": 0.1507,
-                        "oc_forc": -0.0776,
+                        "pamset_udm": {
+                            "lambda": 0.3925,
+                            "akapa": 0.2421,
+                            "cpi": 0.3745,
+                            "W": 0.8172,
+                            "rlamdo": 16.4599,
+                            "beto": 4.4369,
+                            "mixed": 35.4192,
+                        },
+                        "pamset_emiconc": {
+                            "qdirso2": -0.3428,
+                            "qindso2": -0.3856,
+                            "qbc": 0.1507,
+                            "qoc": -0.0776,
+                        },
                     },
                 ]
             },
@@ -93,7 +100,9 @@ class TestCICEROSCMAdapter(_AdapterTester):
         assert isinstance(res, ScmRun)
         assert res["run_id"].min() == 1
         assert res["run_id"].max() == 30040
-        assert res.get_unique_meta("climate_model", no_duplicates=True) == "CICERO-SCM"
+        assert (
+            res.get_unique_meta("climate_model", no_duplicates=True) == "CICERO-SCM-PY"
+        )
 
         assert set(res.get_unique_meta("variable")) == set(
             [
@@ -220,12 +229,6 @@ class TestCICEROSCMAdapter(_AdapterTester):
             scenario="ssp245",
             run_id=1,
         )
-        test_length = res.filter(
-            variable="Effective Radiative Forcing|Greenhouse Gases",
-            scenario="ssp245",
-            run_id=1,
-        )
-        assert len(test_length.values[0]) == 351
         # check that jump in GHG ERF isn't there
         assert (
             ssp245_ghg_erf_2015.values.squeeze() - ssp245_ghg_erf_2014.values.squeeze()
@@ -268,7 +271,9 @@ class TestCICEROSCMAdapter(_AdapterTester):
             c for c in self._common_variables if c not in missing_from_ciceroscm
         ]
         res = run(
-            climate_models_cfgs={"CICEROSCM": ({"lambda": 0.540},)},
+            climate_models_cfgs={
+                "CICEROSCMPY": [{"pamset_udm": {"lambda": 0.540}, "pamset_emiconc": {}}]
+            },
             scenarios=test_scenarios.filter(scenario="ssp126"),
             output_variables=common_variables,
         )
@@ -283,68 +288,33 @@ class TestCICEROSCMAdapter(_AdapterTester):
             run(
                 scenarios=test_scenarios.filter(scenario=["ssp126"]),
                 climate_models_cfgs={
-                    "CiceroSCM": [
+                    "CiceroSCMPY": [
                         {
                             "model_end": 2100,
-                            "scenario_end": 2100,
                             "Index": 30040,
-                            "lambda": 0.540,
-                            "akapa": 0.341,
-                            "cpi": 0.556,
-                            "W": 1.897,
-                            "rlamdo": 16.618,
-                            "beto": 3.225,
-                            "mixed": 107.277,
-                            "dirso2_forc": -0.457,
-                            "indso2_forc": -0.514,
-                            "bc_forc": 0.200,
-                            "oc_forc": -0.103,
+                            "pamset_udm": {
+                                "lambda": 0.540,
+                                "akapa": 0.341,
+                                "cpi": 0.556,
+                                "W": 1.897,
+                                "rlamdo": 16.618,
+                                "beto": 3.225,
+                                "mixed": 107.277,
+                            },
+                            "pamset_emiconc": {
+                                "qdirso2": -0.457,
+                                "qindso2": -0.514,
+                                "qbc": 0.200,
+                                "qoc": -0.103,
+                            },
                         },
                     ]
                 },
                 output_variables=("Surface Air Temperature Change",),
-                out_config={"CiceroSCM": ("With ECS",)},
+                out_config={"CiceroSCMPY": ("With ECS",)},
             )
-
-    @pytest.mark.parametrize(
-        "input,exp",
-        (
-            ("folder", ("folder",)),
-            (os.path.join("folder", "subfolder"), ("folder", "subfolder")),
-        ),
-    )
-    def test_write_parameter_files(self, input, exp):
-        assert write_parameter_files.splitall(input) == exp
-
-    @pytest.mark.ciceroscm
-    @pytest.mark.parametrize(
-        "name",
-        (
-            "some super super super super super super super super super super long scenario name which should not explode",
-            "another name with some special | . characters which should also work",
-            # any other names you want to test
-        ),
-    )
-    def test_run_long_scenario_name(
-        self,
-        name,
-        test_scenarios,
-    ):
-        starting_scenario = test_scenarios.filter(scenario="ssp126").rename(
-            {"scenario": {"ssp126": name}}
-        )
-
-        res = run(
-            scenarios=starting_scenario,
-            climate_models_cfgs={"CICEROSCM": [{}]},
-            output_variables=("Surface Air Temperature Change",),
-        )
-
-        assert res.get_unique_meta("scenario", True) == name
-        assert (1.4 < res.filter(year=2100).values < 1.6).all()
-        # any other tests you want to add
 
 
 @pytest.mark.ciceroscm
 def test_get_version():
-    assert CICEROSCM.get_version() == "v2019vCH4"
+    assert CICEROSCMPY.get_version() == "1.0.0"

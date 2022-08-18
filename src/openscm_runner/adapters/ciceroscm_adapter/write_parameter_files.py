@@ -13,6 +13,18 @@ def splitall(path):
     return out
 
 
+def check_pamset_consistency(pamset):
+    """
+    Check consistency of parameter set so scenario_end is
+    equal to or earlier than model_end
+    """
+    if "model_end" in pamset and "scenario_end" not in pamset:
+        pamset["scenario_end"] = pamset["model_end"]
+    elif "model_end" in pamset and pamset["scenario_end"] > pamset["model_end"]:
+        pamset["scenario_end"] = pamset["model_end"]
+    return pamset
+
+
 class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
     """
     Class to write parameterfiles
@@ -65,10 +77,13 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
             "input/ssp434_em_RCMIP.txt",
             f"{filedir_to_pamfile}/inputfiles/{scen}_em.txt",
         )
+        pamset = check_pamset_consistency(pamset)
+
         for k, value in self._pamset_defaults.items():
             old = f"{k} {value}"
             if k in ("model_end", "scenario_start", "scenario_end"):
                 new = f"{k} {pamset.get(k, value)}"
+                print(f"{k} {pamset.get(k, value)}")
             else:
                 new = f"{k} {pamset.get(k, float(value)):.4}"
             filedata = filedata.replace(old, new)

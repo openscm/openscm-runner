@@ -1,33 +1,31 @@
 """
-CICEROSCM adapter
+CICEROSCMPY adapter
 """
 import logging
-import os.path
-from subprocess import check_output  # nosec
 
 from ..base import _Adapter
 from ..utils.cicero_utils._run_ciceroscm_parallel import run_ciceroscm_parallel
-from ._utils import _get_executable
-from .ciceroscm_wrapper import CiceroSCMWrapper
+from ._compat import cscmpy
+from .cscmpy_wrapper import CSCMPYWrapper
 
 LOGGER = logging.getLogger(__name__)
 
 
 def _execute_run(cfgs, output_variables, scenariodata):
-    cscm = CiceroSCMWrapper(scenariodata)
+    cscm = CSCMPYWrapper(scenariodata)
     try:
         out = cscm.run_over_cfgs(cfgs, output_variables)
     finally:
-        cscm.cleanup_tempdirs()
+        LOGGER.info("Finished run")
     return out
 
 
-class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
+class CICEROSCMPY(_Adapter):  # pylint: disable=too-few-public-methods
     """
-    Adapter for CICEROSCM
+    Adapter for CICEROSCM python version
     """
 
-    model_name = "CiceroSCM"
+    model_name = "CiceroSCMPY"
 
     def __init__(self):  # pylint: disable=useless-super-delegation
         """
@@ -62,20 +60,5 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
         -------
         str
             The CICEROSCM version id
-
-        Raises
-        ------
-        OSError
-            The CICERO-SCM binary cannot be run on the operating system
         """
-        executable = _get_executable(
-            os.path.join(os.path.dirname(__file__), "utils_templates", "run_dir")
-        )
-        try:
-            check_output(executable)
-        except OSError as orig_exc:
-            raise OSError(
-                "CICERO-SCM is not available on your operating system"
-            ) from orig_exc
-
-        return "v2019vCH4"
+        return cscmpy.__version__
