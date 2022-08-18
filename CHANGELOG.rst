@@ -20,6 +20,7 @@ Unreleased
 Added
 ~~~~~
 
+- (`#78 <https://github.com/openscm/openscm-runner/pull/78>`_) CICERO-SCM python implementation adapter
 - (`#74 <https://github.com/openscm/openscm-runner/pull/74>`_) Run tests on macOS as part of CI
 - (`#72 <https://github.com/openscm/openscm-runner/pull/72>`_) Add notebook showing how to run MAGICC
 
