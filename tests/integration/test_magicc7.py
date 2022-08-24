@@ -136,7 +136,9 @@ def test_write_scen_files_and_make_full_cfgs(test_scenarios):
             .replace("\\", "-")
             .replace(" ", "-")
         )
-        scen_full_filename = os.path.join(adapter._run_dir(), "openscm-runner", scen_file_name)
+        scen_full_filename = os.path.join(
+            adapter._run_dir(), "openscm-runner", scen_file_name
+        )
 
         scenario_cfg = [v for v in res if v["file_emisscen"] == scen_full_filename]
 
