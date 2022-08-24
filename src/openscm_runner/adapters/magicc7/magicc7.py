@@ -159,6 +159,7 @@ class MAGICC7(_Adapter):
         run_id_block = 0
 
         if out_directory is None:
+            # Defaults to writing to the run/openscm-runner directory
             out_directory = os.path.join(self._run_dir(), "openscm-runner")
             os.makedirs(out_directory, exist_ok=True)
 
