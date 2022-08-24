@@ -68,6 +68,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Download MAGICC non-windows
+      if: runner.os != 'Windows'
       run: |
         mkdir -p bin/magicc/magicc-v7.5.3
         wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
@@ -95,8 +96,6 @@ jobs:
           pytest tests -r a
     - name: Test with pytest Windows
       if: runner.os == 'Windows'
-      env:
-        MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc.exe
       run: |
           pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=$env:MIN_COVERAGE
 
