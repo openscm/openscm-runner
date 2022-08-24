@@ -177,8 +177,9 @@ class MAGICC7(_Adapter):
                 .replace("\\", "-")
                 .replace(" ", "-")
             )
+            scen_file_name = os.path.join(out_directory, scen_file_name)
             writer.write(
-                os.path.join(out_directory, scen_file_name),
+                scen_file_name,
                 magicc_version=self.get_version()[1],
             )
 

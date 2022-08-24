@@ -113,7 +113,6 @@ class TestMagicc7Adapter(_AdapterTester):
             raise AssertionError(missing_vars)
 
 
-@pytest.mark.magicc
 def test_write_scen_files_and_make_full_cfgs(test_scenarios):
     adapter = MAGICC7()
     test_scenarios_magiccdf = pymagicc.io.MAGICCData(test_scenarios)
@@ -137,8 +136,9 @@ def test_write_scen_files_and_make_full_cfgs(test_scenarios):
             .replace("\\", "-")
             .replace(" ", "-")
         )
+        scen_full_filename = os.path.join(adapter._run_dir(), "openscm-runner", scen_file_name)
 
-        scenario_cfg = [v for v in res if v["file_emisscen"] == scen_file_name]
+        scenario_cfg = [v for v in res if v["file_emisscen"] == scen_full_filename]
 
         assert len(scenario_cfg) == 1
         scenario_cfg = scenario_cfg[0]
