@@ -224,4 +224,6 @@ class MAGICC7(_Adapter):
 
     @classmethod
     def _run_dir(cls):
-        return os.path.join(os.path.dirname(cls._executable()), "..", "run")
+        return os.path.abspath(
+            os.path.join(os.path.dirname(cls._executable()), "..", "run")
+        )

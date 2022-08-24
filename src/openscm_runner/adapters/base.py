@@ -2,6 +2,7 @@
 Base class for adapters
 """
 from abc import ABC, abstractmethod
+from typing import Any, Dict, Iterable, List
 
 
 class _Adapter(ABC):  # pylint: disable=too-few-public-methods
@@ -40,7 +41,13 @@ class _Adapter(ABC):  # pylint: disable=too-few-public-methods
             Keyword arguments used to initialise the model
         """
 
-    def run(self, scenarios, cfgs, output_variables, output_config):
+    def run(
+        self,
+        scenarios,
+        cfgs: List[Dict[str, Any]],
+        output_variables: Iterable[str],
+        output_config: Iterable[str],
+    ):
         """
         Parameters
         ----------
@@ -50,10 +57,10 @@ class _Adapter(ABC):  # pylint: disable=too-few-public-methods
         cfgs : list[dict]
             The config with which to run the model
 
-        output_variables : list[str]
+        output_variables : list of str or tuple of str
             Variables to include in the output
 
-        output_config : tuple[str]
+        output_config : list of str or tuple of str
             Configuration to include in the output
 
         Returns

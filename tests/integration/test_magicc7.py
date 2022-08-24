@@ -113,6 +113,7 @@ class TestMagicc7Adapter(_AdapterTester):
             raise AssertionError(missing_vars)
 
 
+@pytest.mark.magicc
 def test_write_scen_files_and_make_full_cfgs(test_scenarios):
     adapter = MAGICC7()
     test_scenarios_magiccdf = pymagicc.io.MAGICCData(test_scenarios)
