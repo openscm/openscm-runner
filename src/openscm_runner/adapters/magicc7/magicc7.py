@@ -154,9 +154,14 @@ class MAGICC7(_Adapter):
 
         return out
 
-    def _write_scen_files_and_make_full_cfgs(self, scenarios, cfgs):
+    def _write_scen_files_and_make_full_cfgs(self, scenarios, cfgs, out_directory=None):
         full_cfgs = []
         run_id_block = 0
+
+        if out_directory is None:
+            # Defaults to writing to the run/openscm-runner directory
+            out_directory = os.path.join(self._run_dir(), "openscm-runner")
+            os.makedirs(out_directory, exist_ok=True)
 
         for (scenario, model), smdf in progress(
             scenarios.timeseries().groupby(["scenario", "model"]),
@@ -173,8 +178,9 @@ class MAGICC7(_Adapter):
                 .replace("\\", "-")
                 .replace(" ", "-")
             )
+            scen_file_name = os.path.join(out_directory, scen_file_name)
             writer.write(
-                os.path.join(self._run_dir(), scen_file_name),
+                scen_file_name,
                 magicc_version=self.get_version()[1],
             )
 
@@ -218,4 +224,6 @@ class MAGICC7(_Adapter):
 
     @classmethod
     def _run_dir(cls):
-        return os.path.join(os.path.dirname(cls._executable()), "..", "run")
+        return os.path.abspath(
+            os.path.join(os.path.dirname(cls._executable()), "..", "run")
+        )

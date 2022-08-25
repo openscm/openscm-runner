@@ -14,6 +14,14 @@ The changes listed in this file are categorised as follows:
     - Fixed: any bug fixes
     - Security: in case of vulnerabilities.
 
+Master
+------
+
+Changed
+~~~~~~~
+
+- (`#80 <https://github.com/openscm/openscm-runner/pull/80>`_) MAGICC adapter uses `run/openscm-runner` directory to store SCEN files instead of `run`
+
 v0.11.0 - 2022-08-18
 --------------------
 
