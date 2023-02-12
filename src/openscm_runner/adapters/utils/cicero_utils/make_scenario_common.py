@@ -225,7 +225,7 @@ class COMMONSFILEWRITER:
                     ].loc[
                         str(self.years[0]) : str(self.years[-1])
                     ].to_numpy().astype(
-                        np.float
+                        float
                     )
                 else:
                     printout_frame[comp] = (
