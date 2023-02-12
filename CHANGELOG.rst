@@ -20,7 +20,8 @@ Master
 Changed
 ~~~~~~~
 
-- (`#80 <https://github.com/openscm/openscm-runner/pull/80>`_) MAGICC adapter uses `run/openscm-runner` directory to store SCEN files instead of `run`
+- (`#81 <https://github.com/openscm/openscm-runner/pull/81>`_) Replaced the deprecated ``np.float`` for the builtin ``float`` (Thanks @jkikstra)
+- (`#80 <https://github.com/openscm/openscm-runner/pull/80>`_) MAGICC adapter uses ``run/openscm-runner`` directory to store SCEN files instead of `run`
 
 v0.11.0 - 2022-08-18
 --------------------
