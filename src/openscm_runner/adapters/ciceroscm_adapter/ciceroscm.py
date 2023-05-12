@@ -72,7 +72,7 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
             os.path.join(os.path.dirname(__file__), "utils_templates", "run_dir")
         )
         try:
-            check_output(executable)
+            check_output(executable)  # nosec
         except OSError as orig_exc:
             raise OSError(
                 "CICERO-SCM is not available on your operating system"

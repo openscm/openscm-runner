@@ -216,7 +216,11 @@ class MAGICC7(_Adapter):
         str
             The MAGICC7 version id
         """
-        return check_output([cls._executable(), "--version"]).decode("utf-8").strip()
+        return (
+            check_output([cls._executable(), "--version"])  # nosec
+            .decode("utf-8")
+            .strip()
+        )
 
     @classmethod
     def _executable(cls):

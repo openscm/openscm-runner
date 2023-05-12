@@ -7,3 +7,27 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
+
+[tool.coverage.run]
+branch = true
+source = [
+    "src/openscm_runner"
+]
+omit = [
+    "*_version.py",
+    # TODO: remove the exclusion for MAGICC
+    "*adapters/magicc7*",
+    "*testing.py"
+]
+
+[tool.coverage.report]
+fail_under = 90
+skip_empty = true
+show_missing = true
+ignore_errors = true
+
+# Regexes for lines to exclude from consideration in addition to the defaults
+exclude_also = [
+    # Don't complain about missing type checking code:
+    "if TYPE_CHECKING",
+]
