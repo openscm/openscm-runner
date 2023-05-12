@@ -19,6 +19,9 @@ omit = [
     "*adapters/magicc7*",
     "*testing.py"
 ]
+concurrency = ["multiprocessing"]
+parallel = true
+sigterm = true
 
 [tool.coverage.report]
 fail_under = 90
