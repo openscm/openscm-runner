@@ -97,7 +97,8 @@ jobs:
     - name: Test with pytest Windows
       if: runner.os == 'Windows'
       run: |
-          pytest tests -r a --cov=openscm_runner --cov-report='' --cov-fail-under=$env:MIN_COVERAGE
+          # Not strictly testing coverage under windows as MAGICC isn't available
+          pytest tests -r a --cov=openscm_runner --cov-report='term-missing' --cov-fail-under=70
 
   test-notebooks:
     runs-on: ubuntu-latest
