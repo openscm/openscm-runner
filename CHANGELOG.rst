@@ -17,6 +17,9 @@ The changes listed in this file are categorised as follows:
 Master
 ------
 
+v0.12.0 - 2023-05-12
+--------------------
+
 Changed
 ~~~~~~~
 
