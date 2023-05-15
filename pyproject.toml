@@ -15,8 +15,6 @@ source = [
 ]
 omit = [
     "*_version.py",
-    # TODO: remove the exclusion for MAGICC
-    "*adapters/magicc7*",
     "*testing.py"
 ]
 concurrency = ["multiprocessing"]
