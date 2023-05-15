@@ -189,18 +189,20 @@ class _AdapterTester(ABC):  # nosec
             out_config=None,
         )
 
-        assert isinstance(res, ScmRun)
-        assert res["run_id"].min() == 0  # pylint: disable=compare-to-zero
-        assert res["run_id"].min() == 0  # pylint: disable=compare-to-zero
-        assert res["run_id"].max() == 8
+        assert isinstance(res, ScmRun)  # nosec
+        assert res["run_id"].min() == 0  # pylint: disable=compare-to-zero # nosec
+        assert res["run_id"].min() == 0  # pylint: disable=compare-to-zero # nosec
+        assert res["run_id"].max() == 8  # nosec
 
-        assert res.get_unique_meta("climate_model", no_duplicates=True) == "model_name"
+        assert (
+            res.get_unique_meta("climate_model", no_duplicates=True) == "model_name"
+        )  # nosec
 
         assert set(res.get_unique_meta("variable")) == {
             "expected",
             "output",
             "variables",
-        }
+        }  # nosec
 
         # output value checks e.g.
         npt.assert_allclose(

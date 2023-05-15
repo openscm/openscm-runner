@@ -17,6 +17,16 @@ The changes listed in this file are categorised as follows:
 Master
 ------
 
+Added
+~~~~~
+
+- (`#83 <https://github.com/openscm/openscm-runner/pull/83>`_) Added support for Python v3.10 and v3.11
+
+Changed
+~~~~~~~
+
+- (`#83 <https://github.com/openscm/openscm-runner/pull/83>`_) Fix failing CI. ``fair`` is now pinned to < 2
+
 v0.12.0 - 2023-05-12
 --------------------
 
