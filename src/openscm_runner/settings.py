@@ -1,4 +1,6 @@
 """
+Settings handling
+
 Rather than hard-coding constants, configuration can be source from 2 different
 sources:
 
@@ -31,8 +33,12 @@ class ConfigLoader:
     .. code:: python
 
         >>> config = ConfigLoader()
-        >>> config['VALUE']
-        >>> config.get("VALUE", None)
+        >>> config["VALUE"]
+        Traceback (most recent call last):
+         ...
+        KeyError: 'VALUE'
+        >>> config.get("VALUE", "some_default")
+        'some_default'
     """
 
     def __init__(self):

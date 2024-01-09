@@ -5,7 +5,7 @@ import numpy.testing as npt
 import pytest
 from scmdata import ScmRun
 
-from openscm_runner import run
+import openscm_runner.run
 from openscm_runner.adapters import FAIR
 from openscm_runner.testing import _AdapterTester
 from openscm_runner.utils import calculate_quantiles
@@ -13,7 +13,7 @@ from openscm_runner.utils import calculate_quantiles
 
 class TestFairAdapter(_AdapterTester):
     @pytest.mark.parametrize("nworkers", (1, 4))
-    def test_run(
+    def test_run(  # noqa: PLR0913
         self,
         test_scenarios,
         monkeypatch,
@@ -27,8 +27,8 @@ class TestFairAdapter(_AdapterTester):
             "expected_fair1X_test_run_output.json",
         )
 
-        monkeypatch.setenv("FAIR_WORKER_NUMBER", "{}".format(nworkers))
-        res = run(
+        monkeypatch.setenv("FAIR_WORKER_NUMBER", f"{nworkers}")
+        res = openscm_runner.run.run(
             climate_models_cfgs={
                 "FaIR": [
                     {},
@@ -53,9 +53,10 @@ class TestFairAdapter(_AdapterTester):
         assert isinstance(res, ScmRun)
         assert res["run_id"].min() == 0
         assert res["run_id"].max() == 8
-        assert res.get_unique_meta(
-            "climate_model", no_duplicates=True
-        ) == "FaIRv{}".format(FAIR.get_version())
+        assert (
+            res.get_unique_meta("climate_model", no_duplicates=True)
+            == f"FaIRv{FAIR.get_version()}"
+        )
 
         assert set(res.get_unique_meta("variable")) == set(
             [
@@ -82,18 +83,18 @@ class TestFairAdapter(_AdapterTester):
     def test_variable_naming(self, test_scenarios):
         missing_from_fair = (
             "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC AFOLU",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC Fossil and Industrial",
+            "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC Fossil and Industrial",  # noqa: E501
             "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC AFOLU",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC Fossil and Industrial",
+            "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC Fossil and Industrial",  # noqa: E501
             "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC AFOLU",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC Fossil and Industrial",
+            "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC Fossil and Industrial",  # noqa: E501
             "Net Atmosphere to Ocean Flux|CO2",
             "Net Atmosphere to Land Flux|CO2",
         )
         common_variables = [
             c for c in self._common_variables if c not in missing_from_fair
         ]
-        res = run(
+        res = openscm_runner.run.run(
             climate_models_cfgs={"FaIR": ({"startyear": 1750},)},
             scenarios=test_scenarios.filter(scenario="ssp126"),
             output_variables=common_variables,
@@ -105,7 +106,7 @@ class TestFairAdapter(_AdapterTester):
 
 
 def test_fair_ocean_factors(test_scenarios):
-    res_default_factors = run(
+    res_default_factors = openscm_runner.run.run(
         climate_models_cfgs={"FaIR": [{}]},
         scenarios=test_scenarios.filter(scenario=["ssp585"]),
         output_variables=(
@@ -115,7 +116,7 @@ def test_fair_ocean_factors(test_scenarios):
         ),
     )
 
-    res_custom_factors = run(
+    res_custom_factors = openscm_runner.run.run(
         climate_models_cfgs={
             "FaIR": [
                 {
@@ -149,23 +150,24 @@ def test_fair_ocean_factors(test_scenarios):
 
 
 def test_startyear(test_scenarios, test_scenarios_2600):
-    # we can't run different start years in the same ensemble as output files will differ in shape.
-    # There is a separate test to ensure this does raise an error.
-    res_1850 = run(
+    # we can't run different start years in the same ensemble as output files
+    # will differ in shape. There is a separate test to ensure this does raise
+    # an error.
+    res_1850 = openscm_runner.run.run(
         climate_models_cfgs={"FaIR": [{"startyear": 1850}]},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
         output_variables=("Surface Air Temperature Change",),
         out_config=None,
     )
 
-    res_1750 = run(
+    res_1750 = openscm_runner.run.run(
         climate_models_cfgs={"FaIR": [{"startyear": 1750}]},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
         output_variables=("Surface Air Temperature Change",),
         out_config=None,
     )
 
-    res_default = run(
+    res_default = openscm_runner.run.run(
         climate_models_cfgs={"FaIR": [{}]},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
         output_variables=("Surface Air Temperature Change",),
@@ -194,7 +196,7 @@ def test_startyear(test_scenarios, test_scenarios_2600):
     assert gsat2100_start1750 == gsat2100_startdefault
 
     with pytest.raises(ValueError):
-        run(
+        openscm_runner.run.run(
             climate_models_cfgs={"FaIR": [{"startyear": 1650}]},
             scenarios=test_scenarios.filter(scenario=["ssp245"]),
             output_variables=("Surface Air Temperature Change",),
@@ -202,7 +204,7 @@ def test_startyear(test_scenarios, test_scenarios_2600):
         )
 
     with pytest.raises(ValueError):
-        run(
+        openscm_runner.run.run(
             climate_models_cfgs={"FaIR": [{}]},
             scenarios=test_scenarios_2600.filter(scenario=["ssp245"]),
             output_variables=("Surface Air Temperature Change",),
@@ -210,7 +212,7 @@ def test_startyear(test_scenarios, test_scenarios_2600):
         )
 
     with pytest.raises(ValueError):
-        run(
+        openscm_runner.run.run(
             climate_models_cfgs={"FaIR": [{"startyear": 1750}, {"startyear": 1850}]},
             scenarios=test_scenarios.filter(scenario=["ssp245"]),
             output_variables=("Surface Air Temperature Change",),
@@ -278,7 +280,7 @@ def test_forcing_categories(test_scenarios):
         "Effective Radiative Forcing",
     ]
 
-    res = run(
+    res = openscm_runner.run.run(
         climate_models_cfgs={"FaIR": [{}]},
         scenarios=test_scenarios.filter(scenario=["ssp245"]),
         output_variables=tuple(forcing_categories),
@@ -398,7 +400,7 @@ def test_forcing_categories(test_scenarios):
     npt.assert_allclose(
         forcing["Effective Radiative Forcing|Aerosols|Direct Effect|SOx"]
         + forcing[
-            "Effective Radiative Forcing|Aerosols|Direct Effect|Secondary Organic Aerosol"
+            "Effective Radiative Forcing|Aerosols|Direct Effect|Secondary Organic Aerosol"  # noqa: E501
         ]
         + forcing["Effective Radiative Forcing|Aerosols|Direct Effect|Nitrate"]
         + forcing["Effective Radiative Forcing|Aerosols|Direct Effect|BC"]
@@ -406,7 +408,8 @@ def test_forcing_categories(test_scenarios):
         forcing["Effective Radiative Forcing|Aerosols|Direct Effect"],
     )
 
-    # If up to here is fine, then we only need to check previouly defined aggregates against "super-aggregates"
+    # If up to here is fine, then we only need to check previouly defined
+    # aggregates against "super-aggregates"
     npt.assert_allclose(
         forcing["Effective Radiative Forcing|Aerosols|Direct Effect"]
         + forcing["Effective Radiative Forcing|Aerosols|Indirect Effect"],
