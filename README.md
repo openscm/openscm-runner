@@ -10,8 +10,9 @@ TODO:
 - Update notebook tests
 - Change to using pytest-regressions for handling expected values
 - add PHONY to help in copier
-- add conda support via copier somewhere (might not need to be too complicated though as the only thing you really need to test is installation, the rest is just handled by conda-forge)
+- add conda support via copier somewhere (might not need to be too complicated though as the only thing you really need to test is installation and then you just add the badges, the rest is just handled by conda-forge)
 - add AUTHORS in copier
+- fill out contributing docs more fully in copier
 - add sidebar back into docs in copier
 - add feature request issue template to copier
 - add feature-request label to both GitHub and GitLab orgs (if they don't exist, otherwise update feature request template to match existing name)
@@ -23,7 +24,7 @@ https://myst-parser.readthedocs.io/en/latest/syntax/organising_content.html#inse
 
 <!--- sec-begin-description -->
 
-Thin wrapper to run emissions scenarios with simple climate models
+OpenSCM-Runner provides a unified API for running emissions scenarios with different simple climate models.
 
 [![CI](https://github.com/openscm/openscm-runner/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/openscm/openscm-runner/actions/workflows/ci.yaml)
 [![Coverage](https://codecov.io/gh/openscm/openscm-runner/branch/main/graph/badge.svg)](https://codecov.io/gh/openscm/openscm-runner)
@@ -62,6 +63,21 @@ Additional dependencies can be installed using
 ```bash
 # To add notebook dependencies
 pip install openscm-runner[notebooks]
+
+# To add dependencies for all models
+pip install openscm-runner[models]
+
+# To add dependencies for MAGICC
+pip install openscm-runner[magicc]
+
+# To add dependencies for FaIR
+pip install openscm-runner[fair]
+
+# CICERO-SCM's Fortran binary requires no additional dependencies to be
+# installed
+
+# To add dependencies for CICERO-SCM's Python port
+pip install openscm-runner[ciceroscmpy]
 
 # If you are installing with conda, we recommend
 # installing the extras by hand because there is no stable
