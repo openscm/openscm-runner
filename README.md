@@ -2,23 +2,21 @@
 
 TODO:
 
-- TODO: work out how to handle package data
-- Change notebooks into papermill style
-- Update notebook tests
-- add PHONY to help in copier
-- add conda support via copier somewhere (might not need to be too complicated though as the only thing you really need to test is installation, the rest is just handled by conda-forge)
-- add AUTHORS in copier
-- check if version and release in docs/source/conf.py do anything
-- convert docs from rst to md
-- work out what pygments_style in docs/source/conf.py does
-- add sidebar back into docs in copier
 - get rid of |CO2| throughout
 - note that this removes support for Python \< 3.9
 - Remove README.rst
+- convert CHANGELOG to directory style
+- convert docs from rst to md
+- TODO: work out how to handle package data
+- Change notebooks into papermill style
+- Update notebook tests
 - Change to using pytest-regressions for handling expected values
+- add PHONY to help in copier
+- add conda support via copier somewhere (might not need to be too complicated though as the only thing you really need to test is installation, the rest is just handled by conda-forge)
+- add AUTHORS in copier
+- add sidebar back into docs in copier
 - add feature request issue template to copier
 - add feature-request label to both GitHub and GitLab orgs (if they don't exist, otherwise update feature request template to match existing name)
-- convert CHANGELOG to directory style
 
 <!---
 Can use start-after and end-before directives in docs, see
