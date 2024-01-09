@@ -1,50 +1,23 @@
-import os.path
+"""
+Re-useable fixtures etc. for tests
 
-import pyam
+See https://docs.pytest.org/en/7.1.x/reference/fixtures.html#conftest-py-sharing-fixtures-across-multiple-files
+"""
+from __future__ import annotations
+
+from pathlib import Path
+
+import pandas as pd
 import pytest
-from scmdata import ScmRun
+import scmdata
 
 from openscm_runner.adapters import CICEROSCM, MAGICC7
 
-TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test-data")
-
-
-@pytest.fixture(scope="session")
-def test_data_dir():
-    return TEST_DATA_DIR
-
-
-@pytest.fixture(scope="session")
-def test_scenarios(test_data_dir):
-    scenarios = pyam.IamDataFrame(
-        os.path.join(test_data_dir, "rcmip_scen_ssp_world_emissions.csv")
-    )
-
-    return scenarios
-
-
-@pytest.fixture(scope="session")
-def test_scenarios_2600(test_data_dir):
-    scenarios = pyam.IamDataFrame(
-        os.path.join(test_data_dir, "rcmip_scen_ssp_world_emissions_2600.csv")
-    )
-
-    return scenarios
-
-
-@pytest.fixture(scope="session")
-def test_scenario_ssp370_world(test_data_dir):
-    scenario = ScmRun(
-        os.path.join(
-            test_data_dir, "rcmip-emissions-annual-means-v5-1-0-ssp370-world.csv"
-        ),
-        lowercase_cols=True,
-    )
-
-    return scenario
-
+TEST_DATA_DIR = Path(__file__).parent / "test-data"
+"""Directory in which test data lives"""
 
 REQUIRED_MAGICC_VERSION = "v7.5.3"
+"""MAGICC version required for the tests"""
 
 try:
     MAGICC_VERSION = MAGICC7.get_version()
@@ -68,7 +41,7 @@ except KeyError:
     CICERO_OS_ERROR = False
 
 
-def pytest_runtest_setup(item):
+def pytest_runtest_setup(item) -> None:
     for mark in item.iter_markers():
         if mark.name == "magicc" and not CORRECT_MAGICC_IS_AVAILABLE:
             if MAGICC_VERSION is None:
@@ -87,15 +60,49 @@ def pytest_runtest_setup(item):
                 pytest.skip("CICERO-SCM not available")
 
 
-def pytest_addoption(parser):
-    parser.addoption(
-        "--update-expected-values",
-        action="store_true",
-        default=False,
-        help="Overwrite expected values",
+@pytest.fixture(scope="session", autouse=True)
+def pandas_terminal_width():
+    # Set pandas terminal width so that doctests don't depend on terminal width.
+
+    # We set the display width to 120 because examples should be short,
+    # anything more than this is too wide to read in the source.
+    pd.set_option("display.width", 120)
+
+    # Display as many columns as you want (i.e. let the display width do the
+    # truncation)
+    pd.set_option("display.max_columns", 1000)
+
+
+@pytest.fixture(scope="session")
+def test_data_dir() -> Path:
+    return TEST_DATA_DIR
+
+
+@pytest.fixture(scope="session")
+def test_scenarios(test_data_dir: Path) -> scmdata.ScmRun:
+    scenarios = scmdata.ScmRun(
+        test_data_dir / "rcmip_scen_ssp_world_emissions.csv",
+        lowercase_cols=True,
     )
 
+    return scenarios
 
-@pytest.fixture
-def update_expected_values(request):
-    return request.config.getoption("--update-expected-values")
+
+@pytest.fixture(scope="session")
+def test_scenarios_2600(test_data_dir: Path) -> scmdata.ScmRun:
+    scenarios = scmdata.ScmRun(
+        test_data_dir / "rcmip_scen_ssp_world_emissions_2600.csv",
+        lowercase_cols=True,
+    )
+
+    return scenarios
+
+
+@pytest.fixture(scope="session")
+def test_scenario_ssp370_world(test_data_dir: Path) -> scmdata.ScmRun:
+    scenario = scmdata.ScmRun(
+        test_data_dir / "rcmip-emissions-annual-means-v5-1-0-ssp370-world.csv",
+        lowercase_cols=True,
+    )
+
+    return scenario

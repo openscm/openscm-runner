@@ -1,34 +1,216 @@
-[build-system]
-requires = [
-    "setuptools>=41.2",
-    "setuptools_scm[toml]>=1.15",
-    "wheel>=0.31.0",
-]
-build-backend = "setuptools.build_meta"
+[tool.poetry]
+name = "openscm-runner"
+version = "0.1.0"
+description = "Thin wrapper to run emissions scenarios with simple climate models"
+authors = ["Zebedee Nicholls <zebedee.nicholls@climate-energy-college.org>"]
+readme = "README.md"
+packages = [{include = "openscm_runner", from = "src"}]
 
-[tool.setuptools_scm]
+[tool.poetry.dependencies]
+python = "^3.9"
+notebook = { version = "^6.5.3", optional = true }
+openscm-units = ">=0.5.0"
+python-dotenv = "^1.0.0"
+scmdata = ">=0.7.4"
+tqdm = "^4.66.1"
+fair = "<2"
+pymagicc = "<3"
+ciceroscm = "^1.0.0"
+ipywidgets = "^8.1.1"
+seaborn = "^0.13.1"
+
+[tool.poetry.extras]
+notebooks = ["notebook"]
+
+[tool.poetry.group.tests.dependencies]
+pytest = "^7.3.1"
+
+[tool.poetry.group.docs.dependencies]
+myst-nb = "^0.17.0"
+sphinx-rtd-theme = "^1.2.0"
+sphinx-autodoc-typehints = "^1.23.0"
+sphinx-autodocgen = "^1.3"
+jupytext = "^1.14.5"
+sphinx-copybutton = "^0.5.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest-cov = "^4.0.0"
+coverage = "^7.2.0"
+mypy = "^1.2.0"
+ruff = "^0.1.8"
+pre-commit = "^3.3.1"
+towncrier = "^23.6.0"
+liccheck = "^0.9.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]
+source = ["src"]
 branch = true
-source = [
-    "src/openscm_runner"
-]
-omit = [
-    "*_version.py",
-    "*testing.py"
-]
-concurrency = ["multiprocessing"]
-parallel = true
-sigterm = true
 
 [tool.coverage.report]
-fail_under = 90
+fail_under = 95
 skip_empty = true
 show_missing = true
-ignore_errors = true
-
 # Regexes for lines to exclude from consideration in addition to the defaults
 exclude_also = [
     # Don't complain about missing type checking code:
     "if TYPE_CHECKING",
+]
+
+[tool.mypy]
+strict = true
+# prevent unimported libraries silently being treated as Any
+disallow_any_unimported = true
+# show error codes on failure with context
+show_error_codes = true
+show_error_context = true
+# warn if code can't be reached
+warn_unreachable = true
+# importing following uses default settings
+follow_imports = "normal"
+
+[tool.jupytext]
+formats = "ipynb,py:percent"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+
+[tool.ruff]
+src = ["src"]
+target-version = "py39"
+select = [
+    "E",  # pycodestyle error
+    "W",  # pycodestyle warning
+    "F",  # pyflakes
+    "I",  # isort
+    "D",  # pydocstyle
+    "PL",  # pylint
+    "TRY",  # tryceratops
+    "NPY",  # numpy rules
+    "RUF",  # ruff specifics
+    "UP",  # pyupgrade
+    "S",  # flake8-bandit
+    # pandas support via pandas-vet. In some cases we will want to disable
+    # this because it can lead to too many false positives.
+    "PD",
+]
+unfixable = [
+    "PD002",  # Disable autofix for inplace as this often introduces bugs
+]
+ignore = [
+    "D200",  # One-line docstring should fit on one line with quotes
+    "D400",  # First line should end with a period
+]
+line-length = 88
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.per-file-ignores]
+"test*.py" = [
+    "D",  # Documentation not needed in tests
+    "S101",  # S101 Use of `assert` detected
+    "PLR2004" # Magic value used in comparison
+]
+"docs/source/notebooks/*" = [
+    "D100",  # Missing docstring at the top of file
+    "E402",  # Module level import not at top of file
+    "S101",  # Use of `assert` detected
+]
+"scripts/*" = [
+    "S101" # S101 Use of `assert` detected
+]
+
+[tool.ruff.isort]
+known-first-party = ["src"]
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
+
+[tool.towncrier]
+package = "openscm_runner"
+package_dir = "src"
+filename = "docs/source/changelog.md"
+directory = "changelog/"
+title_format = "## openscm-runner {version} ({project_date})"
+underlines = ["", "", ""]
+issue_format = "[#{issue}](https://github.com/openscm/openscm-runner/pulls/{issue})"
+
+  [[tool.towncrier.type]]
+  directory = "breaking"
+  name = "Breaking Changes"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "deprecation"
+  name = "Deprecations"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "feature"
+  name = "Features"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "improvement"
+  name = "Improvements"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "fix"
+  name = "Bug Fixes"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "docs"
+  name = "Improved Documentation"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "trivial"
+  name = "Trivial/Internal Changes"
+  showcontent = false
+
+[tool.liccheck]
+authorized_licenses = [
+    "bsd",
+    "bsd license",
+    "BSD 3-Clause",
+    "CC0",
+    "apache",
+    "apache 2.0",
+    "apache software",
+    "apache software license",
+    "Apache License, Version 2.0",
+    "Historical Permission Notice and Disclaimer (HPND)",
+    "isc license",
+    "isc license (iscl)",
+    "gnu lgpl",
+    "lgpl with exceptions or zpl",
+    "LGPLv2+",
+    "GNU Lesser General Public License v2 (LGPLv2)",
+    "GNU Lesser General Public License v2 or later (LGPLv2+)",
+    "mit",
+    "mit license",
+    "Mozilla Public License 2.0 (MPL 2.0)",
+    "python software foundation",
+    "python software foundation license",
+    "zpl 2.1",
+]
+# This starting list is relatively conservative. Depending on the project, it
+# may make sense to move some of these into the authorized list
+unauthorized_licenses = [
+    "agpl",
+    "gnu agpl",
+    "gpl v3",
+    "gplv3",
+    "gpl v2",
+    "gplv2",
+    "gpl v1",
+    "gplv1",
 ]
