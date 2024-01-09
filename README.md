@@ -2,8 +2,6 @@
 
 TODO:
 
-- get rid of |CO2| throughout
-- note that this removes support for Python \< 3.9
 - Remove README.rst
 - convert CHANGELOG to directory style
 - convert docs from rst to md
