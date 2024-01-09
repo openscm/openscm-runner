@@ -1,0 +1,57 @@
+name: "Setup Python and Poetry"
+description: "setup Python and Poetry with caches"
+
+inputs:
+  python-version:
+    description: "Python version to use"
+    required: true
+  venv-id:
+    description: "ID to identify cached environment (should be unique from other steps)"
+    required: true
+  poetry-dependency-install-flags:
+    description: "Flags to pass to poetry when running `poetry install --no-interaction --no-root`"
+    required: true
+  run-poetry-install:
+    description: "Should we run the poetry install steps"
+    required: false
+    default: true
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      id: setup-python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Load cached Poetry installation
+      id: cached-poetry
+      uses: actions/cache@v3
+      with:
+        path: ~/.local  # the path depends on the OS
+        key: poetry-2  # increment to reset cache
+    - name: Install Poetry
+      if: steps.cached-poetry.outputs.cache-hit != 'true'
+      uses: snok/install-poetry@v1
+    - name: Load cached venv
+      if: ${{ inputs.run-poetry-install == 'true' }}
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: "venv-${{ inputs.venv-id }}-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}"
+    # Install dependencies first so that our package doesn't appear in the cache by accident
+    - name: Install dependencies
+      if: ${{ inputs.run-poetry-install == 'true' }}
+      shell: bash
+      run: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+        poetry env use ${{ inputs.python-version }}
+        poetry install --no-interaction --no-root ${{ inputs.poetry-dependency-install-flags }}
+    # Now run same command but let the package install too
+    - name: Install package
+      if: ${{ inputs.run-poetry-install == 'true' }}
+      shell: bash
+      run: poetry install --no-interaction ${{ inputs.poetry-dependency-install-flags }}

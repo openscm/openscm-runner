@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+jobs:
+  mypy:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.9"
+          venv-id: "docs"
+          poetry-dependency-install-flags: "--all-extras --only 'main,dev'"
+      - name: mypy
+        run: MYPYPATH=stubs poetry run mypy src
+
+  docs:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.9"
+          venv-id: "docs"
+          poetry-dependency-install-flags: "--all-extras --only 'main,docs'"
+      - name: docs
+        run: poetry run sphinx-build -W --keep-going -T -b html docs/source docs/build
+
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ "ubuntu-latest", "macos-latest", "windows-latest" ]
+        python-version: [ "3.9", "3.10", "3.11" ]
+    runs-on: "${{ matrix.os }}"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "${{ matrix.python-version }}"
+          venv-id: "tests-${{ runner.os }}"
+          poetry-dependency-install-flags: "--all-extras"
+      - name: Download MAGICC non-windows
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p bin/magicc/magicc-v7.5.3
+          wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+          tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
+      - name: Run tests linux
+        if: runner.os == 'Linux'
+        env:
+          MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
+        run: |
+          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
+          poetry run coverage report
+      - name: Run tests macOS
+        if: runner.os == 'macOS'
+        env:
+          MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc-darwin-amd64
+        run: |
+          # Locate the gfortran library. The location can change when the image is updated
+          GFORTRAN_LIBS=$(find /usr/local/Cellar/gcc@11 -name libgfortran.5.dylib | head -n 1 | xargs dirname)
+          echo $GFORTRAN_LIBS
+          export DYLD_LIBRARY_PATH=$GFORTRAN_LIBS:$DYLD_LIBRARY_PATH
+          # TODO: loosen coverage requirements if CI fails, otherwise delete this comment
+          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
+      - name: Run tests windows
+        if: runner.os == 'Windows'
+        env:
+          MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc.exe
+        run: |
+          # TODO: loosen coverage requirements if CI fails, otherwise delete this comment
+          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
+      - name: Upload coverage reports to Codecov (Linux only)
+        if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v3
+
+  imports-without-extras:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ "ubuntu-latest" ]
+        python-version: [ "3.9", "3.10", "3.11" ]
+    runs-on: "${{ matrix.os }}"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "${{ matrix.python-version }}"
+          venv-id: "imports-without-extras-${{ runner.os }}"
+          poetry-dependency-install-flags: "--only main"
+      - name: Check importable without extras
+        run: poetry run python scripts/test-install.py
+
+  check-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.9"
+          venv-id: "check-build-${{ runner.os }}"
+          run-poetry-install: false
+          poetry-dependency-install-flags: "not used"
+      - name: Build package
+        run: |
+          poetry build --no-interaction
+      - name: Check build
+        run: |
+          tar -tvf dist/openscm_runner-*.tar.gz --wildcards '*openscm_runner/py.typed'
+
+  check-dependency-licences:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.9"
+          venv-id: "licence-check"
+          poetry-dependency-install-flags: "--all-extras"
+      - name: Check licences of dependencies
+        shell: bash
+        run: |
+          TEMP_FILE=$(mktemp)
+          poetry export --without=tests --without=docs --without=dev > $TEMP_FILE
+          poetry run liccheck -r $TEMP_FILE -R licence-check.txt
+          cat licence-check.txt
