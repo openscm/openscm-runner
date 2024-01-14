@@ -2,8 +2,6 @@
 
 TODO:
 
-- Remove README.rst
-- convert CHANGELOG to directory style
 - convert docs from rst to md
 - TODO: work out how to handle package data
 - Change notebooks into papermill style
