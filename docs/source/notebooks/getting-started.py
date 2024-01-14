@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.5
+#       jupytext_version: 1.16.0
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -13,12 +13,12 @@
 # ---
 
 # %% [markdown]
-# # Basic demo
+# # Getting started with OpenSCM-Runner
 #
-# This notebook gives a basic demonstration of how to use OpenSCM-Runner.
+# To be written
 
 # %%
 import openscm_runner
 
 # %%
-print(f"You are using openscm_runner version {openscm_runner.__version__}")
+print(openscm_runner.__version__)

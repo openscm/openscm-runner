@@ -1,4 +1,5 @@
 (notebooks-reference)=
+
 # Notebooks
 
 Here we provide various examples of how to use OpenSCM-Runner.
@@ -10,10 +11,34 @@ to keep our repository slim and make it easier to track changes.
 ## Basic demos
 
 ```{toctree}
-:caption: Contents
-:maxdepth: 1
-notebooks/basic-demo.py
+---
+maxdepth: 1
+---
+notebooks/getting-started.py
 ```
+
+## Model specific notebooks
+
+### MAGICC
+
+```{toctree}
+---
+maxdepth: 1
+---
+notebooks/magicc/run-magicc.py
+```
+
+### FaIR
+
+```{toctree}
+---
+maxdepth: 1
+---
+notebooks/fair/run-fair.py
+notebooks/fair/fair-gmst-ohu-factors.py
+```
+
+### CICERO-SCM
 
 ## Notebook execution info
 
