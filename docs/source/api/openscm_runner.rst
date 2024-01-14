@@ -10,7 +10,6 @@ API Reference
   :toctree: ./
 
   openscm_runner.adapters
-  openscm_runner.operations
   openscm_runner.progress
   openscm_runner.run
   openscm_runner.settings

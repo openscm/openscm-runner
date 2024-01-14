@@ -2,7 +2,6 @@
 
 TODO:
 
-- convert docs from rst to md
 - TODO: work out how to handle package data
 - Change notebooks into papermill style
 - Update notebook tests
@@ -14,6 +13,18 @@ TODO:
 - add sidebar back into docs in copier
 - add feature request issue template to copier
 - add feature-request label to both GitHub and GitLab orgs (if they don't exist, otherwise update feature request template to match existing name)
+- add contributor docs about how to contribute in different ways to copier, e.g.
+  - tutorials
+  - docs
+  - bug reports
+  - bug fixes
+  - feature requests
+  - pull requests
+- add contributor info re workflows
+  - only push to your own branches (semi-enforced by GitHub's forking workflow but a good reminder)
+  - tools we use
+  - small MRs
+- other learnings from the basic copier setup into copier
 
 <!---
 Can use start-after and end-before directives in docs, see
