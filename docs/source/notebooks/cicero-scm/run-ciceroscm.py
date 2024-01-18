@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.16.0
+#       jupytext_version: 1.16.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -16,7 +16,6 @@
 # # Minimal OpenSCM-Runner example with CICERO-SCM
 
 # %%
-# NBVAL_IGNORE_OUTPUT
 import logging
 import os.path
 
@@ -40,7 +39,6 @@ OPENSCM_RUNNER_LOGGER.setLevel(logging.INFO)
 OPENSCM_RUNNER_LOGGER.addHandler(STDERR_INFO_HANDLER)
 
 # %%
-# NBVAL_IGNORE_OUTPUT
 openscm_runner.__version__
 
 # %%
@@ -48,7 +46,6 @@ cicero_scm = CICEROSCM()
 cicero_scm.get_version()
 
 # %%
-# NBVAL_IGNORE_OUTPUT
 input_emissions = scmdata.ScmRun(
     os.path.join("..", "tests", "test-data", "rcmip_scen_ssp_world_emissions.csv"),
     lowercase_cols=True,
@@ -57,7 +54,6 @@ input_emissions = scmdata.ScmRun(
 input_emissions.head(30)
 
 # %%
-# NBVAL_IGNORE_OUTPUT
 res = run(
     climate_models_cfgs={
         "CICEROSCM": [
@@ -125,11 +121,9 @@ res = run(
 )  # TODO: remove filter once we know how to stop the model
 
 # %%
-# NBVAL_IGNORE_OUTPUT
 res.head()
 
 # %%
-# NBVAL_IGNORE_OUTPUT
 res.tail()
 
 # %%
@@ -143,19 +137,16 @@ plot_kwargs = dict(
 )
 
 # %%
-# NBVAL_IGNORE_OUTPUT
 ax = plt.figure(figsize=(12, 7)).add_subplot(111)
 res.filter(variable="Surface Air Temperature Change").plumeplot(ax=ax, **plot_kwargs)
 ax.axhline(1.1)
 ax.axvline(2018)
 
 # %%
-# NBVAL_IGNORE_OUTPUT
 ax = plt.figure(figsize=(12, 7)).add_subplot(111)
 res.filter(variable="Atmospheric Concentrations|CO2").plumeplot(ax=ax, **plot_kwargs)
 
 # %%
-# NBVAL_IGNORE_OUTPUT
 ax = plt.figure(figsize=(12, 7)).add_subplot(111)
 ax, legend_items = res.filter(
     variable="Effective Radiative Forcing*",

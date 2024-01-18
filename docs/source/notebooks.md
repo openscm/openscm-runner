@@ -40,6 +40,13 @@ notebooks/fair/fair-gmst-ohu-factors.py
 
 ### CICERO-SCM
 
+```{toctree}
+---
+maxdepth: 1
+---
+notebooks/cicero-scm/run-ciceroscmpy.py
+```
+
 ## Notebook execution info
 
 ```{nb-exec-table}

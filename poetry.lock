@@ -4228,9 +4228,10 @@ docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.link
 testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
 
 [extras]
+ciceroscm = ["pandas"]
 notebooks = ["notebook"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "9e410eaeb254e0b43d7d9acbc7daed62c5bcf014ad612ed87837a4f8662c77bf"
+content-hash = "df039290c080209670a55fec18001ae77889c13b1342b8973be0ccecbd7a7859"

@@ -2,8 +2,7 @@
 
 TODO:
 
-- Change notebooks into papermill style
-- Update notebook tests
+- Update notebook tests i.e. just make sure docs building covers them
 - TODO: work out how to handle package data
 - Change to using pytest-regressions for handling expected values
 - get version to include dirty/commits when being created

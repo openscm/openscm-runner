@@ -16,13 +16,15 @@ tqdm = "^4.66.1"
 fair = "<2"
 pymagicc = "<3"
 ciceroscm = "^1.0.0"
-# TODO: remove this and then get update in ciceroscm
-pandas = "<2"
 ipywidgets = "^8.1.1"
 seaborn = "^0.13.1"
+# Bit hacky, but basically we only need to pin pandas
+# if we're installing ciceroscm
+pandas = { version = "<2", optional = true }
 
 [tool.poetry.extras]
 notebooks = ["notebook"]
+ciceroscm = ["pandas"]
 
 [tool.poetry.group.tests.dependencies]
 pytest = "^7.3.1"
