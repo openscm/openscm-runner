@@ -52,11 +52,9 @@ jobs:
           poetry-dependency-install-flags: "--all-extras"
       - name: Download MAGICC non-windows
         if: runner.os != 'Windows'
-        env:
-          MAGICC_DOWNLOAD_LINK: ${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}
         run: |
           mkdir -p bin/magicc/magicc-v7.5.3
-          wget -O "bin/magicc/magicc-v7.5.3.tar.gz" $MAGICC_DOWNLOAD_LINK
+          wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
           tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
       - name: Run tests linux
         if: runner.os == 'Linux'
