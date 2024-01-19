@@ -2,6 +2,10 @@ name: "Setup Python and Poetry"
 description: "setup Python and Poetry with caches"
 
 inputs:
+  os:
+    description: "Operating system to use"
+    required: false
+    default: "ubuntu-latest"
   python-version:
     description: "Python version to use"
     required: true
@@ -40,7 +44,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: .venv
-        key: "venv-${{ inputs.venv-id }}-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}"
+        key: "venv-${{ inputs.venv-id }}-${{ inputs.os }}-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}"
     # Install dependencies first so that our package doesn't appear in the cache by accident
     - name: Install dependencies
       if: ${{ inputs.run-poetry-install == 'true' }}

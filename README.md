@@ -2,8 +2,6 @@
 
 TODO:
 
-- Change to using pytest-regressions for handling expected values
-  - next PR as too hard to do with confidence when there are so many moving parts
 - Update notebook tests i.e. just make sure docs building covers them
 - TODO: work out how to handle package data
 - get version to include dirty/commits when being created
@@ -26,6 +24,7 @@ TODO:
   - only push to your own branches (semi-enforced by GitHub's forking workflow but a good reminder)
   - tools we use
   - small MRs
+- add CI fixes to copier repo
 
 <!---
 Can use start-after and end-before directives in docs, see
