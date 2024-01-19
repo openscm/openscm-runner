@@ -18,9 +18,7 @@ def get_data_from_conc_file(folder, variable, endyear):
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_conc.txt"), delimiter=r"\s+")
     years = df_temp.Year[: endyear - df_temp.Year[0] + 1]
-    timeseries = df_temp[variable].to_numpy()[
-        : len(years)
-    ]  # pylint:disable=unsubscriptable-object
+    timeseries = df_temp[variable].to_numpy()[: len(years)]  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
@@ -30,9 +28,7 @@ def get_data_from_em_file(folder, variable, endyear):
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_em.txt"), delimiter=r"\s+")
     years = df_temp.Year[: endyear - df_temp.Year[0] + 1]
-    timeseries = df_temp[variable].to_numpy()[
-        : len(years)
-    ]  # pylint:disable=unsubscriptable-object
+    timeseries = df_temp[variable].to_numpy()[: len(years)]  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
@@ -42,9 +38,7 @@ def get_data_from_temp_file(folder, variable, endyear):
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_temp.txt"), delimiter=r"\s+")
     years = df_temp.Year[: endyear - df_temp.Year[0] + 1]
-    timeseries = df_temp[variable].to_numpy()[
-        : len(years)
-    ]  # pylint:disable=unsubscriptable-object
+    timeseries = df_temp[variable].to_numpy()[: len(years)]  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 
@@ -57,9 +51,7 @@ def get_data_from_ohc_file(folder, variable, endyear):
     # Units are 10^22J and output should be 10^21J = ZJ
     conv_factor = 10.0
     timeseries = (
-        df_temp[variable].to_numpy()[
-            : len(years)
-        ]  # pylint:disable=unsubscriptable-object
+        df_temp[variable].to_numpy()[: len(years)]  # pylint:disable=unsubscriptable-object
         * conv_factor
     )
     return years, timeseries
@@ -71,9 +63,7 @@ def get_data_from_rib_file(folder, variable, endyear):
     """
     df_temp = pd.read_csv(os.path.join(folder, "temp_rib.txt"), delimiter=r"\s+")
     years = df_temp.Year[: endyear - df_temp.Year[0] + 1]
-    timeseries = df_temp[variable].to_numpy()[
-        : len(years)
-    ]  # pylint:disable=unsubscriptable-object
+    timeseries = df_temp[variable].to_numpy()[: len(years)]  # pylint:disable=unsubscriptable-object
     return years, timeseries
 
 

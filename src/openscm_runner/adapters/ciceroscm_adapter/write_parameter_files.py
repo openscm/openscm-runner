@@ -54,7 +54,6 @@ class PARAMETERFILEWRITER:  # pylint: disable=too-few-public-methods
 
         with open(
             os.path.join(self.udir, "pam_RCMIP_test_klimsensdefault.scm"),
-            "r",
             encoding="ascii",
         ) as origfile:
             self.origfiledata = origfile.read()

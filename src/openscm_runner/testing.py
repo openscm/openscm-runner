@@ -24,7 +24,7 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
     if not HAS_PYTEST:
         raise ImportError("pytest not installed, run `pip install pytest`")
 
-    with open(expected_output_file, "r", encoding="ascii") as filehandle:
+    with open(expected_output_file, encoding="ascii") as filehandle:
         expected_output = json.load(filehandle)
 
     updated_output = {}
@@ -194,9 +194,7 @@ class _AdapterTester(ABC):  # nosec
         assert res["run_id"].min() == 0  # pylint: disable=compare-to-zero # nosec
         assert res["run_id"].max() == 8  # nosec
 
-        assert (
-            res.get_unique_meta("climate_model", no_duplicates=True) == "model_name"
-        )  # nosec
+        assert res.get_unique_meta("climate_model", no_duplicates=True) == "model_name"  # nosec
 
         assert set(res.get_unique_meta("variable")) == {
             "expected",
