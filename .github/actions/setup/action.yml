@@ -44,6 +44,7 @@ runs:
         virtualenvs-in-project: true
     # Maybe delete this
     - name: Set Poetry environment
+      shell: bash
       run: |
         poetry env use ${{ inputs.python-version }}
     # - name: Load cached venv
