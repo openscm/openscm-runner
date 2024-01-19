@@ -58,7 +58,7 @@ jobs:
           venv-id: "tests-${{ runner.os }}"
           poetry-dependency-install-flags: "--all-extras"
       - name: Download MAGICC non-windows
-        # if: runner.os != 'Windows'
+        if: runner.os != 'Windows'
         run: |
           mkdir -p bin/magicc/magicc-v7.5.3
           wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
@@ -83,8 +83,6 @@ jobs:
           poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
       - name: Run tests windows
         if: runner.os == 'Windows'
-        env:
-          MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc.exe
         run: |
           source $VENV  # ensure windows will find poetry
           poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
