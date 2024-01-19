@@ -24,29 +24,31 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Load cached Poetry installation
-      id: cached-poetry
-      uses: actions/cache@v3
-      with:
-        path: ~/.local  # the path depends on the OS
-        key: "${{ inputs.os }}-${{ inputs.python-version }}-poetry-1"  # increment to reset cache
-    - name: Install Poetry
-      if: steps.cached-poetry.outputs.cache-hit != 'true'
-      uses: snok/install-poetry@v1
-      with:
-        virtualenvs-create: true
-        virtualenvs-in-project: true
+    # - name: Install Poetry
+    #   if: steps.cached-poetry.outputs.cache-hit != 'true'
+    #   uses: snok/install-poetry@v1
+    #   with:
+    #     virtualenvs-create: true
+    #     virtualenvs-in-project: true
+    - name: Install poetry
+      run: |
+        pipx install poetry
+        which poetry
+        poetry --version  # Check poetry installation
     - name: Set up Python ${{ inputs.python-version }}
+      shell: bash
       id: setup-python
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
         cache: poetry
-    # Maybe delete this
     - name: Set Poetry environment
       shell: bash
       run: |
+        which poetry
         poetry env use ${{ inputs.python-version }}
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
     # - name: Load cached venv
     #   if: ${{ inputs.run-poetry-install == 'true' }}
     #   id: cached-poetry-dependencies
@@ -59,8 +61,6 @@ runs:
       if: ${{ inputs.run-poetry-install == 'true' }}
       shell: bash
       run: |
-        which poetry
-        poetry --version  # Check poetry installation
         poetry install --no-interaction --no-root ${{ inputs.poetry-dependency-install-flags }}
     # Now run same command but let the package install too
     - name: Install package
