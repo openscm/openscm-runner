@@ -48,7 +48,7 @@ runs:
         poetry config virtualenvs.create true
         poetry config virtualenvs.in-project true
     - name: Install dependencies
-      if: ${{ inputs.run-poetry-install == 'true' }} && ${{ steps.setup-python.outputs.cache-hit != 'true' }}
+      if: ${{ (inputs.run-poetry-install == 'true')  && (steps.setup-python.outputs.cache-hit != 'true') }}
       shell: bash
       run: |
         poetry install --no-interaction --no-root ${{ inputs.poetry-dependency-install-flags }}
