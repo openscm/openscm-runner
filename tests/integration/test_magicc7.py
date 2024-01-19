@@ -4,7 +4,7 @@ import pymagicc.io
 import pytest
 from scmdata import ScmRun
 
-from openscm_runner import run
+import openscm_runner.run
 from openscm_runner.adapters import MAGICC7
 from openscm_runner.testing import _AdapterTester
 from openscm_runner.utils import calculate_quantiles
@@ -24,7 +24,7 @@ class TestMagicc7Adapter(_AdapterTester):
             "expected_magicc7_test_run_output.json",
         )
 
-        res = run(
+        res = openscm_runner.run.run(
             climate_models_cfgs={
                 "MAGICC7": [
                     {
@@ -75,9 +75,10 @@ class TestMagicc7Adapter(_AdapterTester):
         assert isinstance(res, ScmRun)
         assert res["run_id"].min() == 0
         assert res["run_id"].max() == 8
-        assert res.get_unique_meta(
-            "climate_model", no_duplicates=True
-        ) == "MAGICC{}".format(MAGICC7.get_version())
+        assert (
+            res.get_unique_meta("climate_model", no_duplicates=True)
+            == f"MAGICC{MAGICC7.get_version()}"
+        )
         assert set(res.get_unique_meta("variable")) == {
             "Surface Air Temperature Change",
             "Effective Radiative Forcing",
@@ -102,7 +103,7 @@ class TestMagicc7Adapter(_AdapterTester):
 
     def test_variable_naming(self, test_scenarios):
         common_variables = self._common_variables
-        res = run(
+        res = openscm_runner.run.run(
             climate_models_cfgs={"MAGICC7": ({"core_climatesensitivity": 3},)},
             scenarios=test_scenarios.filter(scenario="ssp126"),
             output_variables=common_variables,
@@ -131,8 +132,7 @@ def test_write_scen_files_and_make_full_cfgs(test_scenarios):
         ["model", "scenario"]
     ):
         scen_file_name = (
-            "{}_{}.SCEN7".format(scenario, model)
-            .upper()
+            f"{scenario}_{model}.SCEN7".upper()
             .replace("/", "-")
             .replace("\\", "-")
             .replace(" ", "-")
@@ -149,7 +149,7 @@ def test_write_scen_files_and_make_full_cfgs(test_scenarios):
         assert scenario_cfg["model"] == model
         assert scenario_cfg["scenario"] == scenario
         for i in range(2, 9):
-            scen_flag_val = scenario_cfg["file_emisscen_{}".format(i)]
+            scen_flag_val = scenario_cfg[f"file_emisscen_{i}"]
 
             assert scen_flag_val == "NONE"
 
@@ -181,7 +181,7 @@ def test_return_config(test_scenarios, out_config):
                 }
             )
 
-    res = run(
+    res = openscm_runner.run.run(
         climate_models_cfgs={"MAGICC7": cfgs},
         scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
         output_variables=(
@@ -217,7 +217,7 @@ def test_return_config(test_scenarios, out_config):
 )
 def test_return_config_clash_error(test_scenarios, cfgs):
     with pytest.raises(ValueError):
-        run(
+        openscm_runner.run.run(
             climate_models_cfgs={"MAGICC7": cfgs},
             scenarios=test_scenarios.filter(scenario=["ssp126"]),
             output_variables=("Surface Air Temperature Change",),

@@ -2,9 +2,10 @@
 
 TODO:
 
+- Change to using pytest-regressions for handling expected values
+  - next PR as too hard to do with confidence when there are so many moving parts
 - Update notebook tests i.e. just make sure docs building covers them
 - TODO: work out how to handle package data
-- Change to using pytest-regressions for handling expected values
 - get version to include dirty/commits when being created
 - fix deprecated API warning in scmdata for both seaborn and pandas (seaborn b/c of "ci" usage, pandas because of something in concat, run the FaIR notebook to see them both)
 - add PHONY to help in copier
@@ -25,7 +26,6 @@ TODO:
   - only push to your own branches (semi-enforced by GitHub's forking workflow but a good reminder)
   - tools we use
   - small MRs
-- other learnings from the basic copier setup into copier
 
 <!---
 Can use start-after and end-before directives in docs, see
