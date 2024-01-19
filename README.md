@@ -24,8 +24,6 @@ TODO:
     - only push to your own branches (semi-enforced by GitHub's forking workflow but a good reminder)
     - tools we use
     - small MRs
-- orgs
-  - add feature-request label to both GitHub and GitLab orgs (if they don't exist, otherwise update feature request template to match existing name)
 
 <!---
 Can use start-after and end-before directives in docs, see
