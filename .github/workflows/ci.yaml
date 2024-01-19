@@ -87,6 +87,7 @@ jobs:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc.exe
         run: |
           # TODO: loosen coverage requirements if CI fails, otherwise delete this comment
+          source $VENV  # ensure windows will find poetry
           poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
       - name: Upload coverage reports to Codecov (Linux only)
         if: runner.os == 'Linux'
@@ -112,7 +113,9 @@ jobs:
           venv-id: "imports-without-extras-${{ runner.os }}"
           poetry-dependency-install-flags: "--only main"
       - name: Check importable without extras
-        run: poetry run python scripts/test-install.py
+        run: |
+          source $VENV  # ensure windows will find poetry
+          poetry run python scripts/test-install.py
 
   check-build:
     runs-on: ubuntu-latest
