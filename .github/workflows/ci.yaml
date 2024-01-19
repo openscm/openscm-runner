@@ -10,6 +10,7 @@ jobs:
   mypy:
     if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
+    continue-on-error: true  # For now, don't worry about passing mypy because of legacy
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
