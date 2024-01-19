@@ -17,7 +17,7 @@
 
 # %%
 import logging
-import os.path
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import scmdata
@@ -47,9 +47,17 @@ cicero_scm.get_version()
 
 # %%
 input_emissions = scmdata.ScmRun(
-    os.path.join("..", "tests", "test-data", "rcmip_scen_ssp_world_emissions.csv"),
+    str(
+        Path("..")
+        / ".."
+        / ".."
+        / ".."
+        / "tests"
+        / "test-data"
+        / "clean_scenarios_full_ssps.csv"
+    ),
     lowercase_cols=True,
-)
+).drop_meta(["activity_id", "mip_era"])
 
 input_emissions.head(30)
 

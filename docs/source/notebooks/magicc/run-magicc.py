@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.16.0
+#       jupytext_version: 1.16.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -47,19 +47,8 @@ os.environ["MAGICC_EXECUTABLE_7"] = str(
     / "bin"
     / "magicc"
 )
-os.environ["MAGICC_EXECUTABLE_7"] = str(
-    Path("..")
-    / ".."
-    / ".."
-    / ".."
-    / "bin"
-    / "magicc"
-    / "magicc-v7.5.3"
-    / "bin"
-    / "magicc-darwin-arm64"
-)
-# Some users also need something like this
-os.environ["DYLD_LIBRARY_PATH"] = "/opt/homebrew/opt/gfortran/lib/gcc/current/"
+# # Some users also need something like this
+# os.environ["DYLD_LIBRARY_PATH"] = "/opt/homebrew/opt/gfortran/lib/gcc/current/"
 
 # %%
 magicc7 = openscm_runner.adapters.MAGICC7
