@@ -172,7 +172,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 variable=variable, year=2100, scenario=scen
             ).convert_unit(unit)
             if res_scen_2100_emms.empty:
-                raise AssertionError(f"No {variable} data for {scen}")
+                raise AssertionError(f"No {variable} data for {scen}")  # noqa: TRY003
 
             npt.assert_allclose(
                 res_scen_2100_emms.values,
@@ -189,13 +189,13 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 variable=variable, year=2014, scenario=scen
             ).convert_unit(unit)
             if res_scen_2014_emms.empty:
-                raise AssertionError(f"No {variable} data for {scen}")
+                raise AssertionError(f"No {variable} data for {scen}")  # noqa: TRY003
 
             res_scen_2016_emms = res.filter(
                 variable=variable, year=2016, scenario=scen
             ).convert_unit(unit)
             if res_scen_2016_emms.empty:
-                raise AssertionError(f"No {variable} data for {scen}")
+                raise AssertionError(f"No {variable} data for {scen}")  # noqa: TRY003
 
             npt.assert_allclose(
                 res_scen_2014_emms.values,
@@ -213,7 +213,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
         ):
             res_scen_2015_emms = res.filter(variable=variable, year=2015, scenario=scen)
             if res_scen_2015_emms.empty:
-                raise AssertionError(f"No CO2 emissions data for {scen}")
+                raise AssertionError(f"No CO2 emissions data for {scen}")  # noqa: TRY003
 
             assert not np.equal(res_scen_2015_emms.values, 0).all()
 
@@ -258,11 +258,11 @@ class TestCICEROSCMAdapter(_AdapterTester):
     def test_variable_naming(self, test_scenarios):
         missing_from_ciceroscm = (
             "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC AFOLU",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC Fossil and Industrial",
+            "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC Fossil and Industrial",  # noqa: E501
             "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC AFOLU",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC Fossil and Industrial",
+            "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC Fossil and Industrial",  # noqa: E501
             "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC AFOLU",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC Fossil and Industrial",
+            "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC Fossil and Industrial",  # noqa: E501
             "Heat Uptake|Ocean",
             "Net Atmosphere to Land Flux|CO2",
             "Net Atmosphere to Ocean Flux|CO2",
