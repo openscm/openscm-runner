@@ -1,30 +1,5 @@
 # OpenSCM-Runner
 
-TODO:
-
-- external libraries
-  - fix deprecated API warning in scmdata for both seaborn and pandas (seaborn b/c of "ci" usage, pandas because of something in concat, run the FaIR notebook to see them both)
-- copier
-  - in copier get version to include dirty/commits when being created
-  - add PHONY to help in copier
-  - add conda support via copier somewhere (might not need to be too complicated though as the only thing you really need to test is installation and then you just add the badges, the rest is just handled by conda-forge)
-  - add AUTHORS in copier
-  - fill out contributing docs more fully in copier
-  - add sidebar back into docs in copier
-  - add feature request issue template to copier
-  - add contributor docs about how to contribute in different ways to copier, e.g.
-    - tutorials
-    - docs
-    - bug reports
-    - bug fixes
-    - feature requests
-    - pull requests
-  - add CI fixes to copier repo
-  - add contributor info re workflows
-    - only push to your own branches (semi-enforced by GitHub's forking workflow but a good reminder)
-    - tools we use
-    - small MRs
-
 <!---
 Can use start-after and end-before directives in docs, see
 https://myst-parser.readthedocs.io/en/latest/syntax/organising_content.html#inserting-other-documents-directly-into-the-current-document
