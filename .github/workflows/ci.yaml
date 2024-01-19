@@ -35,6 +35,11 @@ jobs:
           python-version: "3.9"
           venv-id: "docs"
           poetry-dependency-install-flags: "--all-extras --only 'main,docs'"
+      - name: Download MAGICC
+        run: |
+          mkdir -p bin/magicc/magicc-v7.5.3
+          wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+          tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
       - name: docs
         run: poetry run sphinx-build -W --keep-going -T -b html docs/source docs/build
 

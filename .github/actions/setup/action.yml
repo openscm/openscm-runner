@@ -45,6 +45,7 @@ runs:
       shell: bash
       run: |
         which poetry
+        which python || which "python${{ inputs.python-version }}" || which Python || which "Python${{ inputs.python-version }}"
         poetry env use "python${{ inputs.python-version }}"
         poetry config virtualenvs.create true
         poetry config virtualenvs.in-project true
