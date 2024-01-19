@@ -31,7 +31,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
         )
 
         if shuffle_column_order:
-            tmp = test_scenarios.data
+            tmp = test_scenarios.long_data()
             cols = tmp.columns.tolist()
             tmp = tmp[cols[1:] + cols[:1]]
             test_scenarios = ScmRun(test_scenarios)
@@ -331,9 +331,8 @@ class TestCICEROSCMAdapter(_AdapterTester):
         name,
         test_scenarios,
     ):
-        starting_scenario = test_scenarios.filter(scenario="ssp126").rename(
-            {"scenario": {"ssp126": name}}
-        )
+        starting_scenario = test_scenarios.filter(scenario="ssp126")
+        starting_scenario["scenario"] = name
 
         res = openscm_runner.run.run(
             scenarios=starting_scenario,

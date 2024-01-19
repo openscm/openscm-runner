@@ -8,14 +8,14 @@ packages = [{include = "openscm_runner", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-notebook = { version = "^6.5.3", optional = true }
+notebook = "<7"
 openscm-units = ">=0.5.0"
 python-dotenv = "^1.0.0"
 scmdata = ">=0.7.4"
 tqdm = "^4.66.1"
 fair = "<2"
 pymagicc = "<3"
-ciceroscm = "^1.0.0"
+ciceroscm = "1.0.0"  # TODO: ask Marit if she wants to loosen this
 ipywidgets = "^8.1.1"
 seaborn = "^0.13.1"
 # Bit hacky, but basically we only need to pin pandas
