@@ -26,7 +26,7 @@ runs:
   steps:
     - name: Set up Python ${{ inputs.python-version }}
       id: setup-python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
     - name: Load cached Poetry installation
@@ -38,26 +38,25 @@ runs:
     - name: Install Poetry
       if: steps.cached-poetry.outputs.cache-hit != 'true'
       uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
     - name: Load cached venv
       if: ${{ inputs.run-poetry-install == 'true' }}
       id: cached-poetry-dependencies
       uses: actions/cache@v3
       with:
-        path: .venv
+        path: ~/.cache
         key: "venv-${{ inputs.venv-id }}-${{ inputs.os }}-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}"
     # Install dependencies first so that our package doesn't appear in the cache by accident
     - name: Install dependencies
       if: ${{ inputs.run-poetry-install == 'true' }}
       shell: bash
       run: |
-        poetry config virtualenvs.create true
-        poetry config virtualenvs.in-project true
-        poetry env use ${{ inputs.python-version }}
         poetry install --no-interaction --no-root ${{ inputs.poetry-dependency-install-flags }}
     # Now run same command but let the package install too
     - name: Install package
       if: ${{ inputs.run-poetry-install == 'true' }}
       shell: bash
       run: |
-        source $VENV  # ensure windows will find poetry
         poetry install --no-interaction ${{ inputs.poetry-dependency-install-flags }}
