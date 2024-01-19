@@ -16,6 +16,9 @@ build:
     post_create_environment:
       - pip install poetry
       - poetry config virtualenvs.create false
+      - mkdir -p bin/magicc/magicc-v7.5.3
+      - wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+      - tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
     post_install:
       - poetry install --with docs --all-extras
 
