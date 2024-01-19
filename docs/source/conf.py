@@ -136,7 +136,7 @@ myst_enable_extensions = ["amsmath", "dollarmath"]
 nb_execution_mode = "cache"
 nb_execution_raise_on_error = True
 nb_execution_show_tb = True
-nb_execution_timeout = 120
+nb_execution_timeout = 300  # long to handle slow builds on rtd
 nb_custom_formats = {".py": ["jupytext.reads", {"fmt": "py:percent"}]}
 
 # -- Options for HTML output -------------------------------------------------
