@@ -50,7 +50,6 @@ runs:
       if: ${{ inputs.run-poetry-install == 'true' }}
       shell: bash
       run: |
-        source $VENV  # ensure windows will find poetry
         poetry config virtualenvs.create true
         poetry config virtualenvs.in-project true
         poetry env use ${{ inputs.python-version }}
