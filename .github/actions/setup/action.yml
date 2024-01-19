@@ -34,7 +34,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: ~/.local  # the path depends on the OS
-        key: "${{ inputs.os }}-poetry-2"  # increment to reset cache
+        key: "${{ inputs.os }}-poetry-3"  # increment to reset cache
     - name: Install Poetry
       if: steps.cached-poetry.outputs.cache-hit != 'true'
       uses: snok/install-poetry@v1
@@ -53,6 +53,7 @@ runs:
       if: ${{ inputs.run-poetry-install == 'true' }}
       shell: bash
       run: |
+        poetry --version  # Check poetry installation
         poetry install --no-interaction --no-root ${{ inputs.poetry-dependency-install-flags }}
     # Now run same command but let the package install too
     - name: Install package
