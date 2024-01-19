@@ -37,7 +37,6 @@ runs:
         which poetry
         poetry --version  # Check poetry installation
     - name: Set up Python ${{ inputs.python-version }}
-      shell: bash
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
