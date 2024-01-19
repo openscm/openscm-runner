@@ -111,7 +111,6 @@ jobs:
           poetry-dependency-install-flags: "--only main"
       - name: Check importable without extras
         run: |
-          source $VENV  # ensure windows will find poetry
           poetry run python scripts/test-install.py
 
   check-build:
