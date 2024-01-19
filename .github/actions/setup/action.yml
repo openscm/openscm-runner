@@ -24,12 +24,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up Python ${{ inputs.python-version }}
-      id: setup-python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ inputs.python-version }}
-        cache: poetry
     - name: Load cached Poetry installation
       id: cached-poetry
       uses: actions/cache@v3
@@ -42,6 +36,12 @@ runs:
       with:
         virtualenvs-create: true
         virtualenvs-in-project: true
+    - name: Set up Python ${{ inputs.python-version }}
+      id: setup-python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: poetry
     # Maybe delete this
     - name: Set Poetry environment
       shell: bash
