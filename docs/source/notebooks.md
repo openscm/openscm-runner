@@ -45,6 +45,7 @@ notebooks/fair/fair-gmst-ohu-factors.py
 maxdepth: 1
 ---
 notebooks/cicero-scm/run-ciceroscmpy.py
+notebooks/cicero-scm/run-ciceroscm.py
 ```
 
 ## Notebook execution info
