@@ -97,9 +97,6 @@ jobs:
         os: [ "ubuntu-latest" ]
         python-version: [ "3.9", "3.10", "3.11" ]
     runs-on: "${{ matrix.os }}"
-    defaults:
-      run:
-        shell: bash  # Need this for windows to not explode apparently
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
