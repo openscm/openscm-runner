@@ -1,10 +1,22 @@
 [tool.poetry]
 name = "openscm-runner"
-version = "0.1.0"
+version = "0.12.1"
 description = "Thin wrapper to run emissions scenarios with simple climate models"
 authors = ["Zebedee Nicholls <zebedee.nicholls@climate-energy-college.org>"]
 readme = "README.md"
 packages = [{include = "openscm_runner", from = "src"}]
+include = [
+    "adapters/fair_adapter/*.csv",
+    "adapters/ciceroscm_adapter/utils_templates/*.txt",
+    "adapters/ciceroscm_adapter/utils_templates/pam_RCMIP_test_klimsensdefault.scm",
+    "adapters/ciceroscm_adapter/utils_templates/run_dir/*.txt",
+    "adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb",
+    "adapters/ciceroscm_adapter/utils_templates/run_dir/input_OTHER/NATEMIS/*.txt",
+    "adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFLUC/*.txt",
+    "adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFSUN/*.txt",
+    "adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFVOLC/*.txt",
+    "adapters/ciceroscm_py_adapter/*.txt",
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"

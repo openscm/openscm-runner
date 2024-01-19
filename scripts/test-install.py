@@ -28,25 +28,17 @@ def import_submodules(package_name: str) -> None:
 import_submodules("openscm_runner")
 
 # make sure csvs etc. are included
-openscm_runner_root = Path(openscm_runner.__file__)
+openscm_runner_root = Path(openscm_runner.__file__).parent
 
-assert (
-    openscm_runner_root / "adapters/fair_adapter/natural-emissions-and-forcing.csv"
-).exists()
-
-assert (
-    openscm_runner_root / "adapters/ciceroscm_adapter/utils_templates/gases_v1RCMIP.txt"
-).exists()
-
-
-assert (
-    openscm_runner_root
-    / "adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb_bfx"
-).exists()
-
-assert (
-    openscm_runner_root
-    / "adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFSUN/solar_IPCC.txt"
-).exists()
+expect_included_files = [
+    "adapters/fair_adapter/natural-emissions-and-forcing.csv",
+    "adapters/ciceroscm_adapter/utils_templates/gases_v1RCMIP.txt",
+    "adapters/ciceroscm_adapter/utils_templates/run_dir/scm_vCH4fb_bfx",
+    "adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFSUN/solar_IPCC.txt",
+]
+for file in expect_included_files:
+    assert (
+        openscm_runner_root / file
+    ).exists(), f"{file} not packaged (root: {openscm_runner_root})"
 
 print(openscm_runner.__version__)
