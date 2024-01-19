@@ -1,9 +1,19 @@
 [tool.poetry]
 name = "openscm-runner"
+keywords = ["openscm", "runner", "python", "simple", "climate", "model"]
 version = "0.12.1"
 description = "Thin wrapper to run emissions scenarios with simple climate models"
-authors = ["Zebedee Nicholls <zebedee.nicholls@climate-energy-college.org>"]
+authors = [
+    "Zebedee Nicholls <zebedee.nicholls@climate-energy-college.org>",
+    "Robert Gieseke <rob.g@web.de>",
+    "Jared Lewis <jared.lewis@climate-resource.com>",
+    "Marit Sandstad <marit.sandstad@cicero.oslo.no>",
+    "Chris Smith <c.j.smith1@leeds.ac.uk>",
+    "Sven Willner <sven.willner@pik-potsdam.de>",
+]
+license = "BSD-3-Clause"
 readme = "README.md"
+repository = "https://github.com/openscm/openscm-runner"
 packages = [{include = "openscm_runner", from = "src"}]
 include = [
     "adapters/fair_adapter/*.csv",
@@ -17,26 +27,46 @@ include = [
     "adapters/ciceroscm_adapter/utils_templates/run_dir/input_RF/RFVOLC/*.txt",
     "adapters/ciceroscm_py_adapter/*.txt",
 ]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering",
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-notebook = "<7"
 openscm-units = ">=0.5.0"
 python-dotenv = "^1.0.0"
 scmdata = ">=0.7.4"
 tqdm = "^4.66.1"
-fair = "<2"
-pymagicc = "<3"
-ciceroscm = "1.0.0"  # TODO: ask Marit if she wants to loosen this
-ipywidgets = "^8.1.1"
-seaborn = "^0.13.1"
+# optional below here
+ciceroscm = { version = "1.0.0", optional = true }  # TODO: ask Marit if she wants to loosen this
+fair = { version = "<2", optional = true }
+pymagicc = { version = "<3", optional = true }
 # Bit hacky, but basically we only need to pin pandas
 # if we're installing ciceroscm
 pandas = { version = "<2", optional = true }
+notebook = { version = "*", optional = true }
+seaborn = { version = "^0.13.1", optional = true }
+ipywidgets = { version = "^8.1.1", optional = true }
 
 [tool.poetry.extras]
-notebooks = ["notebook"]
+notebooks = ["notebook", "seaborn", "ipywidgets"]
 ciceroscm = ["pandas"]
+ciceroscmpy = ["pandas", "ciceroscm"]
+fair = ["fair"]
+magicc = ["pymagicc"]
+models = ["pandas", "ciceroscm", "fair", "pymagicc"]
 
 [tool.poetry.group.tests.dependencies]
 pytest = "^7.3.1"

@@ -3,7 +3,6 @@
 TODO:
 
 - Update notebook tests i.e. just make sure docs building covers them
-- TODO: work out how to handle package data
 - get version to include dirty/commits when being created
 - fix deprecated API warning in scmdata for both seaborn and pandas (seaborn b/c of "ci" usage, pandas because of something in concat, run the FaIR notebook to see them both)
 - add PHONY to help in copier
