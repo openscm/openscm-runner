@@ -13,6 +13,23 @@ from openscm_runner import run
 def _get_output_dict(  # pylint: disable=too-many-locals,too-many-branches
     res, outputs_to_get
 ):
+    """
+    Get output dictionary
+
+    Returns a dictionary of outputs which can be used with our regression testing.
+
+    Parameters
+    ----------
+    res
+        Results from which to extract outputs
+
+    outputs_to_get
+        Outputs to get from the results
+
+    Returns
+    -------
+        Dictionary of results which can be understood by our regression tests
+    """
     output = {}
     for climate_model, checks in outputs_to_get.items():
         res_cm = res.filter(climate_model=climate_model)
