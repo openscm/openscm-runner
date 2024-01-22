@@ -1,40 +1,23 @@
 """
 Miscellaneous testing code
 """
-import json
 from abc import ABC, abstractmethod
 
+import numpy as np
 import numpy.testing as npt
 from scmdata import ScmRun
 
 from openscm_runner import run
 
-try:
-    import pytest
 
-    HAS_PYTEST = True
-
-except ImportError:
-    HAS_PYTEST = False
-
-
-def _check_output(  # pylint: disable=too-many-locals,too-many-branches
-    res, expected_output_file, rtol, update
+def _get_output_dict(  # pylint: disable=too-many-locals,too-many-branches
+    res, outputs_to_get
 ):
-    if not HAS_PYTEST:
-        raise ImportError("pytest not installed, run `pip install pytest`")
-
-    with open(expected_output_file, encoding="ascii") as filehandle:
-        expected_output = json.load(filehandle)
-
-    updated_output = {}
-
-    for climate_model, checks in expected_output.items():
+    output = {}
+    for climate_model, checks in outputs_to_get.items():
         res_cm = res.filter(climate_model=climate_model)
 
-        updated_output[climate_model] = []
-
-        for filter_kwargs, expected_val in checks:
+        for filter_kwargs in checks:
             err_msg = f"{filter_kwargs}"
             filter_kwargs_in = {**filter_kwargs}
             check_units = filter_kwargs.pop("unit", None)
@@ -53,25 +36,16 @@ def _check_output(  # pylint: disable=too-many-locals,too-many-branches
                 ).values
             )
 
-            try:
-                npt.assert_allclose(
-                    res_val,
-                    expected_val,
-                    rtol=rtol,
-                    err_msg=err_msg,
-                )
-                new_val = expected_val
-            except AssertionError:
-                new_val = res_val
-                if not update:
-                    raise
+            key = ["climate_model", climate_model]
+            for k, v in filter_kwargs_in.items():
+                key.append(k)
+                key.append(v)
 
-            updated_output[climate_model].append((filter_kwargs_in, new_val))
-    if update:
-        with open(expected_output_file, "w", encoding="ascii") as file_handle:
-            json.dump(updated_output, file_handle, indent=4)
+            # key = tuple(key)
+            key = "_".join([str(v) for v in key])
+            output[key] = np.array([res_val])
 
-        pytest.skip(f"Updated {expected_output_file}")
+    return output
 
 
 class _AdapterTester(ABC):  # nosec
@@ -99,13 +73,13 @@ class _AdapterTester(ABC):  # nosec
         "Effective Radiative Forcing|Aerosols",
         "Effective Radiative Forcing|Aerosols|Direct Effect",
         "Effective Radiative Forcing|Aerosols|Direct Effect|BC",
-        "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC Fossil and Industrial",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC Fossil and Industrial",  # noqa: E501
         "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC AFOLU",
         "Effective Radiative Forcing|Aerosols|Direct Effect|OC",
-        "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC Fossil and Industrial",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC Fossil and Industrial",  # noqa: E501
         "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC AFOLU",
         "Effective Radiative Forcing|Aerosols|Direct Effect|SOx",
-        "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC Fossil and Industrial",
+        "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC Fossil and Industrial",  # noqa: E501
         "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC AFOLU",
         "Effective Radiative Forcing|Aerosols|Indirect Effect",
         "Effective Radiative Forcing|Greenhouse Gases",
@@ -143,8 +117,8 @@ class _AdapterTester(ABC):  # nosec
 
             print(f"exp: {exp}, check_val: {check_val}")
 
-    def _check_output(self, res, expected_output_file, update):
-        _check_output(res, expected_output_file, self._rtol, update)
+    def _get_output_dict(self, res, outputs_to_get):
+        return _get_output_dict(res, outputs_to_get)
 
     @staticmethod
     def _check_heat_content_heat_uptake_consistency(res):

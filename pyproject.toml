@@ -68,6 +68,7 @@ models = ["pandas", "ciceroscm", "fair", "pymagicc"]
 
 [tool.poetry.group.tests.dependencies]
 pytest = "^7.3.1"
+pytest-regressions = "^2.5.0"
 
 [tool.poetry.group.docs.dependencies]
 myst-nb = "^0.17.0"
