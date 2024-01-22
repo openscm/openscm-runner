@@ -1,5 +1,3 @@
-import os.path
-
 import numpy as np
 import numpy.testing as npt
 import pytest
@@ -23,13 +21,7 @@ def _check_res(exp, check_val, raise_error, rtol=RTOL):
 
 
 @pytest.mark.magicc
-def test_multimodel_run(test_scenarios, test_data_dir, update_expected_values):
-    expected_output_file = os.path.join(
-        test_data_dir,
-        "expected-integration-output",
-        "expected_run_multimodel_output.json",
-    )
-
+def test_multimodel_run(test_scenarios, num_regression):
     res = openscm_runner.run.run(
         climate_models_cfgs={
             "FaIR": [
@@ -124,6 +116,94 @@ def test_multimodel_run(test_scenarios, test_data_dir, update_expected_values):
     quantiles = calculate_quantiles(res, [0, 0.05, 0.17, 0.5, 0.83, 0.95, 1])
     assert "run_id" not in quantiles.meta
 
-    openscm_runner.testing._check_output(
-        res, expected_output_file, rtol=RTOL, update=update_expected_values
-    )
+    outputs_to_get = {
+        "*": [
+            {
+                "variable": "Effective Radiative Forcing",
+                "unit": "W/m^2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05,
+            },
+            {
+                "variable": "Heat Uptake",
+                "unit": "W/m^2",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05,
+            },
+            {
+                "variable": "Heat Content",
+                "unit": "ZJ",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05,
+            },
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05,
+            },
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.95,
+            },
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0.05,
+            },
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0.95,
+            },
+        ],
+        "MAGICC*": [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05,
+            },
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0.95,
+            },
+        ],
+        "FaIR*": [
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp126",
+                "quantile": 0.05,
+            },
+            {
+                "variable": "Surface Air Temperature Change",
+                "region": "World",
+                "year": 2100,
+                "scenario": "ssp370",
+                "quantile": 0.95,
+            },
+        ],
+    }
+
+    output_dict = openscm_runner.testing._get_output_dict(res, outputs_to_get)
+    num_regression.check(output_dict, default_tolerance=dict(rtol=RTOL))

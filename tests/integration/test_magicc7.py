@@ -15,15 +15,8 @@ class TestMagicc7Adapter(_AdapterTester):
     def test_run(
         self,
         test_scenarios,
-        test_data_dir,
-        update_expected_values,
+        num_regression,
     ):
-        expected_output_file = os.path.join(
-            test_data_dir,
-            "expected-integration-output",
-            "expected_magicc7_test_run_output.json",
-        )
-
         res = openscm_runner.run.run(
             climate_models_cfgs={
                 "MAGICC7": [
@@ -99,7 +92,109 @@ class TestMagicc7Adapter(_AdapterTester):
         # a problem for another day...
         # self._check_heat_content_heat_uptake_consistency(res)
 
-        self._check_output(res, expected_output_file, update_expected_values)
+        outputs_to_get = {
+            "MAGICCv7.5.3": [
+                {
+                    "variable": "Heat Content|Ocean",
+                    "unit": "ZJ",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Heat Uptake|Ocean",
+                    "unit": "W/m^2",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Heat Uptake",
+                    "unit": "W/m^2",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Effective Radiative Forcing",
+                    "unit": "W/m^2",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Net Atmosphere to Land Flux|CO2",
+                    "unit": "GtC / yr",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0.05,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0.95,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0.05,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0.95,
+                },
+            ]
+        }
+
+        output_dict = self._get_output_dict(res, outputs_to_get)
+        num_regression.check(output_dict, default_tolerance=dict(rtol=self._rtol))
 
     def test_variable_naming(self, test_scenarios):
         common_variables = self._common_variables

@@ -11,12 +11,11 @@ from openscm_runner.utils import calculate_quantiles
 
 class TestFairAdapter(_AdapterTester):
     @pytest.mark.parametrize("nworkers", (1, 4))
-    def test_run(  # noqa: PLR0913
+    def test_run(
         self,
         test_scenarios,
         monkeypatch,
         nworkers,
-        test_data_dir,
         num_regression,
     ):
         monkeypatch.setenv("FAIR_WORKER_NUMBER", f"{nworkers}")
