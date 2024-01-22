@@ -20,16 +20,9 @@ class TestCICEROSCMAdapter(_AdapterTester):
     def test_run(
         self,
         test_scenarios,
-        test_data_dir,
-        update_expected_values,
+        num_regression,
         shuffle_column_order,
     ):
-        expected_output_file = os.path.join(
-            test_data_dir,
-            "expected-integration-output",
-            "expected_ciceroscm_test_run_output.json",
-        )
-
         if shuffle_column_order:
             tmp = test_scenarios.long_data()
             cols = tmp.columns.tolist()
@@ -242,14 +235,143 @@ class TestCICEROSCMAdapter(_AdapterTester):
             scenario="ssp245",
             run_id=1,
         )
-        # ch
+
         # check that jump in GHG ERF isn't there
         assert (
             ssp245_ch4_conc_2014.values.squeeze()
             - ssp245_ch4_conc_2015.values.squeeze()
         ) < 0.1
 
-        self._check_output(res, expected_output_file, update_expected_values)
+        outputs_to_get = {
+            "CICERO-SCM": [
+                {
+                    "variable": "Heat Content|Ocean",
+                    "unit": "ZJ",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0.05,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0.95,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0.05,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0.95,
+                },
+                {
+                    "variable": "Surface Air Ocean Blended Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Heat Uptake",
+                    "unit": "W/m^2",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0.05,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0.95,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0.05,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0.95,
+                },
+                {
+                    "variable": "Atmospheric Concentrations|CO2",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "unit": "ppm",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Emissions|CO2",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "unit": "PgC / yr",
+                    "quantile": 1,
+                },
+            ]
+        }
+
+        output_dict = self._get_output_dict(res, outputs_to_get)
+        num_regression.check(output_dict, default_tolerance=dict(rtol=self._rtol))
 
     @pytest.mark.ciceroscm
     def test_variable_naming(self, test_scenarios):
