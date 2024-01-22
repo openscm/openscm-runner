@@ -1,15 +1,14 @@
 """
 Adapters for different climate models
 """
-from typing import List, Type
 
 from .base import _Adapter
-from .ciceroscm_adapter import CICEROSCM  # noqa: F401
-from .ciceroscm_py_adapter import CICEROSCMPY  # noqa: F401
-from .fair_adapter import FAIR  # noqa: F401
-from .magicc7 import MAGICC7  # noqa: F401
+from .ciceroscm_adapter import CICEROSCM
+from .ciceroscm_py_adapter import CICEROSCMPY
+from .fair_adapter import FAIR
+from .magicc7 import MAGICC7
 
-_registered_adapters: List[Type[_Adapter]] = [
+_registered_adapters: list[type[_Adapter]] = [
     CICEROSCM,
     CICEROSCMPY,
     FAIR,
@@ -58,7 +57,7 @@ def get_adapters_classes():
     return _registered_adapters
 
 
-def register_adapter_class(adapter_cls: Type[_Adapter]):
+def register_adapter_class(adapter_cls: type[_Adapter]):
     """
     Register a new adapter class
 

@@ -44,7 +44,9 @@ def run_ciceroscm_parallel(scenarios, cfgs, output_vars, _execute_run):
     LOGGER.info("Entered _parallel_ciceroscm")
     runs = [
         {"cfgs": cfgs, "output_variables": output_vars, "scenariodata": smdf}
-        for (scen, model), smdf in scenarios.timeseries().groupby(["scenario", "model"])
+        for (scen, model), smdf in scenarios.timeseries(time_axis="year").groupby(
+            ["scenario", "model"]
+        )
     ]
 
     max_workers = int(config.get("CICEROSCM_WORKER_NUMBER", os.cpu_count()))

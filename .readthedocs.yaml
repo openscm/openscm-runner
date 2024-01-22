@@ -1,13 +1,27 @@
+# .readthedocs.yaml
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+# Thank you also https://browniebroke.com/blog/specify-docs-dependency-groups-with-poetry-and-read-the-docs/
+
+# Required
 version: 2
 
+# Set the version of Python and other tools you might need
 build:
-  os: ubuntu-20.04
+  os: ubuntu-22.04
   tools:
     python: "3.9"
+  jobs:
+    post_create_environment:
+      - pip install poetry
+      - poetry config virtualenvs.create false
+      - mkdir -p bin/magicc/magicc-v7.5.3
+      - wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "https://www.magicc.org/api/download?type=MAGICC7&token=${MAGICC_LINK_FROM_MAGICC_DOT_ORG}"
+      - tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
+    post_install:
+      - poetry install --with docs --all-extras
 
-python:
-  install:
-    - method: pip
-      path: .
-      extra_requirements:
-        - docs
+# Build documentation in the docs/ directory with Sphinx
+sphinx:
+   configuration: docs/source/conf.py

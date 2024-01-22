@@ -1,8 +1,8 @@
 import os.path
-import requests
 
 import pyam
 import pymagicc.definitions
+import requests
 
 RCMIP_EMISSIONS_URL = "https://drive.google.com/u/0/uc?id=1krA0lficstXqahlNCko7nbfqgjKrd_Sa&export=download"
 DATA_FILE_RAW_NAME = "rcmip_emissions.csv"
@@ -17,10 +17,7 @@ if not os.path.isfile(data_file_raw):
         fh.write(request.content)
 
 keep_vars = pymagicc.definitions.convert_magicc7_to_openscm_variables(
-    [
-        "{}_EMIS".format(v)
-        for v in pymagicc.definitions.PART_OF_SCENFILE_WITH_EMISSIONS_CODE_1
-    ]
+    [f"{v}_EMIS" for v in pymagicc.definitions.PART_OF_SCENFILE_WITH_EMISSIONS_CODE_1]
 )
 keep_vars = [
     v.replace("HFC4310", "HFC4310mee").replace("SOx", "Sulfur").replace("NMVOC", "VOC")

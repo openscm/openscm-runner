@@ -1,210 +1,170 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+Configuration file for the Sphinx documentation builder.
 
-# -- Path setup --------------------------------------------------------------
-from importlib.metadata import version
+For the full list of built-in configuration values, see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+from functools import wraps
+
+from sphinxcontrib_autodocgen import AutoDocGen
+
+import openscm_runner
 
 # -- Project information -----------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "OpenSCM-Runner"
-authors = ", ".join(["Zeb Nicholls", "Robert Gieseke", "Jared Lewis", "Sven Willner"])
-copyright_year = "2020"
-copyright = "{}, {}".format(copyright_year, authors)
-author = authors
-
-# The full version, including alpha/beta/rc tags
-release = version("openscm_runner")
-# The short X.Y version
-version = ".".join(release.split(".")[:2])
-
+# put the authors in their own variable, so they can be reused later
+authors = ", ".join(
+    ["Zebedee Nicholls", "Robert Gieseke", "Jared Lewis", "Sven Willner"]
+)
+# add a copyright year variable, we can extend this over time in future as
+# needed
+copyright_year = "2020-2024"
+copyright = f"{copyright_year}, {authors}"
 
 # -- General configuration ---------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
 extensions = [
+    # create documentation automatically from source code
+    # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
     "sphinx.ext.autodoc",
-    "sphinx.ext.coverage",
+    # automatic summary
+    "sphinx.ext.autosummary",
+    # automatic summary with better control
+    "sphinxcontrib_autodocgen",
+    # tell sphinx that we're using numpy style docstrings
+    # https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
+    "sphinx.ext.napoleon",
+    # add support for type hints too (so type hints are included next to
+    # argument and return types in docs)
+    # https://github.com/tox-dev/sphinx-autodoc-typehints
+    # this must come after napoleon
+    # in the list for things to work properly
+    # https://github.com/tox-dev/sphinx-autodoc-typehints#compatibility-with-sphinxextnapoleon
+    "sphinx_autodoc_typehints",
+    # jupytext rendered notebook support (also loads myst_parser)
+    "myst_nb",
+    # links to other docs
     "sphinx.ext.intersphinx",
-    "sphinx.ext.napoleon",  # pass numpy style docstrings
-    "sphinx_click.ext",
+    # add source code to docs
+    "sphinx.ext.viewcode",
+    # add copy code button to code examples
+    "sphinx_copybutton",
+    # math support
+    "sphinx.ext.mathjax",
 ]
+
+# general sphinx settings
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
+# Don't include module names in object names (can also be left on,
+# depends a bit how your project is structured and what you prefer)
+add_module_names = False
+# Other global settings which we've never used but are included by default
+templates_path = ["_templates"]
+# Avoid sphinx thinking that conf.py is a source file because we use .py
+# endings for notebooks
+exclude_patterns = ["conf.py"]
+# Stop sphinx doing funny things with byte order markers
+source_encoding = "utf-8"
+
+# configure default settings for autodoc directives
+# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#directives
 autodoc_default_options = {
-    "inherited-members": None,
-    "members": None,
-    "private-members": None,
-    "show-inheritance": None,
-    "undoc-members": None,
+    # Show the inheritance of classes
+    "show-inheritance": True,
 }
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+# autosummary with autodocgen
+# make sure autosummary doesn't interfere
+autosummary_generate = True
+autosummary_generate_overwrite = False
 
-# The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
-source_suffix = ".rst"
+autodocgen_config = [
+    {
+        "modules": [openscm_runner],
+        "generated_source_dir": "docs/source/api",
+        # choose a different title for specific modules, e.g. the toplevel one
+        "module_title_decider": lambda modulename: "API Reference"
+        if modulename == "openscm_runner"
+        else modulename,
+    }
+]
 
-# The master toctree document.
-master_doc = "index"
+# monkey patch to remove leading newlines
+generate_module_rst_orig = AutoDocGen.generate_module_rst
 
-# The language for content autogenerated by Sphinx. Refer to documentation
-# for a list of supported languages.
-#
-# This is also used if you do content translation via gettext catalogs.
-# Usually you set "language" from the command line for these cases.
-language = "en"
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["build"]
+@wraps(generate_module_rst_orig)
+def _generate_module_rst_new(*args, **kwargs):
+    default = generate_module_rst_orig(*args, **kwargs)
+    out = default.lstrip("\n")
+    if not out.endswith("\n"):
+        out = f"{out}\n"
 
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
+    return out
+
+
+AutoDocGen.generate_module_rst = _generate_module_rst_new
+
+# napoleon extension settings
+# https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
+# We use numpy style docstrings
+napoleon_numpy_docstring = True
+# We don't use google docstrings
+napoleon_google_docstring = False
+# Don't use separate rtype for the return documentation
+napoleon_use_rtype = False
+
+# autodoc type hints settings
+# https://github.com/tox-dev/sphinx-autodoc-typehints
+# include full name of classes when expanding type hints?
+typehints_fully_qualified = True
+# Add rtype directive if needed
+typehints_document_rtype = True
+# Put the return type as part of the return documentation
+typehints_use_rtype = False
+
+# Left-align maths equations
+mathjax3_config = {"chtml": {"displayAlign": "center"}}
+
+# myst configuration
+myst_enable_extensions = ["amsmath", "dollarmath"]
+# cache because we save our notebooks as `.py` files i.e. without output
+# stored so auto doesn't work (it just ends up being run every time)
+nb_execution_mode = "cache"
+nb_execution_raise_on_error = True
+nb_execution_show_tb = True
+nb_execution_timeout = 300  # long to handle slow builds on rtd
+nb_custom_formats = {".py": ["jupytext.reads", {"fmt": "py:percent"}]}
 
 # -- Options for HTML output -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
+# Pick your theme for html output, we typically use the read the docs theme
 html_theme = "sphinx_rtd_theme"
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# The default sidebars (for documents that don't match any pattern) are
-# defined by theme itself.  Builtin themes are using these templates by
-# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
-# 'searchbox.html']``.
-#
-# html_sidebars = {}
 
-html_context = {
-    "display_github": False,
-    "github_user": "openscm",
-    "github_repo": "openscm-runner",
-    "github_version": "master",
-    "conf_py_path": "/docs/source",
-}
-
-# -- Options for HTMLHelp output ---------------------------------------------
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = "openscmrunnerdoc"
+# Ignore ipynb files when building (see https://github.com/executablebooks/MyST-NB/issues/363).
+def setup(app):
+    """
+    Set up the Sphinx app
+    """
+    app.registry.source_suffix.pop(".ipynb", None)
 
 
-# -- Options for LaTeX output ------------------------------------------------
-
-latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #
-    # 'papersize': 'letterpaper',
-    # The font size ('10pt', '11pt' or '12pt').
-    #
-    # 'pointsize': '10pt',
-    # Additional stuff for the LaTeX preamble.
-    #
-    # 'preamble': '',
-    # Latex figure (float) alignment
-    #
-    # 'figure_align': 'htbp',
-}
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, "openscm-runner.tex", "OpenSCM-Runner Documentation", author, "manual")
-]
-
-
-# -- Options for manual page output ------------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, "openscm-runner", "OpenSCM-Runner Documentation", [author], 1)
-]
-
-
-# -- Options for Texinfo output ----------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (
-        master_doc,
-        "openscm-runner",
-        "OpenSCM-Runner Documentation",
-        author,
-        "openscm-runner",
-        "Thin wrapper to run simple climate models (emissions driven runs only)",
-        "Miscellaneous",
-    )
-]
-
-# -- Options for Epub output -------------------------------------------------
-
-# Bibliographic Dublin Core info.
-epub_title = project
-
-# The unique identifier of the text. This can be a ISBN number
-# or the project homepage.
-#
-# epub_identifier = ''
-
-# A unique identification for the text.
-#
-# epub_uid = ''
-
-# A list of files that should not be packed into the epub file.
-epub_exclude_files = ["search.html"]
-
-
-# -- Extension configuration -------------------------------------------------
-
-coverage_write_headline = False  # do not write headlines.
-
-# -- Options for intersphinx extension ---------------------------------------
-
-# Example configuration for intersphinx: refer to the Python standard library.
+# Intersphinx mapping
 intersphinx_mapping = {
     "numpy": ("https://docs.scipy.org/doc/numpy", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "python": ("https://docs.python.org/3", None),
     "pyam": ("https://pyam-iamc.readthedocs.io/en/latest", None),
     "scmdata": ("https://scmdata.readthedocs.io/en/latest", None),
-    # "pint": ("https://pint.readthedocs.io/en/latest", None), # no full API doc here, unfortunately
+    "xarray": ("http://xarray.pydata.org/en/stable", None),
+    "pint": (
+        "https://pint.readthedocs.io/en/latest",
+        None,
+    ),
 }
-napoleon_google_docstring = False
-napoleon_numpy_docstring = True
-set_type_checking_flag = False
-
-# -- Options for todo extension ----------------------------------------------
-
-# If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = True
-
-# # -- Logos -------------------------------------------------------------------
-
-# html_logo = "_static/logo_200px_wide.png"
-# latex_logo = "_static/logo.png"
-
-
-# -- Misc configuration -------------------------------------------------
-
-rst_epilog = """
-.. |CO2| replace:: CO\ :sub:`2`\
-"""

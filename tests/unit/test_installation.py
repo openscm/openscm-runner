@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from openscm_runner import run
+import openscm_runner.run
 
 
 @patch("openscm_runner.adapters.fair_adapter.fair_adapter.fair", None)
@@ -10,7 +10,7 @@ def test_no_fair():
     with pytest.raises(
         ImportError, match="fair is not installed. Run 'pip install fair'"
     ):
-        run(
+        openscm_runner.run.run(
             climate_models_cfgs={"fair": ["config list"]},
             scenarios="not used",
         )
@@ -20,9 +20,12 @@ def test_no_fair():
 def test_no_pymagicc():
     with pytest.raises(
         ImportError,
-        match="pymagicc is not installed. Run 'conda install pymagicc' or 'pip install pymagicc'",
+        match=(
+            "pymagicc is not installed. "
+            "Run 'conda install pymagicc' or 'pip install pymagicc'"
+        ),
     ):
-        run(
+        openscm_runner.run.run(
             climate_models_cfgs={"MAGICC7": ["config list"]},
             scenarios="not used",
         )

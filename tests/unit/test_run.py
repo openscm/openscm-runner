@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from openscm_runner import run
+import openscm_runner.run
 
 
 def test_run_out_config_conflict_error():
@@ -12,7 +12,7 @@ def test_run_out_config_conflict_error():
     )
     with pytest.raises(NotImplementedError):
         with pytest.warns(UserWarning, match=error_msg):
-            run(
+            openscm_runner.run.run(
                 climate_models_cfgs={"model_a": ["config list"]},
                 scenarios="not used",
                 out_config={"another model": ("hi",)},
@@ -25,7 +25,7 @@ def test_run_out_config_type_error():
         "climate_model: 'model_a'"
     )
     with pytest.raises(TypeError, match=error_msg):
-        run(
+        openscm_runner.run.run(
             climate_models_cfgs={"model_a": ["config list"]},
             scenarios="not used",
             out_config={"model_a": "hi"},

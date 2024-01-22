@@ -1,0 +1,61 @@
+name: "Setup Python and Poetry"
+description: "setup Python and Poetry with caches"
+
+inputs:
+  os:
+    description: "Operating system to use"
+    required: false
+    default: "ubuntu-latest"
+  python-version:
+    description: "Python version to use"
+    required: true
+  venv-id:
+    description: "ID to identify cached environment (should be unique from other steps)"
+    required: true
+  poetry-dependency-install-flags:
+    description: "Flags to pass to poetry when running `poetry install --no-interaction --no-root`"
+    required: true
+  run-poetry-install:
+    description: "Should we run the poetry install steps"
+    required: false
+    default: true
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install poetry
+      shell: bash
+      run: |
+        pipx install poetry
+        which poetry
+        poetry --version  # Check poetry installation
+    - name: Set up Python ${{ inputs.python-version }}
+      id: setup-python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: poetry
+    - name: Set Poetry environment
+      shell: bash
+      run: |
+        # This line used to be needed, but seems to have been
+        # sorted with newer poetry versions. The check is whether
+        # the right version of python is shown below after running
+        # `poetry run which python` and whether the right version
+        # of python is used in the tests
+        # poetry env use "python${{ inputs.python-version }}"
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+    - name: Install dependencies
+      if: ${{ (inputs.run-poetry-install == 'true')  && (steps.setup-python.outputs.cache-hit != 'true') }}
+      shell: bash
+      run: |
+        poetry install --no-interaction --no-root ${{ inputs.poetry-dependency-install-flags }}
+    # Now run same command but let the package install too
+    - name: Install package
+      if: ${{ inputs.run-poetry-install == 'true' }}
+      shell: bash
+      run: |
+        poetry install --no-interaction ${{ inputs.poetry-dependency-install-flags }}
+        poetry run python --version  # Check python version just in case

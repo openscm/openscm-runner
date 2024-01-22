@@ -1,0 +1,60 @@
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_rule:
+        type: choice
+        description: How to bump the project's version (see https://python-poetry.org/docs/cli/#version)
+        options:
+          - patch
+          - minor
+          - major
+          - prepatch
+          - preminor
+          - premajor
+          - prerelease
+        required: true
+
+jobs:
+  bump_version:
+    name: "Bump version and create changelog"
+    if: "!startsWith(github.event.head_commit.message, 'bump:')"
+    runs-on: ubuntu-latest
+    env:
+      CI_COMMIT_EMAIL: "ci-runner@openscm-runner.invalid"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+
+      # towncrier imports the package as part of building so we have to
+      # install the pacakage (to keep things slim, we only install the main
+      # dependencies, which also means that we get a test that we can import
+      # the package with only the compulsory dependencies installed for free)
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.11"
+          venv-id: "bump"
+          poetry-dependency-install-flags: "--only main"
+
+      - name: Install towncrier
+        run: |
+          poetry run pip install towncrier
+
+      - name: Create bump and changelog
+
+        run: |
+          BASE_VERSION=`poetry version -s`
+          NEW_VERSION=`poetry version -s ${{ github.event.inputs.bump_rule }}`
+          poetry run towncrier build --yes --version v$NEW_VERSION
+
+          git config --global user.name "$GITHUB_ACTOR"
+          git config --global user.email "$CI_COMMIT_EMAIL"
+
+          git commit -a -m "bump: version $BASE_VERSION -> $NEW_VERSION"
+          git tag v$NEW_VERSION
+          git push && git push --tags
+          echo "Bumped to version $NEW_VERSION"

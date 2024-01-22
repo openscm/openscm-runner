@@ -2,7 +2,8 @@
 Base class for adapters
 """
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, List
+from collections.abc import Iterable
+from typing import Any
 
 
 class _Adapter(ABC):  # pylint: disable=too-few-public-methods
@@ -44,7 +45,7 @@ class _Adapter(ABC):  # pylint: disable=too-few-public-methods
     def run(
         self,
         scenarios,
-        cfgs: List[Dict[str, Any]],
+        cfgs: list[dict[str, Any]],
         output_variables: Iterable[str],
         output_config: Iterable[str],
     ):

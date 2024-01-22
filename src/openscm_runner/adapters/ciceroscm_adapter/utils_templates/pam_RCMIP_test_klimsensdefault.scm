@@ -1,6 +1,6 @@
 output_prefix 'output_rbs/test_rcmip'
 gaspam_file '../input_RCP/gases_v1RCMIP.txt'
-concentration_file 'input/ssp434_conc_RCMIP.txt' 
+concentration_file 'input/ssp434_conc_RCMIP.txt'
 emission_file 'input/ssp434_em_RCMIP.txt'
 scenario_file 'input/ssp434_em_RCMIP.txt'
 model_end 2500

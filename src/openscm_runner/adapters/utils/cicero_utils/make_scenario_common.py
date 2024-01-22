@@ -23,7 +23,6 @@ def _unit_conv_factor(unit, cicero_unit):
     in openscm_units
     """
     with openscm_units.unit_registry.context("NOx_conversions"):
-
         if cicero_unit.startswith("GgH1"):
             conv_factor = (
                 openscm_units.unit_registry(unit)
@@ -108,7 +107,7 @@ class COMMONSFILEWRITER:
         Get the list of gas components and units
         from the gases file:
         """
-        with open(gasfile, "r", encoding="ascii") as txt_rcpfile:
+        with open(gasfile, encoding="ascii") as txt_rcpfile:
             gasreader = csv.reader(txt_rcpfile, delimiter="\t")
             next(gasreader)
             for row in gasreader:
@@ -222,9 +221,7 @@ class COMMONSFILEWRITER:
                         * convfactor
                     ).to_numpy() - ssp245data[
                         f"BMB_AEROS_{cicero_comp_dict[comp][0]}"
-                    ].loc[
-                        str(self.years[0]) : str(self.years[-1])
-                    ].to_numpy().astype(
+                    ].loc[str(self.years[0]) : str(self.years[-1])].to_numpy().astype(
                         float
                     )
                 else:

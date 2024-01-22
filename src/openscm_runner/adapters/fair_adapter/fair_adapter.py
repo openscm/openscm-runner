@@ -15,7 +15,7 @@ from ._run_fair import run_fair
 from ._scmdf_to_emissions import scmdf_to_emissions
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def _get_natural_emissions_and_forcing(startyear, num_timesteps):
     # TODO: somebody who knows what they are doing to use scmdata
     natural_df = pd.read_csv(
@@ -137,6 +137,7 @@ class FAIR(_Adapter):
     def get_version():
         """
         Get the FAIR version being used by this adapter
+
         Returns
         -------
         str
@@ -148,6 +149,7 @@ class FAIR(_Adapter):
 def _check_startyear(cfgs):
     """
     Check to see that at most one startyear is defined in the config
+
     Returns
     -------
     int

@@ -99,7 +99,7 @@ def run(
 
         model_meta = set(model_res.meta.columns.tolist())
         climate_model = model_res.get_unique_meta("climate_model")
-        if model_meta != key_meta:  # noqa
+        if model_meta != key_meta:
             raise AssertionError(
                 f"{climate_model} meta: {model_meta}, expected meta: {key_meta}"
             )

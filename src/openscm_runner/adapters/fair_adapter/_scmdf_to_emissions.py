@@ -141,9 +141,7 @@ def _get_fair_col_unit_context(variable):
     return fair_col, in_unit, context
 
 
-def scmdf_to_emissions(
-    scmrun, startyear=1750, endyear=2100, scen_startyear=2015
-):  # pylint: disable=R0914
+def scmdf_to_emissions(scmrun, startyear=1750, endyear=2100, scen_startyear=2015):  # pylint: disable=R0914
     """
     Convert an :obj:`scmdata.ScmRun` into a FaIR emissions :obj:`np.ndarray`
 

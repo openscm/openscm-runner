@@ -5,8 +5,8 @@ import numpy.testing as npt
 import pytest
 from scmdata import ScmRun
 
+import openscm_runner.run
 import openscm_runner.testing
-from openscm_runner import run
 from openscm_runner.utils import calculate_quantiles
 
 RTOL = 1e-5
@@ -19,7 +19,7 @@ def _check_res(exp, check_val, raise_error, rtol=RTOL):
         if raise_error:
             raise
 
-        print("exp: {}, check_val: {}".format(exp, check_val))
+        print(f"exp: {exp}, check_val: {check_val}")
 
 
 @pytest.mark.magicc
@@ -30,7 +30,7 @@ def test_multimodel_run(test_scenarios, test_data_dir, update_expected_values):
         "expected_run_multimodel_output.json",
     )
 
-    res = run(
+    res = openscm_runner.run.run(
         climate_models_cfgs={
             "FaIR": [
                 {},

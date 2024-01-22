@@ -5,7 +5,7 @@ import numpy.testing as npt
 import pytest
 from scmdata import ScmRun
 
-from openscm_runner import run
+import openscm_runner.run
 from openscm_runner.adapters import CICEROSCMPY
 from openscm_runner.testing import _AdapterTester
 from openscm_runner.utils import calculate_quantiles
@@ -30,12 +30,12 @@ class TestCICEROSCMAdapter(_AdapterTester):
         )
 
         if shuffle_column_order:
-            tmp = test_scenarios.data
+            tmp = test_scenarios.long_data()
             cols = tmp.columns.tolist()
             tmp = tmp[cols[1:] + cols[:1]]
             test_scenarios = ScmRun(test_scenarios)
 
-        res = run(
+        res = openscm_runner.run.run(
             scenarios=test_scenarios.filter(scenario=["ssp126", "ssp245", "ssp370"]),
             climate_models_cfgs={
                 "CICEROSCMPY": [
@@ -160,7 +160,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
         )
 
         # check that emissions were passed through correctly
-        for (scen, variable, unit, exp_val) in (
+        for scen, variable, unit, exp_val in (
             ("ssp126", "Emissions|CO2", "PgC/yr", -2.3503),
             ("ssp370", "Emissions|CO2", "PgC/yr", 22.562),
             ("ssp126", "Emissions|CH4", "TgCH4/yr", 122.195),
@@ -172,14 +172,14 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 variable=variable, year=2100, scenario=scen
             ).convert_unit(unit)
             if res_scen_2100_emms.empty:
-                raise AssertionError("No {} data for {}".format(variable, scen))
+                raise AssertionError(f"No {variable} data for {scen}")  # noqa: TRY003
 
             npt.assert_allclose(
                 res_scen_2100_emms.values,
                 exp_val,
                 rtol=1e-4,
             )
-        for (scen, variable, unit, exp_val14, exp_val16) in (
+        for scen, variable, unit, exp_val14, exp_val16 in (
             ("ssp126", "Emissions|CH4", "TgCH4/yr", 387.874, 379.956),
             ("ssp370", "Emissions|CH4", "TgCH4/yr", 387.874, 394.149),
             ("ssp126", "Emissions|N2O", "TgN2ON/yr", 6.911, 6.858),
@@ -189,13 +189,13 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 variable=variable, year=2014, scenario=scen
             ).convert_unit(unit)
             if res_scen_2014_emms.empty:
-                raise AssertionError("No {} data for {}".format(variable, scen))
+                raise AssertionError(f"No {variable} data for {scen}")  # noqa: TRY003
 
             res_scen_2016_emms = res.filter(
                 variable=variable, year=2016, scenario=scen
             ).convert_unit(unit)
             if res_scen_2016_emms.empty:
-                raise AssertionError("No {} data for {}".format(variable, scen))
+                raise AssertionError(f"No {variable} data for {scen}")  # noqa: TRY003
 
             npt.assert_allclose(
                 res_scen_2014_emms.values,
@@ -207,13 +207,13 @@ class TestCICEROSCMAdapter(_AdapterTester):
                 exp_val16,
                 rtol=1e-4,
             )
-        for (scen, variable) in (
+        for scen, variable in (
             ("ssp126", "Effective Radiative Forcing|Aerosols"),
             ("ssp370", "Effective Radiative Forcing|Aerosols"),
         ):
             res_scen_2015_emms = res.filter(variable=variable, year=2015, scenario=scen)
             if res_scen_2015_emms.empty:
-                raise AssertionError("No CO2 emissions data for {}".format(scen))
+                raise AssertionError(f"No CO2 emissions data for {scen}")  # noqa: TRY003
 
             assert not np.equal(res_scen_2015_emms.values, 0).all()
 
@@ -258,11 +258,11 @@ class TestCICEROSCMAdapter(_AdapterTester):
     def test_variable_naming(self, test_scenarios):
         missing_from_ciceroscm = (
             "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC AFOLU",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC Fossil and Industrial",
+            "Effective Radiative Forcing|Aerosols|Direct Effect|BC|MAGICC Fossil and Industrial",  # noqa: E501
             "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC AFOLU",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC Fossil and Industrial",
+            "Effective Radiative Forcing|Aerosols|Direct Effect|OC|MAGICC Fossil and Industrial",  # noqa: E501
             "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC AFOLU",
-            "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC Fossil and Industrial",
+            "Effective Radiative Forcing|Aerosols|Direct Effect|SOx|MAGICC Fossil and Industrial",  # noqa: E501
             "Heat Uptake|Ocean",
             "Net Atmosphere to Land Flux|CO2",
             "Net Atmosphere to Ocean Flux|CO2",
@@ -270,7 +270,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
         common_variables = [
             c for c in self._common_variables if c not in missing_from_ciceroscm
         ]
-        res = run(
+        res = openscm_runner.run.run(
             climate_models_cfgs={
                 "CICEROSCMPY": [{"pamset_udm": {"lambda": 0.540}, "pamset_emiconc": {}}]
             },
@@ -285,7 +285,7 @@ class TestCICEROSCMAdapter(_AdapterTester):
     @pytest.mark.ciceroscm
     def test_w_out_config(self, test_scenarios):
         with pytest.raises(NotImplementedError):
-            run(
+            openscm_runner.run.run(
                 scenarios=test_scenarios.filter(scenario=["ssp126"]),
                 climate_models_cfgs={
                     "CiceroSCMPY": [

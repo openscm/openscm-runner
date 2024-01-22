@@ -1,0 +1,33 @@
+name: Deploy
+
+on:
+  release:
+    types: [published]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  deploy-pypi:
+    name: Deploy to PyPI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.9"
+          venv-id: "deploy"
+          poetry-dependency-install-flags: "--all-extras"
+      - name: Run tests
+        run: |
+          poetry run pytest -r a src tests --doctest-modules
+      - name: Publish to PyPI
+        env:
+          PYPI_TOKEN: "${{ secrets.PYPI_TOKEN }}"
+        run: |
+          poetry config pypi-token.pypi $PYPI_TOKEN
+          poetry publish --build --no-interaction
