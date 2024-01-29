@@ -5,6 +5,7 @@ See https://docs.pytest.org/en/7.1.x/reference/fixtures.html#conftest-py-sharing
 """
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import pandas as pd
@@ -26,9 +27,10 @@ try:
     else:
         CORRECT_MAGICC_IS_AVAILABLE = True
 
-except KeyError:
+except (KeyError, subprocess.CalledProcessError) as exc:
     MAGICC_VERSION = None
     CORRECT_MAGICC_IS_AVAILABLE = False
+    MAGICC_LOAD_EXC = exc
 
 
 CICEROSCM_IS_AVAILABLE = False
@@ -45,7 +47,7 @@ def pytest_runtest_setup(item) -> None:
     for mark in item.iter_markers():
         if mark.name == "magicc" and not CORRECT_MAGICC_IS_AVAILABLE:
             if MAGICC_VERSION is None:
-                pytest.skip("MAGICC7 not available")
+                pytest.skip(f"MAGICC7 not available. Exc: {MAGICC_LOAD_EXC}")
             else:
                 pytest.skip(
                     "Wrong MAGICC version for tests ({}), we require {}".format(
@@ -106,17 +108,3 @@ def test_scenario_ssp370_world(test_data_dir: Path) -> scmdata.ScmRun:
     )
 
     return scenario
-
-
-def pytest_addoption(parser):
-    parser.addoption(
-        "--update-expected-values",
-        action="store_true",
-        default=False,
-        help="Overwrite expected values",
-    )
-
-
-@pytest.fixture
-def update_expected_values(request):
-    return request.config.getoption("--update-expected-values")

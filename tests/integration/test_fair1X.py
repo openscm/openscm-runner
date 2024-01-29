@@ -1,5 +1,3 @@
-import os.path
-
 import numpy as np
 import numpy.testing as npt
 import pytest
@@ -13,20 +11,13 @@ from openscm_runner.utils import calculate_quantiles
 
 class TestFairAdapter(_AdapterTester):
     @pytest.mark.parametrize("nworkers", (1, 4))
-    def test_run(  # noqa: PLR0913
+    def test_run(
         self,
         test_scenarios,
         monkeypatch,
         nworkers,
-        test_data_dir,
-        update_expected_values,
+        num_regression,
     ):
-        expected_output_file = os.path.join(
-            test_data_dir,
-            "expected-integration-output",
-            "expected_fair1X_test_run_output.json",
-        )
-
         monkeypatch.setenv("FAIR_WORKER_NUMBER", f"{nworkers}")
         res = openscm_runner.run.run(
             climate_models_cfgs={
@@ -78,7 +69,98 @@ class TestFairAdapter(_AdapterTester):
         # TODO CHECK: heat content is not zero in the first year in FaIR?
         self._check_heat_content_heat_uptake_consistency(res)
 
-        self._check_output(res, expected_output_file, update_expected_values)
+        outputs_to_get = {
+            "FaIR*": [
+                {
+                    "variable": "Heat Uptake",
+                    "unit": "W/m**2",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Heat Uptake",
+                    "unit": "W/m**2",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0,
+                },
+                {
+                    "variable": "Effective Radiative Forcing",
+                    "unit": "W/m**2",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Effective Radiative Forcing",
+                    "unit": "W/m**2",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 1,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0.05,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp126",
+                    "quantile": 0.95,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0.05,
+                },
+                {
+                    "variable": "Surface Air Temperature Change",
+                    "region": "World",
+                    "year": 2100,
+                    "scenario": "ssp370",
+                    "quantile": 0.95,
+                },
+            ]
+        }
+        output_dict = self._get_output_dict(res, outputs_to_get)
+        num_regression.check(output_dict, default_tolerance=dict(rtol=self._rtol))
 
     def test_variable_naming(self, test_scenarios):
         missing_from_fair = (
