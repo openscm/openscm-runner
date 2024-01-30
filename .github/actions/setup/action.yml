@@ -40,10 +40,10 @@ runs:
       shell: bash
       run: |
         # This line used to be needed, but seems to have been
-        # sorted with newer poetry versions. The check is whether
-        # the right version of python is shown below after running
-        # `poetry run which python` and whether the right version
-        # of python is used in the tests
+        # sorted with newer poetry versions. We can still check whether
+        # the right version of python is used by looking at the output of
+        # `poetry run which python` below and whether the right version
+        # of python is used in the tests (or whatever step is being done)
         # poetry env use "python${{ inputs.python-version }}"
         poetry config virtualenvs.create true
         poetry config virtualenvs.in-project true
@@ -54,6 +54,7 @@ runs:
         poetry install --no-interaction --no-root ${{ inputs.poetry-dependency-install-flags }}
     # Now run same command but let the package install too
     - name: Install package
+      # To ensure that the package is always installed, this step is run even if the cache was hit
       if: ${{ inputs.run-poetry-install == 'true' }}
       shell: bash
       run: |

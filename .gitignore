@@ -1,3 +1,6 @@
+# ruff
+.ruff_cache
+
 # Notebooks
 *.ipynb
 

@@ -18,6 +18,7 @@ endef
 export PRINT_HELP_PYSCRIPT
 
 
+.PHONY: help
 help:  ## print short description of each target
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 

@@ -2,8 +2,9 @@
 name: Feature Request
 about: Request a feature or suggest an idea for this project
 title: ''
-labels: feature-request
+labels: feature
 assignees: ''
+
 ---
 
 ## The motivation

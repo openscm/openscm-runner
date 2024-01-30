@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v3
       - uses: ./.github/actions/setup
         with:
-          os: ubuntu-latest
+          os: "ubuntu-latest"
           python-version: "3.9"
           venv-id: "docs"
           poetry-dependency-install-flags: "--all-extras --only 'main,dev'"
@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v3
       - uses: ./.github/actions/setup
         with:
-          os: ubuntu-latest
+          os: "ubuntu-latest"
           python-version: "3.9"
           venv-id: "docs"
           poetry-dependency-install-flags: "--all-extras --only 'main,docs'"
@@ -52,7 +52,10 @@ jobs:
     runs-on: "${{ matrix.os }}"
     defaults:
       run:
-        shell: bash  # Need this for windows to not explode apparently
+        # This might be needed for Windows and doesn't seem to affect unix-based systems
+        # so we include it. If you have better proof of whether this is needed or not,
+        # feel free to update.
+        shell: bash
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
