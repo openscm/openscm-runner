@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "openscm-runner"
 keywords = ["openscm", "runner", "python", "simple", "climate", "model"]
-version = "0.13.0"
+version = "0.13.1a0"
 description = "Thin wrapper to run emissions scenarios with simple climate models"
 authors = [
     "Zebedee Nicholls <zebedee.nicholls@climate-energy-college.org>",
