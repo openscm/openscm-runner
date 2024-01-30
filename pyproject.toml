@@ -48,7 +48,7 @@ python-dotenv = "^1.0.0"
 scmdata = ">=0.7.4"
 tqdm = "^4.66.1"
 # optional below here
-ciceroscm = { version = "1.1.1", optional = true }  # TODO: ask Marit if she wants to loosen this
+ciceroscm = { version = "1.1.1", optional = true }
 fair = { version = "<2", optional = true }
 pymagicc = { version = "<3", optional = true }
 # Bit hacky, but basically we only need to pin pandas
