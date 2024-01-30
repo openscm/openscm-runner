@@ -18,6 +18,24 @@ of rst and use slightly different categories.
 
 <!-- towncrier release notes start -->
 
+## openscm-runner v0.13.0 (2024-01-30)
+
+
+### Breaking Changes
+
+- Updated to CICERO-SCM v1.1.1
+
+  This also removes the pin on Pandas when installing CICERO-SCM's python port ([#89](https://github.com/openscm/openscm-runner/pulls/89))
+
+### Improvements
+
+- Switched to using [pytest-regressions](https://pytest-regressions.readthedocs.io/en/latest) rather than relying on our own solution ([#88](https://github.com/openscm/openscm-runner/pulls/88))
+
+### Trivial/Internal Changes
+
+- [#91](https://github.com/openscm/openscm-runner/pulls/91)
+
+
 ## openscm-runner v0.12.1 (2023-05-15)
 
 ### Features
