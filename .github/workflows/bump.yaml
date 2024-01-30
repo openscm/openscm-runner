@@ -47,14 +47,21 @@ jobs:
       - name: Create bump and changelog
 
         run: |
-          BASE_VERSION=`poetry version -s`
-          NEW_VERSION=`poetry version -s ${{ github.event.inputs.bump_rule }}`
-          poetry run towncrier build --yes --version v$NEW_VERSION
-
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "$CI_COMMIT_EMAIL"
 
+          # Bump
+          BASE_VERSION=`poetry version -s`
+          NEW_VERSION=`poetry version -s ${{ github.event.inputs.bump_rule }}`
+          echo "Bumping version $BASE_VERSION > $NEW_VERSION"
+          poetry run towncrier build --yes --version v$NEW_VERSION
           git commit -a -m "bump: version $BASE_VERSION -> $NEW_VERSION"
           git tag v$NEW_VERSION
+
+          # Bump to alpha (so that future commits do not have the same
+          # version as the tagged commit)
+          BASE_VERSION=`poetry version -s`
+          NEW_VERSION=`poetry version -s prerelease`
+          echo "Bumping version $BASE_VERSION > $NEW_VERSION"
+          git commit -a -m "bump(pre-release): version $BASE_VERSION > $NEW_VERSION"
           git push && git push --tags
-          echo "Bumped to version $NEW_VERSION"
