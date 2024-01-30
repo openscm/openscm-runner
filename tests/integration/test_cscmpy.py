@@ -433,4 +433,4 @@ class TestCICEROSCMAdapter(_AdapterTester):
 
 
 def test_get_version():
-    assert CICEROSCMPY.get_version() == "1.0.0"
+    assert CICEROSCMPY.get_version() == "1.1.1"

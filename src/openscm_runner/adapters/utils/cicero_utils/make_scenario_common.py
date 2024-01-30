@@ -1,5 +1,6 @@
 """
 Common handler and converter of scenariodat for cicero
+
 Class will be inherited by subversions to get specific
 handling
 """
@@ -19,7 +20,9 @@ LOGGER = logging.getLogger(__name__)
 
 def _unit_conv_factor(unit, cicero_unit):
     """
-    Convert cicero units that can't be automatically dealt with
+    Convert cicero units
+
+    Conversion for cicero units that can't be automatically dealt with
     in openscm_units
     """
     with openscm_units.unit_registry.context("NOx_conversions"):
@@ -105,6 +108,8 @@ class COMMONSFILEWRITER:
     def initialize_units_comps(self, gasfile):
         """
         Get the list of gas components and units
+
+        Get the list of gas components and untis
         from the gases file:
         """
         with open(gasfile, encoding="ascii") as txt_rcpfile:
@@ -170,7 +175,7 @@ class COMMONSFILEWRITER:
         )
         years = scenarioframe.columns
 
-        if not isinstance(years[0], np.int64):
+        if not isinstance(years[0], (np.int64, np.int32)):
             yearsint = [np.int64(d.year) for d in years]
             scenarioframe.rename(
                 lambda d: np.int64(d.year), axis="columns", inplace=True
@@ -190,6 +195,8 @@ class COMMONSFILEWRITER:
 
     def make_printoutframe(self, scenarioframe, ssp245data):
         """
+        Take scenarioframe and convert to cicero format emissions
+
         Take scenarioframe and convert to cicero format
         emissions data to write to file or pass as dataframe
         """
