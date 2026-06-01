@@ -2,46 +2,57 @@
 Adapters for different climate models
 """
 
+from ._protocol import AdapterLike
 from .base import _Adapter
 from .ciceroscm_adapter import CICEROSCM
+from .ciceroscm_py2_adapter import CICEROSCMPY2
 from .ciceroscm_py_adapter import CICEROSCMPY
+from .fair2_adapter import FAIR2
 from .fair_adapter import FAIR
 from .magicc7 import MAGICC7
 
 _registered_adapters: list[type[_Adapter]] = [
     CICEROSCM,
     CICEROSCMPY,
+    CICEROSCMPY2,
     FAIR,
+    FAIR2,
     MAGICC7,
 ]
 
 
-def get_adapter(climate_model):
+def get_adapter(climate_model, **kwargs):
     """
-    Get an adapter for a given climate_model
+    Get an adapter for a given ``climate_model``.
 
     Parameters
     ----------
     climate_model: str
-        The name of the model to fetch
+        The name of the model to fetch. Case-insensitive.
 
-        This parameter is case-insensitive
+    **kwargs
+        Forwarded to the adapter's constructor. The base
+        :class:`~openscm_runner.adapters.base._Adapter` accepts
+        ``cfgs``, ``mode``, ``output_variables`` and ``output_config``
+        as keyword arguments; concrete adapters may take additional
+        kwargs through their constructor. Callers that just want an
+        adapter instance for inspection can pass no kwargs.
 
     Raises
     ------
     NotImplementedError
-        A matching adapter could not be found
+        A matching adapter could not be found.
 
     Returns
     -------
     openscm_runner.adapters.base._Adapter
-        The adapter for a given climate model
+        Configured adapter instance.
     """
     adapters_classes = get_adapters_classes()
 
     for Adapter in adapters_classes:
         if Adapter.model_name.upper() == climate_model.upper():
-            return Adapter()
+            return Adapter(**kwargs)
 
     raise NotImplementedError(f"No adapter available for {climate_model}")
 

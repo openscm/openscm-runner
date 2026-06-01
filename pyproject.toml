@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "openscm-runner"
 keywords = ["openscm", "runner", "python", "simple", "climate", "model"]
-version = "0.13.1a0"
+version = "0.14.0a0"
 description = "Thin wrapper to run emissions scenarios with simple climate models"
 authors = [
     "Zebedee Nicholls <zebedee.nicholls@climate-energy-college.org>",
@@ -48,8 +48,19 @@ python-dotenv = "^1.0.0"
 scmdata = ">=0.7.4"
 tqdm = "^4.66.1"
 # optional below here
-ciceroscm = { version = "1.1.1", optional = true }
-fair = { version = "<2", optional = true }
+# The `ciceroscm` PyPI package covers both v1.1.x (used by
+# `ciceroscm_py_adapter`) and v2.x (used by `ciceroscm_py2_adapter`);
+# the `fair` PyPI package covers both FaIR 1.6 (`fair_adapter`) and
+# FaIR 2.x (`fair2_adapter`). Only one major version of each can be
+# installed at a time, so the paired extras below
+# (`[ciceroscmpy]`/`[ciceroscmpy2]`, `[fair]`/`[fair2]`) are mutually
+# exclusive. The version ranges here permit either; the adapter
+# `_compat` shims enforce the correct major version at runtime and
+# raise a clear ImportError otherwise. Users who need a hard pin can
+# supply one themselves alongside the extra (e.g.
+# `pip install openscm-runner[fair] "fair<2"`).
+ciceroscm = { version = ">=1.1,<3", optional = true }
+fair = { version = ">=1.6,<3", optional = true }
 pymagicc = { version = "<3", optional = true }
 notebook = { version = "*", optional = true }
 seaborn = { version = "^0.13.1", optional = true }
@@ -57,8 +68,10 @@ ipywidgets = { version = "^8.1.1", optional = true }
 
 [tool.poetry.extras]
 notebooks = ["notebook", "seaborn", "ipywidgets"]
-ciceroscmpy = ["ciceroscm"]
-fair = ["fair"]
+ciceroscmpy = ["ciceroscm"]    # CICERO-SCM v1.1.x adapter; mutually exclusive with [ciceroscmpy2]
+ciceroscmpy2 = ["ciceroscm"]   # CICERO-SCM v2.1.x adapter; mutually exclusive with [ciceroscmpy]
+fair = ["fair"]                # FaIR 1.6 adapter; mutually exclusive with [fair2]
+fair2 = ["fair"]               # FaIR 2.x adapter; mutually exclusive with [fair]
 magicc = ["pymagicc"]
 models = ["ciceroscm", "fair", "pymagicc"]
 

@@ -134,7 +134,10 @@ def _get_fair_col_unit_context(variable):
     if in_unit.shape[0] != 1:
         raise AssertionError(in_unit)
 
-    fair_col = int(row[row].index.values) + 1  # first col is time
+    # numpy 2.x rejects int() on a non-0-dim array; index[0] gives the
+    # single guaranteed-unique row position (the assertion above ensures
+    # exactly one True row), avoiding the conversion entirely.
+    fair_col = int(row[row].index[0]) + 1  # first col is time
     in_unit = in_unit.iloc[0]
     context = EMISSIONS_SPECIES_UNITS_CONTEXT[row]["context"].iloc[0]
 

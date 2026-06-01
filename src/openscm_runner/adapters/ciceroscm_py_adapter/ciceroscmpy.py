@@ -27,12 +27,11 @@ class CICEROSCMPY(_Adapter):  # pylint: disable=too-few-public-methods
 
     model_name = "CiceroSCMPY"
 
-    def __init__(self):  # pylint: disable=useless-super-delegation
+    def __init__(self, **kwargs):  # pylint: disable=useless-super-delegation
         """
-        Initialise the CICEROSCM adapter
-
+        Initialise the CICEROSCM (Python wrapper) adapter.
         """
-        super().__init__()
+        super().__init__(**kwargs)
 
     def _init_model(self):  # pylint: disable=arguments-differ
         pass
