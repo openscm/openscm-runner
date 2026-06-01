@@ -77,13 +77,6 @@ pip install openscm-runner
 conda install -c conda-forge openscm-runner
 ```
 
-Note: the modernisation deltas above are not yet on PyPI. To use them, install
-from this fork's `modernisation/integration` branch:
-
-```bash
-pip install "git+https://github.com/benmsanderson/openscm-runner.git@modernisation/integration"
-```
-
 ### Optional extras
 
 Each climate model adapter is gated behind its own pyproject extra. The
@@ -99,22 +92,17 @@ pip install openscm-runner[magicc]
 # FaIR 1.6 adapter (original)
 pip install openscm-runner[fair]
 
-# FaIR 2.x adapter (modernisation fork, AR7-era)
+# FaIR 2.x adapter
 pip install openscm-runner[fair2]
 
-# CICERO-SCM v1.1.x Python adapter (original)
+# CICERO-SCM v1.1.x Python adapter
 pip install openscm-runner[ciceroscmpy]
 
-# CICERO-SCM v2.x Python adapter (modernisation fork)
+# CICERO-SCM v2.x Python adapter
 pip install openscm-runner[ciceroscmpy2]
 
 # All three legacy models in one go (FaIR 1.6 + MAGICC + CICEROSCM v1.1.x)
 pip install openscm-runner[models]
-
-# Streaming netCDF output (NetCDFChunkWriter) and notebook chunk-readback.
-# Already pulled in by [notebooks]; install standalone if you want the
-# CLI runner to write per-scenario .nc files without the notebook deps.
-pip install openscm-runner[netcdf]
 
 # CICERO-SCM's Fortran binary requires no additional dependencies to be
 # installed; it ships with the adapter package.

@@ -45,7 +45,7 @@ classifiers = [
 python = "^3.9"
 openscm-units = ">=0.5.0"
 python-dotenv = "^1.0.0"
-scmdata = ">=0.7.4"
+scmdata = ">=0.19"
 tqdm = "^4.66.1"
 # optional below here
 # The `ciceroscm` PyPI package covers both v1.1.x (used by
