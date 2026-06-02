@@ -11,6 +11,7 @@ from openscm_runner.utils import calculate_quantiles
 RTOL = 1e-5
 
 
+@pytest.mark.fair1x_only
 class TestCICEROSCMAdapter(_AdapterTester):
     @pytest.mark.parametrize("shuffle_column_order", (True, False))
     def test_run(
