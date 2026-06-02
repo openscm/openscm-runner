@@ -35,14 +35,13 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering",
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 openscm-units = ">=0.5.0"
 python-dotenv = "^1.0.0"
 scmdata = ">=0.19"

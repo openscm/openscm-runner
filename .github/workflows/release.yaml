@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup
         with:
-          python-version: "3.9"
+          python-version: "3.10"
           venv-id: "release"
           poetry-dependency-install-flags: "--all-extras"
       - name: Add version to environment
