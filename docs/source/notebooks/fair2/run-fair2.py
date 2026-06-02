@@ -111,18 +111,11 @@ res_run.get_unique_meta("variable")
 # ## Plot
 
 # %%
-plot_kwargs = dict(
-    hue_var="scenario",
-    style_var="model",
-    style_label="IAM",
-    time_axis="year",
-)
-
-# %%
 ax = plt.figure(figsize=(12, 6)).add_subplot(111)
 res_run.filter(variable="Surface Air Temperature Change").lineplot(
-    ax=ax, **plot_kwargs
+    ax=ax, time_axis="year", hue="scenario", style="model",
 )
+ax.set_title("FaIRv2 - ssp245 Surface Air Temperature Change")
 plt.tight_layout()
 plt.show()
 

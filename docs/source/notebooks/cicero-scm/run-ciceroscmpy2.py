@@ -131,18 +131,11 @@ res_run.get_unique_meta("climate_model", no_duplicates=True)
 # ## Plot
 
 # %%
-plot_kwargs = dict(
-    hue_var="scenario",
-    style_var="model",
-    style_label="IAM",
-    time_axis="year",
-)
-
-# %%
 ax = plt.figure(figsize=(12, 6)).add_subplot(111)
 res_run.filter(variable="Surface Air Temperature Change").lineplot(
-    ax=ax, **plot_kwargs
+    ax=ax, time_axis="year", hue="scenario", style="model",
 )
+ax.set_title("CICERO-SCM v2.x - ssp245 Surface Air Temperature Change")
 plt.tight_layout()
 plt.show()
 
