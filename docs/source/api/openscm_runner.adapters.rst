@@ -12,7 +12,9 @@ openscm\_runner.adapters
   openscm_runner.adapters.base
   openscm_runner.adapters.ciceroscm_adapter
   openscm_runner.adapters.ciceroscm_py_adapter
+  openscm_runner.adapters.ciceroscm_py2_adapter
   openscm_runner.adapters.fair_adapter
+  openscm_runner.adapters.fair2_adapter
   openscm_runner.adapters.magicc7
   openscm_runner.adapters.utils
 

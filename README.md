@@ -153,6 +153,18 @@ fair2 = FAIR2.from_native_distribution(
     output_variables=("Surface Air Temperature Change",),
 )
 result = openscm_runner.run.run([fair2], scenarios=my_scmrun)
+
+# Concentration-driven mode: same construction shape, different
+# `mode=` and the scenarios DataFrame should carry
+# `Atmospheric Concentrations|*` rows for the species you want to
+# drive. See the per-adapter `_run` docstring for the calibration-
+# directory layout each adapter expects.
+fair2_cd = FAIR2.from_native_distribution(
+    "/path/to/calibration_bundle",
+    mode=RunMode.CONCENTRATION_DRIVEN,
+    output_variables=("Surface Air Temperature Change",),
+)
+result_cd = openscm_runner.run.run([fair2_cd], scenarios=my_conc_scmrun)
 ```
 
 ## For developers
