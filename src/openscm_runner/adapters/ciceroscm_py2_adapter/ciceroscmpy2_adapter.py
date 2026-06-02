@@ -1,116 +1,121 @@
 """
-Adapter for CICERO-SCM v2.x (DistributionRun mode, v1 scope).
+Adapter for CICERO-SCM v2.x (DistributionRun mode, scenarios-driven).
 
-This adapter is a sibling to
-:class:`openscm_runner.adapters.ciceroscm_py_adapter.CICEROSCMPY`
-(which wraps the v1.1.x release with a per-config loop) and does not
-replace it. The v1.1.x adapter is kept working for downstream users
-that depend on its outputs; this one targets the AR7-relevant v2.1.0
-release and its native ``DistributionRun`` ensemble API.
+Sibling of :class:`openscm_runner.adapters.ciceroscm_py_adapter.CICEROSCMPY`
+(which wraps the v1.1.x release with a per-config loop). This adapter
+targets the AR7-relevant v2.1.0 release and its native
+``DistributionRun`` ensemble API.
 
-**Scope of this first version**
+**API shape: scenarios DataFrame is authoritative**
 
-DistributionRun mode only. Each entry in the per-model ``cfgs`` list
-must carry a ``distribution_json`` sidecar key pointing at a CICERO-SCM
-parameter-distribution JSON (a posterior of ``pamset_udm`` +
-``pamset_emiconc`` dicts, e.g. ``draw_samples_500.json``). The runner
-hands the JSON to upstream's :class:`ciceroscm.parallel.DistributionRun`
-and lets it dispatch the ensemble in parallel (upstream already manages
-its own ProcessPool sized by the ``max_workers`` sidecar key).
+The adapter follows the same surface as :class:`FAIR2`: the caller
+supplies a scenarios :class:`scmdata.ScmRun` carrying ``Emissions|*``
+rows (ED) or ``Atmospheric Concentrations|*`` rows (CD), and the
+adapter overlays them on a calibration directory of static defaults
+(gaspam, historical_em / historical_conc baselines, default natural
+emissions, default solar / volcanic / LUC forcings, parameter
+posterior JSON). No per-scenario file lookups happen inside the
+adapter; per-scenario inputs come from the scenarios DataFrame.
 
-Translated-cfg mode (one parameter dict per ensemble member, like the
-v1.1.x adapter) is **not** implemented in this version. The v2.1.0
-DistributionRun API is the path AR7-relevant CICERO Monte-Carlo runs
-take, and a translated path adds bookkeeping that is not warranted by
-any current use case.
+Reproducing a published reference (e.g. Marit's RCMIP runs) is the
+application layer's job: translate the reference scenarios into
+openscm-runner format on the application side (the fork's
+``scripts/translate_cicero_bundle_to_iamc.py`` does this for the
+``cscm-calibrate`` ``rcmip-march2026`` bundle), then drive the
+adapter from the translated DataFrame. The adapter stays dumb; the
+application repo decides what to feed it.
 
-**Two input modes — bundle mode is the recommended default**
+**Constructing the adapter**
 
-*Bundle mode* **(use this for any AR7-relevant or scientifically
-defensible run)**. Set ``cicero_bundle_dir`` to a directory laid
-out like Marit's ``cscm-calibrate`` RCMIP working directory (the
-per-scenario ``{scen}_em_{gases_ep}``, ``{scen}_conc_{gases_ep}``,
-``solar_RCMIP_{scen}_RCMIP3.txt``, ``VOLC_RCMIP_…``,
-``LUCalbedo_RCMIP_…``, plus ``natemis_CH4_…`` / ``natemis_N2O_…``
-and the gaspam). For each scenario in the user ``scenarios``
-ScmRun the adapter picks the matching files from the bundle,
-falling back to ``historical`` files when scenario-specific ones
-don't exist (the same logic ``run_full_rcmip_protocol.py`` in
-``cscm-calibrate@ben_rcmip_sandbox`` uses). The adapter's
-``_build_scendata_list_bundle`` reproduces that reference protocol
-bit-exactly on the ``draw_samples_500`` posterior — verified
-2026-05-24 to the digit for every year of ssp119 against a 10-
-member subset of the same posterior.
+The recommended path is :meth:`CICEROSCMPY2.from_native_distribution`,
+which takes a calibration directory laid out like
+``cscm-calibrate@ben_rcmip_sandbox`` (gaspam + historical_em +
+historical_conc + natemis + default forcings + the parameter
+posterior JSON, with canonical filename patterns). It resolves
+each canonical file by glob, writes a single cfg with explicit
+paths, and instantiates the adapter::
 
-*Splice mode* (legacy, **carries a calibration-mismatch bias —
-prefer bundle mode**). Set ``gaspam_file`` + ``concentrations_file``
-directly; the v1.1.x ``SCENARIODATAGETTER`` splices the user
-ScmRun on top of its bundled ``ssp245_em_RCMIP.txt`` historical.
-That historical is a v1.1.x-era file that does **not** match what
-modern v2.x calibrations such as ``draw_samples_500`` were fit
-against, so the calibration "sees" the wrong present-day forcing
-baseline and warming comes out 0.3-0.5 K too high. On ssp119 with
-the same 10-member subset, splice mode gives 1.85 K of 2024
-warming where bundle mode (and the reference protocol) give
-1.50 K. The adapter emits a ``LOGGER.warning`` whenever splice
-mode is invoked so the bias is not silent. Kept as a back-compat
-path for callers that have not yet migrated.
+    from openscm_runner import RunMode
+    from openscm_runner.adapters import CICEROSCMPY2
 
-**Per-cfg sidecar keys**
+    adapter = CICEROSCMPY2.from_native_distribution(
+        "/path/to/marit-rcmip-march2026/",
+        mode=RunMode.EMISSIONS_DRIVEN,
+        member_indices=range(500),
+        output_variables=("Surface Air Temperature Change", ...),
+    )
+    result = adapter.run(scenarios)
 
-- ``distribution_json`` (always required): filesystem path to a
-  parameter-posterior JSON readable by ``DistributionRun``. Either
+Direct cfg construction via ``CICEROSCMPY2(cfgs=[...], mode=...)``
+is also supported; the cfg dict must carry the required sidecar
+keys listed below.
+
+**Required cfg sidecar keys**
+
+- ``distribution_json`` (path): parameter posterior JSON readable by
+  :class:`ciceroscm.parallel.distributionrun.DistributionRun`. Either
   a flat list of cfg dicts or a
-  ``{"meta_info": ..., "configurations": [...]}`` envelope is
-  accepted (upstream handles both).
-- ``cicero_bundle_dir`` (bundle mode): directory containing the
-  per-scenario CICERO-format inputs. When set, all other file paths
-  default to canonical names within this directory and can be
-  overridden individually with the ``*_file`` keys.
-- ``cicero_gases_ep`` (bundle mode, optional): gaspam-name suffix
-  used to build per-scenario filenames. Default
-  ``"gases_vupdate_2024_WMO_added_new.txt"``.
-- ``gaspam_file`` (splice mode required, bundle mode optional):
-  filesystem path to a gases parameter file. In bundle mode
-  defaults to ``cicero_bundle_dir / cicero_gases_ep``.
-- ``concentrations_file`` (splice mode required, bundle mode
-  optional): historical concentrations covering ``nystart`` to
-  ``emstart``. In bundle mode picked per-scenario from the bundle.
-- ``member_indices`` (optional, default = all members in JSON):
-  sequence of zero-based ``int`` selecting rows of the posterior.
-- ``max_workers`` (optional): forwarded to
+  ``{"meta_info": ..., "configurations": [...]}`` envelope.
+- ``gaspam_file`` (path): species-properties file
+  (``EM_UNIT``, ``CONC_UNIT``, ``BETA``, ``TAU*``, ``NAT_EM``).
+  Must match the species set the ``distribution_json`` posterior
+  was calibrated against.
+- ``historical_em_file`` (path): CICERO-format historical emissions
+  baseline. Provides the species-column coverage and pre-1850 values
+  that the user's ``Emissions|*`` overlay extends.
+- ``historical_conc_file`` (path): CICERO-format historical
+  concentrations baseline. Same role for the CD path; also provides
+  the pre-industrial concentration values CICEROSCM needs to seed
+  the concentration solver in ED mode.
+- ``nat_ch4_file`` / ``nat_n2o_file`` (paths): natural CH4 / N2O
+  emissions trajectories.
+- ``rf_solar_file`` / ``rf_volc_file`` / ``rf_luc_file`` (paths):
+  default solar / volcanic / LUC albedo forcing files.
+
+**Optional cfg sidecar keys**
+
+- ``rf_luc_constant_zero_file`` (path): used in place of
+  ``rf_luc_file`` for scenarios whose
+  ``protocol_land_use_forcing == "constant_zero"`` meta column is
+  set. Without this key, idealised scenarios fall back to the
+  historical LUC file with a warning.
+- ``member_indices`` (sequence of int): zero-based row indices into
+  the parameter posterior. Defaults to all members.
+- ``max_workers`` (int): forwarded to
   ``DistributionRun.run_over_distribution``. Defaults to
-  :func:`openscm_runner.settings.get_worker_count` with
-  ``CICEROSCM_WORKER_NUMBER`` as the override env var.
-- ``nystart`` / ``nyend`` / ``emstart`` (optional): time bounds.
-  Defaults: ``nystart=1750``,
-  ``nyend=max(scenario_year)``. ``emstart`` is auto-derived in
-  bundle mode (1850 for ``esm-allghg-*``; ``nyend`` for other
-  emissions-driven and all concentration-driven runs, matching
-  Marit's ``run_full_rcmip_protocol.py``); splice mode keeps the
-  first-user-scenario-year default.
-- ``cicero_conc_run`` (bundle mode, optional): force
-  concentration-driven (``True``) or emissions-driven (``False``).
-  Default is auto-detect from scenario name: ``esm-*`` and
-  ``methanemip-*`` are emissions-driven; everything else (ssp*,
-  scen7-*, 1pctCO2*, abrupt*, hist-*, piControl) is
-  concentration-driven, matching Marit's protocol runner.
-- ``sunvolc`` (optional, default ``1``).
-- Optional pass-through forcing-file overrides: ``rf_sun_file``,
-  ``rf_volc_n_file``, ``rf_volc_s_file``, ``rf_volc_file``,
-  ``rf_luc_file``, ``nat_ch4_file``, ``nat_n2o_file``. In bundle
-  mode these override the per-scenario default lookup.
+  :func:`openscm_runner.settings.get_worker_count` capped at the
+  total number of scheduled jobs (members x scenarios).
+- ``nystart`` / ``nyend`` / ``emstart`` (int): time bounds. Defaults:
+  ``nystart=1750``, ``nyend=max(scenarios time)``,
+  ``emstart=nyend`` in CD mode (so emissions never take over) and
+  ``emstart=1850`` in ED mode.
+- ``sunvolc`` (int): per-cfg override for the
+  ``protocol_natural_forcing`` driven default
+  (``0`` for ``off``, ``1`` for ``on``).
+- ``idtm`` (int): integration timestep. Default ``24``.
 
-**ssp245 fallback note (splice mode only)**
+**Protocol metadata (per-scenario)**
 
-The splice mode's SCENARIODATAGETTER reuses the v1.1.x bundled
-``ssp245_em_RCMIP.txt`` for the historical period and for species
-the user scenario omits (legacy halocarbons CFC-11/12/113/114/115,
-HCFC-22/141b/123/142b, H-1211/1301/2402, CH3Br, CCl4, CH3CCl3, and
-the biomass-burning aerosol subspecies BMB_AEROS_BC /
-BMB_AEROS_OC). For non-ssp245 scenarios this silently uses ssp245
-trajectories. Bundle mode does not have this issue: each scenario's
-own emissions / concentrations file is used directly.
+When the scenarios ScmRun carries ``protocol_natural_forcing`` and
+``protocol_land_use_forcing`` meta columns (the RCMIP3 loader sets
+these), per-scenario natural-forcing and LUC handling is driven by
+them: ``natural_forcing == "off"`` flattens the natural CH4 / N2O
+trajectories to their 1750 value and zeros ``sunvolc``;
+``land_use_forcing == "constant_zero"`` substitutes
+``rf_luc_constant_zero_file`` for ``rf_luc_file`` (or warns if not
+available). When the meta columns are absent, the defaults are
+``natural_forcing="on"`` and ``land_use_forcing="historical"`` (no
+idealised treatment); idealised users should set those meta columns
+on their ScmRun or override at the cfg level.
+
+**Driving mode (per-adapter)**
+
+The adapter-level :class:`~openscm_runner.RunMode` (set via the
+``mode=`` constructor argument or ``CICEROSCMPY2.from_native_distribution(
+mode=...)``) is authoritative for ``conc_run`` and applies uniformly
+to every scenario in the call. The per-cfg ``cicero_conc_run``
+internal flag is derived from this; users should not set it
+directly.
 """
 from __future__ import annotations
 
@@ -123,13 +128,9 @@ from scmdata import ScmRun, run_append
 from ..._run_mode import RunMode
 from ...settings import config
 from ..base import _Adapter
-from ..ciceroscm_py_adapter.make_scenario_data import SCENARIODATAGETTER
 from ._compat import HAS_CICEROSCM_PY2, _ciceroscm_major_version, cscmpy2
 
 try:
-    # `get_worker_count` lands with the SLURM-aware worker sizing PR
-    # (modernisation/worker-counts); fall through to the simpler env-
-    # var lookup when reviewing this branch alone against main.
     from ...settings import get_worker_count
 except ImportError:  # pragma: no cover
     def get_worker_count(override_env_var: str | None = None) -> int:
@@ -138,24 +139,72 @@ except ImportError:  # pragma: no cover
             return max(int(val), 1)
         return max(os.cpu_count() or 1, 1)
 
+
 LOGGER = logging.getLogger(__name__)
 
-# Bundled historical emissions used by the SCENARIODATAGETTER splice
-# (CICERO-SCM expects emissions starting from nystart). Lives under
-# the v1.1.x adapter's utils_templates directory and is reused here to
-# avoid a redundant copy; if you need a different historical baseline,
-# fork SCENARIODATAGETTER to accept an explicit path.
-_BUNDLED_HISTORICAL_DIR = os.path.join(
-    os.path.dirname(__file__), "..", "ciceroscm_adapter", "utils_templates"
-)
+
+# Translate openscm-runner ``Atmospheric Concentrations|{species}``
+# names to the CICERO-SCM species labels (mostly identical apart from
+# hyphens in halocarbon names). Used by
+# :func:`_build_hybrid_concentrations_data` to overlay user-supplied
+# concentrations on the bundle's ``historical_conc`` baseline.
+_OPENSCM_TO_CICERO_CONC = {
+    "CFC11": "CFC-11",
+    "CFC12": "CFC-12",
+    "CFC113": "CFC-113",
+    "CFC114": "CFC-114",
+    "CFC115": "CFC-115",
+    "HCFC22": "HCFC-22",
+    "HCFC141b": "HCFC-141b",
+    "HCFC142b": "HCFC-142b",
+    "Halon1211": "H-1211",
+    "Halon1301": "H-1301",
+    "Halon2402": "H-2402",
+}
+
+
+# Canonical filenames inside a CICEROSCM v2.x calibration directory,
+# tied to the v2024 WMO-added-new gaspam endpoint. These are the
+# defaults :meth:`CICEROSCMPY2.from_native_distribution` looks for;
+# every one is overridable via a cfg keyword to the classmethod. The
+# defaults match Marit's ``cscm-calibrate@ben_rcmip_sandbox``
+# ``rcmip-march2026`` layout; Zenodo-published bundles for AR7 use
+# follow the same convention.
+_DEFAULT_CANONICAL_FILES: dict[str, str] = {
+    "gaspam_file": "gases_vupdate_2024_WMO_added_new.txt",
+    "historical_em_file": (
+        "historical_em_gases_vupdate_2024_WMO_added_new.txt"
+    ),
+    "historical_conc_file": (
+        "historical_conc_gases_vupdate_2024_WMO_added_new.txt"
+    ),
+    "nat_ch4_file": (
+        "natemis_CH4_ode_method_from_March2026_vupdate_2024_WMO_added_new.txt"
+    ),
+    "nat_n2o_file": (
+        "natemis_N2O_ode_method_from_March2026_vupdate_2024_WMO_added_new.txt"
+    ),
+    "rf_solar_file": "solar_RCMIP_historical_RCMIP3.txt",
+    "rf_volc_file": "VOLC_RCMIP_historical_RCMIP3.txt",
+    "rf_luc_file": "LUCalbedo_RCMIP_historical_RCMIP3.txt",
+}
+# Idealised LUC handling for CICEROSCM mirrors FaIR's runtime approach
+# (see fair2_adapter._fill_natural_forcings): the calibration bundle
+# ships ONE LUC file (the historical+projection trajectory), and the
+# adapter builds an in-memory zeros DataFrame at run time for any
+# scenario whose ``protocol_land_use_forcing`` metadata is
+# ``"constant_zero"``. No alternate bundle file is needed.
 
 
 class CICEROSCMPY2(_Adapter):
     """
-    Adapter for running CICERO-SCM v2.x with a parameter-distribution JSON.
+    Adapter for CICERO-SCM v2.x with a parameter-distribution JSON.
 
     Registered under ``model_name = "CICERO-SCM-PY2"`` (distinct from
     the existing ``"CICERO-SCM-PY"`` which wraps v1.1.x).
+
+    See module docstring for the supported cfg sidecar keys and
+    construction patterns.
     """
 
     model_name = "CICERO-SCM-PY2"
@@ -186,12 +235,7 @@ class CICEROSCMPY2(_Adapter):
                 "`output_config` not implemented for CICEROSCMPY2"
             )
 
-        # Surface unsupported variables up-front: upstream silently
-        # drops anything not in its reformat mapping, which means a
-        # user who asks for e.g. ``Sea Level Change`` sees an empty
-        # column rather than a clear error.
         from ._output_variables import validate_output_variables
-
         validate_output_variables(output_variables)
 
         from ._upstream_patches import (
@@ -211,36 +255,31 @@ class CICEROSCMPY2(_Adapter):
                 triggering,
             )
 
-        for cfg in cfgs:
-            if "distribution_json" not in cfg:
+        required = (
+            "distribution_json",
+            "gaspam_file",
+            "historical_em_file",
+            "historical_conc_file",
+            "nat_ch4_file",
+            "nat_n2o_file",
+            "rf_solar_file",
+            "rf_volc_file",
+            "rf_luc_file",
+        )
+        for cfg_index, cfg in enumerate(cfgs):
+            missing = [k for k in required if k not in cfg]
+            if missing:
                 raise ValueError(
-                    "CICEROSCMPY2 cfg is missing required sidecar key "
-                    "'distribution_json'. See the adapter docstring for the "
-                    "full list of supported sidecar keys."
+                    f"CICEROSCMPY2 cfg {cfg_index} is missing required "
+                    f"sidecar keys: {missing}. The supported construction "
+                    "path is CICEROSCMPY2.from_native_distribution("
+                    "calibration_dir), which auto-resolves these from "
+                    "canonical filenames inside the calibration directory; "
+                    "see the module docstring for the file patterns. "
+                    "Power users may set each key explicitly."
                 )
-            if "cicero_bundle_dir" in cfg:
-                # Bundle mode: paths derived from the bundle directory.
-                continue
-            # Splice mode: need explicit gaspam + concentrations files.
-            for key in ("gaspam_file", "concentrations_file"):
-                if key not in cfg:
-                    raise ValueError(
-                        f"CICEROSCMPY2 cfg is missing required sidecar key "
-                        f"{key!r}. Either supply gaspam_file + "
-                        "concentrations_file (splice mode) or set "
-                        "cicero_bundle_dir (bundle mode). See the adapter "
-                        "docstring."
-                    )
 
-        # Apply adapter-level driving mode uniformly: ``self.mode`` is
-        # the canonical public surface, the per-cfg ``cicero_conc_run``
-        # boolean is an internal detail. Setting the flag here means
-        # downstream code (``_run_one_distribution`` etc.) keeps
-        # reading the same key it always has, but the protocol
-        # auto-detect-by-scenario-name fallback in those code paths
-        # is bypassed in favour of an explicit user-supplied mode.
         cfgs = [_with_mode_applied(cfg, self.mode) for cfg in cfgs]
-
         results = []
         for cfg_index, cfg in enumerate(cfgs):
             LOGGER.info(
@@ -267,35 +306,41 @@ class CICEROSCMPY2(_Adapter):
         **cfg_overrides: Any,
     ) -> "CICEROSCMPY2":
         """
-        Construct from a CICERO-SCM 2.x bundle on disk.
+        Construct from a CICERO-SCM 2.x calibration directory.
 
-        The bundle directory is Marit's ``rcmip-march2026`` layout
-        (or equivalent): the per-scenario CICERO-format inputs live
-        directly under the directory, and a parameter posterior JSON
-        lives there alongside them. The classmethod auto-locates the
-        JSON (a single ``*distribution*.json`` in the directory) and
-        wires the bundle directory into the cfg.
+        The calibration directory carries the gaspam, historical_em /
+        historical_conc baselines, natural CH4 / N2O emissions, default
+        solar / volcanic / LUC forcing files, and a parameter posterior
+        JSON. The classmethod resolves each by canonical filename glob
+        (see ``_CANONICAL_FILE_PATTERNS``) and writes the resolved
+        paths into a single cfg dict.
+
+        Per-scenario emissions / concentration files in the directory
+        (e.g. ``{scen}_em_*``, ``{scen}_conc_*``) are NOT read; the
+        scenarios DataFrame passed to :meth:`run` is the source of
+        truth for per-scenario inputs. Translate any reference bundle
+        into openscm-runner format on the application side and pass it
+        in via ``scenarios``.
 
         Parameters
         ----------
         native_distribution_path
-            Bundle directory root.
+            Calibration directory root.
         mode
-            Driving mode. Maps to ``cicero_conc_run`` on the cfg.
+            Driving mode. Maps to ``cicero_conc_run`` internally.
         distribution_json
             Optional explicit path to the parameter posterior JSON.
-            Defaults to the single ``*distribution*.json`` in the
-            bundle directory.
+            Defaults to the single ``*distribution*.json`` or
+            ``draw_samples_*.json`` in the directory.
         member_indices
             Optional zero-based row indices into the parameter
             posterior. ``None`` (default) selects all members.
         output_variables, output_config
             Forwarded to the adapter constructor.
         **cfg_overrides
-            Forwarded as keys on the single bundle cfg dict. Useful
-            keys: ``cicero_gases_ep``, ``nystart``, ``nyend``,
-            ``emstart``, ``sunvolc``, and the optional
-            forcing-file overrides documented in the class docstring.
+            Forwarded as keys on the cfg dict, overriding any
+            auto-resolved canonical filenames. Use this to point a
+            specific input at a non-canonical location.
 
         Returns
         -------
@@ -304,38 +349,46 @@ class CICEROSCMPY2(_Adapter):
         """
         from pathlib import Path
 
-        bundle_dir = Path(native_distribution_path)
-        if not bundle_dir.exists():
+        cal_dir = Path(native_distribution_path)
+        if not cal_dir.exists():
             raise FileNotFoundError(
-                f"CICERO-SCM bundle directory not found: {bundle_dir}"
+                f"CICERO-SCM calibration directory not found: {cal_dir}"
             )
-        if not bundle_dir.is_dir():
+        if not cal_dir.is_dir():
             raise FileNotFoundError(
-                f"CICERO-SCM bundle path is not a directory: {bundle_dir}"
+                f"CICERO-SCM calibration path is not a directory: {cal_dir}"
             )
 
-        if distribution_json is None:
-            candidates = sorted(bundle_dir.glob("*distribution*.json"))
-            if not candidates:
+        cfg: dict[str, Any] = {}
+        for key, fname in _DEFAULT_CANONICAL_FILES.items():
+            # Skip the canonical-file existence check for any key the
+            # caller is overriding via ``**cfg_overrides``. The whole
+            # point of an override is to point at a non-canonical
+            # location, so missing the canonical file in ``cal_dir``
+            # is not an error in that case.
+            if key in cfg_overrides:
+                continue
+            candidate = cal_dir / fname
+            if not candidate.is_file():
                 raise FileNotFoundError(
-                    f"No ``*distribution*.json`` in {bundle_dir}; pass "
-                    "``distribution_json`` explicitly to "
-                    "CICEROSCMPY2.from_native_distribution."
+                    f"CICEROSCMPY2.from_native_distribution: canonical "
+                    f"file for {key!r} not found in {cal_dir}: "
+                    f"expected {fname!r}. The calibration directory "
+                    "must follow the cscm-calibrate rcmip-march2026 "
+                    "layout (canonical filenames anchored on the "
+                    "v2024 WMO-added-new gaspam endpoint), or pass an "
+                    f"explicit {key}=... cfg override pointing at "
+                    "the actual file location."
                 )
-            if len(candidates) > 1:
-                raise ValueError(
-                    f"Multiple ``*distribution*.json`` files in {bundle_dir}: "
-                    f"{[c.name for c in candidates]}. Pass "
-                    "``distribution_json`` explicitly to disambiguate."
-                )
-            distribution_json = candidates[0]
+            cfg[key] = str(candidate)
 
-        cfg: dict[str, Any] = {
-            "distribution_json": str(distribution_json),
-            "cicero_bundle_dir": str(bundle_dir),
-        }
+        if distribution_json is None and "distribution_json" not in cfg_overrides:
+            distribution_json = _resolve_distribution_json(cal_dir)
+        if distribution_json is not None:
+            cfg["distribution_json"] = str(distribution_json)
+
         if member_indices is not None:
-            cfg["member_indices"] = member_indices
+            cfg["member_indices"] = list(member_indices)
         cfg.update(cfg_overrides)
 
         return cls(
@@ -350,7 +403,6 @@ class CICEROSCMPY2(_Adapter):
         """Return the installed ciceroscm version (e.g. ``"2.1.0"``)."""
         if not HAS_CICEROSCM_PY2:
             import sys as _sys
-
             raise ImportError(
                 "ciceroscm is not installed (this Python interpreter "
                 f"is {_sys.version.split()[0]}; ciceroscm 2.x requires "
@@ -358,13 +410,41 @@ class CICEROSCMPY2(_Adapter):
                 "or 'pip install openscm-runner[ciceroscmpy2]'."
             )
         from importlib.metadata import PackageNotFoundError, version
-
         try:
             return version("ciceroscm")
         except PackageNotFoundError:
-            # Fall back to runtime __version__ (a setuptools_scm dev
-            # string for source installs); better than nothing.
             return cscmpy2.__version__
+
+
+# ---------------------------------------------------------------------------
+# Calibration-directory helpers
+# ---------------------------------------------------------------------------
+
+
+def _resolve_distribution_json(cal_dir) -> str:
+    """Locate the parameter posterior JSON in ``cal_dir``."""
+    from pathlib import Path
+
+    for pat in ("*distribution*.json", "draw_samples_*.json"):
+        matches = sorted(Path(cal_dir).glob(pat))
+        if len(matches) == 1:
+            return str(matches[0])
+        if len(matches) > 1:
+            raise ValueError(
+                f"CICEROSCMPY2.from_native_distribution: multiple "
+                f"{pat!r} files in {cal_dir}: {[m.name for m in matches]}. "
+                "Pass ``distribution_json=...`` explicitly to disambiguate."
+            )
+    raise FileNotFoundError(
+        f"CICEROSCMPY2.from_native_distribution: no parameter posterior "
+        f"JSON in {cal_dir} (expected *distribution*.json or "
+        "draw_samples_*.json). Pass ``distribution_json=...`` explicitly."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Run dispatch
+# ---------------------------------------------------------------------------
 
 
 def _with_mode_applied(cfg: dict[str, Any], mode: RunMode) -> dict[str, Any]:
@@ -372,11 +452,7 @@ def _with_mode_applied(cfg: dict[str, Any], mode: RunMode) -> dict[str, Any]:
     Inject the adapter-level ``mode`` into a cfg as the internal
     ``cicero_conc_run`` flag.
 
-    Returns a new dict; the caller's cfg is not mutated. Overrides
-    any pre-existing per-cfg ``cicero_conc_run`` because the
-    adapter-level mode is authoritative under the AdapterLike
-    reshape; the protocol auto-detect-by-scenario-name fallback in
-    the downstream code paths is bypassed.
+    Returns a new dict; the caller's cfg is not mutated.
     """
     new = dict(cfg)
     new["cicero_conc_run"] = mode == RunMode.CONCENTRATION_DRIVEN
@@ -400,7 +476,6 @@ def _run_one_distribution(scenarios, cfg: dict[str, Any], output_variables) -> S
             f"{distribution_json}"
         )
 
-    # Validate cheap cfg invariants before doing scenariodata work.
     member_indices = cfg.get("member_indices")
     if member_indices is not None:
         member_indices = list(member_indices)
@@ -413,16 +488,19 @@ def _run_one_distribution(scenarios, cfg: dict[str, Any], output_variables) -> S
 
     scendata_list = _build_scendata_list(scenarios, cfg)
 
-    # distro_config is unused when json_file_name exists (upstream
-    # checks os.path.exists before falling back to .make_config_lists).
     dist = DistributionRun(distro_config=None, json_file_name=distribution_json)
-
     if member_indices is not None:
         dist.cfgs = [dist.cfgs[i] for i in member_indices]
 
     max_workers = cfg.get("max_workers")
     if max_workers is None:
         max_workers = get_worker_count("CICEROSCM_WORKER_NUMBER")
+    # Cap at the total job count. Starting more workers than jobs
+    # wastes setup cost; on macOS, idle workers also race-condition on
+    # stdout capture inside CICEROSCM's Fortran-init path and trip a
+    # BrokenProcessPool for small ensembles.
+    n_jobs = max(1, len(dist.cfgs) * len(scendata_list))
+    max_workers = max(1, min(max_workers, n_jobs))
 
     LOGGER.info(
         "CICEROSCMPY2 dispatching %d members x %d scenarios with "
@@ -435,186 +513,167 @@ def _run_one_distribution(scenarios, cfg: dict[str, Any], output_variables) -> S
     result = dist.run_over_distribution(
         scendata_list, list(output_variables), max_workers=max_workers
     )
-    # DistributionRun returns a pandas DataFrame (concatenated upstream);
-    # wrap it as ScmRun so the adapter's caller gets the documented type.
     return ScmRun(result) if not isinstance(result, ScmRun) else result
 
 
-def _build_scendata_list(scenarios, cfg: dict[str, Any]) -> list[dict[str, Any]]:
-    """
-    Convert ``scenarios`` into the list of dicts upstream expects.
-
-    Dispatches on the presence of ``cicero_bundle_dir`` in ``cfg``:
-
-    * Bundle mode: paths are resolved per-scenario from the bundle
-      directory (Marit-aligned setup). The user's ScmRun is used only
-      to enumerate scenario names and pick the end year.
-    * Splice mode: legacy path that uses SCENARIODATAGETTER to splice
-      the user's ScmRun on top of the bundled ssp245 historical
-      emissions.
-    """
-    if cfg.get("cicero_bundle_dir") is not None:
-        return _build_scendata_list_bundle(scenarios, cfg)
-    return _build_scendata_list_splice(scenarios, cfg)
+# ---------------------------------------------------------------------------
+# Scendata builder (scenarios-driven, single mode)
+# ---------------------------------------------------------------------------
 
 
-def _build_scendata_list_splice(
+def _build_scendata_list(
     scenarios, cfg: dict[str, Any]
 ) -> list[dict[str, Any]]:
     """
-    Splice-mode scendata builder.
+    Build the per-scenario scendata dicts upstream's
+    ``DistributionRun.run_over_distribution`` expects.
 
-    One dict per (model, scenario) pair. Emissions are built by
-    SCENARIODATAGETTER (v1.1.x-inherited), which splices user emissions
-    on top of the bundled ssp245 historical.
+    For each scenario name in ``scenarios``, builds a scendata dict
+    pointing at the calibration directory's baselines plus an
+    in-memory ``emissions_data`` (ED) or ``concentrations_data``
+    (CD) DataFrame derived from the user's ``Emissions|*`` or
+    ``Atmospheric Concentrations|*`` rows overlaid on the
+    corresponding baseline.
+
+    Reads the scenarios ScmRun's ``protocol_natural_forcing`` and
+    ``protocol_land_use_forcing`` meta columns (when present) to
+    drive per-scenario natural-forcing and LUC handling; otherwise
+    defaults to the non-idealised settings.
     """
-    if scenarios is None:
-        raise ValueError(
-            "CICEROSCMPY2 splice mode requires `scenarios` to be provided "
-            "(an emissions ScmRun). Set cicero_bundle_dir to run from a "
-            "pre-built bundle without user emissions instead."
-        )
-
-    # Splice mode uses a v1.1.x-era ssp245 historical that does not match
-    # v2.x calibrations (e.g. draw_samples_500), so present-day warming
-    # comes out 0.3-0.5 K too high relative to bundle mode and the
-    # reference protocol. Bundle mode is the supported path for any
-    # scientifically defensible run; this warning fires once per run so
-    # the bias is not silent. See module docstring for the diagnosis.
-    LOGGER.warning(
-        "CICEROSCMPY2: running in splice mode. Splice mode overlays "
-        "user emissions on the v1.1.x-bundled ssp245 historical, which "
-        "does not match v2.x calibrations and produces a present-day "
-        "warm bias of ~0.3-0.5 K. Use bundle mode (set "
-        "`cicero_bundle_dir` to a Marit-RCMIP-aligned directory) for "
-        "any scientifically defensible run. See the CICEROSCMPY2 "
-        "adapter module docstring for details."
-    )
-
     nystart = int(cfg.get("nystart", 1750))
+    if scenarios is None or scenarios.empty:
+        raise ValueError(
+            "CICEROSCMPY2 needs a non-empty scenarios ScmRun. "
+            "Construct it via openscm_runner.scenarios.load_rcmip3_* "
+            "or hand-build with Emissions|* (ED) / "
+            "Atmospheric Concentrations|* (CD) rows."
+        )
     scenario_years = scenarios.time_points.years()
     nyend = int(cfg.get("nyend", max(scenario_years)))
-    emstart = int(cfg.get("emstart", min(scenario_years)))
-    sunvolc_cfg = cfg.get("sunvolc")
+    scenario_names = sorted(set(scenarios["scenario"]))
 
-    sdatagetter = SCENARIODATAGETTER(_BUNDLED_HISTORICAL_DIR, nystart, nyend)
+    conc_run_global = bool(cfg.get("cicero_conc_run", False))
+    if "emstart" in cfg:
+        default_emstart = int(cfg["emstart"])
+    elif conc_run_global:
+        default_emstart = nyend
+    else:
+        default_emstart = 1850
+
+    sunvolc_override = cfg.get("sunvolc")
+
+    nat_ch4_df = _load_natemis_dataframe(cfg["nat_ch4_file"], "CH4", nystart)
+    nat_n2o_df = _load_natemis_dataframe(cfg["nat_n2o_file"], "N2O", nystart)
 
     scendata_list: list[dict[str, Any]] = []
-    timeseries = scenarios.timeseries(time_axis="year")
-    for (scenario_name, model_name), scen_df in timeseries.groupby(
-        ["scenario", "model"]
-    ):
-        emissions_df = sdatagetter.get_scenario_data(scen_df, nystart)
+    for scenario_name in scenario_names:
         spec = _resolve_protocol_spec(scenarios, scenario_name)
-        if sunvolc_cfg is not None:
-            scen_sunvolc = int(sunvolc_cfg)
+        natural_off = spec["natural_forcing"] == "off"
+        lu_zero = spec["land_use_forcing"] == "constant_zero"
+
+        scenarios_have_em = (
+            not scenarios.filter(
+                scenario=scenario_name,
+                variable="Emissions|*",
+                log_if_empty=False,
+            ).empty
+        )
+        scenarios_have_conc = (
+            not scenarios.filter(
+                scenario=scenario_name,
+                variable="Atmospheric Concentrations|*",
+                log_if_empty=False,
+            ).empty
+        )
+
+        scen_emstart = default_emstart
+        if sunvolc_override is not None:
+            scen_sunvolc = int(sunvolc_override)
         else:
-            scen_sunvolc = 0 if spec["natural_forcing"] == "off" else 1
+            scen_sunvolc = 0 if natural_off else 1
+
+        if natural_off:
+            scen_nat_ch4 = _flatten_natemis_to_preindustrial(nat_ch4_df)
+            scen_nat_n2o = _flatten_natemis_to_preindustrial(nat_n2o_df)
+        else:
+            scen_nat_ch4 = nat_ch4_df
+            scen_nat_n2o = nat_n2o_df
+
+        idealised = natural_off and lu_zero
+        em_data = _build_hybrid_emissions_data(
+            scenarios=scenarios,
+            scenario_name=scenario_name,
+            baseline_em_file=cfg["historical_em_file"],
+            nystart=nystart,
+            nyend=nyend,
+            emstart=scen_emstart,
+            zero_unsupplied=idealised,
+        )
+
+        conc_data = None
+        if conc_run_global and scenarios_have_conc:
+            conc_data = _build_hybrid_concentrations_data(
+                scenarios=scenarios,
+                scenario_name=scenario_name,
+                baseline_conc_path=cfg["historical_conc_file"],
+                nystart=nystart,
+                nyend=nyend,
+                hold_unsupplied_at_pi=idealised,
+            )
+
         scendata: dict[str, Any] = {
             "nystart": nystart,
             "nyend": nyend,
-            "emstart": emstart,
+            "emstart": scen_emstart,
             "sunvolc": scen_sunvolc,
+            "conc_run": conc_run_global,
+            "idtm": int(cfg.get("idtm", 24)),
             "scenname": scenario_name,
             "gaspam_file": cfg["gaspam_file"],
-            "concentrations_file": cfg["concentrations_file"],
-            "emissions_data": emissions_df,
+            "emissions_data": em_data,
+            "rf_solar_file": cfg["rf_solar_file"],
+            "rf_volc_file": cfg["rf_volc_file"],
+            "nat_ch4_data": scen_nat_ch4.loc[
+                : min(nyend, scen_nat_ch4.index.max())
+            ],
+            "nat_n2o_data": scen_nat_n2o.loc[
+                : min(nyend, scen_nat_n2o.index.max())
+            ],
         }
-        # Pass through any explicit forcing-file overrides if the user
-        # wants to replace ciceroscm's bundled solar / volcanic / LUC
-        # data. Forwarded as-is; CICEROSCM validates these on init.
-        for opt_key in (
-            "rf_sun_file", "rf_volc_n_file", "rf_volc_s_file",
-            "rf_volc_file", "rf_luc_file", "nat_ch4_file", "nat_n2o_file",
-        ):
-            if opt_key in cfg:
-                scendata[opt_key] = cfg[opt_key]
+        # LUC: mirror FaIR's runtime mask. Non-idealised scenarios use
+        # the bundle's historical file as-is; idealised scenarios get a
+        # zeros DataFrame matching the simulation window (same effect
+        # as FaIR's ``zero_land_use_scenarios`` mask, without needing a
+        # separate ``constant_zero`` bundle file).
+        if lu_zero:
+            import pandas as pd
+            scendata["rf_luc_data"] = pd.DataFrame(
+                {0: [0.0] * (nyend - nystart + 1)},
+                index=range(nystart, nyend + 1),
+            )
+        else:
+            scendata["rf_luc_file"] = cfg["rf_luc_file"]
+        if conc_data is not None:
+            scendata["concentrations_data"] = conc_data
+        else:
+            scendata["concentrations_file"] = cfg["historical_conc_file"]
+
         LOGGER.debug(
-            "CICEROSCMPY2 splice scendata for scenario=%s model=%s years=%d-%d",
-            scenario_name,
-            model_name,
-            nystart,
-            nyend,
+            "CICEROSCMPY2 scendata scenario=%s years=%d-%d emstart=%d "
+            "conc_run=%s natural_off=%s lu_zero=%s "
+            "em_overlay=%s conc_overlay=%s",
+            scenario_name, nystart, nyend, scen_emstart,
+            conc_run_global, natural_off, lu_zero,
+            scenarios_have_em, conc_data is not None,
         )
         scendata_list.append(scendata)
 
     return scendata_list
 
 
-# Default natural-emissions filenames in Marit's bundle layout.
-_DEFAULT_NATEMIS_CH4 = (
-    "natemis_CH4_ode_method_from_March2026_vupdate_2024_WMO_added_new.txt"
-)
-_DEFAULT_NATEMIS_N2O = (
-    "natemis_N2O_ode_method_from_March2026_vupdate_2024_WMO_added_new.txt"
-)
-# Default gaspam-name suffix used in scenario file lookups.
-_DEFAULT_GASES_EP = "gases_vupdate_2024_WMO_added_new.txt"
-
-
-def _pick_bundle_file(bundle_dir, candidates: list[str]) -> str:
-    """
-    Return the first existing path from ``candidates`` under ``bundle_dir``.
-
-    Mirrors the historical-fallback logic in Marit's
-    ``run_full_rcmip_protocol.make_scenariodata_argdict``: try the
-    scenario-specific name first, fall back to ``historical``.
-    """
-    for name in candidates:
-        p = os.path.join(bundle_dir, name)
-        if os.path.exists(p):
-            return p
-    raise FileNotFoundError(
-        f"None of these files exist in {bundle_dir}: {candidates}"
-    )
-
-
-def _find_bundle_file(bundle_dir, candidates: list[str]) -> str | None:
-    """Like :func:`_pick_bundle_file` but returns ``None`` instead of raising."""
-    for name in candidates:
-        p = os.path.join(bundle_dir, name)
-        if os.path.exists(p):
-            return p
-    return None
-
-
-def _bundle_basename_candidates(scenario_name: str) -> list[str]:
-    """Ordered fallback basenames for ``{scenario}_em_/conc_`` resolution.
-
-    The CICEROSCM bundle uses BARE scenario names for its ``_em_*`` /
-    ``_conc_*`` files. Protocol ED/CD/CO2-only/all-GHG distinctions live
-    in cfg rather than the filename, so e.g. ``ssp245_em_*`` is the
-    shared file for ``ssp245`` (CD), ``esm-ssp245`` (ED CO2-only), and
-    ``esm-allGHG-ssp245`` (ED all-GHG). This helper produces the
-    candidate basenames to try in order:
-
-    - ``esm-allGHG-X`` -> ``[esm-allGHG-X, esm-X, X]``: the first is for
-      the rare scenario-specific file (e.g. the CH4-swap variants), the
-      second falls back to the CO2-only ED file if shipped, and the
-      third lands on the bare bundle file.
-    - ``esm-X`` -> ``[esm-X, X]``: try the explicit ED file first, then
-      the bare bundle file.
-    - ``scen7-XC`` (CD suffix) -> ``[scen7-XC, scen7-X]``: the bundle's
-      ``scen7-H_conc_*`` is the right trajectory for ``scen7-HC``.
-
-    For ``_em_*`` resolution the caller may also need to prefer hybrid
-    mode (loader's masked ScmRun) over a stripped bundle file when the
-    scenario is ED-CO2-only — see the caller for that logic.
-    """
-    candidates = [scenario_name]
-    if scenario_name.startswith("esm-allGHG-"):
-        rest = scenario_name[len("esm-allGHG-"):]
-        candidates.append(f"esm-{rest}")
-        candidates.append(rest)
-    elif scenario_name.startswith("esm-"):
-        candidates.append(scenario_name[len("esm-"):])
-    if (
-        scenario_name.startswith("scen7-")
-        and scenario_name.endswith("C")
-        and not scenario_name.startswith("esm-")
-    ):
-        candidates.append(scenario_name[:-1])
-    return candidates
+# ---------------------------------------------------------------------------
+# Hybrid baseline + overlay helpers
+# ---------------------------------------------------------------------------
 
 
 def _load_natemis_dataframe(path: str, component: str, nystart: int):
@@ -638,18 +697,17 @@ def _load_natemis_dataframe(path: str, component: str, nystart: int):
 
 
 def _flatten_natemis_to_preindustrial(natemis_df, anchor_year: int = 1750):
-    """Hold natural emissions constant at the pre-industrial value.
+    """
+    Hold natural emissions constant at the pre-industrial value.
 
     For RCMIP3 idealised scenarios (esm-flat*, esm-bell*, esm-pi-*,
     esm-1pct-*, 1pctCO2*, abrupt-*) the protocol prescribes constant
-    pre-industrial non-CO2 forcing. The bundled natemis_CH4/_N2O
+    pre-industrial non-CO2 forcing. The bundled natemis_CH4 / N2O
     files carry a historical trajectory through 2022 then jump
     discontinuously to a flat 2024+ value (252 -> 280.65 Tg/yr for
     CH4); both the historical drift and the jump pollute the
-    idealised diagnostics. This helper returns a copy of the natemis
-    DataFrame with every row replaced by the ``anchor_year`` (1750)
-    value, so CICERO sees a true pre-industrial natural-emissions
-    baseline for the whole 1750-2500 window.
+    idealised diagnostics. This helper returns a copy with every row
+    replaced by the ``anchor_year`` (1750) value.
     """
     if anchor_year not in natemis_df.index:
         anchor_year = int(natemis_df.index.min())
@@ -665,16 +723,13 @@ def _cicero_unit_to_pint(cicero_unit_raw: str, cicero_species: str) -> str:
     Translate a CICERO gaspam EM_UNIT token to an openscm-units string.
 
     Mirrors :meth:`COMMONSFILEWRITER.initialize_units_comps` (the
-    v1.1.x adapter's shared helper) so the same per-yr unit strings
-    are used for conversion.
+    v1.1.x adapter's helper).
 
-    - ``"Pg_C"``  -> ``"PgC / yr"``  (and the CO2 / CO2_lu species
-      both use this; openscm-units handles the carbon-mass-vs-CO2
-      conversion via the carbon context)
-    - ``"Tg_N"`` for N2O is the AR-specific N2ON convention -> ``"TgN2ON / yr"``
-    - ``"Tg_SO2"``, ``"Tg_C"`` etc. -> just strip the underscore
+    - ``"Pg_C"``  -> ``"PgC / yr"``  (CO2 / CO2_lu)
+    - ``"Tg_N"`` for N2O is the AR convention -> ``"TgN2ON / yr"``
+    - ``"Tg_SO2"``, ``"Tg_C"`` etc. -> strip the underscore
     - ``"Tg"`` / ``"Mt"`` / ``"Gg"`` with no underscore -> append the
-      species name (e.g. ``"Gg"`` for ``HFC125`` -> ``"GgHFC125 / yr"``)
+      species name
     """
     if cicero_species == "N2O" and cicero_unit_raw == "Tg_N":
         return "TgN2ON / yr"
@@ -684,58 +739,64 @@ def _cicero_unit_to_pint(cicero_unit_raw: str, cicero_species: str) -> str:
     return f"{cicero_unit_raw}{comp_str} / yr"
 
 
-def _build_hybrid_emissions_data(  # noqa: PLR0913
+def _build_hybrid_emissions_data(
     scenarios,
     scenario_name: str,
-    bundle_dir: str,
-    gases_ep: str,
+    baseline_em_file: str,
     nystart: int,
     nyend: int,
     emstart: int,
+    zero_unsupplied: bool = False,
 ):
     """
-    Build a CICERO-format emissions DataFrame for a novel scenario.
+    Build a CICERO-format emissions DataFrame for one scenario.
 
-    Bundle mode normally picks `{scen}_em_{gases_ep}` from the bundle
-    directly. When a user passes a ScmRun for a scenario that has no
-    such bundle file (e.g. an AR7 IAM output), this helper overlays
-    the user's emissions on top of the bundle's ``historical_em``
-    instead, mapping openscm-runner variable names to CICERO species
-    via :data:`cicero_comp_dict` (the same mapping the v1.1.x
-    SCENARIODATAGETTER uses) and converting units through
-    openscm-units.
+    Reads ``baseline_em_file`` as the species-coverage and
+    historical-trajectory source, then overlays the user's
+    ``Emissions|*`` rows for ``scenario_name`` from year ``emstart``
+    onwards, mapping openscm-runner variable names to CICERO species
+    via the v1.1.x ``cicero_comp_dict`` and converting units through
+    openscm-units. Returns a DataFrame indexed by year (nystart to
+    nyend) with CICERO species as columns, ready to hand to upstream
+    via the ``emissions_data`` scendata key.
 
-    Returns a DataFrame indexed by year (``nystart`` to ``nyend``)
-    with CICERO species as columns, suitable for passing through to
-    CICERO via the ``emissions_data`` scendata key. Species the user
-    doesn't supply stay at the bundle's historical value (held forward
-    past the historical file's extent, since the bundle's
-    ``historical_em`` already extends to 2500 with last-value-forward
-    constant filling, this is effectively the bundle author's
-    decision).
+    Species the user doesn't supply stay at the baseline's value
+    (held forward past the baseline's extent — the canonical
+    ``historical_em_*`` from cscm-calibrate already extends to 2500
+    with last-value-forward constant filling).
+
+    Parameters
+    ----------
+    zero_unsupplied
+        When ``True``, every species column the user does NOT supply
+        is overwritten with ``0.0`` across the whole ``[nystart, nyend]``
+        window. This is the RCMIP3-idealised semantic (esm-flat*,
+        esm-bell*, esm-pi-*, 1pctCO2*, abrupt-*) for the
+        *anthropogenic* emissions surface: only CO2 varies, every other
+        anthropogenic species sees no flux. Matches Marit's bundle
+        files (``esm-flat10_em_*`` holds non-CO2 at 0, not at the
+        1750 anthropogenic value) and mirrors FaIR's
+        ``co2_only_scenarios`` runtime mask. Natural CH4 / N2O
+        emissions are handled separately via the natemis flatten, so
+        the combined per-scenario emissions reaching CICEROSCM are
+        ``zero anthropogenic + PI-flat natural`` (= effective
+        pre-industrial total). Default ``False`` (non-idealised
+        scenarios pick up the baseline's historical trajectory for
+        non-overridden species).
     """
     import pandas as pd
     from openscm_units import unit_registry as ureg
 
     from ..utils.cicero_utils.make_scenario_common import cicero_comp_dict
 
-    hist_path = os.path.join(bundle_dir, f"historical_em_{gases_ep}")
-
-    # Read the file. Same parsing the v1.1.x _read_ssp245_em uses
-    # (4 header rows, tab delim, strip column-name whitespace, rename
-    # the duplicate CO2 columns to FFI / AFOLU).
     df = (
         pd.read_csv(
-            hist_path, delimiter="\t", index_col=0, skiprows=[1, 2, 3]
+            baseline_em_file, delimiter="\t", index_col=0, skiprows=[1, 2, 3]
         )
         .rename(columns=lambda x: x.strip())
         .astype(float)
     )
     df.index = df.index.astype(int)
-    # After strip(), the second CO2 column comes through as
-    # "CO2 .1" (internal space + pandas-disambiguating ".1") because
-    # the original header is " CO2 \t CO2 \t CH4 ..." - lambda strip
-    # only removes leading / trailing whitespace. Match both forms.
     df.columns = [
         "CO2_FF" if c == "CO2"
         else "CO2_AFOLU" if c in ("CO2.1", "CO2 .1")
@@ -743,27 +804,26 @@ def _build_hybrid_emissions_data(  # noqa: PLR0913
         for c in df.columns
     ]
 
-    # Pull per-column units from the file's "Unit" header (row 2).
-    with open(hist_path) as fh:
-        _ = next(fh)  # Component row (we already have columns)
+    with open(baseline_em_file) as fh:
+        _ = next(fh)
         unit_line = next(fh)
     unit_tokens = [t.strip() for t in unit_line.rstrip("\n").split("\t")]
     column_units = dict(zip(df.columns, unit_tokens[1:]))
 
     df = df.loc[nystart:nyend].copy()
 
-    user_filtered = scenarios.filter(scenario=scenario_name)
+    user_filtered = scenarios.filter(
+        scenario=scenario_name, log_if_empty=False,
+    )
     if user_filtered.empty:
         return df
 
     user_ts = user_filtered.timeseries(time_axis="year")
     user_ts.columns = user_ts.columns.astype(int)
-
-    # Map CICERO short names in cicero_comp_dict to the renamed
-    # columns in df (CO2 / CO2_lu -> CO2_FF / CO2_AFOLU).
     cicero_to_df_col = {"CO2": "CO2_FF", "CO2_lu": "CO2_AFOLU"}
 
     overlaid: list[str] = []
+    overlaid_df_cols: set[str] = set()
     skipped_unmapped: list[str] = []
     for cicero_species, (openscm_suffix, factor) in cicero_comp_dict.items():
         col = cicero_to_df_col.get(cicero_species, cicero_species)
@@ -778,10 +838,6 @@ def _build_hybrid_emissions_data(  # noqa: PLR0913
         cicero_unit_pint = _cicero_unit_to_pint(
             column_units[col], cicero_species
         )
-        # Some species need a unit-conversion context (NOx mass-N vs
-        # mass-NO2; NH3 mass-N vs mass-NH3). openscm-units exposes
-        # these via ScmRun.convert_unit's `context` kwarg; for raw
-        # pint we activate the same registry context manager.
         contexts = {"NOx": "NOx_conversions", "NH3": "NH3_conversions"}
         ctx = contexts.get(cicero_species)
         try:
@@ -789,8 +845,7 @@ def _build_hybrid_emissions_data(  # noqa: PLR0913
                 with ureg.context(ctx):
                     convfactor = (
                         (1.0 * ureg(user_unit))
-                        .to(cicero_unit_pint)
-                        .magnitude
+                        .to(cicero_unit_pint).magnitude
                         * factor
                     )
             else:
@@ -800,98 +855,196 @@ def _build_hybrid_emissions_data(  # noqa: PLR0913
                 )
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.warning(
-                "CICEROSCMPY2 hybrid: skipping species %s (unit "
-                "conversion %s -> %s failed: %s)",
+                "CICEROSCMPY2 hybrid emissions: skipping species %s "
+                "(unit conversion %s -> %s failed: %s)",
                 cicero_species, user_unit, cicero_unit_pint, exc,
             )
             skipped_unmapped.append(cicero_species)
             continue
         for year, val in user_row.items():
-            if (
-                year in df.index
-                and year >= emstart
-                and not pd.isna(val)
-            ):
+            if year in df.index and year >= emstart and not pd.isna(val):
                 df.at[year, col] = val * convfactor
         overlaid.append(cicero_species)
+        overlaid_df_cols.add(col)
+
+    if zero_unsupplied:
+        # Idealised scenarios: zero every non-user-supplied
+        # anthropogenic species across all years. Matches Marit's
+        # bundle files (``esm-flat10_em_*`` carries 0 for non-CO2
+        # everywhere) and mirrors FaIR's runtime ``co2_only_scenarios``
+        # mask. The natemis flatten handles natural CH4 / N2O
+        # separately.
+        zeroed: list[str] = []
+        for col in df.columns:
+            if col in overlaid_df_cols:
+                continue
+            df[col] = 0.0
+            zeroed.append(col)
+        LOGGER.info(
+            "CICEROSCMPY2 hybrid emissions (idealised): zeroed %d "
+            "non-overlaid anthropogenic species (%s).",
+            len(zeroed), zeroed,
+        )
 
     LOGGER.info(
-        "CICEROSCMPY2 hybrid emissions for scenario %r: overlaid "
-        "%d species from user ScmRun (%s); %d skipped on unit "
-        "errors (%s); others use bundle historical_em.",
+        "CICEROSCMPY2 hybrid emissions for scenario %r: overlaid %d "
+        "species from user ScmRun (%s); %d skipped on unit errors "
+        "(%s); others use baseline %s.",
         scenario_name, len(overlaid), overlaid,
         len(skipped_unmapped), skipped_unmapped,
+        os.path.basename(baseline_em_file),
     )
 
     return df
 
 
-def _auto_conc_run(scenario_name: str) -> bool:
+def _build_hybrid_concentrations_data(
+    scenarios,
+    scenario_name: str,
+    baseline_conc_path: str,
+    nystart: int,
+    nyend: int,
+    hold_unsupplied_at_pi: bool = False,
+):
     """
-    Auto-detect whether ``scenario_name`` should run concentration-driven.
+    Build a CICERO-format concentrations DataFrame for one CD scenario.
 
-    Mirrors ``run_full_rcmip_protocol.py``: scenarios starting with
-    ``esm-`` or ``methanemip`` are emissions-driven; everything else
-    (ssp*, scen7-*, 1pctCO2*, abrupt*, hist-*, historical*, piControl)
-    is concentration-driven.
+    Reads ``baseline_conc_path`` as the species-coverage and
+    historical-trajectory source, forward-fills the last available
+    row out to ``nyend``, then overlays the user's
+    ``Atmospheric Concentrations|*`` rows for ``scenario_name`` on
+    top via :data:`_OPENSCM_TO_CICERO_CONC`.
 
-    Legacy name-pattern fallback used by :func:`_resolve_protocol_spec`
-    when the input ScmRun lacks the ``protocol_mode`` meta column.
-    New code should prefer reading that column directly.
+    The full gaspam-species column coverage matters: CICEROSCM's
+    ``_precalculate_concentrations_vanilla_gases`` requires every
+    gaspam-vanilla species to have a column in ``self.conc_in``.
+    Returning the DataFrame for use via the ``concentrations_data``
+    scendata key skips the ``concentrations_file`` reader and its
+    unit check (which we don't need; the DataFrame was built from a
+    gaspam-compatible baseline).
+
+    Parameters
+    ----------
+    hold_unsupplied_at_pi
+        When ``True``, every species column the user does NOT supply
+        is overwritten with the baseline's 1750 (PI) value across the
+        whole ``[nystart, nyend]`` window. This is the RCMIP3-idealised
+        semantic for the *concentrations* surface (1pctCO2*, abrupt-*,
+        piControl): non-CO2 atmospheric content is held at pre-
+        industrial regardless of what the historical baseline says.
+        Matches Marit's bundle files (``1pctCO2_conc_*`` holds CH4 at
+        798.8 ppb, N2O at 271.57 ppb, CFCs at 0 across all years).
+        Asymmetric with the emissions case (which zeros, not PI-holds)
+        because emissions are fluxes and concentrations are state:
+        zero emissions = no anthropogenic flux into the atmosphere;
+        PI-held concentrations = preserve the natural atmospheric
+        content. Default ``False`` (non-idealised concentrations
+        inherit the baseline trajectory).
     """
-    s = scenario_name.lower()
-    return not (s.startswith("esm-") or s.startswith("esm_") or
-                s.startswith("methanemip"))
+    import pandas as pd
 
-
-def _is_idealised(scenario_name: str) -> bool:
-    """
-    True for RCMIP3 idealised experiments that prescribe constant
-    pre-industrial natural forcing.
-
-    Covers the ``esm-flat*`` constant-emissions family, the
-    ``esm-bell*`` and ``esm-pi-*`` impulse-response experiments, and
-    the ``1pctCO2*`` / ``abrupt*`` concentration-driven idealised
-    runs.
-
-    Legacy name-pattern fallback used by :func:`_resolve_protocol_spec`
-    when the input ScmRun lacks the ``protocol_natural_forcing`` /
-    ``protocol_land_use_forcing`` meta columns. New code should prefer
-    reading those columns directly.
-    """
-    s = scenario_name.lower()
-    return (
-        s.startswith("esm-flat") or s.startswith("esm-bell")
-        or s.startswith("esm-pi-") or s.startswith("esm-1pct")
-        or s.startswith("1pctco2") or s.startswith("abrupt")
+    df = (
+        pd.read_csv(
+            baseline_conc_path, delimiter=r"\s+", index_col=0,
+            skiprows=[1, 2, 3],
+        )
+        .rename(columns=lambda x: x.strip())
+        .astype(float)
     )
+    df.index = df.index.astype(int)
+
+    if nyend > df.index.max():
+        last = df.iloc[-1]
+        extension = pd.DataFrame(
+            {col: [last[col]] * (nyend - df.index.max())
+             for col in df.columns},
+            index=range(df.index.max() + 1, nyend + 1),
+        )
+        df = pd.concat([df, extension])
+
+    user_filtered = scenarios.filter(
+        scenario=scenario_name,
+        variable="Atmospheric Concentrations|*",
+        log_if_empty=False,
+    )
+    if user_filtered.empty:
+        return df
+
+    user_ts = user_filtered.timeseries(time_axis="year")
+    user_ts.columns = user_ts.columns.astype(int)
+
+    overlaid: list[str] = []
+    overlaid_cols: set[str] = set()
+    for index_tuple, values in user_ts.iterrows():
+        meta = dict(zip(user_ts.index.names, index_tuple))
+        species_short = meta["variable"].split("|", 1)[1]
+        cicero_name = _OPENSCM_TO_CICERO_CONC.get(
+            species_short, species_short
+        )
+        if cicero_name not in df.columns:
+            LOGGER.debug(
+                "CICEROSCMPY2 hybrid concs: species %r (CICERO name "
+                "%r) absent from baseline conc file %s; ignored.",
+                species_short, cicero_name,
+                os.path.basename(baseline_conc_path),
+            )
+            continue
+        for year, val in values.items():
+            if year in df.index and not pd.isna(val):
+                df.at[year, cicero_name] = float(val)
+        overlaid.append(cicero_name)
+        overlaid_cols.add(cicero_name)
+
+    if hold_unsupplied_at_pi:
+        pi_year = 1750 if 1750 in df.index else int(df.index.min())
+        pi_row = df.loc[pi_year]
+        held: list[str] = []
+        for col in df.columns:
+            if col in overlaid_cols:
+                continue
+            df[col] = float(pi_row[col])
+            held.append(col)
+        LOGGER.info(
+            "CICEROSCMPY2 hybrid concentrations (idealised): held "
+            "%d non-overlaid species at PI value (year %d) (%s).",
+            len(held), pi_year, held,
+        )
+
+    LOGGER.info(
+        "CICEROSCMPY2 hybrid concentrations for scenario %r: "
+        "overlaid %d species from user ScmRun (%s); others use "
+        "baseline %s.",
+        scenario_name, len(overlaid), overlaid,
+        os.path.basename(baseline_conc_path),
+    )
+
+    return df
 
 
 def _resolve_protocol_spec(
     scenario_run, scenario_name: str,
 ) -> dict[str, str]:
-    """Return per-scenario protocol metadata used by the scendata builder.
+    """
+    Return per-scenario protocol metadata for the scendata builder.
 
-    Result has three keys:
+    Result has two keys:
 
-    * ``mode`` — one of ``"CD"``, ``"ED-CO2-only"``, ``"ED-all-GHG"``.
-      Drives ``conc_run`` and the bulk of ``emstart`` selection.
-    * ``natural_forcing`` — ``"on"`` or ``"off"``. Drives ``sunvolc``,
-      the natemis CH4 / N2O flatten step, and the idealised branch of
-      ``emstart`` for ED scenarios.
+    * ``natural_forcing`` — ``"on"`` or ``"off"``. ``"off"`` zeros
+      ``sunvolc`` and flattens the natural CH4 / N2O trajectories to
+      their 1750 value.
     * ``land_use_forcing`` — ``"historical"`` or ``"constant_zero"``.
-      Drives the LUC albedo fallback chain (``constant_zero`` adds
-      ``LUCalbedo_RCMIP_constant_zero_RCMIP3.txt`` to the fallbacks).
+      ``"constant_zero"`` substitutes ``rf_luc_constant_zero_file``
+      for ``rf_luc_file`` (or warns if not available).
 
-    Reads the loader's protocol meta columns when present on
-    ``scenario_run``; falls back to the legacy name-pattern helpers
-    :func:`_auto_conc_run` and :func:`_is_idealised` for ScmRuns
-    constructed outside :func:`openscm_runner.scenarios.load_rcmip3_*`.
+    Reads the scenarios ScmRun's ``protocol_natural_forcing`` and
+    ``protocol_land_use_forcing`` meta columns (the RCMIP3 loader
+    sets these). When absent, defaults to the non-idealised
+    ``("on", "historical")`` pair; idealised users should set the
+    meta columns on their ScmRun or override at the cfg level.
     """
     meta = getattr(scenario_run, "meta", None)
     have_meta = (
         meta is not None
-        and "protocol_mode" in meta.columns
         and "protocol_natural_forcing" in meta.columns
         and "protocol_land_use_forcing" in meta.columns
     )
@@ -899,365 +1052,7 @@ def _resolve_protocol_spec(
         sub = meta[meta["scenario"].astype(str) == scenario_name]
         if not sub.empty:
             return {
-                "mode": str(sub["protocol_mode"].iloc[0]),
                 "natural_forcing": str(sub["protocol_natural_forcing"].iloc[0]),
                 "land_use_forcing": str(sub["protocol_land_use_forcing"].iloc[0]),
             }
-    # Name-pattern fallback. Note: the legacy helpers tie natural and
-    # land-use together; callers handed a metadata-free ScmRun won't
-    # benefit from the independent control the meta cols allow.
-    s = scenario_name.lower()
-    if _auto_conc_run(scenario_name):
-        mode = "CD"
-    elif s.startswith(("esm-allghg", "esm_allghg")):
-        mode = "ED-all-GHG"
-    else:
-        mode = "ED-CO2-only"
-    idealised = _is_idealised(scenario_name)
-    return {
-        "mode": mode,
-        "natural_forcing": "off" if idealised else "on",
-        "land_use_forcing": "constant_zero" if idealised else "historical",
-    }
-
-
-def _build_scendata_list_bundle(  # noqa: PLR0912, PLR0915
-    scenarios, cfg: dict[str, Any]
-) -> list[dict[str, Any]]:
-    """
-    Bundle-mode scendata builder (Marit's RCMIP setup).
-
-    For each scenario in ``scenarios`` (or just "historical" if none
-    given), picks ``{scen}_em_{gases_ep}``, ``{scen}_conc_{gases_ep}``,
-    and ``solar/VOLC/LUCalbedo_RCMIP_{scen}_RCMIP3.txt`` from the
-    bundle; falls back to ``historical_em_…`` / ``historical_conc_…``
-    / ``…_RCMIP_historical_RCMIP3.txt`` when scenario-specific files
-    don't exist. Natural CH4/N2O are loaded as DataFrames (the upstream
-    file reader requires exact row-count matching, which we handle).
-
-    Bypasses the v1.1.x SCENARIODATAGETTER splice entirely; the
-    bundle's scenario emissions file is the source of truth.
-    """
-    bundle_dir = cfg["cicero_bundle_dir"]
-    if not os.path.isdir(bundle_dir):
-        raise FileNotFoundError(
-            f"cicero_bundle_dir does not exist or is not a directory: "
-            f"{bundle_dir}"
-        )
-
-    gases_ep = cfg.get("cicero_gases_ep", _DEFAULT_GASES_EP)
-    gaspam_file = cfg.get("gaspam_file", os.path.join(bundle_dir, gases_ep))
-    if not os.path.exists(gaspam_file):
-        raise FileNotFoundError(
-            f"CICEROSCMPY2 bundle mode: gaspam_file not found at "
-            f"{gaspam_file}. Pass cicero_gases_ep or gaspam_file to "
-            "override."
-        )
-
-    nystart = int(cfg.get("nystart", 1750))
-    if scenarios is not None and not scenarios.empty:
-        scenario_years = scenarios.time_points.years()
-        nyend = int(cfg.get("nyend", max(scenario_years)))
-        scenario_names = sorted(set(scenarios["scenario"]))
-    else:
-        nyend = int(cfg.get("nyend", 2100))
-        scenario_names = ["historical"]
-    # sunvolc default is "on for non-idealised, off for idealised";
-    # explicit cfg value overrides for both. Resolved per-scenario
-    # below so a mixed scenario list (e.g. SSP + esm-flat*) gets
-    # the right treatment for each.
-    sunvolc_cfg = cfg.get("sunvolc")
-
-    # Preload natural emissions DataFrames (avoids the read-time
-    # row-count-mismatch error in upstream's default endyear=2500).
-    nat_ch4_path = cfg.get(
-        "nat_ch4_file", os.path.join(bundle_dir, _DEFAULT_NATEMIS_CH4)
-    )
-    nat_n2o_path = cfg.get(
-        "nat_n2o_file", os.path.join(bundle_dir, _DEFAULT_NATEMIS_N2O)
-    )
-    nat_ch4_df = _load_natemis_dataframe(nat_ch4_path, "CH4", nystart)
-    nat_n2o_df = _load_natemis_dataframe(nat_n2o_path, "N2O", nystart)
-
-    scendata_list: list[dict[str, Any]] = []
-    for scenario_name in scenario_names:
-        # Per-scenario protocol metadata (loader meta cols or
-        # name-pattern fallback). Drives conc_run / emstart / sunvolc /
-        # LUC fallback / natemis flatten without further name parsing.
-        spec = _resolve_protocol_spec(scenarios, scenario_name)
-        natural_off = spec["natural_forcing"] == "off"
-        lu_zero = spec["land_use_forcing"] == "constant_zero"
-
-        # Emissions resolution. Order of precedence:
-        #   1. Explicit cfg["emissions_file"] override
-        #   2. Bundle's own `{scen}_em_{gases_ep}` (canonical RCMIP scenario)
-        #   3. User ScmRun for this scenario, spliced onto bundle's
-        #      `historical_em` -> "hybrid mode" for novel / IAM-output
-        #      scenarios with no bundle file
-        #   4. `historical_em` as a last-resort fallback (constant
-        #      after the historical end year)
-        explicit_conc_run = cfg.get("cicero_conc_run")
-        if explicit_conc_run is None:
-            conc_run = spec["mode"] == "CD"
-        else:
-            conc_run = bool(explicit_conc_run)
-
-        # emstart selection: every ED variant runs 1750-1849 conc-driven
-        # against the bundle's stripped conc trajectory (near-PI for the
-        # CMIP6 SSPs / scen7 markers; constant_zero proxy for the
-        # idealised experiments), then the bundle's _em_ file (or the
-        # loader's ScmRun via hybrid mode) drives 1850 onwards. CD runs
-        # set emstart=nyend so emissions never take over.
-        if "emstart" in cfg:
-            scen_emstart = int(cfg["emstart"])
-        elif conc_run:
-            scen_emstart = nyend
-        else:
-            scen_emstart = 1850
-
-        # Bundle file resolution. The bundle uses bare scenario names,
-        # so esm-ssp245 / esm-allGHG-ssp245 / scen7-HC all need
-        # prefix/suffix stripping to land on the right ssp245_*,
-        # scen7-H_* files. See _bundle_basename_candidates.
-        em_override = cfg.get("emissions_file")
-        basenames = _bundle_basename_candidates(scenario_name)
-        em_candidates = [f"{b}_em_{gases_ep}" for b in basenames]
-        em_bundle_match = _find_bundle_file(bundle_dir, em_candidates)
-
-        em_bundle_is_stripped = (
-            em_bundle_match is not None
-            and os.path.basename(em_bundle_match) != em_candidates[0]
-        )
-
-        # Idealised scenarios (natural=off + LU=constant_zero, e.g.
-        # 1pctCO2, abrupt-*, piControl) want PI-flat anthropogenic
-        # emissions everywhere so CICEROSCM's calc_aerosol_forcing
-        # (concentrations_emissions_handler.py:584) — which computes
-        # ``q = (emis[yr] - emis[1750]) * ALPHA`` for each aerosol
-        # tracer regardless of conc_run mode — produces zero aerosol
-        # perturbation. Without this, the default fallback to
-        # historical_em_ leaks historical SO2 / BC / OC / NOx / NH3 /
-        # NMVOC / CH4 into the idealised runs and breaks the "only CO2
-        # varies" protocol invariant. This is the fourth member of the
-        # idealised-suppression set: sunvolc=0, natemis flatten,
-        # LUC=constant_zero, and now PI-flat emissions.
-        #
-        # Scenarios that ship a scenario-specific _em_ file (esm-flat*,
-        # esm-bell-*, esm-pi-*, esm-piControl) hit the exact-name match
-        # above; their files are CO2-only by construction so aerosols
-        # are already PI-flat. The fix only affects scenarios that
-        # would otherwise fall through to the historical_em_ fallback
-        # (1pctCO2*, abrupt-*, piControl, the bundle-only esm-1pct-brch-*).
-        idealised = natural_off and lu_zero
-        em_fallback_chain = (
-            [f"esm-piControl_em_{gases_ep}", f"historical_em_{gases_ep}"]
-            if idealised else [f"historical_em_{gases_ep}"]
-        )
-
-        # Detect protocol-strict mixed-mode input from the loader: the
-        # presence of Atmospheric Concentrations|* rows for this
-        # scenario means the loader is supplying ED CO2-only inputs
-        # (CO2 from emissions + non-CO2 from concentrations) — see
-        # openscm_runner.scenarios.rcmip3._load_mixed_mode_scenario.
-        # CICEROSCM v2's conc_run is all-or-nothing per scenario
-        # (concentrations_emissions_handler.py guards on a single
-        # pamset flag, no per-species toggle), so we cannot honor the
-        # protocol-strict mode here. Fall back to the bundle's
-        # bare-name _em_ file via stripping, running full all-GHG ED.
-        # This matches Marit's published reference (her esm-ssp245
-        # and esm-allGHG-ssp245 are bit-identical for the same upstream
-        # reason — proper mixed mode awaits a CICEROSCM v2 patch).
-        loader_supplied_concentrations = (
-            scenarios is not None and not scenarios.empty
-            and not scenarios.filter(
-                scenario=scenario_name,
-                variable="Atmospheric Concentrations|*",
-            ).empty
-        )
-        if loader_supplied_concentrations:
-            LOGGER.info(
-                "CICEROSCMPY2 bundle mode: scenario %r supplies "
-                "Atmospheric Concentrations rows (protocol-strict ED "
-                "CO2-only); CICEROSCM v2 cannot run per-species mixed "
-                "mode, falling back to bundle's full all-GHG _em_ file "
-                "(matches Marit's published reference).",
-                scenario_name,
-            )
-
-        # ED-CO2-only scenarios share their bundle file with the bare
-        # variant (e.g. esm-ssp245 strips to ssp245_em_). For scenarios
-        # where the loader supplies mixed-mode inputs we want CICERO to
-        # use the bundle's full all-GHG file directly (per the
-        # CICEROSCM-v2 fallback above); for everything else we still
-        # prefer hybrid mode so the loader's ScmRun drives the run.
-        prefer_hybrid_for_co2_only = (
-            spec["mode"] == "ED-CO2-only"
-            and em_bundle_is_stripped
-            and not loader_supplied_concentrations
-        )
-
-        # For idealised scenarios, suppress hybrid mode entirely. The
-        # loader stub (or any user ScmRun) would splice onto
-        # historical_em inside _build_hybrid_emissions_data, exactly
-        # the historical-aerosol leak the em_fallback_chain above is
-        # designed to avoid. Use the PI-flat fallback chain directly.
-        use_hybrid = (
-            em_override is None
-            and (em_bundle_match is None or prefer_hybrid_for_co2_only)
-            and not idealised
-            and scenarios is not None
-            and not scenarios.empty
-            and scenario_name in set(scenarios["scenario"])
-        )
-        em_path = None
-        em_data = None
-        if em_override is not None:
-            em_path = em_override
-        elif use_hybrid:
-            em_data = _build_hybrid_emissions_data(
-                scenarios=scenarios,
-                scenario_name=scenario_name,
-                bundle_dir=bundle_dir,
-                gases_ep=gases_ep,
-                nystart=nystart,
-                nyend=nyend,
-                emstart=scen_emstart,
-            )
-            LOGGER.info(
-                "CICEROSCMPY2 bundle mode: scenario %r driven via hybrid "
-                "emissions DataFrame (loader ScmRun overlaid on "
-                "historical_em_%s)%s.",
-                scenario_name,
-                gases_ep,
-                " — preferred over stripped bundle file for ED-CO2-only"
-                if prefer_hybrid_for_co2_only else "",
-            )
-        else:
-            em_path = em_bundle_match or _pick_bundle_file(
-                bundle_dir, em_fallback_chain,
-            )
-            if (
-                idealised
-                and em_bundle_match is None
-                and os.path.basename(em_path) != em_fallback_chain[0]
-            ):
-                LOGGER.warning(
-                    "CICEROSCMPY2 bundle mode: idealised scenario %r has "
-                    "no scenario-specific _em_ file and the preferred "
-                    "PI-flat fallback %s is missing from the bundle; "
-                    "using %s instead. Aerosol forcing will track "
-                    "historical anthropogenic precursors via "
-                    "calc_aerosol_forcing — the 'only CO2 varies' "
-                    "protocol invariant is violated.",
-                    scenario_name,
-                    em_fallback_chain[0],
-                    os.path.basename(em_path),
-                )
-        conc_candidates = (
-            [f"{b}_conc_{gases_ep}" for b in basenames]
-            + [f"historical_conc_{gases_ep}"]
-        )
-        conc_path = cfg.get("concentrations_file") or _pick_bundle_file(
-            bundle_dir, conc_candidates,
-        )
-        # Solar / volcanic / LUC files in the bundle have per-scenario
-        # variants for the CMIP6 SSPs (ssp245, ...) and the CMIP7 scen7
-        # markers (scen7-H, ...), but not for the esm-* / esm-allGHG-*
-        # / scen7-*C variants. Apply the same prefix/suffix stripping
-        # we use for the _em_ / _conc_ files (step 5b) so e.g.
-        # esm-ssp245 picks up solar_RCMIP_ssp245_RCMIP3.txt rather than
-        # falling through to solar_RCMIP_historical_RCMIP3.txt — which
-        # forward-fills at 2023 and was the root cause of the post-2023
-        # +0.2-0.5 K bias against Marit on the esm-ssp* family.
-        forcing_basenames = [b for b in basenames]
-        sun_path = cfg.get("rf_solar_file") or _pick_bundle_file(
-            bundle_dir,
-            [f"solar_RCMIP_{b}_RCMIP3.txt" for b in forcing_basenames]
-            + ["solar_RCMIP_historical_RCMIP3.txt"],
-        )
-        volc_path = cfg.get("rf_volc_file") or _pick_bundle_file(
-            bundle_dir,
-            [f"VOLC_RCMIP_{b}_RCMIP3.txt" for b in forcing_basenames]
-            + ["VOLC_RCMIP_historical_RCMIP3.txt"],
-        )
-        # When protocol_land_use_forcing == "constant_zero" (idealised
-        # experiments + piControl variants), prefer the bundle's
-        # ``LUCalbedo_RCMIP_constant_zero_RCMIP3.txt``. The historical
-        # LUC albedo file accumulates ~-0.2 W/m² of cooling forcing
-        # through 2022 then snaps back to 0 at 2023, producing both a
-        # +0.2 W/m² warming jump (~15 mK uptick at 2024 in GSAT) and a
-        # persistent ~0.12 K bias on the active emissions period.
-        luc_scenario_candidates = [
-            f"LUCalbedo_RCMIP_{b}_RCMIP3.txt" for b in forcing_basenames
-        ]
-        if lu_zero:
-            luc_fallbacks = (
-                luc_scenario_candidates
-                + ["LUCalbedo_RCMIP_constant_zero_RCMIP3.txt",
-                   "LUCalbedo_RCMIP_historical_RCMIP3.txt"]
-            )
-        else:
-            luc_fallbacks = (
-                luc_scenario_candidates
-                + ["LUCalbedo_RCMIP_historical_RCMIP3.txt"]
-            )
-        luc_path = cfg.get("rf_luc_file") or _pick_bundle_file(
-            bundle_dir, luc_fallbacks,
-        )
-        # protocol_natural_forcing == "off" -> hold solar/volcanic at
-        # pre-industrial (sunvolc=0) and flatten the natural CH4 / N2O
-        # emissions tables to their 1750 PI value (otherwise the
-        # historical natemis trajectory + 2023 discontinuity contaminates
-        # ZEC and piControl diagnostics). Explicit cfg["sunvolc"]
-        # overrides the metadata-driven default for both.
-        if sunvolc_cfg is not None:
-            scen_sunvolc = int(sunvolc_cfg)
-        else:
-            scen_sunvolc = 0 if natural_off else 1
-        if natural_off:
-            scen_nat_ch4 = _flatten_natemis_to_preindustrial(nat_ch4_df)
-            scen_nat_n2o = _flatten_natemis_to_preindustrial(nat_n2o_df)
-        else:
-            scen_nat_ch4 = nat_ch4_df
-            scen_nat_n2o = nat_n2o_df
-        scendata: dict[str, Any] = {
-            "nystart": nystart,
-            "nyend": nyend,
-            "emstart": scen_emstart,
-            "sunvolc": scen_sunvolc,
-            "conc_run": conc_run,
-            "idtm": 24,
-            "scenname": scenario_name,
-            "gaspam_file": gaspam_file,
-            "concentrations_file": conc_path,
-            "rf_solar_file": sun_path,
-            "rf_volc_file": volc_path,
-            "rf_luc_file": luc_path,
-            "nat_ch4_data": scen_nat_ch4.loc[
-                : min(nyend, scen_nat_ch4.index.max())
-            ],
-            "nat_n2o_data": scen_nat_n2o.loc[
-                : min(nyend, scen_nat_n2o.index.max())
-            ],
-        }
-        # CICERO's InputHandler accepts either `emissions_file` (path)
-        # or `emissions_data` (in-memory DataFrame). Hybrid mode produces
-        # the DataFrame directly to avoid writing a temp file.
-        if em_data is not None:
-            scendata["emissions_data"] = em_data
-        else:
-            scendata["emissions_file"] = em_path
-        LOGGER.debug(
-            "CICEROSCMPY2 bundle scendata for scenario=%s years=%d-%d "
-            "(emstart=%d, conc_run=%s) em=%s conc=%s",
-            scenario_name,
-            nystart,
-            nyend,
-            scen_emstart,
-            conc_run,
-            "<hybrid-DataFrame>" if em_path is None else os.path.basename(em_path),
-            os.path.basename(conc_path),
-        )
-        scendata_list.append(scendata)
-
-    return scendata_list
+    return {"natural_forcing": "on", "land_use_forcing": "historical"}

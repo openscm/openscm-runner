@@ -158,7 +158,9 @@ class FAIR2(_Adapter):
             Forwarded to the adapter constructor.
         **cfg_overrides
             Forwarded as keys on the single native cfg dict. Useful
-            keys: ``fair2_conc_bundle_dir`` (required for CD),
+            keys: ``fair2_conc_bundle_dir`` (optional fallback for CD
+            mode -- only used when the scenarios DataFrame has no
+            ``Atmospheric Concentrations|*`` rows),
             ``fair2_conc_gases_ep`` (default ``"gases_vupdate_2024_WMO_added_new.txt"``),
             ``fair2_stochastic_run`` (default ``False``).
 
@@ -166,21 +168,20 @@ class FAIR2(_Adapter):
         -------
         FAIR2
             Configured adapter, ready to call ``.run(scenarios)``.
+
+        Notes
+        -----
+        Construction does not check whether CD mode will have
+        concentrations available. If neither the scenarios DataFrame
+        passed at ``.run()`` time nor ``fair2_conc_bundle_dir`` supplies
+        them, the adapter raises ``ValueError`` from inside
+        ``.run()``.
         """
         calibration = NativeFairCalibration(native_distribution_path)
         cfg: dict[str, Any] = {"native_calibration": calibration}
         if member_indices is not None:
             cfg["member_indices"] = member_indices
         cfg.update(cfg_overrides)
-
-        if mode == RunMode.CONCENTRATION_DRIVEN and not cfg.get(
-            "fair2_conc_bundle_dir"
-        ):
-            raise ValueError(
-                "FAIR2.from_native_distribution(mode=RunMode.CONCENTRATION_DRIVEN) "
-                "requires a `fair2_conc_bundle_dir` keyword (path to the "
-                "CICERO RCMIP bundle with `{scen}_conc_{gases_ep}` files)."
-            )
 
         return cls(
             cfgs=[cfg],
@@ -209,6 +210,60 @@ def _with_mode_applied(cfg: dict[str, Any], mode: RunMode) -> dict[str, Any]:
     return new
 
 
+def _zero_fill_year_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Replace NaN with 0.0 in the year columns of an emissions or
+    concentrations DataFrame.
+
+    Year columns are detected as columns whose name is a digit string
+    (e.g. ``"1850"``); meta columns (``scenario``, ``variable``, ...)
+    are left untouched. Used as one of two NaN-tolerance layers on the
+    way into FaIR; see also :func:`_zero_fill_fair_arrays`.
+    """
+    year_cols = [c for c in df.columns if isinstance(c, str) and c.isdigit()]
+    if not year_cols:
+        return df
+    out = df.copy()
+    out[year_cols] = out[year_cols].fillna(0.0)
+    return out
+
+
+def _zero_fill_fair_arrays(f) -> None:
+    """
+    Replace NaN with 0.0 in ``f.emissions`` / ``f.concentration`` /
+    ``f.forcing`` in-place.
+
+    :meth:`fair.FAIR.run` checks per-species input arrays for NaN
+    before computing anything (``fair.FAIR._check_properties``) and
+    raises ``ValueError`` if any input-mode species has NaN. This
+    bites the scenarios-driven CD path: the user may supply only
+    ``Atmospheric Concentrations|CO2``, which fills FaIR's ``CO2``
+    species (concentration mode) but leaves ``CO2 FFI`` and
+    ``CO2 AFOLU`` (still emissions mode) with NaN for years outside
+    the bundle's historical span.
+
+    The non-NaN-but-zero state is the right physical interpretation:
+    species not covered by user inputs simply contribute nothing.
+    For emissions-mode species this means zero forcing; for
+    concentration-mode species the zero emissions array is unused
+    (the concentration trajectory drives the simulation). Same for
+    the forcing-mode array on natural forcing species the caller did
+    not provide.
+    """
+    import numpy as np
+
+    for attr in ("emissions", "concentration", "forcing"):
+        arr = getattr(f, attr, None)
+        if arr is None:
+            continue
+        values = getattr(arr, "values", None)
+        if values is None:
+            continue
+        mask = np.isnan(values)
+        if mask.any():
+            values[mask] = 0.0
+
+
 def _resolve_calibration(value: Any) -> NativeFairCalibration:
     """
     Accept either a path-like or an already-loaded
@@ -231,16 +286,29 @@ def _run_native_cfgs(scenarios, cfgs, output_variables) -> ScmRun:
     results = []
     # Up-front cfg validation: catch user errors before we touch any
     # calibration files (so the error doesn't depend on a valid
-    # bundle being available).
+    # bundle being available). Conc-driven mode needs concentrations
+    # from somewhere -- either the scenarios DataFrame (preferred,
+    # Atmospheric Concentrations|*) or a bundle directory of CICERO-
+    # format `{scen}_conc_*` files. If neither source is available,
+    # raise here rather than waiting for fair.FAIR.run to fail with
+    # an opaque "missing input" error.
+    scenarios_have_conc = (
+        scenarios is not None
+        and not scenarios.empty
+        and not scenarios.filter(
+            variable="Atmospheric Concentrations|*", log_if_empty=False
+        ).empty
+    )
     for cfg in cfgs:
-        if cfg.get("fair2_conc_driven") is True and not cfg.get(
-            "fair2_conc_bundle_dir"
-        ):
+        conc_driven = cfg.get("fair2_conc_driven") is True
+        if conc_driven and not cfg.get("fair2_conc_bundle_dir") and not scenarios_have_conc:
             raise ValueError(
-                "FaIRv2 conc-driven mode requires `fair2_conc_bundle_dir` "
-                "cfg key (path to the CICERO RCMIP bundle with "
-                "`{scen}_conc_{gases_ep}` files; same bundle the "
-                "CICEROSCMPY2 adapter uses in bundle mode)."
+                "FaIRv2 conc-driven mode needs concentrations from "
+                "either the scenarios DataFrame "
+                "(``Atmospheric Concentrations|*`` rows) or a bundle "
+                "directory of CICERO-format ``{scen}_conc_*`` files "
+                "(``fair2_conc_bundle_dir`` cfg key). Neither was "
+                "supplied."
             )
 
     run_id_offset = 0
@@ -445,6 +513,14 @@ def _run_translated_cfgs(  # noqa: PLR0912, PLR0915
                 co2_only_scenarios=idealised_scenarios,
             )
             if not emissions_df.empty:
+                # fair.FAIR.run rejects NaN in any species' emissions
+                # array, even ones the user has flipped to
+                # concentration-driven (CD species' arrays get
+                # overwritten by fill_from_pandas(mode="concentration")
+                # downstream, but the NaN-check fires before that).
+                # Zero-fill so the CD override has a clean slate to
+                # write over.
+                emissions_df = _zero_fill_year_columns(emissions_df)
                 f.fill_from_pandas(mode="emissions", df=emissions_df)
         _fill_natural_forcings(
             f, calibration,
@@ -816,6 +892,11 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
             co2_only_scenarios=idealised_scenarios,
         )
         if not emissions_df.empty:
+            # See parallel comment in _run_translated_cfgs: zero-fill so
+            # any species without scenario coverage (e.g. CD species
+            # whose values are written back by the concentration fill)
+            # gets a non-NaN array fair.FAIR.run will accept.
+            emissions_df = _zero_fill_year_columns(emissions_df)
             f.fill_from_pandas(mode="emissions", df=emissions_df)
 
     # Fill concentrations for the species we flipped above. FaIR's
@@ -838,6 +919,15 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
         zero_natural_scenarios=natural_off,
         zero_land_use_scenarios=land_use_zero,
     )
+
+    # Final NaN tolerance: zero-fill any species (or year) the caller
+    # didn't cover. See _zero_fill_fair_arrays for rationale. This is
+    # the safety net that makes the scenarios-driven CD path
+    # (Atmospheric Concentrations|* in the scenarios DataFrame, no
+    # bundle conc dir) work without panicking on the un-flipped
+    # emissions-mode siblings (CO2 FFI / CO2 AFOLU when only CO2 is
+    # supplied as a concentration, etc.).
+    _zero_fill_fair_arrays(f)
 
     f.run(progress=False, suppress_warnings=True)
 
