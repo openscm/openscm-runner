@@ -21,6 +21,12 @@ build:
       - tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
     post_install:
       - poetry install --with docs --all-extras
+      # Defensive: poetry 2.x + readthedocs's `virtualenvs.create false`
+      # interaction has been observed to leave `sphinx-autodocgen` not
+      # importable by the sphinx-build step even though poetry's log
+      # claims it was installed. Re-install via pip into the active
+      # venv to be sure (idempotent if already there).
+      - pip install sphinx-autodocgen
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
