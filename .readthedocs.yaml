@@ -22,11 +22,13 @@ build:
     post_install:
       - poetry install --with docs --all-extras
       # Defensive: poetry 2.x + readthedocs's `virtualenvs.create false`
-      # interaction has been observed to leave `sphinx-autodocgen` not
-      # importable by the sphinx-build step even though poetry's log
-      # claims it was installed. Re-install via pip into the active
-      # venv to be sure (idempotent if already there).
+      # interaction leaves several packages installed but not
+      # discoverable on the sphinx-build python path. The poetry log
+      # says they're installed, but `python -m sphinx` can't import
+      # them. Re-install the docs-relevant packages + the project
+      # itself via pip directly (idempotent if poetry got there first).
       - pip install sphinx-autodocgen
+      - pip install -e .
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
