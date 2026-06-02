@@ -140,6 +140,9 @@ def _get_fair_col_unit_context(variable):
     fair_col = int(row[row].index[0]) + 1  # first col is time
     in_unit = in_unit.iloc[0]
     context = EMISSIONS_SPECIES_UNITS_CONTEXT[row]["context"].iloc[0]
+    # pandas 3.0 StringDtype inference turns None -> nan in mixed-type columns
+    if pd.isna(context):
+        context = None
 
     return fair_col, in_unit, context
 
