@@ -145,6 +145,11 @@ jobs:
           python-version: "3.10"
           venv-id: "licence-check"
           poetry-dependency-install-flags: "--all-extras"
+      - name: Install poetry-plugin-export
+        # `poetry export` moved out of poetry core in poetry 2.x; it's now
+        # provided by the poetry-plugin-export plugin. Without this the
+        # next step fails with `The requested command export does not exist.`
+        run: poetry self add poetry-plugin-export
       - name: Check licences of dependencies
         shell: bash
         run: |
