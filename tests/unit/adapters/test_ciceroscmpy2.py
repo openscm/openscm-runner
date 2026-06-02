@@ -30,19 +30,16 @@ import pytest
 from openscm_runner.adapters import CICEROSCMPY2, get_adapter, get_adapters_classes
 from openscm_runner.adapters.ciceroscm_py2_adapter._compat import (
     HAS_CICEROSCM_PY2,
-    _ciceroscm_major_version,
 )
 
 # Skip tests that instantiate CICEROSCMPY2() (which calls _init_model
-# and imports / version-checks the underlying ciceroscm package) when
-# ciceroscm>=2 isn't available. CI installs `--all-extras` but pip can
-# only have one major version of `ciceroscm` at a time; when the
-# lockfile resolved to ciceroscm 1.x, _ciceroscm_major_version returns
-# 1 and these tests skip cleanly instead of raising the documented
-# ImportError.
+# and imports the underlying ciceroscm package) when ciceroscm>=2
+# isn't available. CI installs `--all-extras` but pip can only have
+# one major version of `ciceroscm` at a time; `HAS_CICEROSCM_PY2` is
+# False when ciceroscm 1.x is the resolved version, so the skip
+# fires cleanly instead of raising the documented ImportError.
 cicero_skip = pytest.mark.skipif(
-    not HAS_CICEROSCM_PY2 or _ciceroscm_major_version() < 2,
-    reason="ciceroscm>=2 not installed",
+    not HAS_CICEROSCM_PY2, reason="ciceroscm>=2 not installed",
 )
 
 
