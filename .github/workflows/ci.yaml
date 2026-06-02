@@ -67,9 +67,24 @@ jobs:
           poetry-dependency-install-flags: "--all-extras"
       - name: Download MAGICC non-windows
         if: runner.os != 'Windows'
+        # magicc.org's TLS endpoint has been observed to time out
+        # intermittently (30s SSL handshake hang). Retry a few times
+        # rather than failing the whole matrix job on a single transient
+        # network blip; wget's `--tries` only covers connection errors,
+        # so wrap the call in a for-loop that also retries on SSL
+        # failures.
         run: |
           mkdir -p bin/magicc/magicc-v7.5.3
-          wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+          for attempt in 1 2 3; do
+            if wget --tries=2 --waitretry=10 --timeout=60 \
+                    -O "bin/magicc/magicc-v7.5.3.tar.gz" \
+                    "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"; then
+              echo "MAGICC download succeeded on attempt $attempt"
+              break
+            fi
+            echo "MAGICC download attempt $attempt failed; retrying in 15s"
+            sleep 15
+          done
           tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
       - name: Run tests linux
         if: runner.os == 'Linux'
@@ -77,22 +92,42 @@ jobs:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
         run: |
           poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
+          # Coverage gate is enforced on Linux only (where the test
+          # matrix actually exercises every adapter under the lockfile
+          # resolution). macOS and Windows jobs are about platform
+          # compat, not coverage; running the gate there would force
+          # repeated threshold tuning every time `[fair]` vs `[fair2]`
+          # / `[ciceroscmpy]` vs `[ciceroscmpy2]` mutual-exclusion
+          # skips a different set of tests.
           poetry run coverage report
       - name: Run tests macOS
         if: runner.os == 'macOS'
         env:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc-darwin-amd64
         run: |
-          # Locate the gfortran library. The location can change when the image is updated
-          GFORTRAN_LIBS=$(find /usr/local/Cellar/gcc@11 -name libgfortran.5.dylib | head -n 1 | xargs dirname)
-          echo $GFORTRAN_LIBS
+          # Locate the gfortran library. The runner image's Homebrew
+          # layout changes over time (gcc@11 -> gcc@current, intel ->
+          # arm64 prefix). Use `brew --prefix` so this finds whatever
+          # gcc is installed today, in whichever Cellar root the
+          # current runner image uses.
+          GFORTRAN_LIBS=$(find "$(brew --prefix)" -name libgfortran.5.dylib 2>/dev/null | head -n 1 | xargs dirname)
+          if [ -z "$GFORTRAN_LIBS" ]; then
+            echo "libgfortran.5.dylib not found under $(brew --prefix); brew gcc may not be installed on this runner image" >&2
+            exit 1
+          fi
+          echo "GFORTRAN_LIBS=$GFORTRAN_LIBS"
           export DYLD_LIBRARY_PATH=$GFORTRAN_LIBS:$DYLD_LIBRARY_PATH
-          # TODO: loosen coverage requirements if CI fails, otherwise delete this comment
-          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
+          # Don't enforce the coverage threshold on macOS / Windows.
+          # pytest-cov reads `[tool.coverage.report] fail_under` from
+          # pyproject, so just dropping `coverage report` isn't
+          # sufficient -- we have to drop `--cov*` from pytest too.
+          # See the Linux job above for the gated coverage step.
+          poetry run pytest -r a -v src tests --doctest-modules
       - name: Run tests windows
         if: runner.os == 'Windows'
         run: |
-          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
+          # Coverage gate is Linux-only; see comment in the macOS job.
+          poetry run pytest -r a -v src tests --doctest-modules
       - name: Upload coverage reports to Codecov (Linux only)
         if: runner.os == 'Linux'
         uses: codecov/codecov-action@v3
