@@ -2,8 +2,6 @@
 # Read the Docs configuration file
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
-# Thank you also https://browniebroke.com/blog/specify-docs-dependency-groups-with-poetry-and-read-the-docs/
-
 # Required
 version: 2
 
@@ -14,21 +12,23 @@ build:
     python: "3.10"
   jobs:
     post_create_environment:
-      - pip install poetry
-      - poetry config virtualenvs.create false
       - mkdir -p bin/magicc/magicc-v7.5.3
       - wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "https://www.magicc.org/api/download?type=MAGICC7&token=${MAGICC_LINK_FROM_MAGICC_DOT_ORG}"
       - tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
     post_install:
-      - poetry install --with docs --all-extras
-      # Defensive: poetry 2.x + readthedocs's `virtualenvs.create false`
-      # interaction leaves several packages installed but not
-      # discoverable on the sphinx-build python path. The poetry log
-      # says they're installed, but `python -m sphinx` can't import
-      # them. Re-install the docs-relevant packages + the project
-      # itself via pip directly (idempotent if poetry got there first).
-      - pip install sphinx-autodocgen
-      - pip install -e .
+      # Use pip directly rather than poetry. poetry 2.x x readthedocs's
+      # `virtualenvs.create false` config leaves docs-group packages
+      # not importable by the sphinx-build python (silent installation
+      # path mismatch). Pip-installing the project + docs group
+      # explicitly avoids the issue entirely.
+      - pip install -e ".[fair,fair2,magicc,ciceroscmpy,ciceroscmpy2]"
+      - pip install
+          myst-nb
+          sphinx-book-theme
+          sphinx-autodoc-typehints
+          sphinx-autodocgen
+          jupytext
+          sphinx-copybutton
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
