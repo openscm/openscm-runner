@@ -28,6 +28,22 @@ from unittest.mock import patch
 import pytest
 
 from openscm_runner.adapters import CICEROSCMPY2, get_adapter, get_adapters_classes
+from openscm_runner.adapters.ciceroscm_py2_adapter._compat import (
+    HAS_CICEROSCM_PY2,
+    _ciceroscm_major_version,
+)
+
+# Skip tests that instantiate CICEROSCMPY2() (which calls _init_model
+# and imports / version-checks the underlying ciceroscm package) when
+# ciceroscm>=2 isn't available. CI installs `--all-extras` but pip can
+# only have one major version of `ciceroscm` at a time; when the
+# lockfile resolved to ciceroscm 1.x, _ciceroscm_major_version returns
+# 1 and these tests skip cleanly instead of raising the documented
+# ImportError.
+cicero_skip = pytest.mark.skipif(
+    not HAS_CICEROSCM_PY2 or _ciceroscm_major_version() < 2,
+    reason="ciceroscm>=2 not installed",
+)
 
 
 # Required sidecar keys after the Phase F rewrite. Tests parametrised
@@ -60,6 +76,7 @@ def _make_full_cfg(tmp_path) -> dict:
 # ---------------------------------------------------------------------------
 
 
+@cicero_skip
 def test_ciceroscmpy2_is_registered():
     assert CICEROSCMPY2.model_name == "CICERO-SCM-PY2"
     assert CICEROSCMPY2 in get_adapters_classes()
@@ -92,6 +109,7 @@ def test_ciceroscmpy2_raises_when_wrong_major_version():
 # ---------------------------------------------------------------------------
 
 
+@cicero_skip
 def test_ciceroscmpy2_run_rejects_output_config(tmp_path):
     adapter = CICEROSCMPY2()
     with pytest.raises(NotImplementedError, match="output_config"):
@@ -103,6 +121,7 @@ def test_ciceroscmpy2_run_rejects_output_config(tmp_path):
         )
 
 
+@cicero_skip
 @pytest.mark.parametrize("missing_key", _REQUIRED_CFG_KEYS)
 def test_ciceroscmpy2_rejects_cfg_missing_required_sidecar(
     tmp_path, missing_key,
@@ -126,6 +145,7 @@ def test_ciceroscmpy2_rejects_cfg_missing_required_sidecar(
         )
 
 
+@cicero_skip
 def test_ciceroscmpy2_rejects_missing_distribution_json(tmp_path):
     """
     After sidecar-key validation, the path is checked for existence
@@ -145,6 +165,7 @@ def test_ciceroscmpy2_rejects_missing_distribution_json(tmp_path):
         )
 
 
+@cicero_skip
 def test_ciceroscmpy2_rejects_empty_member_indices(tmp_path):
     """
     An explicit empty member_indices is almost certainly a user
@@ -188,6 +209,7 @@ def _populate_minimal_calibration_dir(cal_dir) -> None:
     (cal_dir / "draw_samples_500.json").write_text("")
 
 
+@cicero_skip
 def test_from_native_distribution_resolves_canonical_files(tmp_path):
     """
     Given a calibration directory with canonical filenames, the
@@ -243,6 +265,7 @@ def test_from_native_distribution_errors_when_path_missing(tmp_path):
         CICEROSCMPY2.from_native_distribution(missing)
 
 
+@cicero_skip
 def test_from_native_distribution_explicit_distribution_json_overrides_default(
     tmp_path,
 ):
@@ -262,6 +285,7 @@ def test_from_native_distribution_explicit_distribution_json_overrides_default(
     assert adapter.cfgs[0]["distribution_json"] == str(other_dist)
 
 
+@cicero_skip
 def test_from_native_distribution_cfg_overrides_take_precedence(tmp_path):
     """
     Keyword arguments to ``from_native_distribution`` become cfg keys
@@ -279,6 +303,7 @@ def test_from_native_distribution_cfg_overrides_take_precedence(tmp_path):
     assert adapter.cfgs[0]["gaspam_file"] == str(custom_gaspam)
 
 
+@cicero_skip
 def test_from_native_distribution_override_skips_missing_canonical_file(tmp_path):
     """
     Partial override: when the user supplies a cfg-level override for

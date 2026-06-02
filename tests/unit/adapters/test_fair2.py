@@ -25,11 +25,22 @@ from unittest.mock import patch
 import pytest
 
 from openscm_runner.adapters import FAIR2, get_adapter, get_adapters_classes
+from openscm_runner.adapters.fair2_adapter._compat import HAS_FAIR2
 from openscm_runner.adapters.fair2_adapter._native_calibration import (
     NativeFairCalibration,
 )
 
+# Skip tests that instantiate FAIR2() (which calls _init_model and imports
+# the underlying fair package) when fair>=2 isn't available. CI installs
+# `--all-extras` but pip can only have one major version of `fair` at a
+# time; when the lockfile resolved to fair 1.6.x, HAS_FAIR2 is False and
+# these tests skip cleanly instead of raising the documented ImportError.
+fair2_skip = pytest.mark.skipif(
+    not HAS_FAIR2, reason="fair>=2 not installed"
+)
 
+
+@fair2_skip
 def test_fair2_is_registered():
     assert FAIR2.model_name == "FaIRv2"
     assert FAIR2 in get_adapters_classes()
@@ -129,6 +140,7 @@ def test_native_calibration_file_returns_none_for_absent_optional(tmp_path):
     assert cal.file("species_configs") is not None
 
 
+@fair2_skip
 def test_fair2_translated_cfg_with_no_climate_configs_raises_useful_error():
     """
     Translated-cfg mode runs without a calibration bundle. If the cfg
@@ -146,6 +158,7 @@ def test_fair2_translated_cfg_with_no_climate_configs_raises_useful_error():
         )
 
 
+@fair2_skip
 def test_fair2_run_rejects_mixed_native_and_translated_cfgs():
     """
     Each cfg list must be entirely native or entirely translated;
@@ -164,6 +177,7 @@ def test_fair2_run_rejects_mixed_native_and_translated_cfgs():
         )
 
 
+@fair2_skip
 def test_fair2_run_rejects_output_config():
     adapter = FAIR2()
     with pytest.raises(NotImplementedError, match="output_config"):
@@ -175,6 +189,7 @@ def test_fair2_run_rejects_output_config():
         )
 
 
+@fair2_skip
 def test_fair2_translated_cfg_warns_on_unknown_parameter_names(caplog):
     """
     Translated-cfg mode logs a WARNING when a cfg dict carries keys
@@ -240,6 +255,7 @@ def test_fair2_stochastic_run_default_is_off():
     )
 
 
+@fair2_skip
 def test_fair2_conc_driven_requires_a_conc_source(tmp_path):
     """
     Concentration-driven mode needs concentrations from somewhere:
