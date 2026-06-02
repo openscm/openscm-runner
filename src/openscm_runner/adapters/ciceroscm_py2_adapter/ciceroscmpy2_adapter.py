@@ -330,7 +330,10 @@ class CICEROSCMPY2(_Adapter):
             Driving mode. Maps to ``cicero_conc_run`` internally.
         distribution_json
             Optional explicit path to the parameter posterior JSON.
-            Defaults to the single ``*distribution*.json`` or
+            Defaults to the single ``calibrated_*ensemble*.json``
+            (Marit's Zenodo convention, e.g.
+            ``calibrated_ciceroscm_ensemble.json`` in
+            `10.5281/zenodo.20506399`), ``*distribution*.json``, or
             ``draw_samples_*.json`` in the directory.
         member_indices
             Optional zero-based row indices into the parameter
@@ -422,10 +425,27 @@ class CICEROSCMPY2(_Adapter):
 
 
 def _resolve_distribution_json(cal_dir) -> str:
-    """Locate the parameter posterior JSON in ``cal_dir``."""
+    """Locate the parameter posterior JSON in ``cal_dir``.
+
+    Patterns matched in order (first uniquely-matching pattern wins):
+
+    * ``calibrated_*ensemble*.json`` -- Marit's canonical Zenodo
+      publication (e.g. ``calibrated_ciceroscm_ensemble.json`` in
+      `10.5281/zenodo.20506399`).
+    * ``*distribution*.json`` -- internal naming used during early
+      development.
+    * ``draw_samples_*.json`` -- internal naming used in
+      ``cscm-calibrate`` dev directories before the Zenodo
+      publication convention.
+    """
     from pathlib import Path
 
-    for pat in ("*distribution*.json", "draw_samples_*.json"):
+    patterns = (
+        "calibrated_*ensemble*.json",
+        "*distribution*.json",
+        "draw_samples_*.json",
+    )
+    for pat in patterns:
         matches = sorted(Path(cal_dir).glob(pat))
         if len(matches) == 1:
             return str(matches[0])
@@ -437,8 +457,9 @@ def _resolve_distribution_json(cal_dir) -> str:
             )
     raise FileNotFoundError(
         f"CICEROSCMPY2.from_native_distribution: no parameter posterior "
-        f"JSON in {cal_dir} (expected *distribution*.json or "
-        "draw_samples_*.json). Pass ``distribution_json=...`` explicitly."
+        f"JSON in {cal_dir} (expected calibrated_*ensemble*.json, "
+        "*distribution*.json, or draw_samples_*.json). Pass "
+        "``distribution_json=...`` explicitly."
     )
 
 

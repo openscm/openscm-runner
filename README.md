@@ -52,11 +52,18 @@ Mode is expressed via the `openscm_runner.RunMode` enum
 `NotImplementedError` if asked to run in a mode it does not declare
 in its `supported_modes` attribute.
 
-Adapters that ship with a native parameter distribution (FaIRv2's
-Zenodo calibration, CICERO-SCM 2.x's `rcmip-march2026` bundle) expose
-a `from_native_distribution` classmethod returning a fully-configured
-instance. Adapters that don't have a published distribution are
-configured with explicit per-cfg dicts the standard way.
+Adapters that ship with a native parameter distribution expose a
+`from_native_distribution` classmethod returning a fully-configured
+instance. Current published calibrations:
+
+- **FaIRv2**: see the FaIR docs for current Zenodo records.
+- **CICERO-SCM-PY2**: [`10.5281/zenodo.20506399`](https://doi.org/10.5281/zenodo.20506399)
+  (Sandstad, v1.0.0, RCMIP phase III, calibrated for `ciceroscm 2.1.0`).
+  Download and unpack, then pass the directory path to
+  `CICEROSCMPY2.from_native_distribution(cal_dir)`.
+
+Adapters that don't have a published distribution are configured with
+explicit per-cfg dicts the standard way.
 
 Scenario inputs use the openscm-runner emissions naming convention;
 the wrapper raises `ValueError` on unknown emissions variable names

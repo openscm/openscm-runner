@@ -31,7 +31,14 @@
 # * ``solar_RCMIP_historical_RCMIP3.txt``
 # * ``VOLC_RCMIP_historical_RCMIP3.txt``
 # * ``LUCalbedo_RCMIP_historical_RCMIP3.txt``
-# * a ``*distribution*.json`` or ``draw_samples_*.json``
+# * a parameter posterior JSON matching one of
+#   ``calibrated_*ensemble*.json``, ``*distribution*.json``, or
+#   ``draw_samples_*.json``
+#
+# The canonical published calibration is Sandstad v1.0.0
+# (`10.5281/zenodo.20506399`), which follows this layout exactly.
+# Download, unpack, and point ``from_native_distribution`` at the
+# unpacked directory.
 #
 # Every required path is also cfg-overridable. Partial overrides skip
 # the canonical-file existence check for the overridden key, so the
