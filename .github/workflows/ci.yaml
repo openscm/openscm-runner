@@ -165,16 +165,30 @@ jobs:
         run: |
           IFS=' ' read -ra PACKAGES <<< "fair>=1.6,<2 ciceroscm>=1.1,<2 pymagicc<3"
           for pkg in "${PACKAGES[@]}"; do
-            poetry run pip install "$pkg"
+            poetry run pip install --no-cache-dir "$pkg"
           done
+          echo "=== ENV1 PACKAGES INSTALLED ==="
+          poetry run pip list | grep -E '^(fair|ciceroscm|pymagicc)'
           poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-fail-under=0 -m "faircicero1x_only or magicc"
-      - name: Uninstall env1 packages and install env2 packages
+      - name: Uninstall env1 packages and clean up
         run: |
+          echo "=== UNINSTALLING ENV1 PACKAGES ==="
           poetry run pip uninstall -y fair ciceroscm pymagicc
+          echo "=== CLEARING PYTHON BYTECODE CACHE ==="
+          find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+          find . -type f -name '*.pyc' -delete 2>/dev/null || true
+          echo "=== VERIFYING UNINSTALL ==="
+          poetry run pip list | grep -E '^(fair|ciceroscm|pymagicc)' || echo "Confirmed: env1 packages removed"
+      - name: Install env2 packages
+        run: |
+          echo "=== INSTALLING ENV2 PACKAGES ==="
           IFS=' ' read -ra PACKAGES <<< "fair>=2,<3 ciceroscm>=2,<3 pymagicc<3"
           for pkg in "${PACKAGES[@]}"; do
-            poetry run pip install "$pkg"
+            echo "Installing: $pkg"
+            poetry run pip install --force-reinstall --no-cache-dir "$pkg"
           done
+          echo "=== ENV2 PACKAGES INSTALLED ==="
+          poetry run pip list | grep -E '^(fair|ciceroscm|pymagicc)'
       - name: Run env2 tests
         env:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
