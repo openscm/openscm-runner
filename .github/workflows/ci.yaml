@@ -190,12 +190,12 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: ./.github/actions/setup
         with:
+          os: "ubuntu-latest"
           python-version: "3.10"
-      - name: Install coverage
-        run: pip install coverage
+          venv-id: "coverage-combine"
+          poetry-dependency-install-flags: "--only main"
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4
         with:
@@ -210,11 +210,11 @@ jobs:
           echo "Coverage files in current directory:"
           ls -la .coverage*
           # Combine all coverage files
-          coverage combine --keep
+          poetry run coverage combine --keep
           echo "Combined coverage report:"
-          coverage report
+          poetry run coverage report
           # Generate XML report from combined data
-          coverage xml
+          poetry run coverage xml
       - name: Upload combined coverage to Codecov
         uses: codecov/codecov-action@v3
 
