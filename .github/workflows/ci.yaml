@@ -160,7 +160,11 @@ jobs:
           venv-id: "tests-${{ matrix.environment.name }}-${{ matrix.python-version }}"
           poetry-dependency-install-flags: "--with ${{ matrix.environment.dependency-group }}"
       - name: Install model packages for ${{ matrix.environment.name }}
-        run: poetry run pip install "${{ matrix.environment.model-packages }}"
+        run: |
+          IFS=' ' read -ra PACKAGES <<< "${{ matrix.environment.model-packages }}"
+          for pkg in "${PACKAGES[@]}"; do
+            poetry run pip install "$pkg"
+          done
       - name: Download MAGICC
         run: |
           mkdir -p bin/magicc/magicc-v7.5.3
