@@ -136,32 +136,24 @@ jobs:
     # Test with two different dependency environments:
     # env1: fair<2, ciceroscmpy<2 (v1.x adapters)
     # env2: fair>=2, ciceroscmpy>=2 (v2.x adapters)
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: [ "3.10", "3.11" ]
-        environment:
-          - name: "env1"
-            dependency-group: "test-env1"
-            markers: "faircicero1x_only or magicc"
-            model-packages: "fair>=1.6,<2 ciceroscm>=1.1,<2 pymagicc<3"
-          - name: "env2"
-            dependency-group: "test-env2"
-            markers: "faircicero2_only or magicc"
-            model-packages: "fair>=2,<3 ciceroscm>=2,<3 pymagicc<3"
-    runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - uses: ./.github/actions/setup
+      - name: Run tests for env1 (fair<2, ciceroscmpy<2)
+        uses: ./.github/actions/setup
         with:
           os: "ubuntu-latest"
           python-version: "${{ matrix.python-version }}"
-          venv-id: "tests-${{ matrix.environment.name }}-${{ matrix.python-version }}"
-          poetry-dependency-install-flags: "--with ${{ matrix.environment.dependency-group }}"
-      - name: Install model packages for ${{ matrix.environment.name }}
+          venv-id: "tests-env1-${{ matrix.python-version }}"
+          poetry-dependency-install-flags: "--with test-env1"
+      - name: Install env1 model packages
         run: |
-          IFS=' ' read -ra PACKAGES <<< "${{ matrix.environment.model-packages }}"
+          IFS=' ' read -ra PACKAGES <<< "fair>=1.6,<2 ciceroscm>=1.1,<2 pymagicc<3"
           for pkg in "${PACKAGES[@]}"; do
             poetry run pip install "$pkg"
           done
@@ -170,51 +162,37 @@ jobs:
           mkdir -p bin/magicc/magicc-v7.5.3
           wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
           tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
-      - name: Run tests for ${{ matrix.environment.name }}
+      - name: Run tests for env1
         env:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
-          COVERAGE_FILE: .coverage.${{ matrix.environment.name }}-py${{ matrix.python-version }}
+          COVERAGE_FILE: .coverage.env1-py${{ matrix.python-version }}
         run: |
-          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-fail-under=0 -m "${{ matrix.environment.markers }}"
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
+          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-fail-under=0 -m "faircicero1x_only or magicc"
+      - name: Run tests for env2 (fair>=2, ciceroscmpy>=2)
+        uses: ./.github/actions/setup
         with:
-          name: coverage-${{ matrix.environment.name }}-py${{ matrix.python-version }}
-          path: .coverage.*
-          retention-days: 1
-
-  tests-multi-env-coverage:
-    # Combine coverage from both environments and report
-    needs: tests-multi-env
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-      - name: Install coverage
-        run: pip install coverage
-      - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: coverage-artifacts
-      - name: Combine coverage data
+          os: "ubuntu-latest"
+          python-version: "${{ matrix.python-version }}"
+          venv-id: "tests-env2-${{ matrix.python-version }}"
+          poetry-dependency-install-flags: "--with test-env2"
+      - name: Install env2 model packages
         run: |
-          # Debug: show what we downloaded
-          echo "Downloaded artifacts:"
-          find coverage-artifacts -type f -name ".coverage.*"
-          # Consolidate all coverage files into current directory
-          find coverage-artifacts -type f -name ".coverage.*" -exec mv {} . \;
-          echo "Coverage files in current directory:"
-          ls -la .coverage*
-          # Combine all coverage files
-          coverage combine --keep
+          IFS=' ' read -ra PACKAGES <<< "fair>=2,<3 ciceroscm>=2,<3 pymagicc<3"
+          for pkg in "${PACKAGES[@]}"; do
+            poetry run pip install "$pkg"
+          done
+      - name: Run tests for env2
+        env:
+          MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
+          COVERAGE_FILE: .coverage.env2-py${{ matrix.python-version }}
+        run: |
+          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-fail-under=0 -m "faircicero2_only or magicc"
+      - name: Combine coverage from both environments
+        run: |
+          poetry run coverage combine .coverage.env1-py${{ matrix.python-version }} .coverage.env2-py${{ matrix.python-version }}
           echo "Combined coverage report:"
-          coverage report
-          # Generate XML report from combined data
-          coverage xml
+          poetry run coverage report
+          poetry run coverage xml
       - name: Upload combined coverage to Codecov
         uses: codecov/codecov-action@v3
 
