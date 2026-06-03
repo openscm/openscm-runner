@@ -74,3 +74,29 @@ virtual-environment:  ## update virtual environment, create a new one if it does
 	poetry config virtualenvs.in-project true
 	poetry install --all-extras
 	poetry run pre-commit install
+
+.PHONY: test-env1
+test-env1:  ## run tests with environment 1 (fair<2, ciceroscmpy<2, magicc7)
+	poetry install --with test-env1
+	poetry run pip install 'fair>=1.6,<2' 'ciceroscm>=1.1,<2' 'pymagicc<3'
+	COVERAGE_FILE=.coverage.env1 poetry run pytest src tests -r a -v --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml --cov-fail-under=0 -m "faircicero1x_only or magicc" || true
+
+.PHONY: test-env2
+test-env2:  ## run tests with environment 2 (fair>=2, ciceroscmpy>=2, magicc7)
+	poetry install --with test-env2
+	poetry run pip install 'fair>=2,<3' 'ciceroscm>=2,<3' 'pymagicc<3'
+	COVERAGE_FILE=.coverage.env2 poetry run pytest src tests -r a -v --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml --cov-fail-under=0 -m "faircicero2_only or magicc" || true
+
+.PHONY: test-multi
+test-multi:  ## run tests with both environments sequentially and combine coverage
+	@echo "Running tests with environment 1 (fair<2, ciceroscmpy<2)..."
+	@$(MAKE) test-env1
+	@echo "\nRunning tests with environment 2 (fair>=2, ciceroscmpy>=2)..."
+	@$(MAKE) test-env2
+	@echo "\nCombining coverage from both environments..."
+	@poetry run coverage combine .coverage.env1 .coverage.env2
+	@poetry run coverage report
+
+.PHONY: test-multi-coverage
+test-multi-coverage:  ## clean up coverage files from previous test-multi runs
+	rm -f .coverage .coverage.* coverage.xml

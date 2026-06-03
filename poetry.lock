@@ -543,12 +543,12 @@ version = "0.4.6"
 description = "Cross-platform colored terminal text."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
-groups = ["main", "dev", "docs", "tests"]
+groups = ["main", "dev", "docs", "test-env1", "test-env2", "tests"]
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {main = "extra == \"notebooks\" and sys_platform == \"win32\" or platform_system == \"Windows\"", dev = "platform_system == \"Windows\" or sys_platform == \"win32\"", docs = "platform_system == \"Windows\" or sys_platform == \"win32\"", tests = "sys_platform == \"win32\""}
+markers = {main = "extra == \"notebooks\" and sys_platform == \"win32\" or platform_system == \"Windows\"", dev = "platform_system == \"Windows\" or sys_platform == \"win32\"", docs = "platform_system == \"Windows\" or sys_platform == \"win32\"", test-env1 = "sys_platform == \"win32\"", test-env2 = "sys_platform == \"win32\"", tests = "sys_platform == \"win32\""}
 
 [[package]]
 name = "comm"
@@ -640,7 +640,7 @@ version = "7.4.1"
 description = "Code coverage measurement for Python"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["dev", "test-env1", "test-env2"]
 files = [
     {file = "coverage-7.4.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:077d366e724f24fc02dbfe9d946534357fda71af9764ff99d73c3c596001bbd7"},
     {file = "coverage-7.4.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:0193657651f5399d433c92f8ae264aff31fc1d066deee4b831549526433f3f61"},
@@ -817,12 +817,12 @@ version = "1.2.0"
 description = "Backport of PEP 654 (exception groups)"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "dev", "docs", "tests"]
+groups = ["main", "dev", "docs", "test-env1", "test-env2", "tests"]
 files = [
     {file = "exceptiongroup-1.2.0-py3-none-any.whl", hash = "sha256:4bfd3996ac73b41e9b9628b04e079f193850720ea5945fc96a08633c66912f14"},
     {file = "exceptiongroup-1.2.0.tar.gz", hash = "sha256:91f5c769735f051a4290d52edd0858999b57e5876e9f85937691bd4c9fa3ed68"},
 ]
-markers = {main = "extra == \"notebooks\" and python_version == \"3.10\"", dev = "python_version == \"3.10\"", docs = "python_version == \"3.10\"", tests = "python_version == \"3.10\""}
+markers = {main = "extra == \"notebooks\" and python_version == \"3.10\"", dev = "python_version == \"3.10\"", docs = "python_version == \"3.10\"", test-env1 = "python_version == \"3.10\"", test-env2 = "python_version == \"3.10\"", tests = "python_version == \"3.10\""}
 
 [package.extras]
 test = ["pytest (>=6)"]
@@ -1184,7 +1184,7 @@ version = "2.0.0"
 description = "brain-dead simple config-ini parsing"
 optional = false
 python-versions = ">=3.7"
-groups = ["dev", "tests"]
+groups = ["dev", "test-env1", "test-env2", "tests"]
 files = [
     {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
     {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
@@ -2423,7 +2423,7 @@ version = "23.2"
 description = "Core utilities for Python packages"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "dev", "docs", "tests"]
+groups = ["main", "dev", "docs", "test-env1", "test-env2", "tests"]
 files = [
     {file = "packaging-23.2-py3-none-any.whl", hash = "sha256:8c491190033a9af7e1d931d0b5dacc2ef47509b34dd0de67ed209b5203fc88c7"},
     {file = "packaging-23.2.tar.gz", hash = "sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5"},
@@ -2724,7 +2724,7 @@ version = "1.4.0"
 description = "plugin and hook calling mechanisms for python"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev", "tests"]
+groups = ["dev", "test-env1", "test-env2", "tests"]
 files = [
     {file = "pluggy-1.4.0-py3-none-any.whl", hash = "sha256:7db9f7b503d67d1c5b95f59773ebb58a8c1c288129a88665838012cfb07b8981"},
     {file = "pluggy-1.4.0.tar.gz", hash = "sha256:8c85c2876142a764e5b7548e7d9a0e0ddb46f5185161049a79b7e974454223be"},
@@ -2989,7 +2989,7 @@ version = "7.4.4"
 description = "pytest: simple powerful testing with Python"
 optional = false
 python-versions = ">=3.7"
-groups = ["dev", "tests"]
+groups = ["dev", "test-env1", "test-env2", "tests"]
 files = [
     {file = "pytest-7.4.4-py3-none-any.whl", hash = "sha256:b090cdf5ed60bf4c45261be03239c2c1c22df034fbffe691abe93cd80cea01d8"},
     {file = "pytest-7.4.4.tar.gz", hash = "sha256:2cf0005922c6ace4a3e2ec8b4080eb0d9753fdc93107415332f50ce9e7994280"},
@@ -3012,7 +3012,7 @@ version = "4.1.0"
 description = "Pytest plugin for measuring coverage."
 optional = false
 python-versions = ">=3.7"
-groups = ["dev"]
+groups = ["dev", "test-env1", "test-env2"]
 files = [
     {file = "pytest-cov-4.1.0.tar.gz", hash = "sha256:3904b13dfbfec47f003b8e77fd5b589cd11904a21ddf1ab38a64f204d6a10ef6"},
     {file = "pytest_cov-4.1.0-py3-none-any.whl", hash = "sha256:6ba70b9e97e69fcc3fb45bfeab2d0a138fb65c4d0d6a41ef33983ad114be8c3a"},
@@ -3031,7 +3031,7 @@ version = "1.5.0"
 description = "pytest plugin for test data directories and files"
 optional = false
 python-versions = ">=3.8"
-groups = ["tests"]
+groups = ["test-env1", "test-env2", "tests"]
 files = [
     {file = "pytest-datadir-1.5.0.tar.gz", hash = "sha256:1617ed92f9afda0c877e4eac91904b5f779d24ba8f5e438752e3ae39d8d2ee3f"},
     {file = "pytest_datadir-1.5.0-py3-none-any.whl", hash = "sha256:34adf361bcc7b37961bbc1dfa8d25a4829e778bab461703c38a5c50ca9c36dc8"},
@@ -3046,7 +3046,7 @@ version = "2.5.0"
 description = "Easy to use fixtures to write regression tests."
 optional = false
 python-versions = ">=3.8"
-groups = ["tests"]
+groups = ["test-env1", "test-env2", "tests"]
 files = [
     {file = "pytest-regressions-2.5.0.tar.gz", hash = "sha256:818c7884c1cff3babf89eebb02cbc27b307856b1985427c24d52cb812a106fd9"},
     {file = "pytest_regressions-2.5.0-py3-none-any.whl", hash = "sha256:8c4e5c4037325fdb0825bc1fdcb75e17e03adf3407049f0cb704bb996d496255"},
@@ -3166,7 +3166,7 @@ version = "6.0.1"
 description = "YAML parser and emitter for Python"
 optional = false
 python-versions = ">=3.6"
-groups = ["main", "dev", "docs", "tests"]
+groups = ["main", "dev", "docs", "test-env1", "test-env2", "tests"]
 files = [
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d858aa552c999bc8a8d57426ed01e40bef403cd8ccdd0fc5f6f04a00414cac2a"},
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:fd66fc5d0da6d9815ba2cebeb4205f95818ff4b79c3ebe268e75d961704af52f"},
@@ -4153,12 +4153,12 @@ version = "2.0.1"
 description = "A lil' TOML parser"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "dev", "tests"]
+groups = ["main", "dev", "test-env1", "test-env2", "tests"]
 files = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
 ]
-markers = {main = "(extra == \"ciceroscmpy\" or extra == \"ciceroscmpy2\" or extra == \"models\" or extra == \"notebooks\") and python_version == \"3.10\"", dev = "python_version == \"3.10\"", tests = "python_version == \"3.10\""}
+markers = {main = "(extra == \"ciceroscmpy\" or extra == \"ciceroscmpy2\" or extra == \"models\" or extra == \"notebooks\") and python_version == \"3.10\"", dev = "python_version == \"3.10\"", test-env1 = "python_version == \"3.10\"", test-env2 = "python_version == \"3.10\"", tests = "python_version == \"3.10\""}
 
 [[package]]
 name = "tornado"
@@ -4494,4 +4494,4 @@ notebooks = ["ipywidgets", "notebook", "seaborn"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "84786ba5de57baf34794e6bdf6681b368f1f196c2076da197209356ed4822132"
+content-hash = "ea68e24b10156cfb8b8cb05615e5edfcbbe644623eaba06ac671d264983a5de2"
