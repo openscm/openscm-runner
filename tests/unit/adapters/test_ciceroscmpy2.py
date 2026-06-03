@@ -78,6 +78,7 @@ def _make_full_cfg(tmp_path) -> dict:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.faircicero2_only
 @cicero_skip
 def test_ciceroscmpy2_is_registered():
     assert CICEROSCMPY2.model_name == "CICERO-SCM-PY2"
@@ -86,6 +87,7 @@ def test_ciceroscmpy2_is_registered():
     assert isinstance(get_adapter("cicero-scm-py2"), CICEROSCMPY2)
 
 
+@pytest.mark.faircicero2_only
 def test_ciceroscmpy2_raises_when_ciceroscm_not_installed():
     with patch(
         "openscm_runner.adapters.ciceroscm_py2_adapter."
@@ -96,6 +98,7 @@ def test_ciceroscmpy2_raises_when_ciceroscm_not_installed():
             CICEROSCMPY2()
 
 
+@pytest.mark.faircicero2_only
 def test_ciceroscmpy2_raises_when_wrong_major_version():
     with patch(
         "openscm_runner.adapters.ciceroscm_py2_adapter."
@@ -111,6 +114,7 @@ def test_ciceroscmpy2_raises_when_wrong_major_version():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.faircicero2_only
 @cicero_skip
 def test_ciceroscmpy2_run_rejects_output_config(tmp_path):
     adapter = CICEROSCMPY2()
@@ -123,10 +127,12 @@ def test_ciceroscmpy2_run_rejects_output_config(tmp_path):
         )
 
 
-@cicero_skip
+@pytest.mark.faircicero2_only
 @pytest.mark.parametrize("missing_key", _REQUIRED_CFG_KEYS)
+@cicero_skip
 def test_ciceroscmpy2_rejects_cfg_missing_required_sidecar(
-    tmp_path, missing_key,
+    tmp_path,
+    missing_key,
 ):
     """
     Each required sidecar key, dropped one at a time, must produce a
@@ -147,6 +153,7 @@ def test_ciceroscmpy2_rejects_cfg_missing_required_sidecar(
         )
 
 
+@pytest.mark.faircicero2_only
 @cicero_skip
 def test_ciceroscmpy2_rejects_missing_distribution_json(tmp_path):
     """
@@ -167,6 +174,7 @@ def test_ciceroscmpy2_rejects_missing_distribution_json(tmp_path):
         )
 
 
+@pytest.mark.faircicero2_only
 @cicero_skip
 def test_ciceroscmpy2_rejects_empty_member_indices(tmp_path):
     """
@@ -175,7 +183,7 @@ def test_ciceroscmpy2_rejects_empty_member_indices(tmp_path):
     a zero-member run.
     """
     samples_json = tmp_path / "samples.json"
-    samples_json.write_text("[{\"pamset_udm\": {}, \"pamset_emiconc\": {}}]")
+    samples_json.write_text('[{"pamset_udm": {}, "pamset_emiconc": {}}]')
     adapter = CICEROSCMPY2()
     cfg = _make_full_cfg(tmp_path)
     cfg["distribution_json"] = str(samples_json)
@@ -206,12 +214,14 @@ def _populate_minimal_calibration_dir(cal_dir) -> None:
     from openscm_runner.adapters.ciceroscm_py2_adapter.ciceroscmpy2_adapter import (
         _DEFAULT_CANONICAL_FILES,
     )
+
     for fname in _DEFAULT_CANONICAL_FILES.values():
         (cal_dir / fname).write_text("")
     (cal_dir / "draw_samples_500.json").write_text("")
 
 
 @cicero_skip
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_resolves_canonical_files(tmp_path):
     """
     Given a calibration directory with canonical filenames, the
@@ -240,6 +250,7 @@ def test_from_native_distribution_resolves_canonical_files(tmp_path):
     # up from a separate bundle file (mirrors FaIR's runtime mask).
 
 
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_errors_on_missing_canonical_file(tmp_path):
     """
     Drop one required canonical file — the resolver names it in the
@@ -254,6 +265,7 @@ def test_from_native_distribution_errors_on_missing_canonical_file(tmp_path):
         CICEROSCMPY2.from_native_distribution(cal_dir)
 
 
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_errors_when_not_a_directory(tmp_path):
     not_a_dir = tmp_path / "not_a_dir"
     not_a_dir.write_text("")
@@ -261,6 +273,7 @@ def test_from_native_distribution_errors_when_not_a_directory(tmp_path):
         CICEROSCMPY2.from_native_distribution(not_a_dir)
 
 
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_errors_when_path_missing(tmp_path):
     missing = tmp_path / "missing_dir"
     with pytest.raises(FileNotFoundError, match="not found"):
@@ -268,6 +281,7 @@ def test_from_native_distribution_errors_when_path_missing(tmp_path):
 
 
 @cicero_skip
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_explicit_distribution_json_overrides_default(
     tmp_path,
 ):
@@ -282,12 +296,14 @@ def test_from_native_distribution_explicit_distribution_json_overrides_default(
     other_dist.write_text("")
 
     adapter = CICEROSCMPY2.from_native_distribution(
-        cal_dir, distribution_json=other_dist,
+        cal_dir,
+        distribution_json=other_dist,
     )
     assert adapter.cfgs[0]["distribution_json"] == str(other_dist)
 
 
 @cicero_skip
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_cfg_overrides_take_precedence(tmp_path):
     """
     Keyword arguments to ``from_native_distribution`` become cfg keys
@@ -300,12 +316,14 @@ def test_from_native_distribution_cfg_overrides_take_precedence(tmp_path):
     custom_gaspam.write_text("")
 
     adapter = CICEROSCMPY2.from_native_distribution(
-        cal_dir, gaspam_file=str(custom_gaspam),
+        cal_dir,
+        gaspam_file=str(custom_gaspam),
     )
     assert adapter.cfgs[0]["gaspam_file"] == str(custom_gaspam)
 
 
 @cicero_skip
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_override_skips_missing_canonical_file(tmp_path):
     """
     Partial override: when the user supplies a cfg-level override for
@@ -329,7 +347,8 @@ def test_from_native_distribution_override_skips_missing_canonical_file(tmp_path
 
     # With the override, the missing-canonical check is skipped.
     adapter = CICEROSCMPY2.from_native_distribution(
-        cal_dir, historical_em_file=str(custom_hist_em),
+        cal_dir,
+        historical_em_file=str(custom_hist_em),
     )
     assert adapter.cfgs[0]["historical_em_file"] == str(custom_hist_em)
     # Other canonical files are still resolved from cal_dir.
@@ -343,6 +362,7 @@ def test_from_native_distribution_override_skips_missing_canonical_file(tmp_path
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_spec_reads_metadata_cols_when_present():
     """
     The resolver reads ``protocol_natural_forcing`` and
@@ -360,18 +380,26 @@ def test_resolve_protocol_spec_reads_metadata_cols_when_present():
 
     df = pd.DataFrame(
         [
-            {"model": "m", "scenario": "esm-ssp245", "region": "World",
-             "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
-             "unit": "Mt CO2/yr",
-             "protocol_natural_forcing": "on",
-             "protocol_land_use_forcing": "historical",
-             "2020": 1.0},
-            {"model": "m", "scenario": "esm-allGHG-piControl", "region": "World",
-             "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
-             "unit": "Mt CO2/yr",
-             "protocol_natural_forcing": "off",
-             "protocol_land_use_forcing": "constant_zero",
-             "2020": 0.0},
+            {
+                "model": "m",
+                "scenario": "esm-ssp245",
+                "region": "World",
+                "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
+                "unit": "Mt CO2/yr",
+                "protocol_natural_forcing": "on",
+                "protocol_land_use_forcing": "historical",
+                "2020": 1.0,
+            },
+            {
+                "model": "m",
+                "scenario": "esm-allGHG-piControl",
+                "region": "World",
+                "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
+                "unit": "Mt CO2/yr",
+                "protocol_natural_forcing": "off",
+                "protocol_land_use_forcing": "constant_zero",
+                "2020": 0.0,
+            },
         ]
     )
     run = ScmRun(df)
@@ -385,6 +413,7 @@ def test_resolve_protocol_spec_reads_metadata_cols_when_present():
     }
 
 
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_spec_defaults_when_meta_missing():
     """
     No metadata on the ScmRun -> non-idealised defaults (no
@@ -398,11 +427,18 @@ def test_resolve_protocol_spec_defaults_when_meta_missing():
         _resolve_protocol_spec,
     )
 
-    df = pd.DataFrame([
-        {"model": "m", "scenario": "ssp245", "region": "World",
-         "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
-         "unit": "Mt CO2/yr", "2020": 1.0},
-    ])
+    df = pd.DataFrame(
+        [
+            {
+                "model": "m",
+                "scenario": "ssp245",
+                "region": "World",
+                "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
+                "unit": "Mt CO2/yr",
+                "2020": 1.0,
+            },
+        ]
+    )
     run = ScmRun(df)
 
     assert _resolve_protocol_spec(run, "ssp245") == {
@@ -417,6 +453,7 @@ def test_resolve_protocol_spec_defaults_when_meta_missing():
     }
 
 
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_spec_handles_non_scmrun_input():
     """
     A stub object without ``.meta`` should default to non-idealised
@@ -431,5 +468,3 @@ def test_resolve_protocol_spec_handles_non_scmrun_input():
 
     spec = _resolve_protocol_spec(_Stub(), "esm-flat10")
     assert spec == {"natural_forcing": "on", "land_use_forcing": "historical"}
-
-

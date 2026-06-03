@@ -18,7 +18,6 @@ End-to-end runs against a real calibration bundle live in
 """
 from __future__ import annotations
 
-import csv
 from pathlib import Path
 from unittest.mock import patch
 
@@ -35,11 +34,10 @@ from openscm_runner.adapters.fair2_adapter._native_calibration import (
 # `--all-extras` but pip can only have one major version of `fair` at a
 # time; when the lockfile resolved to fair 1.6.x, HAS_FAIR2 is False and
 # these tests skip cleanly instead of raising the documented ImportError.
-fair2_skip = pytest.mark.skipif(
-    not HAS_FAIR2, reason="fair>=2 not installed"
-)
+fair2_skip = pytest.mark.skipif(not HAS_FAIR2, reason="fair>=2 not installed")
 
 
+@pytest.mark.faircicero2_only
 @fair2_skip
 def test_fair2_is_registered():
     assert FAIR2.model_name == "FaIRv2"
@@ -49,10 +47,9 @@ def test_fair2_is_registered():
     assert isinstance(get_adapter("fairv2"), FAIR2)
 
 
+@pytest.mark.faircicero2_only
 def test_fair2_raises_when_fair_not_installed():
-    with patch(
-        "openscm_runner.adapters.fair2_adapter.fair2_adapter.HAS_FAIR2", False
-    ):
+    with patch("openscm_runner.adapters.fair2_adapter.fair2_adapter.HAS_FAIR2", False):
         with pytest.raises(ImportError, match="FaIR 2.x is not installed"):
             FAIR2()
 
@@ -79,11 +76,13 @@ def _make_bundle(tmp_path: Path, missing=()) -> Path:
     return tmp_path
 
 
+@pytest.mark.faircicero2_only
 def test_native_calibration_raises_when_directory_missing(tmp_path):
     with pytest.raises(FileNotFoundError, match="not found"):
         NativeFairCalibration(tmp_path / "does_not_exist")
 
 
+@pytest.mark.faircicero2_only
 def test_native_calibration_raises_when_path_is_file(tmp_path):
     f = tmp_path / "not_a_dir.txt"
     f.write_text("x")
@@ -91,12 +90,14 @@ def test_native_calibration_raises_when_path_is_file(tmp_path):
         NativeFairCalibration(f)
 
 
+@pytest.mark.faircicero2_only
 def test_native_calibration_raises_with_missing_required_files(tmp_path):
     _make_bundle(tmp_path, missing=("calibrated_constrained_parameters.csv",))
     with pytest.raises(FileNotFoundError, match="missing required files"):
         NativeFairCalibration(tmp_path)
 
 
+@pytest.mark.faircicero2_only
 def test_native_calibration_loads_parameters(tmp_path):
     _make_bundle(tmp_path)
     cal = NativeFairCalibration(tmp_path)
@@ -108,6 +109,7 @@ def test_native_calibration_loads_parameters(tmp_path):
     assert list(cal.parameters.index) == [100, 200]
 
 
+@pytest.mark.faircicero2_only
 def test_native_calibration_select_members_all(tmp_path):
     _make_bundle(tmp_path)
     cal = NativeFairCalibration(tmp_path)
@@ -115,6 +117,7 @@ def test_native_calibration_select_members_all(tmp_path):
     assert len(out) == 2
 
 
+@pytest.mark.faircicero2_only
 def test_native_calibration_select_members_indices(tmp_path):
     _make_bundle(tmp_path)
     cal = NativeFairCalibration(tmp_path)
@@ -126,6 +129,7 @@ def test_native_calibration_select_members_indices(tmp_path):
     assert out.index[0] == 200
 
 
+@pytest.mark.faircicero2_only
 def test_native_calibration_select_members_empty_raises(tmp_path):
     _make_bundle(tmp_path)
     cal = NativeFairCalibration(tmp_path)
@@ -133,6 +137,7 @@ def test_native_calibration_select_members_empty_raises(tmp_path):
         cal.select_members([])
 
 
+@pytest.mark.faircicero2_only
 def test_native_calibration_file_returns_none_for_absent_optional(tmp_path):
     _make_bundle(tmp_path)
     cal = NativeFairCalibration(tmp_path)
@@ -140,6 +145,7 @@ def test_native_calibration_file_returns_none_for_absent_optional(tmp_path):
     assert cal.file("species_configs") is not None
 
 
+@pytest.mark.faircicero2_only
 @fair2_skip
 def test_fair2_translated_cfg_with_no_climate_configs_raises_useful_error():
     """
@@ -158,6 +164,7 @@ def test_fair2_translated_cfg_with_no_climate_configs_raises_useful_error():
         )
 
 
+@pytest.mark.faircicero2_only
 @fair2_skip
 def test_fair2_run_rejects_mixed_native_and_translated_cfgs():
     """
@@ -177,6 +184,7 @@ def test_fair2_run_rejects_mixed_native_and_translated_cfgs():
         )
 
 
+@pytest.mark.faircicero2_only
 @fair2_skip
 def test_fair2_run_rejects_output_config():
     adapter = FAIR2()
@@ -189,6 +197,7 @@ def test_fair2_run_rejects_output_config():
         )
 
 
+@pytest.mark.faircicero2_only
 @fair2_skip
 def test_fair2_translated_cfg_warns_on_unknown_parameter_names(caplog):
     """
@@ -225,6 +234,7 @@ def test_fair2_translated_cfg_warns_on_unknown_parameter_names(caplog):
     assert "ignored unknown parameter names" in caplog.text
 
 
+@pytest.mark.faircicero2_only
 def test_fair2_stochastic_run_default_is_off():
     """
     The AR7-relevant fair-calibrate bundles ship
@@ -247,6 +257,7 @@ def test_fair2_stochastic_run_default_is_off():
     from openscm_runner.adapters.fair2_adapter.fair2_adapter import (
         _run_one_calibration,
     )
+
     sig = inspect.signature(_run_one_calibration)
     assert sig.parameters["stochastic_run"].default is False, (
         "_run_one_calibration's stochastic_run kwarg must default to "
@@ -255,6 +266,7 @@ def test_fair2_stochastic_run_default_is_off():
     )
 
 
+@pytest.mark.faircicero2_only
 @fair2_skip
 def test_fair2_conc_driven_requires_a_conc_source(tmp_path):
     """
@@ -291,6 +303,7 @@ def test_fair2_conc_driven_requires_a_conc_source(tmp_path):
 # loader sets them) for consistent cross-adapter behaviour.
 
 
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_flags_reads_metadata_cols_when_present():
     # When the input ScmRun carries the loader's protocol metadata, the
     # resolver returns the per-scenario (natural_off, land_use_zero)
@@ -305,19 +318,27 @@ def test_resolve_protocol_flags_reads_metadata_cols_when_present():
     df = pd.DataFrame(
         [
             # CD real-world (natural=on, lu=historical) -> both False
-            {"model": "m", "scenario": "ssp245", "region": "World",
-             "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
-             "unit": "Mt CO2/yr",
-             "protocol_natural_forcing": "on",
-             "protocol_land_use_forcing": "historical",
-             "2020": 1.0},
+            {
+                "model": "m",
+                "scenario": "ssp245",
+                "region": "World",
+                "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
+                "unit": "Mt CO2/yr",
+                "protocol_natural_forcing": "on",
+                "protocol_land_use_forcing": "historical",
+                "2020": 1.0,
+            },
             # CD idealised (natural=off, lu=constant_zero) -> both True
-            {"model": "m", "scenario": "1pctCO2", "region": "World",
-             "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
-             "unit": "Mt CO2/yr",
-             "protocol_natural_forcing": "off",
-             "protocol_land_use_forcing": "constant_zero",
-             "2020": 0.0},
+            {
+                "model": "m",
+                "scenario": "1pctCO2",
+                "region": "World",
+                "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
+                "unit": "Mt CO2/yr",
+                "protocol_natural_forcing": "off",
+                "protocol_land_use_forcing": "constant_zero",
+                "2020": 0.0,
+            },
         ]
     )
     run = ScmRun(df)
@@ -325,6 +346,7 @@ def test_resolve_protocol_flags_reads_metadata_cols_when_present():
     assert flags == {"ssp245": (False, False), "1pctCO2": (True, True)}
 
 
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_flags_falls_back_to_is_idealised_without_metadata():
     # When the ScmRun doesn't carry the metadata cols (e.g. user
     # constructed it directly without going through load_rcmip3_*),
@@ -339,12 +361,22 @@ def test_resolve_protocol_flags_falls_back_to_is_idealised_without_metadata():
 
     df = pd.DataFrame(
         [
-            {"model": "m", "scenario": "ssp245", "region": "World",
-             "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
-             "unit": "Mt CO2/yr", "2020": 1.0},
-            {"model": "m", "scenario": "abrupt-4xCO2", "region": "World",
-             "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
-             "unit": "Mt CO2/yr", "2020": 1.0},
+            {
+                "model": "m",
+                "scenario": "ssp245",
+                "region": "World",
+                "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
+                "unit": "Mt CO2/yr",
+                "2020": 1.0,
+            },
+            {
+                "model": "m",
+                "scenario": "abrupt-4xCO2",
+                "region": "World",
+                "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
+                "unit": "Mt CO2/yr",
+                "2020": 1.0,
+            },
         ]
     )
     run = ScmRun(df)
@@ -354,6 +386,7 @@ def test_resolve_protocol_flags_falls_back_to_is_idealised_without_metadata():
     assert flags["abrupt-4xCO2"] == (True, True)
 
 
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_flags_falls_back_for_scenarios_not_in_run():
     # Mixed case: meta cols are present in general, but a requested
     # scenario name isn't covered by any row (e.g. a bundle-only
@@ -369,12 +402,16 @@ def test_resolve_protocol_flags_falls_back_for_scenarios_not_in_run():
 
     df = pd.DataFrame(
         [
-            {"model": "m", "scenario": "ssp245", "region": "World",
-             "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
-             "unit": "Mt CO2/yr",
-             "protocol_natural_forcing": "on",
-             "protocol_land_use_forcing": "historical",
-             "2020": 1.0},
+            {
+                "model": "m",
+                "scenario": "ssp245",
+                "region": "World",
+                "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
+                "unit": "Mt CO2/yr",
+                "protocol_natural_forcing": "on",
+                "protocol_land_use_forcing": "historical",
+                "2020": 1.0,
+            },
         ]
     )
     run = ScmRun(df)
@@ -385,6 +422,7 @@ def test_resolve_protocol_flags_falls_back_for_scenarios_not_in_run():
     assert flags["esm-flat10"] == (True, True)
 
 
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_flags_handles_none_scenario_run():
     # When no ScmRun is supplied at all (e.g. concentration-only run
     # paths that don't pass scenario_run), the resolver should still
@@ -392,14 +430,17 @@ def test_resolve_protocol_flags_handles_none_scenario_run():
     from openscm_runner.adapters.fair2_adapter.fair2_adapter import (
         _resolve_protocol_flags,
     )
+
     flags = _resolve_protocol_flags(
-        None, ["ssp245", "esm-flat10", "1pctCO2"],
+        None,
+        ["ssp245", "esm-flat10", "1pctCO2"],
     )
     assert flags["ssp245"] == (False, False)
     assert flags["esm-flat10"] == (True, True)
     assert flags["1pctCO2"] == (True, True)
 
 
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_flags_handles_independent_natural_and_land_use():
     # The two flags can move independently when the metadata says so.
     # No scenario in the current registry actually does this, but the
@@ -413,16 +454,18 @@ def test_resolve_protocol_flags_handles_independent_natural_and_land_use():
 
     df = pd.DataFrame(
         [
-            {"model": "m", "scenario": "weird-scen", "region": "World",
-             "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
-             "unit": "Mt CO2/yr",
-             "protocol_natural_forcing": "on",
-             "protocol_land_use_forcing": "constant_zero",
-             "2020": 1.0},
+            {
+                "model": "m",
+                "scenario": "weird-scen",
+                "region": "World",
+                "variable": "Emissions|CO2|MAGICC Fossil and Industrial",
+                "unit": "Mt CO2/yr",
+                "protocol_natural_forcing": "on",
+                "protocol_land_use_forcing": "constant_zero",
+                "2020": 1.0,
+            },
         ]
     )
     run = ScmRun(df)
     flags = _resolve_protocol_flags(run, ["weird-scen"])
     assert flags["weird-scen"] == (False, True)
-
-
