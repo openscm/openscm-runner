@@ -21,6 +21,7 @@ def _check_res(exp, check_val, raise_error, rtol=RTOL):
 
 
 @pytest.mark.magicc
+@pytest.mark.faircicero1x_only
 def test_multimodel_run(test_scenarios, num_regression):
     res = openscm_runner.run.run(
         climate_models_cfgs={
