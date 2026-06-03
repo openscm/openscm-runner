@@ -202,11 +202,19 @@ jobs:
           path: coverage-artifacts
       - name: Combine coverage data
         run: |
+          # Debug: show what we downloaded
+          echo "Downloaded artifacts:"
+          find coverage-artifacts -type f -name ".coverage.*"
           # Consolidate all coverage files into current directory
-          find coverage-artifacts -name ".coverage.*" -exec mv {} . \;
+          find coverage-artifacts -type f -name ".coverage.*" -exec mv {} . \;
+          echo "Coverage files in current directory:"
+          ls -la .coverage*
           # Combine all coverage files
-          poetry run coverage combine
+          poetry run coverage combine --keep
+          echo "Combined coverage report:"
           poetry run coverage report
+          # Generate XML report from combined data
+          poetry run coverage xml
       - name: Upload combined coverage to Codecov
         uses: codecov/codecov-action@v3
 
