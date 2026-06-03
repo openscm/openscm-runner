@@ -60,10 +60,10 @@ keys listed below.
   (``EM_UNIT``, ``CONC_UNIT``, ``BETA``, ``TAU*``, ``NAT_EM``).
   Must match the species set the ``distribution_json`` posterior
   was calibrated against.
-- ``historical_em_file`` (path): CICERO-format historical emissions
+- ``historical_em_file`` (path): RCMIP-format historical emissions
   baseline. Provides the species-column coverage and pre-1850 values
   that the user's ``Emissions|*`` overlay extends.
-- ``historical_conc_file`` (path): CICERO-format historical
+- ``historical_conc_file`` (path): RCMIP-format historical
   concentrations baseline. Same role for the CD path; also provides
   the pre-industrial concentration values CICEROSCM needs to seed
   the concentration solver in ED mode.
@@ -770,7 +770,7 @@ def _build_hybrid_emissions_data(
     zero_unsupplied: bool = False,
 ):
     """
-    Build a CICERO-format emissions DataFrame for one scenario.
+    Build an RCMIP-format emissions DataFrame for one scenario.
 
     Reads ``baseline_em_file`` as the species-coverage and
     historical-trajectory source, then overlays the user's
@@ -928,7 +928,7 @@ def _build_hybrid_concentrations_data(
     hold_unsupplied_at_pi: bool = False,
 ):
     """
-    Build a CICERO-format concentrations DataFrame for one CD scenario.
+    Build an RCMIP-format concentrations DataFrame for one CD scenario.
 
     Reads ``baseline_conc_path`` as the species-coverage and
     historical-trajectory source, forward-fills the last available

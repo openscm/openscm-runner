@@ -306,7 +306,7 @@ def _run_native_cfgs(scenarios, cfgs, output_variables) -> ScmRun:
                 "FaIRv2 conc-driven mode needs concentrations from "
                 "either the scenarios DataFrame "
                 "(``Atmospheric Concentrations|*`` rows) or a bundle "
-                "directory of CICERO-format ``{scen}_conc_*`` files "
+                "directory of RCMIP-format ``{scen}_conc_*`` files "
                 "(``fair2_conc_bundle_dir`` cfg key). Neither was "
                 "supplied."
             )

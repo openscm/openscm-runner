@@ -1,14 +1,14 @@
 """
-Convert CICERO-format concentration files into FaIR 2.x's expected shape.
+Convert RCMIP-format concentration files into FaIR 2.x's expected shape.
 
 This is the conc-driven counterpart to
-:mod:`_emissions_translator`. It reads a CICERO-format
+:mod:`_emissions_translator`. It reads an RCMIP-format
 ``{scen}_conc_{gases_ep}.txt`` file (as shipped in Marit's RCMIP
-bundle) and produces a DataFrame that
-:meth:`fair.FAIR.fill_from_pandas` will accept with
+bundle for openscm/openscm-runner#97) and produces a DataFrame
+that :meth:`fair.FAIR.fill_from_pandas` will accept with
 ``mode="concentration"``.
 
-The bundle's CICERO files look like::
+The bundle's RCMIP files look like::
 
     Component  CO2   CH4   N2O   CFC-11  ...  HFC125  HFC4310mee  cC4F8
     Unit       ppm   ppb   ppb   ppt     ...  ppt     ppt         ppt
@@ -18,11 +18,11 @@ The bundle's CICERO files look like::
     1751       277.1 731.4 273.9 ...
     ...
 
-CICERO and FaIR mostly agree on species names but FaIR uses
-hyphenated forms for HFC / Halon / c-C4F8. The :data:`CICERO_TO_FAIR2_SPECIES`
+RCMIP and FaIR mostly agree on species names but FaIR uses
+hyphenated forms for HFC / Halon / c-C4F8. The :data:`RCMIP_TO_FAIR2_SPECIES`
 map handles the differences; species not in the map are dropped
 with a WARNING (typically only ``H-1202`` and ``HCFC-123`` from
-the CICERO 2024 gaspam, which the AR6 FaIR set does not include).
+the 2024 gaspam, which the AR6 FaIR set does not include).
 
 Units are passed through unchanged (ppm / ppb / ppt match FaIR's
 expectations directly per :func:`fair.io.fill_from._concentration_unit_convert`).
@@ -44,14 +44,14 @@ import pandas as pd
 LOGGER = logging.getLogger(__name__)
 
 
-# CICERO-side species name -> FaIR 2.x species name. CO2 / CH4 / N2O
+# RCMIP-side species name -> FaIR 2.x species name. CO2 / CH4 / N2O
 # and the CFC / HCFC / SF6 / CF4 / C2F6 / C6F14 species are already
 # in matching form across both sides; only the species below need
 # explicit translation. Species the FaIR AR6 default set doesn't
 # include (e.g. ``H-1202``, ``HCFC-123`` in some bundles) drop out
 # silently at the "not in fair_species" check, with a WARNING.
-CICERO_TO_FAIR2_SPECIES = {
-    # HFCs: CICERO uses compact form, FaIR uses hyphenated.
+RCMIP_TO_FAIR2_SPECIES = {
+    # HFCs: RCMIP uses compact form, FaIR uses hyphenated.
     "HFC125": "HFC-125",
     "HFC134a": "HFC-134a",
     "HFC143a": "HFC-143a",
@@ -63,7 +63,7 @@ CICERO_TO_FAIR2_SPECIES = {
     "HFC32": "HFC-32",
     "HFC365mfc": "HFC-365mfc",
     "HFC4310mee": "HFC-4310mee",
-    # Halons: CICERO uses H- prefix, FaIR uses Halon-.
+    # Halons: RCMIP uses H- prefix, FaIR uses Halon-.
     "H-1202": "Halon-1202",
     "H-1211": "Halon-1211",
     "H-1301": "Halon-1301",
@@ -73,14 +73,14 @@ CICERO_TO_FAIR2_SPECIES = {
 }
 
 
-def _read_cicero_conc_file(path: str) -> tuple[pd.DataFrame, dict[str, str]]:
+def _read_rcmip_conc_file(path: str) -> tuple[pd.DataFrame, dict[str, str]]:
     """
-    Parse a CICERO-format concentration file.
+    Parse an RCMIP-format concentration file.
 
     Returns (df, column_units):
-    - ``df``: year-indexed DataFrame with CICERO species names as
+    - ``df``: year-indexed DataFrame with RCMIP species names as
       columns and float values.
-    - ``column_units``: dict mapping each species column to its CICERO
+    - ``column_units``: dict mapping each species column to its RCMIP
       unit string (typically ``ppm``, ``ppb``, ``ppt``).
     """
     df = (
@@ -109,7 +109,7 @@ def build_concentrations_df(  # noqa: PLR0913
     nyend: int = 2500,
 ) -> pd.DataFrame:
     """
-    Build a FaIR-compatible concentrations DataFrame from CICERO bundle files.
+    Build a FaIR-compatible concentrations DataFrame from RCMIP bundle files.
 
     One file per scenario is read from ``{bundle_dir}/{scen}_conc_{gases_ep}``,
     with fallback to ``{bundle_dir}/historical_conc_{gases_ep}`` for
@@ -119,9 +119,9 @@ def build_concentrations_df(  # noqa: PLR0913
     so CICERO and FaIR see the same concentration trajectory per scenario).
 
     ``fair_species`` filters the output to species the FaIR FAIR
-    instance actually has defined; species in the CICERO file but not
+    instance actually has defined; species in the RCMIP file but not
     in FaIR's species list are silently dropped. Species in the
-    CICERO_TO_FAIR2_SPECIES map are translated before this filter.
+    RCMIP_TO_FAIR2_SPECIES map are translated before this filter.
 
     The returned DataFrame has the shape ``fill_from_pandas(mode="concentration")``
     wants: one row per ``(scenario, variable)`` with ``scenario``,
@@ -143,28 +143,28 @@ def build_concentrations_df(  # noqa: PLR0913
             )
             continue
 
-        df, column_units = _read_cicero_conc_file(conc_path)
+        df, column_units = _read_rcmip_conc_file(conc_path)
         df = df.loc[nystart:nyend]
 
-        for cicero_name in df.columns:
-            fair_name = CICERO_TO_FAIR2_SPECIES.get(cicero_name, cicero_name)
+        for rcmip_name in df.columns:
+            fair_name = RCMIP_TO_FAIR2_SPECIES.get(rcmip_name, rcmip_name)
             if fair_name not in fair_species_set:
-                dropped.add(cicero_name)
+                dropped.add(rcmip_name)
                 continue
             row = {
                 "scenario": scenario_name,
                 "variable": fair_name,
                 "region": "World",
-                "unit": column_units[cicero_name],
+                "unit": column_units[rcmip_name],
             }
             # Year columns as strings to match fair's str.lower-friendly form.
             for year in df.index:
-                row[str(year)] = float(df.at[year, cicero_name])
+                row[str(year)] = float(df.at[year, rcmip_name])
             rows.append(row)
 
     if dropped:
         LOGGER.info(
-            "FaIRv2 conc-driven: %d CICERO species in the bundle conc file "
+            "FaIRv2 conc-driven: %d RCMIP species in the bundle conc file "
             "are not in the FaIR species set and were dropped: %s",
             len(dropped),
             sorted(dropped),
@@ -194,9 +194,9 @@ def build_concentrations_df_from_scmrun(
     (``mode="concentration"``), mirroring :func:`build_concentrations_df`.
 
     Variable names are translated from the loader's canonical
-    ``Atmospheric Concentrations|{species}`` form (CICERO-style short
+    ``Atmospheric Concentrations|{species}`` form (RCMIP-style short
     species names like ``HFC125``) to FaIR's hyphenated species
-    (``HFC-125``) via the same :data:`CICERO_TO_FAIR2_SPECIES` map
+    (``HFC-125``) via the same :data:`RCMIP_TO_FAIR2_SPECIES` map
     the bundle path uses. Species not in ``fair_species`` are dropped.
 
     Returns an empty DataFrame when the input has no
@@ -214,7 +214,7 @@ def build_concentrations_df_from_scmrun(
         variable = meta["variable"]
         # variable is "Atmospheric Concentrations|<species>"; strip the prefix.
         species_short = variable.split("|", 1)[1]
-        fair_name = CICERO_TO_FAIR2_SPECIES.get(species_short, species_short)
+        fair_name = RCMIP_TO_FAIR2_SPECIES.get(species_short, species_short)
         if fair_name not in fair_species_set:
             continue
         row = {
