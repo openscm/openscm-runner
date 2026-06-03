@@ -9,7 +9,7 @@ from openscm_runner.testing import _AdapterTester
 from openscm_runner.utils import calculate_quantiles
 
 
-@pytest.mark.fair1x_only
+@pytest.mark.faircicero1x_only
 class TestFairAdapter(_AdapterTester):
     @pytest.mark.parametrize("nworkers", (1, 4))
     def test_run(

@@ -173,10 +173,41 @@ jobs:
       - name: Run tests for ${{ matrix.environment.name }}
         env:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
+          COVERAGE_FILE: .coverage.${{ matrix.environment.name }}-py${{ matrix.python-version }}
         run: |
           poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml -m "${{ matrix.environment.markers }}"
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.environment.name }}-py${{ matrix.python-version }}
+          path: .coverage.*
+          retention-days: 1
+
+  tests-multi-env-coverage:
+    # Combine coverage from both environments and report
+    needs: tests-multi-env
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+        with:
+          os: "ubuntu-latest"
+          python-version: "3.10"
+          venv-id: "coverage-combine"
+          poetry-dependency-install-flags: "--only main"
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage-artifacts
+      - name: Combine coverage data
+        run: |
+          # Consolidate all coverage files into current directory
+          find coverage-artifacts -name ".coverage.*" -exec mv {} . \;
+          # Combine all coverage files
+          poetry run coverage combine
           poetry run coverage report
-      - name: Upload coverage reports to Codecov
+      - name: Upload combined coverage to Codecov
         uses: codecov/codecov-action@v3
 
   imports-without-extras:

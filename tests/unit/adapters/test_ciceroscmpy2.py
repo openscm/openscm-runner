@@ -78,7 +78,7 @@ def _make_full_cfg(tmp_path) -> dict:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 @cicero_skip
 def test_ciceroscmpy2_is_registered():
     assert CICEROSCMPY2.model_name == "CICERO-SCM-PY2"
@@ -87,7 +87,7 @@ def test_ciceroscmpy2_is_registered():
     assert isinstance(get_adapter("cicero-scm-py2"), CICEROSCMPY2)
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_ciceroscmpy2_raises_when_ciceroscm_not_installed():
     with patch(
         "openscm_runner.adapters.ciceroscm_py2_adapter."
@@ -98,7 +98,7 @@ def test_ciceroscmpy2_raises_when_ciceroscm_not_installed():
             CICEROSCMPY2()
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_ciceroscmpy2_raises_when_wrong_major_version():
     with patch(
         "openscm_runner.adapters.ciceroscm_py2_adapter."
@@ -114,7 +114,7 @@ def test_ciceroscmpy2_raises_when_wrong_major_version():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 @cicero_skip
 def test_ciceroscmpy2_run_rejects_output_config(tmp_path):
     adapter = CICEROSCMPY2()
@@ -127,7 +127,7 @@ def test_ciceroscmpy2_run_rejects_output_config(tmp_path):
         )
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 @pytest.mark.parametrize("missing_key", _REQUIRED_CFG_KEYS)
 @cicero_skip
 def test_ciceroscmpy2_rejects_cfg_missing_required_sidecar(
@@ -153,7 +153,7 @@ def test_ciceroscmpy2_rejects_cfg_missing_required_sidecar(
         )
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 @cicero_skip
 def test_ciceroscmpy2_rejects_missing_distribution_json(tmp_path):
     """
@@ -174,7 +174,7 @@ def test_ciceroscmpy2_rejects_missing_distribution_json(tmp_path):
         )
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 @cicero_skip
 def test_ciceroscmpy2_rejects_empty_member_indices(tmp_path):
     """
@@ -221,7 +221,7 @@ def _populate_minimal_calibration_dir(cal_dir) -> None:
 
 
 @cicero_skip
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_resolves_canonical_files(tmp_path):
     """
     Given a calibration directory with canonical filenames, the
@@ -250,7 +250,7 @@ def test_from_native_distribution_resolves_canonical_files(tmp_path):
     # up from a separate bundle file (mirrors FaIR's runtime mask).
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_errors_on_missing_canonical_file(tmp_path):
     """
     Drop one required canonical file — the resolver names it in the
@@ -265,7 +265,7 @@ def test_from_native_distribution_errors_on_missing_canonical_file(tmp_path):
         CICEROSCMPY2.from_native_distribution(cal_dir)
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_errors_when_not_a_directory(tmp_path):
     not_a_dir = tmp_path / "not_a_dir"
     not_a_dir.write_text("")
@@ -273,7 +273,7 @@ def test_from_native_distribution_errors_when_not_a_directory(tmp_path):
         CICEROSCMPY2.from_native_distribution(not_a_dir)
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_errors_when_path_missing(tmp_path):
     missing = tmp_path / "missing_dir"
     with pytest.raises(FileNotFoundError, match="not found"):
@@ -281,7 +281,7 @@ def test_from_native_distribution_errors_when_path_missing(tmp_path):
 
 
 @cicero_skip
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_explicit_distribution_json_overrides_default(
     tmp_path,
 ):
@@ -303,7 +303,7 @@ def test_from_native_distribution_explicit_distribution_json_overrides_default(
 
 
 @cicero_skip
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_cfg_overrides_take_precedence(tmp_path):
     """
     Keyword arguments to ``from_native_distribution`` become cfg keys
@@ -323,7 +323,7 @@ def test_from_native_distribution_cfg_overrides_take_precedence(tmp_path):
 
 
 @cicero_skip
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_from_native_distribution_override_skips_missing_canonical_file(tmp_path):
     """
     Partial override: when the user supplies a cfg-level override for
@@ -362,7 +362,7 @@ def test_from_native_distribution_override_skips_missing_canonical_file(tmp_path
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_spec_reads_metadata_cols_when_present():
     """
     The resolver reads ``protocol_natural_forcing`` and
@@ -413,7 +413,7 @@ def test_resolve_protocol_spec_reads_metadata_cols_when_present():
     }
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_spec_defaults_when_meta_missing():
     """
     No metadata on the ScmRun -> non-idealised defaults (no
@@ -453,7 +453,7 @@ def test_resolve_protocol_spec_defaults_when_meta_missing():
     }
 
 
-@pytest.mark.fair2_only
+@pytest.mark.faircicero2_only
 def test_resolve_protocol_spec_handles_non_scmrun_input():
     """
     A stub object without ``.meta`` should default to non-idealised
