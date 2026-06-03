@@ -188,14 +188,12 @@ jobs:
     needs: tests-multi-env
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-      - uses: ./.github/actions/setup
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          os: "ubuntu-latest"
           python-version: "3.10"
-          venv-id: "coverage-combine"
-          poetry-dependency-install-flags: "--only main"
+      - name: Install coverage
+        run: pip install coverage
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4
         with:
@@ -210,11 +208,11 @@ jobs:
           echo "Coverage files in current directory:"
           ls -la .coverage*
           # Combine all coverage files
-          poetry run coverage combine --keep
+          coverage combine --keep
           echo "Combined coverage report:"
-          poetry run coverage report
+          coverage report
           # Generate XML report from combined data
-          poetry run coverage xml
+          coverage xml
       - name: Upload combined coverage to Codecov
         uses: codecov/codecov-action@v3
 
