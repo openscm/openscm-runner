@@ -157,15 +157,27 @@ jobs:
       - name: Download MAGICC
         run: |
           mkdir -p bin/magicc/magicc-v7.5.3
-          wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+          for attempt in 1 2 3; do
+            if wget --tries=2 --waitretry=10 --timeout=60 \
+                    -O "bin/magicc/magicc-v7.5.3.tar.gz" \
+                    "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"; then
+              echo "MAGICC download succeeded on attempt $attempt"
+              break
+            fi
+            echo "MAGICC download attempt $attempt failed; retrying in 15s"
+            sleep 15
+          done
           tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
       - name: Create env1 virtualenv and install packages
         run: |
           python -m venv .venv-env1
+          .venv-env1/bin/pip install --upgrade pip
+          # Install version constraints first, then the editable package
+          # This ensures pip resolver sees the constraints before resolving dependencies
           .venv-env1/bin/pip install --no-cache-dir \
-            -e ".[magicc,ciceroscmpy]" \
-            "fair>=1.6,<2" "ciceroscm>=1.1,<2" "pymagicc<3" "numpy<2" \
+            "fair>=1.6,<2" "ciceroscm>=1.1,<2" "pymagicc<3" numpy \
             pytest pytest-regressions pytest-cov coverage
+          .venv-env1/bin/pip install --no-cache-dir -e ".[magicc,ciceroscmpy]"
           echo "=== ENV1 PACKAGES ==="
           .venv-env1/bin/pip list | grep -E '^(fair|ciceroscm|pymagicc|numpy)\s'
       - name: Run env1 tests
@@ -177,10 +189,13 @@ jobs:
       - name: Create env2 virtualenv and install packages
         run: |
           python -m venv .venv-env2
+          .venv-env2/bin/pip install --upgrade pip
+          # Install version constraints first, then the editable package
+          # This ensures pip resolver sees the constraints before resolving dependencies
           .venv-env2/bin/pip install --no-cache-dir \
-            -e ".[magicc,ciceroscmpy2]" \
             "fair>=2,<3" "ciceroscm>=2,<3" "pymagicc<3" \
             pytest pytest-regressions pytest-cov coverage
+          .venv-env2/bin/pip install --no-cache-dir -e ".[magicc,ciceroscmpy2]"
           echo "=== ENV2 PACKAGES ==="
           .venv-env2/bin/pip list | grep -E '^(fair|ciceroscm|pymagicc)\s'
       - name: Run env2 tests
