@@ -174,12 +174,13 @@ jobs:
           .venv-env1/bin/pip install --upgrade pip
           # Install version constraints first, then the editable package
           # This ensures pip resolver sees the constraints before resolving dependencies
+          # Constrain pandas/numpy to versions compatible with fair 1.x and ciceroscm 1.x
           .venv-env1/bin/pip install --no-cache-dir \
-            "fair>=1.6,<2" "ciceroscm>=1.1,<2" "pymagicc<3" numpy \
+            "fair>=1.6,<2" "ciceroscm>=1.1,<2" "pymagicc<3" "numpy<2" "pandas<2.2" \
             pytest pytest-regressions pytest-cov coverage
           .venv-env1/bin/pip install --no-cache-dir -e ".[magicc,ciceroscmpy]"
           echo "=== ENV1 PACKAGES ==="
-          .venv-env1/bin/pip list | grep -E '^(fair|ciceroscm|pymagicc|numpy)\s'
+          .venv-env1/bin/pip list | grep -E '^(fair|ciceroscm|pymagicc|numpy|pandas)\s'
       - name: Run env1 tests
         env:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
@@ -195,7 +196,14 @@ jobs:
           .venv-env2/bin/pip install --no-cache-dir \
             "fair>=2,<3" "ciceroscm>=2,<3" "pymagicc<3" \
             pytest pytest-regressions pytest-cov coverage
-          .venv-env2/bin/pip install --no-cache-dir -e ".[magicc,ciceroscmpy2]"
+          # Verify fair was actually installed before installing editable package
+          .venv-env2/bin/python -c "import fair; print(f'fair version: {fair.__version__}')" || \
+            (.venv-env2/bin/pip show fair || echo "fair not found in pip show")
+          # Use --no-deps when installing editable package to avoid re-resolving and removing fair
+          .venv-env2/bin/pip install --no-cache-dir --no-deps -e ".[magicc,ciceroscmpy2]"
+          # Verify fair is still there after editable install
+          .venv-env2/bin/python -c "import fair; print(f'fair version after editable install: {fair.__version__}')" || \
+            (echo "ERROR: fair was removed during editable install" && .venv-env2/bin/pip show fair)
           echo "=== ENV2 PACKAGES ==="
           .venv-env2/bin/pip list | grep -E '^(fair|ciceroscm|pymagicc)\s'
       - name: Run env2 tests
