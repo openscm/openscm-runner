@@ -168,6 +168,12 @@ jobs:
           COVERAGE_FILE: .coverage.env1-py${{ matrix.python-version }}
         run: |
           poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-fail-under=0 -m "faircicero1x_only or magicc"
+      - name: Clean up env1 and prepare for env2
+        run: |
+          # Uninstall env1 packages to avoid conflicts
+          poetry run pip uninstall -y fair ciceroscm pymagicc
+          # Remove env1 dependency group from lock
+          poetry remove --group test-env1 || true
       - name: Run tests for env2 (fair>=2, ciceroscmpy>=2)
         uses: ./.github/actions/setup
         with:
