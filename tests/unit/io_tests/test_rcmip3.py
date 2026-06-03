@@ -55,9 +55,7 @@ def test_load_filters_by_region_explicit_none():
 
 
 def test_load_empty_filter_returns_empty_frame():
-    df = load_rcmip3_concentrations(
-        MINI_BUNDLE, scenarios=["does-not-exist"]
-    )
+    df = load_rcmip3_concentrations(MINI_BUNDLE, scenarios=["does-not-exist"])
     assert df.empty
     # Columns are still present.
     for col in RCMIP3_METADATA_COLS:
