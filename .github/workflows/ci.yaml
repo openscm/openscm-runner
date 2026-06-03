@@ -164,10 +164,10 @@ jobs:
           python -m venv .venv-env1
           .venv-env1/bin/pip install --no-cache-dir \
             -e ".[magicc,ciceroscmpy]" \
-            "fair>=1.6,<2" "ciceroscm>=1.1,<2" "pymagicc<3" \
+            "fair>=1.6,<2" "ciceroscm>=1.1,<2" "pymagicc<3" "numpy<2" \
             pytest pytest-regressions pytest-cov coverage
           echo "=== ENV1 PACKAGES ==="
-          .venv-env1/bin/pip list | grep -E '^(fair|ciceroscm|pymagicc)\s'
+          .venv-env1/bin/pip list | grep -E '^(fair|ciceroscm|pymagicc|numpy)\s'
       - name: Run env1 tests
         env:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
