@@ -149,7 +149,10 @@ jobs:
           os: "ubuntu-latest"
           python-version: "${{ matrix.python-version }}"
           venv-id: "tests-multi-env-${{ matrix.python-version }}"
-          poetry-dependency-install-flags: "--with test-env1 --with test-env2"
+          poetry-dependency-install-flags: "--only main"
+      - name: Install test dependencies
+        run: |
+          poetry run pip install pytest pytest-regressions pytest-cov coverage
       - name: Download MAGICC
         run: |
           mkdir -p bin/magicc/magicc-v7.5.3
