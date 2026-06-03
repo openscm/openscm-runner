@@ -1,0 +1,7 @@
+Model,Scenario,Region,Variable,Unit,Mip_Era,Version,Activity_Id,Type,Priority,1750,1850,1900,2000,2050,2100
+emissions_harmonisation_pipeline,historical,World,Emissions|CH4,Mt CH4/yr,CMIP7,RCMIP Phase 3 v2.0.0,not_applicable,non-idealised,1,26.62406680955776,39.21780406063876,63.58696453457225,307.49023241982576,,
+emissions_harmonisation_pipeline,historical,World,Emissions|CO2|AFOLU,Mt CO2/yr,CMIP7,RCMIP Phase 3 v2.0.0,not_applicable,non-idealised,1,364.074356729764,2640.530108333333,4509.373320833332,5301.064083333332,,
+emissions_harmonisation_pipeline,historical,World,Emissions|CO2|Energy and Industrial Processes,Mt CO2/yr,CMIP7,RCMIP Phase 3 v2.0.0,not_applicable,non-idealised,1,8.734585078970957,191.0985838890709,1965.36987692278,25755.41966282649,,
+MESSAGE-GLOBIOM,ssp245,World,Emissions|CH4,Mt CH4/yr,CMIP6,RCMIP Phase 3 v2.0.0,not_applicable,non-idealised,2,19.019783117809567,43.142363653343445,87.61328845020651,310.18680982649335,357.1669387849115,295.15293661000715
+MESSAGE-GLOBIOM,ssp245,World,Emissions|CO2|AFOLU,Mt CO2/yr,CMIP6,RCMIP Phase 3 v2.0.0,not_applicable,non-idealised,2,297.4646065136893,1841.41441459119,2677.1431790388,4402.238761904763,500.917111454925,-4800.07696909289
+MESSAGE-GLOBIOM,ssp245,World,Emissions|CO2|Energy and Industrial Processes,Mt CO2/yr,CMIP6,RCMIP Phase 3 v2.0.0,not_applicable,non-idealised,2,9.505619891242851,188.2971892915022,1788.8209389436147,25259.64138333597,42961.27293107474,14482.93576314802

@@ -1,0 +1,8 @@
+Model,Scenario,Region,Variable,Unit,Activity_Id,Type,Priority,Mip_Era,Version,1750,1850,1900,2000,2050,2100
+unspecified,historical,World,Effective Radiative Forcing|Natural|Solar,W/m^2,not_applicable,non-idealised,1,CMIP6,RCMIP Phase 3 v2.0.0,0.0736213936942088,0.022764534,-0.045430714,0.083449697,-0.011520725,-0.042802891
+unspecified,historical,World,Effective Radiative Forcing|Natural|Volcanic,W/m^2,not_applicable,non-idealised,1,CMIP6,RCMIP Phase 3 v2.0.0,0.200568231,0.209598647,0.187978948,0.184264439,0.0,0.0
+Unspecified,historical,World,Effective Radiative Forcing|Anthropogenic|Albedo Change,W/m^2,not_applicable,non-idealised,1,CMIP7,RCMIP Phase 3 v2.0.0,0.0,-0.0435720268714391,-0.1154869980249397,-0.2032933475353318,,
+MESSAGE-GLOBIOM,ssp245,World,Effective Radiative Forcing,W/m^2,not_applicable,non-idealised,2,CMIP6,RCMIP Phase 3 v2.0.0,0.2593670678523292,0.310824461312137,0.2935978804339949,1.7855222896362335,4.099182507693591,5.182163568377658
+MESSAGE-GLOBIOM,ssp245,World,Effective Radiative Forcing|Anthropogenic|Albedo Change,W/m^2,not_applicable,non-idealised,2,CMIP6,RCMIP Phase 3 v2.0.0,0.0,-0.0312568797032953,-0.0838596899566386,-0.1939752272865858,-0.2214938023411931,-0.181420605255823
+MESSAGE-GLOBIOM,ssp245,World,Effective Radiative Forcing|Natural|Solar,W/m^2,not_applicable,non-idealised,2,CMIP6,RCMIP Phase 3 v2.0.0,0.0736213936942088,-0.0164407889229786,-0.0612144705636036,0.0860394601004588,-0.0093094832722957,-0.0241900060007853
+MESSAGE-GLOBIOM,ssp245,World,Effective Radiative Forcing|Natural|Volcanic,W/m^2,not_applicable,non-idealised,2,CMIP6,RCMIP Phase 3 v2.0.0,0.1857456741581203,0.1807459751025106,0.1932496771384894,0.1745824169479796,0.0,0.0
