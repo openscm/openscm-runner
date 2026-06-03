@@ -30,49 +30,6 @@ Full documentation can be found at:
 We recommend reading the docs there because the internal documentation links
 don't render correctly on GitHub's viewer.
 
-## Supported climate models and run modes
-
-openscm-runner ships adapters for a small, fixed set of simple climate
-models. Each adapter declares which driving modes it supports; the
-high-level `openscm_runner.run.run` function takes a `mode` argument
-(or, for the new list-form, reads the mode off each pre-constructed
-adapter instance) and dispatches accordingly.
-
-| Adapter | Model | Modes |
-|---|---|---|
-| `FaIR` | FaIR 1.6 | emissions-driven |
-| `FaIRv2` | FaIR 2.x | emissions-driven, concentration-driven |
-| `MAGICC7` | MAGICC7 | emissions-driven |
-| `CiceroSCM` | CICERO-SCM 1.1.x (Fortran) | emissions-driven |
-| `CiceroSCMPY` | CICERO-SCM 1.1.x (Python wrapper) | emissions-driven |
-| `CICERO-SCM-PY2` | CICERO-SCM 2.x | emissions-driven, concentration-driven |
-
-Mode is expressed via the `openscm_runner.RunMode` enum
-(`EMISSIONS_DRIVEN`, `CONCENTRATION_DRIVEN`). The adapter raises
-`NotImplementedError` if asked to run in a mode it does not declare
-in its `supported_modes` attribute.
-
-Adapters that ship with a native parameter distribution expose a
-`from_native_distribution` classmethod returning a fully-configured
-instance. Current published calibrations:
-
-- **FaIRv2**: see the FaIR docs for current Zenodo records.
-- **CICERO-SCM-PY2**: [`10.5281/zenodo.20506399`](https://doi.org/10.5281/zenodo.20506399)
-  (Sandstad, v1.0.0, RCMIP phase III, calibrated for `ciceroscm 2.1.0`).
-  Download and unpack, then pass the directory path to
-  `CICEROSCMPY2.from_native_distribution(cal_dir)`.
-
-Adapters that don't have a published distribution are configured with
-explicit per-cfg dicts the standard way.
-
-Scenario inputs use the openscm-runner emissions naming convention;
-the wrapper raises `ValueError` on unknown emissions variable names
-(see `KNOWN_EMISSIONS_VARIABLES` and `check_variables_are_as_expected`
-in the top-level namespace). Translation from other naming schemes
-(IAMC, RCMIP, CMIP7 ScenarioMIP, AR6 CFC infilling) lives upstream of
-the wrapper; see [`gcages`](https://github.com/openscm/gcages) for a
-canonical translation table.
-
 ## Installation
 
 <!--- sec-begin-installation -->
@@ -136,43 +93,6 @@ pip install "openscm-runner[ciceroscmpy2]" "ciceroscm>=2.1,<3"
 ```
 
 <!--- sec-end-installation -->
-
-## Programmatic API
-
-```python
-import openscm_runner.run
-from openscm_runner import RunMode
-from openscm_runner.adapters import FAIR2
-
-# Dict form (back-compat): registry lookup + per-model cfg list
-result = openscm_runner.run.run(
-    climate_models_cfgs={"FaIRv2": [{"native_calibration": "/path/to/bundle"}]},
-    scenarios=my_scmrun,
-    output_variables=("Surface Air Temperature Change",),
-    mode=RunMode.EMISSIONS_DRIVEN,
-)
-
-# List form: pre-constructed adapter instances. Useful for native
-# parameter bundles where the dict form is awkward.
-fair2 = FAIR2.from_native_distribution(
-    "/path/to/calibration_bundle",
-    mode=RunMode.EMISSIONS_DRIVEN,
-    output_variables=("Surface Air Temperature Change",),
-)
-result = openscm_runner.run.run([fair2], scenarios=my_scmrun)
-
-# Concentration-driven mode: same construction shape, different
-# `mode=` and the scenarios DataFrame should carry
-# `Atmospheric Concentrations|*` rows for the species you want to
-# drive. See the per-adapter `_run` docstring for the calibration-
-# directory layout each adapter expects.
-fair2_cd = FAIR2.from_native_distribution(
-    "/path/to/calibration_bundle",
-    mode=RunMode.CONCENTRATION_DRIVEN,
-    output_variables=("Surface Air Temperature Change",),
-)
-result_cd = openscm_runner.run.run([fair2_cd], scenarios=my_conc_scmrun)
-```
 
 ## For developers
 

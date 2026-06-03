@@ -52,20 +52,11 @@ class MAGICC7(_Adapter):
 
     model_name = "MAGICC7"
 
-    def __init__(self, **kwargs):
-        """
-        Initialise the MAGICC7 adapter.
-
-        Forwards ``**kwargs`` to the base
-        :class:`~openscm_runner.adapters.base._Adapter` constructor so
-        ``cfgs``, ``mode``, ``output_variables`` and ``output_config``
-        bind to instance state.
-        """
+    def _init_model(self):  # pylint:disable=arguments-differ
         if pymagicc is None:
             raise ImportError(
                 "pymagicc is not installed. Run 'conda install pymagicc' or 'pip install pymagicc'"
             )
-        super().__init__(**kwargs)
         self.magicc_scenario_setup = {
             "file_emisscen_2": "NONE",
             "file_emisscen_3": "NONE",
@@ -75,10 +66,6 @@ class MAGICC7(_Adapter):
             "file_emisscen_7": "NONE",
             "file_emisscen_8": "NONE",
         }
-        """dict: MAGICC base scenario setup"""
-
-    def _init_model(self):  # pylint:disable=arguments-differ
-        pass
 
     @staticmethod
     def _convert_to_magicc_units(scenarios):

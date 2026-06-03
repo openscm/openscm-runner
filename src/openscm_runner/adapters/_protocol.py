@@ -23,13 +23,12 @@ state before delegating to the adapter's ``_run`` implementation.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     import scmdata
 
 
-@runtime_checkable
 class AdapterLike(Protocol):
     """
     Minimum surface a climate-model adapter exposes to
