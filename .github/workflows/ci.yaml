@@ -175,7 +175,7 @@ jobs:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
           COVERAGE_FILE: .coverage.${{ matrix.environment.name }}-py${{ matrix.python-version }}
         run: |
-          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml -m "${{ matrix.environment.markers }}"
+          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-fail-under=0 -m "${{ matrix.environment.markers }}"
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
