@@ -33,6 +33,14 @@ from openscm_runner.adapters.ciceroscm_py2_adapter._compat import (
 )
 from openscm_runner.adapters.fair2_adapter._compat import HAS_FAIR2
 
+# This module exercises the fair>=2 + ciceroscm>=2 adapters; route it
+# through the CI multi-environment matrix's env2 slot (see
+# ``.github/workflows/ci.yaml`` ``tests-multi-env`` job and the
+# ``faircicero2_only`` marker declared in ``pytest.ini``). The
+# per-test ``skipif`` markers above stay in place so the module
+# still collects (and skips) in the legacy / unmarked job.
+pytestmark = pytest.mark.faircicero2_only
+
 FAIR2_MINI_BUNDLE = (
     Path(__file__).parent.parent / "test-data" / "fair2-mini-bundle"
 )
