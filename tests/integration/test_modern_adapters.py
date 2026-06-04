@@ -83,7 +83,7 @@ _CICERO_SSP245_OVERRIDES = {
         CICERO_MINI_BUNDLE
         / "ssp245_conc_gases_vupdate_2024_WMO_added_new.txt"
     ),
-    "rf_solar_file": str(
+    "rf_sun_file": str(
         CICERO_MINI_BUNDLE / "solar_RCMIP_ssp245_RCMIP3.txt"
     ),
     "rf_volc_file": str(

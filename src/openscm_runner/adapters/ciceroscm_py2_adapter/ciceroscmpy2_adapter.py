@@ -69,8 +69,10 @@ keys listed below.
   the concentration solver in ED mode.
 - ``nat_ch4_file`` / ``nat_n2o_file`` (paths): natural CH4 / N2O
   emissions trajectories.
-- ``rf_solar_file`` / ``rf_volc_file`` / ``rf_luc_file`` (paths):
-  default solar / volcanic / LUC albedo forcing files.
+- ``rf_sun_file`` / ``rf_volc_file`` / ``rf_luc_file`` (paths):
+  default solar / volcanic / LUC albedo forcing files. Note the
+  solar key is ``rf_sun_file`` (matching upstream ``ciceroscm`` v2.x's
+  ``InputHandler``), not ``rf_solar_file``.
 
 **Optional cfg sidecar keys**
 
@@ -184,7 +186,7 @@ _DEFAULT_CANONICAL_FILES: dict[str, str] = {
     "nat_n2o_file": (
         "natemis_N2O_ode_method_from_March2026_vupdate_2024_WMO_added_new.txt"
     ),
-    "rf_solar_file": "solar_RCMIP_historical_RCMIP3.txt",
+    "rf_sun_file": "solar_RCMIP_historical_RCMIP3.txt",
     "rf_volc_file": "VOLC_RCMIP_historical_RCMIP3.txt",
     "rf_luc_file": "LUCalbedo_RCMIP_historical_RCMIP3.txt",
 }
@@ -262,7 +264,7 @@ class CICEROSCMPY2(_Adapter):
             "historical_conc_file",
             "nat_ch4_file",
             "nat_n2o_file",
-            "rf_solar_file",
+            "rf_sun_file",
             "rf_volc_file",
             "rf_luc_file",
         )
@@ -652,8 +654,6 @@ def _build_scendata_list(
             "scenname": scenario_name,
             "gaspam_file": cfg["gaspam_file"],
             "emissions_data": em_data,
-            "rf_solar_file": cfg["rf_solar_file"],
-            "rf_volc_file": cfg["rf_volc_file"],
             "nat_ch4_data": scen_nat_ch4.loc[
                 : min(nyend, scen_nat_ch4.index.max())
             ],
@@ -661,6 +661,23 @@ def _build_scendata_list(
                 : min(nyend, scen_nat_n2o.index.max())
             ],
         }
+        # Solar + Volcanic: two routes (sunvolc=0 suppression already
+        # handled via the scendata flag above; upstream zeros internally).
+        # 1. Canonical RCMIP3 path (``rcmip3_bundle_path`` cfg key set):
+        #    per-scenario in-memory DataFrames from canonical forcing CSV.
+        # 2. Legacy path: ``rf_sun_file`` + ``rf_volc_file`` paths.
+        if cfg.get("rcmip3_bundle_path") is not None:
+            nat = _build_natural_data_from_rcmip3(
+                scenario_name=scenario_name,
+                rcmip3_bundle_path=cfg["rcmip3_bundle_path"],
+                nystart=nystart,
+                nyend=nyend,
+            )
+            scendata["rf_sun_data"] = nat["rf_sun_data"]
+            scendata["rf_volc_data"] = nat["rf_volc_data"]
+        else:
+            scendata["rf_sun_file"] = cfg["rf_sun_file"]
+            scendata["rf_volc_file"] = cfg["rf_volc_file"]
         # LUC: three routes.
         # 1. Idealised scenarios (``protocol_land_use_forcing ==
         #    "constant_zero"``) -> in-memory zeros DataFrame, same as
@@ -1090,6 +1107,75 @@ def _resolve_protocol_spec(
                 "land_use_forcing": str(sub["protocol_land_use_forcing"].iloc[0]),
             }
     return {"natural_forcing": "on", "land_use_forcing": "historical"}
+
+
+def _build_natural_data_from_rcmip3(
+    *,
+    scenario_name: str,
+    rcmip3_bundle_path,
+    nystart: int,
+    nyend: int,
+):
+    """
+    Build per-scenario Solar + Volcanic DataFrames from the canonical
+    RCMIP3 Zenodo 20430630 bundle.
+
+    Returns a dict with two keys:
+
+    * ``rf_sun_data``: year-indexed single-column DataFrame of the
+      ``Effective Radiative Forcing|Natural|Solar`` trajectory for
+      ``scenario_name``, sliced to ``[nystart, nyend]``.
+    * ``rf_volc_data``: same shape, from
+      ``Effective Radiative Forcing|Natural|Volcanic``. Upstream
+      :class:`ciceroscm.input_handler.InputHandler` propagates this
+      to ``rf_volc_n_data`` and ``rf_volc_s_data`` automatically (see
+      ``set_sun_volc_luc_defaults``), and the input handler's data
+      coercion (``arr[:, None]`` for the volcanic single-column case,
+      ``reshape(-1)`` for solar) handles the shape adjustment for
+      both natural-forcing axes.
+
+    Annual values are passed through unchanged; upstream's per-year
+    integration treats the single column as the year's mean forcing.
+
+    Scenarios with no canonical row (e.g. native CMIP7
+    ``scen7-{cat}`` names) fall back to zeros with a warning.
+    """
+    import pandas as pd
+
+    from ...io.rcmip3 import load_rcmip3_forcings
+
+    years = pd.RangeIndex(nystart, nyend + 1, name="year")
+    zeros = pd.DataFrame({0: [0.0] * len(years)}, index=years)
+
+    out: dict[str, pd.DataFrame] = {}
+    for label, variable in (
+        ("rf_sun_data", "Effective Radiative Forcing|Natural|Solar"),
+        ("rf_volc_data", "Effective Radiative Forcing|Natural|Volcanic"),
+    ):
+        df = load_rcmip3_forcings(
+            rcmip3_bundle_path,
+            scenarios=[scenario_name],
+            variables=[variable],
+        )
+        if df.empty:
+            LOGGER.warning(
+                "CICEROSCMPY2 RCMIP3 natural-forcing path: scenario "
+                "%r has no %r row in the canonical forcing CSV. "
+                "Falling back to zero %s forcing.",
+                scenario_name, variable,
+                label.replace("rf_", "").replace("_data", ""),
+            )
+            out[label] = zeros.copy()
+            continue
+        year_cols = [c for c in df.columns if c.isdigit()]
+        series = (
+            df[year_cols].iloc[0]
+            .rename(lambda y: int(y))
+            .astype(float)
+            .reindex(years).fillna(0.0)
+        )
+        out[label] = pd.DataFrame({0: series.values}, index=years)
+    return out
 
 
 def _build_rf_luc_data_from_rcmip3(
