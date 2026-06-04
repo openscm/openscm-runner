@@ -42,20 +42,21 @@ authoritative list is :data:`SUPPORTED_VARIABLES`):
   ocean pools, airborne fraction, net flux to atmosphere. These are
   expensive (~30-50x per-member runtime on conc-driven runs); the
   adapter only computes them when actually requested.
+- Solar / Volcanic / Land-use albedo ERF, **back-reported** by the
+  adapter on the canonical RCMIP3 path
+  (:data:`RCMIP3_BACK_REPORTABLE_VARIABLES`). CICERO-SCM v2.x itself
+  treats these as forcing inputs (read from the bundle) rather than
+  diagnostic outputs; the adapter echoes the per-scenario input
+  trajectories into the output ScmRun when ``rcmip3_bundle_path`` is
+  set so they can be plotted/inspected alongside diagnostics like
+  total ERF. On the legacy bundle path requests for these names are
+  accepted but the back-report is skipped with a warning.
 
 **What CICERO-SCM v2.x cannot produce** (RCMIP3 variables that no
 amount of adapter work will surface, with reasons):
 
 - ``Sea Level Change`` and all sub-entries (~6 variables): no
   sea-level module.
-- ``Effective Radiative Forcing|Anthropogenic|Albedo Change|Land use``:
-  CICERO-SCM treats land-use albedo as a forcing input (read from
-  ``LUCalbedo_RCMIP_*_RCMIP3.txt`` in the bundle) rather than an
-  output diagnostic.
-- ``Effective Radiative Forcing|Natural|{Solar, Volcanic}``: same —
-  these are forcing inputs from the bundle's ``solar_RCMIP_*`` and
-  ``VOLC_RCMIP_*`` files, summed into the ``+sunvolc`` total but not
-  individually back-reported.
 - ``Effective Radiative Forcing|Anthropogenic|Aerosol-cloud
   Interactions|*`` per-species splits (BC, OC, Sulfate, ...): the
   indirect aerosol forcing is a single ``SO4_IND`` term in
@@ -127,7 +128,27 @@ SUPPORTED_VARIABLES, CARBON_CYCLE_VARIABLES = _build_supported_sets()
 concentrations, temperature, heat uptake, back-calculated CO2/CH4/N2O
 emissions); ``CARBON_CYCLE_VARIABLES`` covers the more expensive
 carbon-cycle back-calculation (fluxes, pools, airborne fraction).
-Their union is what :func:`validate_output_variables` accepts."""
+Their union plus :data:`RCMIP3_BACK_REPORTABLE_VARIABLES` is what
+:func:`validate_output_variables` accepts."""
+
+
+RCMIP3_BACK_REPORTABLE_VARIABLES: frozenset[str] = frozenset({
+    "Effective Radiative Forcing|Natural|Solar",
+    "Effective Radiative Forcing|Natural|Volcanic",
+    "Effective Radiative Forcing|Anthropogenic|Albedo Change|Land use",
+})
+"""Forcing inputs the adapter back-reports on the canonical RCMIP3 path.
+
+CICERO-SCM v2.x treats Solar / Volcanic / Land-use albedo as input
+forcings (read from the bundle's per-scenario forcing files) rather
+than diagnostic outputs. The model neither computes nor exposes them
+through :data:`SUPPORTED_VARIABLES`. The adapter back-reports them by
+echoing the per-scenario trajectories it already has in scope when
+the ``rcmip3_bundle_path`` cfg key is set (see
+:func:`_build_natural_data_from_rcmip3` and
+:func:`_build_rf_luc_data_from_rcmip3` in the adapter module). On
+the legacy bundle path the adapter logs a warning and omits the
+back-report from the output."""
 
 
 # Structurally-unsupported variables, grouped by the reason CICERO-SCM
@@ -172,8 +193,19 @@ _STRUCTURAL_LIMITS: dict[str, tuple[str, ...]] = {
 
 
 def all_supported() -> frozenset[str]:
-    """Return the union of direct + carbon-cycle variables."""
-    return SUPPORTED_VARIABLES | CARBON_CYCLE_VARIABLES
+    """Return the union of direct + carbon-cycle + back-reportable variables.
+
+    The first two come from upstream's ``openscm_to_cscm_dict`` and
+    ``carbon_cycle_outputs``; the third is the adapter's RCMIP3
+    back-report set (see :data:`RCMIP3_BACK_REPORTABLE_VARIABLES`).
+    Skipped entirely when ciceroscm isn't importable so the validator
+    no-ops and the adapter's _compat shim raises the canonical
+    ImportError instead.
+    """
+    base = SUPPORTED_VARIABLES | CARBON_CYCLE_VARIABLES
+    if not base:
+        return base
+    return base | RCMIP3_BACK_REPORTABLE_VARIABLES
 
 
 def validate_output_variables(requested: Iterable[str]) -> None:

@@ -488,9 +488,16 @@ def _run_one_distribution(scenarios, cfg: dict[str, Any], output_variables) -> S
 
     Builds scenariodata dicts from ``scenarios``, applies any
     ``member_indices`` subset to the JSON cfgs, and returns the
-    concatenated ScmRun across all scenarios and members.
+    concatenated ScmRun across all scenarios and members. Variables
+    in :data:`._output_variables.RCMIP3_BACK_REPORTABLE_VARIABLES`
+    (Solar / Volcanic / Land-use albedo ERF) are stripped from the
+    upstream request and back-reported from the scendata's
+    ``rf_sun_data`` / ``rf_volc_data`` / ``rf_luc_data`` trajectories
+    after the model run finishes.
     """
     from ciceroscm.parallel.distributionrun import DistributionRun
+
+    from ._output_variables import RCMIP3_BACK_REPORTABLE_VARIABLES
 
     distribution_json = cfg["distribution_json"]
     if not os.path.exists(distribution_json):
@@ -508,6 +515,29 @@ def _run_one_distribution(scenarios, cfg: dict[str, Any], output_variables) -> S
                 "omit the key (or pass a non-empty sequence) to run the "
                 "full distribution."
             )
+
+    output_variables = list(output_variables)
+    requested_backreport = [
+        v for v in output_variables if v in RCMIP3_BACK_REPORTABLE_VARIABLES
+    ]
+    upstream_variables = [
+        v for v in output_variables if v not in RCMIP3_BACK_REPORTABLE_VARIABLES
+    ]
+
+    if requested_backreport and cfg.get("rcmip3_bundle_path") is None:
+        LOGGER.warning(
+            "CICEROSCMPY2: back-reportable variables %s require the "
+            "`rcmip3_bundle_path` cfg key to be set (the canonical "
+            "RCMIP3 Zenodo 20430630 path); omitting them from the "
+            "output.",
+            requested_backreport,
+        )
+        requested_backreport = []
+
+    if not upstream_variables and not requested_backreport:
+        raise ValueError(
+            "CICEROSCMPY2: no output variables to produce after filtering."
+        )
 
     scendata_list = _build_scendata_list(scenarios, cfg)
 
@@ -533,10 +563,41 @@ def _run_one_distribution(scenarios, cfg: dict[str, Any], output_variables) -> S
         max_workers,
     )
 
-    result = dist.run_over_distribution(
-        scendata_list, list(output_variables), max_workers=max_workers
-    )
-    return ScmRun(result) if not isinstance(result, ScmRun) else result
+    if upstream_variables:
+        result = dist.run_over_distribution(
+            scendata_list, upstream_variables, max_workers=max_workers
+        )
+        result = ScmRun(result) if not isinstance(result, ScmRun) else result
+    else:
+        # Pure back-report request -- skip the model dispatch.
+        result = None
+
+    if requested_backreport:
+        backreport = _build_rcmip3_backreport_scmrun(
+            scendata_list=scendata_list,
+            backreport_variables=requested_backreport,
+            dist_cfgs=dist.cfgs,
+        )
+        if backreport is None:
+            LOGGER.info(
+                "CICEROSCMPY2: no scendata trajectories matched the "
+                "requested back-report variables %s (likely all "
+                "idealised scenarios); back-report omitted.",
+                requested_backreport,
+            )
+        elif result is None:
+            result = backreport
+        else:
+            result = run_append([result, backreport])
+
+    if result is None:
+        raise ValueError(
+            "CICEROSCMPY2: no output produced -- the upstream run was "
+            "skipped (only back-report variables requested) and the "
+            "back-report had no trajectories to copy. Add at least one "
+            "non-back-reportable variable to ``output_variables``."
+        )
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -1263,3 +1324,85 @@ def _build_rf_luc_data_from_rcmip3(
     )
     series = albedo["Land Use"].reindex(years).fillna(0.0)
     return pd.DataFrame({0: series.values}, index=years)
+
+
+# ---------------------------------------------------------------------------
+# RCMIP3 back-report
+# ---------------------------------------------------------------------------
+
+
+# Variable name -> scendata key holding the per-scenario trajectory. The
+# scendata keys are populated by ``_build_scendata_list`` whenever the
+# ``rcmip3_bundle_path`` cfg is set (Solar / Volcanic via
+# ``_build_natural_data_from_rcmip3``; Land use via
+# ``_build_rf_luc_data_from_rcmip3``).
+_BACKREPORT_VAR_TO_SCENDATA_KEY: dict[str, str] = {
+    "Effective Radiative Forcing|Natural|Solar": "rf_sun_data",
+    "Effective Radiative Forcing|Natural|Volcanic": "rf_volc_data",
+    "Effective Radiative Forcing|Anthropogenic|Albedo Change|Land use": "rf_luc_data",
+}
+
+
+def _build_rcmip3_backreport_scmrun(
+    *,
+    scendata_list: list[dict[str, Any]],
+    backreport_variables: list[str],
+    dist_cfgs: list[dict[str, Any]],
+) -> ScmRun | None:
+    """
+    Build an :class:`scmdata.ScmRun` of back-reported forcing inputs.
+
+    For each ``(scenario, run_id, variable)`` combination, copies the
+    scendata's per-scenario trajectory (``rf_sun_data`` /
+    ``rf_volc_data`` / ``rf_luc_data``) into an ScmRun row with the
+    metadata schema upstream's
+    :class:`ciceroscm.parallel.cscmparwrapper.CSCMParWrapper`
+    uses for its diagnostic output -- ``climate_model``, ``model``,
+    ``run_id``, ``scenario``, ``region``, ``variable``, ``unit``,
+    then one column per year.
+
+    The trajectory is per-scenario; every ensemble member sees the
+    same forcing input, so we replicate the same series across each
+    ``dist_cfgs`` entry's ``Index`` (run_id). The adapter post-
+    processing (:func:`CICEROSCMPY2._run`) overwrites the
+    ``climate_model`` column with the model's version string after
+    :func:`run_append` merges this with the upstream-produced result.
+    """
+    rows: list[dict[str, Any]] = []
+    for scendata in scendata_list:
+        scenario_name = scendata["scenname"]
+        for variable in backreport_variables:
+            data_key = _BACKREPORT_VAR_TO_SCENDATA_KEY[variable]
+            data = scendata.get(data_key)
+            if data is None:
+                # Scendata builder didn't populate this trajectory
+                # (e.g. lu_zero idealised scenario for Land use). Skip
+                # for this scenario so the back-report mirrors the
+                # actual model input.
+                continue
+            series = data.iloc[:, 0] if hasattr(data, "iloc") else data
+            year_pairs = [
+                (str(int(year)), float(val))
+                for year, val in zip(series.index, series.values)
+            ]
+            for cfg_dict in dist_cfgs:
+                row: dict[str, Any] = {
+                    "climate_model": "CICERO-SCM-PY",
+                    "model": scenario_name,
+                    "run_id": cfg_dict["Index"],
+                    "scenario": scenario_name,
+                    "region": "World",
+                    "variable": variable,
+                    "unit": "W/m^2",
+                }
+                row.update(year_pairs)
+                rows.append(row)
+
+    if not rows:
+        # No rows produced (e.g. every requested back-report skipped
+        # because the requested variable has no scendata entry --
+        # idealised scenarios that zero LUC, etc). Caller treats None
+        # as "no back-report to append".
+        return None
+
+    return ScmRun(pd.DataFrame(rows))

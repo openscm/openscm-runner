@@ -212,3 +212,78 @@ def test_forcings_solar_differs_across_scenarios():
         variables=["Effective Radiative Forcing|Natural|Solar"],
     )
     assert float(hist["1850"].iloc[0]) != float(ssp["1850"].iloc[0])
+
+
+# ---------------------------------------------------------------------------
+# CICEROSCMPY2 back-report helper
+# ---------------------------------------------------------------------------
+
+
+def _fake_series_df(values, nystart=1750):
+    """Year-indexed single-column DataFrame matching the adapter shape."""
+    return pd.DataFrame(
+        {0: values},
+        index=pd.RangeIndex(nystart, nystart + len(values), name="year"),
+    )
+
+
+def test_backreport_builds_scmrun_with_expected_shape():
+    from openscm_runner.adapters.ciceroscm_py2_adapter.ciceroscmpy2_adapter import (
+        _build_rcmip3_backreport_scmrun,
+    )
+
+    scendata_list = [
+        {
+            "scenname": "ssp245",
+            "rf_sun_data": _fake_series_df([0.0, 0.1, 0.15]),
+            "rf_volc_data": _fake_series_df([0.0, -0.05, -0.20]),
+            "rf_luc_data": _fake_series_df([0.0, -0.01, -0.02]),
+        },
+        {
+            "scenname": "ssp126",
+            "rf_sun_data": _fake_series_df([0.0, 0.05, 0.08]),
+            "rf_volc_data": _fake_series_df([0.0, 0.0, 0.0]),
+            # No rf_luc_data — idealised-style scenario, lu_zero path.
+        },
+    ]
+    dist_cfgs = [{"Index": "cfg_0"}, {"Index": "cfg_1"}]
+    backreport_variables = [
+        "Effective Radiative Forcing|Natural|Solar",
+        "Effective Radiative Forcing|Natural|Volcanic",
+        "Effective Radiative Forcing|Anthropogenic|Albedo Change|Land use",
+    ]
+
+    out = _build_rcmip3_backreport_scmrun(
+        scendata_list=scendata_list,
+        backreport_variables=backreport_variables,
+        dist_cfgs=dist_cfgs,
+    )
+    assert out is not None
+    # ssp245: 3 vars x 2 cfgs = 6 rows; ssp126: 2 vars x 2 cfgs = 4 rows
+    assert len(out.meta) == 10
+    assert set(out.get_unique_meta("variable")) == set(backreport_variables)
+    assert set(out.get_unique_meta("scenario")) == {"ssp245", "ssp126"}
+    assert set(out.get_unique_meta("region")) == {"World"}
+    assert set(out.get_unique_meta("unit")) == {"W/m^2"}
+
+
+def test_backreport_returns_none_when_no_trajectories_match():
+    # User asks only for Land use back-report but every scenario is
+    # idealised (no rf_luc_data populated). Helper returns None so
+    # the caller can log/omit.
+    from openscm_runner.adapters.ciceroscm_py2_adapter.ciceroscmpy2_adapter import (
+        _build_rcmip3_backreport_scmrun,
+    )
+
+    scendata_list = [
+        {"scenname": "1pctCO2", "rf_sun_data": _fake_series_df([0.0, 0.0])},
+    ]
+    dist_cfgs = [{"Index": "cfg_0"}]
+    out = _build_rcmip3_backreport_scmrun(
+        scendata_list=scendata_list,
+        backreport_variables=[
+            "Effective Radiative Forcing|Anthropogenic|Albedo Change|Land use",
+        ],
+        dist_cfgs=dist_cfgs,
+    )
+    assert out is None
