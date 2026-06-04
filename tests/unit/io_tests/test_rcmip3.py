@@ -176,3 +176,39 @@ def test_forcings_has_historical_albedo_breakdown():
             ],
         )
         assert len(df) == 1, f"{component}: expected 1 row, got {len(df)}"
+
+
+def test_forcings_has_natural_solar_volcanic_per_scenario():
+    # Solar + Volcanic are published per-scenario in the canonical
+    # forcing CSV (not a single trajectory broadcast across scenarios
+    # like the legacy bundle CSVs). Confirm both are present for
+    # ssp245 (one of the SSP-RCP scenarios) and historical.
+    for scenario in ("historical", "ssp245"):
+        for component in ("Solar", "Volcanic"):
+            df = load_rcmip3_forcings(
+                MINI_BUNDLE,
+                scenarios=[scenario],
+                variables=[
+                    f"Effective Radiative Forcing|Natural|{component}"
+                ],
+            )
+            assert len(df) == 1, (
+                f"{scenario}/{component}: expected 1 row, got {len(df)}"
+            )
+
+
+def test_forcings_solar_differs_across_scenarios():
+    # The canonical CSV uses per-scenario natural-forcing rows. If
+    # historical 1850 == ssp245 1850 we've accidentally lost the
+    # per-scenario distinction the adapter relies on.
+    hist = load_rcmip3_forcings(
+        MINI_BUNDLE,
+        scenarios=["historical"],
+        variables=["Effective Radiative Forcing|Natural|Solar"],
+    )
+    ssp = load_rcmip3_forcings(
+        MINI_BUNDLE,
+        scenarios=["ssp245"],
+        variables=["Effective Radiative Forcing|Natural|Solar"],
+    )
+    assert float(hist["1850"].iloc[0]) != float(ssp["1850"].iloc[0])
