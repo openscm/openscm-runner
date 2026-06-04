@@ -245,3 +245,82 @@ def _pick_conc_file(bundle_dir: str, scenario_name: str, gases_ep: str):
         if os.path.exists(path):
             return path
     return None
+
+
+def build_concentrations_df_from_rcmip3(
+    rcmip3_bundle_path,
+    scenario_names: Iterable[str],
+    fair_species: Iterable[str],
+    nystart: int = 1750,
+    nyend: int = 2500,
+) -> pd.DataFrame:
+    """
+    Build a FaIR-compatible concentrations DataFrame from the canonical
+    RCMIP3 Zenodo 20430630 bundle.
+
+    Reads ``rcmip_phase3_concentrations_v2.0.0.csv``, filters to the
+    requested ``scenario_names``, canonicalises each row's Variable
+    via :func:`openscm_runner.io.canonicalise_rcmip3_variable` (strips
+    intermediate IAMC categories like ``|F-Gases|HFC|`` so the leaf
+    species name ends up adjacent to ``Atmospheric Concentrations|``),
+    and translates each leaf species to FaIR's hyphenated form via
+    :data:`RCMIP_TO_FAIR2_SPECIES`. Species not in ``fair_species``
+    are dropped silently (matches the legacy bundle path).
+
+    Returned shape matches :func:`build_concentrations_df` and
+    :func:`build_concentrations_df_from_scmrun`: lowercase metadata
+    columns + string-keyed year columns ready for
+    ``fair.FAIR.fill_from_pandas(mode="concentration")``.
+    """
+    from ...io.rcmip3 import (
+        canonicalise_rcmip3_variable,
+        load_rcmip3_concentrations,
+    )
+
+    fair_species_set = set(fair_species)
+    df = load_rcmip3_concentrations(
+        rcmip3_bundle_path, scenarios=list(scenario_names),
+    )
+    if df.empty:
+        return pd.DataFrame()
+
+    year_cols = [
+        c
+        for c in df.columns
+        if isinstance(c, str) and c.isdigit()
+        and nystart <= int(c) <= nyend
+    ]
+
+    rows: list[dict] = []
+    dropped: set[str] = set()
+    for _, csv_row in df.iterrows():
+        variable = canonicalise_rcmip3_variable(csv_row["Variable"])
+        if "|" not in variable:
+            continue
+        species_short = variable.split("|", 1)[1]
+        fair_name = RCMIP_TO_FAIR2_SPECIES.get(species_short, species_short)
+        if fair_name not in fair_species_set:
+            dropped.add(species_short)
+            continue
+        row: dict = {
+            "scenario": csv_row["Scenario"],
+            "variable": fair_name,
+            "region": csv_row.get("Region", "World"),
+            "unit": csv_row["Unit"],
+        }
+        for year_str in year_cols:
+            row[year_str] = float(csv_row[year_str])
+        rows.append(row)
+
+    if dropped:
+        LOGGER.info(
+            "FaIRv2 RCMIP3 concentrations: %d species in canonical CSV "
+            "not in the FaIR species set; dropped: %s",
+            len(dropped), sorted(dropped),
+        )
+
+    if not rows:
+        return pd.DataFrame()
+    out = pd.DataFrame(rows)
+    out.columns = [c.lower() if not c.isdigit() else c for c in out.columns]
+    return out

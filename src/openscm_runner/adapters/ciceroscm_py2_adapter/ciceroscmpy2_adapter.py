@@ -632,6 +632,22 @@ def _build_scendata_list(
             "or hand-build with Emissions|* (ED) / "
             "Atmospheric Concentrations|* (CD) rows."
         )
+
+    # Canonical RCMIP3 path: union the canonical
+    # ``rcmip_phase3_emissions_v2.0.0.csv`` and
+    # ``rcmip_phase3_concentrations_v2.0.0.csv`` rows into the user's
+    # scenarios ScmRun so the existing per-scenario overlay logic
+    # below picks them up. User rows take precedence per
+    # ``(scenario, variable)`` -- canonical rows are dropped when the
+    # user supplies the same key. Variable names from the canonical
+    # CSV are canonicalised (CO2 sub-sector MAGICC names; flat F-gas/
+    # HFC/halocarbon names) so the existing ``cicero_comp_dict``
+    # suffix matching works without changes.
+    if cfg.get("rcmip3_bundle_path"):
+        scenarios = _merge_rcmip3_canonical_into_user(
+            scenarios, cfg["rcmip3_bundle_path"],
+        )
+
     scenario_years = scenarios.time_points.years()
     nyend = int(cfg.get("nyend", max(scenario_years)))
     scenario_names = sorted(set(scenarios["scenario"]))
@@ -1406,3 +1422,84 @@ def _build_rcmip3_backreport_scmrun(
         return None
 
     return ScmRun(pd.DataFrame(rows))
+
+
+# ---------------------------------------------------------------------------
+# RCMIP3 canonical emissions + concentrations merge
+# ---------------------------------------------------------------------------
+
+
+def _merge_rcmip3_canonical_into_user(scenarios, rcmip3_bundle_path):
+    """
+    Union canonical RCMIP3 emissions + concentrations into the user ScmRun.
+
+    Reads ``rcmip_phase3_emissions_v2.0.0.csv`` and
+    ``rcmip_phase3_concentrations_v2.0.0.csv`` from the bundle,
+    filters to the scenarios already present in ``scenarios``,
+    canonicalises variable names (CO2 sub-sectors get the MAGICC
+    suffix; F-gas/HFC/halocarbon intermediate IAMC categories are
+    stripped) and appends the canonical rows to the user ScmRun.
+
+    Deduplication is per ``(scenario, variable)``: canonical rows
+    that overlap a user-supplied key are dropped so the user's
+    values win. Variables the user doesn't supply for a given
+    scenario are filled from canonical.
+
+    The returned ScmRun is what the rest of
+    :func:`_build_scendata_list` operates on; the existing per-
+    scenario emissions / concentrations builders see the merged
+    object and run unchanged.
+    """
+    import pandas as pd
+
+    from ...io.rcmip3 import (
+        canonicalise_rcmip3_variable,
+        load_rcmip3_concentrations,
+        load_rcmip3_emissions,
+    )
+
+    scenario_names = sorted(set(scenarios["scenario"]))
+
+    user_keys: set[tuple[str, str]] = set()
+    user_meta = scenarios.meta
+    for scen, var in zip(user_meta["scenario"], user_meta["variable"]):
+        user_keys.add((str(scen), str(var)))
+
+    canon_rows: list[dict] = []
+    for kind, loader in (
+        ("emissions", load_rcmip3_emissions),
+        ("concentrations", load_rcmip3_concentrations),
+    ):
+        df = loader(rcmip3_bundle_path, scenarios=scenario_names)
+        if df.empty:
+            continue
+        year_cols = [
+            c for c in df.columns if isinstance(c, str) and c.isdigit()
+        ]
+        for _, csv_row in df.iterrows():
+            scen = str(csv_row["Scenario"])
+            variable = canonicalise_rcmip3_variable(csv_row["Variable"])
+            if (scen, variable) in user_keys:
+                continue
+            row: dict = {
+                "scenario": scen,
+                "variable": variable,
+                "region": csv_row.get("Region", "World"),
+                "unit": csv_row["Unit"],
+                "model": "RCMIP3-canonical",
+            }
+            for y in year_cols:
+                row[y] = float(csv_row[y])
+            canon_rows.append(row)
+
+    if not canon_rows:
+        return scenarios
+
+    canon_scmrun = ScmRun(pd.DataFrame(canon_rows))
+    LOGGER.info(
+        "CICEROSCMPY2 RCMIP3 canonical path: merged %d additional rows "
+        "from canonical CSVs into user ScmRun (user rows kept their "
+        "precedence per (scenario, variable)).",
+        len(canon_rows),
+    )
+    return run_append([scenarios, canon_scmrun])

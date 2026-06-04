@@ -248,14 +248,24 @@ def _splice_bundle_with_user(
     bundle_df: pd.DataFrame,
     user_df: pd.DataFrame,
     scenario_names: Iterable[str],
+    *,
+    bundle_per_scenario: bool = False,
 ) -> pd.DataFrame:
     """
     Take bundle historical as baseline and overwrite with user data.
 
-    For each user scenario, the bundle's own scenario label is replaced
-    by the user's scenario name, so each user scenario gets its own
-    copy of the historical baseline. Where the user supplies values
-    for the same (variable, year), the user's values take precedence.
+    Default mode (``bundle_per_scenario=False``): the bundle CSV
+    carries a single ``"historical"`` scenario row per species; this
+    function replicates each bundle row across every user scenario,
+    relabelling the ``scenario`` column.
+
+    Canonical RCMIP3 mode (``bundle_per_scenario=True``): the bundle
+    DataFrame is *already* per-scenario (one row per
+    ``(scenario, variable)`` covering the full 1750-2500 horizon, as
+    produced by :func:`_rcmip3_to_fair_emissions_df`). Filter to
+    rows whose ``scenario`` is in ``scenario_names`` and skip the
+    relabel; the rest of the splice (user overlay, unit scaling)
+    runs unchanged on top.
     """
     # Normalise bundle column names; FaIR is case-insensitive on them.
     bundle_df = bundle_df.copy()
@@ -282,19 +292,25 @@ def _splice_bundle_with_user(
             c.lower() if isinstance(c, str) else c for c in user_df.columns
         ]
 
-    spliced_rows = []
-    for scenario in scenario_names:
-        for _, bundle_row in bundle_df.iterrows():
-            spliced = bundle_row.copy()
-            spliced["scenario"] = scenario
-            spliced_rows.append(spliced)
-
-    if not spliced_rows:
-        # No bundle to splice on top of. Caller has user data only;
-        # pass it through unchanged so FaIR sees what the user supplied.
-        return user_df.reset_index(drop=True)
-
-    spliced_df = pd.DataFrame(spliced_rows).reset_index(drop=True)
+    if bundle_per_scenario:
+        spliced_df = bundle_df[
+            bundle_df["scenario"].isin(list(scenario_names))
+        ].reset_index(drop=True)
+        if spliced_df.empty:
+            return user_df.reset_index(drop=True)
+    else:
+        spliced_rows = []
+        for scenario in scenario_names:
+            for _, bundle_row in bundle_df.iterrows():
+                spliced = bundle_row.copy()
+                spliced["scenario"] = scenario
+                spliced_rows.append(spliced)
+        if not spliced_rows:
+            # No bundle to splice on top of. Caller has user data only;
+            # pass it through unchanged so FaIR sees what the user
+            # supplied.
+            return user_df.reset_index(drop=True)
+        spliced_df = pd.DataFrame(spliced_rows).reset_index(drop=True)
 
     if user_df.empty:
         return spliced_df
@@ -377,30 +393,103 @@ def _splice_bundle_with_user(
     return spliced_df
 
 
+def _rcmip3_to_fair_emissions_df(
+    rcmip3_bundle_path,
+    scenario_names: Iterable[str],
+) -> pd.DataFrame:
+    """
+    Read canonical RCMIP3 emissions and reshape to FaIR-rows.
+
+    Returns a DataFrame in the same horizontal layout that
+    :func:`_scmrun_to_fair2_rows` produces (one row per
+    ``(scenario, FaIR-species)``, integer year columns), keyed by user
+    scenario rather than a single bundle ``"historical"`` row -- so
+    :func:`_splice_bundle_with_user` must be called with
+    ``bundle_per_scenario=True``.
+
+    Variable names from the canonical CSV are canonicalised via
+    :func:`openscm_runner.io.canonicalise_rcmip3_variable` (strips
+    intermediate IAMC categories, maps CO2 sub-sectors to the
+    MAGICC-style names :data:`OPENSCM_TO_FAIR2_SPECIES` is keyed by)
+    before going through :func:`_openscm_to_fair2_species`.
+    """
+    from ...io.rcmip3 import (
+        canonicalise_rcmip3_variable,
+        load_rcmip3_emissions,
+    )
+
+    scenario_list = list(scenario_names)
+    df = load_rcmip3_emissions(rcmip3_bundle_path, scenarios=scenario_list)
+    if df.empty:
+        return pd.DataFrame()
+
+    year_cols = [c for c in df.columns if isinstance(c, str) and c.isdigit()]
+    rows: list[dict] = []
+    unmapped: set[str] = set()
+    for _, csv_row in df.iterrows():
+        canonical_variable = canonicalise_rcmip3_variable(csv_row["Variable"])
+        species = _openscm_to_fair2_species(canonical_variable)
+        if species is None:
+            unmapped.add(csv_row["Variable"])
+            continue
+        row: dict = {
+            "scenario": csv_row["Scenario"],
+            "variable": species,
+            "region": csv_row.get("Region", "World"),
+            "unit": csv_row["Unit"],
+        }
+        for year_str in year_cols:
+            row[int(year_str)] = float(csv_row[year_str])
+        rows.append(row)
+
+    if unmapped:
+        LOGGER.info(
+            "FaIRv2 RCMIP3 emissions: %d canonical variables had no "
+            "FaIR species mapping; dropped: %s",
+            len(unmapped), sorted(unmapped),
+        )
+    if not rows:
+        return pd.DataFrame()
+    return pd.DataFrame(rows)
+
+
 def build_emissions_df(
     scmrun,
     bundle_emissions_csv,
     scenario_names: Iterable[str],
     co2_only_scenarios: Iterable[str] = (),
+    *,
+    rcmip3_bundle_path=None,
 ) -> pd.DataFrame:
     """
     Build the FaIR 2.x-shaped emissions DataFrame.
 
-    Splices the calibration bundle's historical emissions with the
-    user's scenario data and returns one row per (scenario, species)
-    in the horizontal form FaIR's :meth:`fair.FAIR.fill_from_pandas`
-    expects.
+    Splices a historical baseline with the user's scenario data and
+    returns one row per (scenario, species) in the horizontal form
+    FaIR's :meth:`fair.FAIR.fill_from_pandas` expects. The baseline
+    has two sources:
+
+    * **Canonical RCMIP3 path** (``rcmip3_bundle_path`` set, default
+      when wired in from the adapter cfg): per-scenario emissions
+      come from ``rcmip_phase3_emissions_v2.0.0.csv`` in the Zenodo
+      20430630 bundle. Variable names are canonicalised via
+      :func:`openscm_runner.io.canonicalise_rcmip3_variable`.
+    * **Legacy bundle path** (``rcmip3_bundle_path is None``): the
+      calibration bundle's ``historical_emissions_*.csv`` is used as
+      the historical baseline and replicated across user scenarios;
+      same behaviour as before the canonical path was added.
 
     Parameters
     ----------
     scmrun : scmdata.ScmRun or None
         The user's emissions scenarios. When ``None`` or empty, the
-        returned DataFrame is just the bundle's historical relabelled to
-        each user scenario (useful for reproducing the bundle's own
-        runs without further input).
-    bundle_emissions_csv : pathlib.Path
+        returned DataFrame is just the baseline keyed to each user
+        scenario (useful for reproducing canonical RCMIP3 runs without
+        further input).
+    bundle_emissions_csv : pathlib.Path or None
         Path to the bundle's historical emissions CSV (typically
-        ``historical_emissions_1750-2023_cmip7.csv``).
+        ``historical_emissions_1750-2023_cmip7.csv``). Ignored when
+        ``rcmip3_bundle_path`` is set.
     scenario_names : iterable of str
         FaIR scenario labels to populate.
     co2_only_scenarios : iterable of str
@@ -409,8 +498,11 @@ def build_emissions_df(
         (``esm-flat*``, ``esm-bell*``, ``1pctCO2*``, ``abrupt-*``) only
         supply CO2 emissions in the protocol CSV, expecting non-CO2
         forcings to stay at pre-industrial. Without this list, the
-        bundle's historical non-CO2 values leak through (forward-filled
-        at 2023 by the splice) and contaminate the diagnostics.
+        baseline's historical non-CO2 values leak through (forward-
+        filled at 2023 by the splice) and contaminate the diagnostics.
+    rcmip3_bundle_path : path-like or None
+        When set, switches the baseline source to the canonical RCMIP3
+        bundle. See module-level docstring for the layout.
 
     Returns
     -------
@@ -418,11 +510,18 @@ def build_emissions_df(
         Horizontal-form emissions DataFrame ready to pass to
         ``fair.FAIR.fill_from_pandas(mode="emissions", df=...)``.
     """
-    bundle_df = (
-        pd.read_csv(bundle_emissions_csv)
-        if bundle_emissions_csv is not None
-        else pd.DataFrame()
-    )
+    if rcmip3_bundle_path is not None:
+        bundle_df = _rcmip3_to_fair_emissions_df(
+            rcmip3_bundle_path, scenario_names,
+        )
+        bundle_per_scenario = True
+    else:
+        bundle_df = (
+            pd.read_csv(bundle_emissions_csv)
+            if bundle_emissions_csv is not None
+            else pd.DataFrame()
+        )
+        bundle_per_scenario = False
 
     user_df = (
         _scmrun_to_fair2_rows(scmrun, scenario_names)
@@ -433,7 +532,10 @@ def build_emissions_df(
     if bundle_df.empty and user_df.empty:
         return pd.DataFrame()
 
-    spliced = _splice_bundle_with_user(bundle_df, user_df, scenario_names)
+    spliced = _splice_bundle_with_user(
+        bundle_df, user_df, scenario_names,
+        bundle_per_scenario=bundle_per_scenario,
+    )
 
     co2_only_set = set(co2_only_scenarios)
     if co2_only_set:

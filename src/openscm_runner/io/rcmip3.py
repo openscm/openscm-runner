@@ -200,6 +200,64 @@ def load_rcmip3_forcings(
     )
 
 
+_RCMIP3_TO_OPENSCM_CO2_SECTOR: dict[str, str] = {
+    "AFOLU": "MAGICC AFOLU",
+    "Energy and Industrial Processes": "MAGICC Fossil and Industrial",
+}
+
+_RCMIP3_INTERMEDIATE_CATEGORIES: frozenset[str] = frozenset({
+    "F-Gases",
+    "PFC",
+    "HFC",
+    "Montreal Gases",
+    "CFC",
+    "HCFC",
+    "Halon",
+})
+
+
+def canonicalise_rcmip3_variable(variable: str) -> str:
+    """Translate a canonical RCMIP3 variable name to openscm-runner conventions.
+
+    The canonical RCMIP3 CSV uses a few variable-name conventions that
+    differ from the MAGICC-style names openscm-runner adapters (FaIR2,
+    CICEROSCMPY2) work with internally. Specifically:
+
+    * CO2 sub-sectors carry RCMIP-native labels in the canonical CSV
+      (``Emissions|CO2|AFOLU``,
+      ``Emissions|CO2|Energy and Industrial Processes``). MAGICC-style
+      labels are ``Emissions|CO2|MAGICC AFOLU`` and
+      ``Emissions|CO2|MAGICC Fossil and Industrial``.
+    * F-gases, PFCs, HFCs, Montreal Gases, CFCs, HCFCs and Halons
+      carry intermediate IAMC categories in the canonical CSV (e.g.
+      ``Emissions|PFC|C2F6``,
+      ``Atmospheric Concentrations|F-Gases|HFC|HFC125``). openscm-runner
+      uses flat names (``Emissions|C2F6``,
+      ``Atmospheric Concentrations|HFC125``).
+
+    This helper canonicalises the name by applying the rewrite. Names
+    that don't need translation (e.g. ``Emissions|CH4``,
+    ``Effective Radiative Forcing|Natural|Solar``) round-trip unchanged.
+    """
+    parts = variable.split("|")
+    if len(parts) < 3:
+        return variable
+
+    prefix = parts[0]
+
+    if (
+        parts[1] == "CO2"
+        and len(parts) == 3
+        and parts[2] in _RCMIP3_TO_OPENSCM_CO2_SECTOR
+    ):
+        return f"{prefix}|CO2|{_RCMIP3_TO_OPENSCM_CO2_SECTOR[parts[2]]}"
+
+    if any(p in _RCMIP3_INTERMEDIATE_CATEGORIES for p in parts[1:-1]):
+        return f"{prefix}|{parts[-1]}"
+
+    return variable
+
+
 # Scenario-category mapping used by the RCMIP3 upstream generation
 # script (input_datafiles_generation/loop_through_protocol_and_make_input_csvs.py),
 # which feeds per-category CMIP7 ScenarioMIP runs into the canonical

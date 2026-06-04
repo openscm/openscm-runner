@@ -9,6 +9,7 @@ import pytest
 from openscm_runner.io import (
     RCMIP3_DEFAULT_SCENARIO_TO_CATEGORY,
     RCMIP3_METADATA_COLS,
+    canonicalise_rcmip3_variable,
     load_rcmip3,
     load_rcmip3_albedo_categories,
     load_rcmip3_concentrations,
@@ -287,3 +288,98 @@ def test_backreport_returns_none_when_no_trajectories_match():
         dist_cfgs=dist_cfgs,
     )
     assert out is None
+
+
+# ---------------------------------------------------------------------------
+# canonicalise_rcmip3_variable
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("canonical", "expected"),
+    [
+        # Flat name -- unchanged
+        ("Emissions|CH4", "Emissions|CH4"),
+        ("Atmospheric Concentrations|CO2", "Atmospheric Concentrations|CO2"),
+        # Natural-forcing categories aren't stripped
+        (
+            "Effective Radiative Forcing|Natural|Solar",
+            "Effective Radiative Forcing|Natural|Solar",
+        ),
+        # CO2 sub-sectors -> MAGICC-style
+        ("Emissions|CO2|AFOLU", "Emissions|CO2|MAGICC AFOLU"),
+        (
+            "Emissions|CO2|Energy and Industrial Processes",
+            "Emissions|CO2|MAGICC Fossil and Industrial",
+        ),
+        # PFCs / F-gases: strip intermediate categories
+        ("Emissions|PFC|C2F6", "Emissions|C2F6"),
+        ("Emissions|PFC|cC4F8", "Emissions|cC4F8"),
+        (
+            "Atmospheric Concentrations|F-Gases|HFC|HFC125",
+            "Atmospheric Concentrations|HFC125",
+        ),
+        (
+            "Atmospheric Concentrations|F-Gases|PFC|CF4",
+            "Atmospheric Concentrations|CF4",
+        ),
+    ],
+)
+def test_canonicalise_rcmip3_variable_roundtrips(canonical, expected):
+    assert canonicalise_rcmip3_variable(canonical) == expected
+
+
+# ---------------------------------------------------------------------------
+# FaIR2 canonical-RCMIP3 emissions + concentrations builders
+# ---------------------------------------------------------------------------
+
+
+def test_fair2_emissions_canonical_path_translates_variables():
+    from openscm_runner.adapters.fair2_adapter._emissions_translator import (
+        _rcmip3_to_fair_emissions_df,
+    )
+
+    df = _rcmip3_to_fair_emissions_df(MINI_BUNDLE, scenario_names=["ssp245"])
+    assert not df.empty
+    species_seen = set(df["variable"].unique())
+    # Mini fixture has CO2 AFOLU + CO2 FFI + CH4 for ssp245
+    assert species_seen == {"CO2 AFOLU", "CO2 FFI", "CH4"}
+    # Year columns are integer keys (FaIR convention internally)
+    year_cols = [c for c in df.columns if isinstance(c, int)]
+    assert 1750 in year_cols and 2100 in year_cols
+
+
+def test_fair2_concentrations_canonical_path_translates_variables():
+    from openscm_runner.adapters.fair2_adapter._concentrations_translator import (
+        build_concentrations_df_from_rcmip3,
+    )
+
+    df = build_concentrations_df_from_rcmip3(
+        rcmip3_bundle_path=MINI_BUNDLE,
+        scenario_names=["ssp245"],
+        fair_species={"CO2", "CH4", "N2O"},
+        nystart=1750,
+        nyend=2100,
+    )
+    assert not df.empty
+    species_seen = set(df["variable"].unique())
+    assert species_seen == {"CO2", "CH4", "N2O"}
+    # Lowercased metadata columns + string-keyed year columns
+    assert "scenario" in df.columns
+    assert "1750" in df.columns
+    assert "2100" in df.columns
+
+
+def test_fair2_concentrations_canonical_path_filters_unknown_species():
+    from openscm_runner.adapters.fair2_adapter._concentrations_translator import (
+        build_concentrations_df_from_rcmip3,
+    )
+
+    df = build_concentrations_df_from_rcmip3(
+        rcmip3_bundle_path=MINI_BUNDLE,
+        scenario_names=["ssp245"],
+        fair_species={"CH4"},  # restrict
+        nystart=1750,
+        nyend=2100,
+    )
+    assert set(df["variable"].unique()) == {"CH4"}

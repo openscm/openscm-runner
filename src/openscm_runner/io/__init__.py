@@ -6,6 +6,7 @@ Phase 3 wide-table CSV bundle (Zenodo record 20430630).
 from .rcmip3 import (
     RCMIP3_DEFAULT_SCENARIO_TO_CATEGORY,
     RCMIP3_METADATA_COLS,
+    canonicalise_rcmip3_variable,
     load_rcmip3,
     load_rcmip3_albedo_categories,
     load_rcmip3_concentrations,
@@ -17,6 +18,7 @@ from .rcmip3 import (
 __all__ = [
     "RCMIP3_DEFAULT_SCENARIO_TO_CATEGORY",
     "RCMIP3_METADATA_COLS",
+    "canonicalise_rcmip3_variable",
     "load_rcmip3",
     "load_rcmip3_albedo_categories",
     "load_rcmip3_concentrations",

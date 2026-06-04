@@ -301,13 +301,20 @@ def _run_native_cfgs(scenarios, cfgs, output_variables) -> ScmRun:
     )
     for cfg in cfgs:
         conc_driven = cfg.get("fair2_conc_driven") is True
-        if conc_driven and not cfg.get("fair2_conc_bundle_dir") and not scenarios_have_conc:
+        if (
+            conc_driven
+            and not cfg.get("fair2_conc_bundle_dir")
+            and not cfg.get("rcmip3_bundle_path")
+            and not scenarios_have_conc
+        ):
             raise ValueError(
                 "FaIRv2 conc-driven mode needs concentrations from "
                 "either the scenarios DataFrame "
-                "(``Atmospheric Concentrations|*`` rows) or a bundle "
-                "directory of RCMIP-format ``{scen}_conc_*`` files "
-                "(``fair2_conc_bundle_dir`` cfg key). Neither was "
+                "(``Atmospheric Concentrations|*`` rows), the "
+                "canonical RCMIP3 Zenodo bundle "
+                "(``rcmip3_bundle_path`` cfg key), or a per-scenario "
+                "bundle directory of RCMIP-format ``{scen}_conc_*`` "
+                "files (``fair2_conc_bundle_dir`` cfg key). None were "
                 "supplied."
             )
 
@@ -541,6 +548,7 @@ def _run_translated_cfgs(  # noqa: PLR0912, PLR0915
             emissions_df = build_emissions_df(
                 emissions_run, bundle_emissions_csv, scenario_names,
                 co2_only_scenarios=idealised_scenarios,
+                rcmip3_bundle_path=rcmip3_bundle_path,
             )
             if not emissions_df.empty:
                 # fair.FAIR.run rejects NaN in any species' emissions
@@ -782,9 +790,26 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
                     "Bundle-based conc_df path skipped." if conc_bundle_dir
                     else "",
                 )
+    elif use_conc and rcmip3_bundle_path is not None:
+        # Canonical RCMIP3 path: per-scenario concentrations from the
+        # Zenodo 20430630 bundle. Preferred over the legacy
+        # ``conc_bundle_dir`` path when ``rcmip3_bundle_path`` is set.
+        from ._concentrations_translator import (
+            build_concentrations_df_from_rcmip3,
+        )
+
+        conc_df = build_concentrations_df_from_rcmip3(
+            rcmip3_bundle_path=rcmip3_bundle_path,
+            scenario_names=scenario_names,
+            fair_species=species,
+            nystart=start_year,
+            nyend=end_year,
+        )
     elif use_conc:
-        # `conc_bundle_dir is not None` is guaranteed by the cfg-level
-        # validation in _run_native_cfgs (raised before we get here).
+        # Legacy bundle path: per-scenario tab-delimited
+        # ``{scen}_conc_{gases_ep}`` files.
+        # ``conc_bundle_dir is not None`` guaranteed by the cfg-level
+        # validation in _run_native_cfgs.
         from ._concentrations_translator import build_concentrations_df
 
         conc_df = build_concentrations_df(
@@ -924,6 +949,7 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
         emissions_df = build_emissions_df(
             emissions_run, bundle_emissions_csv, scenario_names,
             co2_only_scenarios=idealised_scenarios,
+            rcmip3_bundle_path=rcmip3_bundle_path,
         )
         if not emissions_df.empty:
             # See parallel comment in _run_translated_cfgs: zero-fill so
