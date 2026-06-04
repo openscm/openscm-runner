@@ -29,12 +29,6 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
 
     model_name = "CiceroSCM"
 
-    def __init__(self, **kwargs):  # pylint: disable=useless-super-delegation
-        """
-        Initialise the CICEROSCM adapter.
-        """
-        super().__init__(**kwargs)
-
     def _init_model(self):  # pylint: disable=arguments-differ
         pass
 
@@ -71,10 +65,9 @@ class CICEROSCM(_Adapter):  # pylint: disable=too-few-public-methods
             os.path.join(os.path.dirname(__file__), "utils_templates", "run_dir")
         )
         try:
-            check_output(executable)  # nosec
+            check_output(executable)  # noqa: S603
         except OSError as orig_exc:
-            raise OSError(
-                "CICERO-SCM is not available on your operating system"
-            ) from orig_exc
+            msg = "CICERO-SCM is not available on your operating system"
+            raise OSError(msg) from orig_exc
 
         return "v2019vCH4"

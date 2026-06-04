@@ -32,15 +32,15 @@ authoritative list is :data:`SUPPORTED_VARIABLES`):
 - Total / Anthropogenic ERF + aerosol decomposition (~7),
   per-GHG ERF (CO2, CH4, N2O, F-Gases aggregate, stratospheric H2O,
   stratospheric & tropospheric O3).
-- F-Gases × 23 species × {ERF, Concentrations} = 46
+- F-Gases x 23 species x {ERF, Concentrations} = 46
   (e.g. ``Effective Radiative Forcing|Anthropogenic|F-Gases|HFC|HFC125``).
-- Montreal gases × 19 species × {ERF, Concentrations} = 38
+- Montreal gases x 19 species x {ERF, Concentrations} = 38
   (e.g. ``Effective Radiative Forcing|Anthropogenic|Montreal Gases|CFC|CFC11``).
 - Emissions back-calculation: CO2, CH4, N2O (when conc-driven).
 - Heat Uptake (W/m²), Heat Content total + 0-700 m.
 - Carbon-cycle diagnostics (6): biosphere/ocean fluxes, biosphere/
   ocean pools, airborne fraction, net flux to atmosphere. These are
-  expensive (~30–50× per-member runtime on conc-driven runs); the
+  expensive (~30-50x per-member runtime on conc-driven runs); the
   adapter only computes them when actually requested.
 
 **What CICERO-SCM v2.x cannot produce** (RCMIP3 variables that no
@@ -88,7 +88,7 @@ what CICERO-SCM has and FaIR does not.
 from __future__ import annotations
 
 import logging
-from typing import Iterable
+from collections.abc import Iterable
 
 LOGGER = logging.getLogger(__name__)
 
@@ -112,11 +112,9 @@ def _build_supported_sets() -> tuple[frozenset[str], frozenset[str]]:
         return frozenset(), frozenset()
 
     direct = frozenset(
-        # Upstream's dict contains one stray key with a trailing
-        # apostrophe ("Atmospheric Concentrations|Ozone|Tropospheric'").
-        # That's an upstream typo; we exclude it so users cannot
-        # legitimately request a name that round-trips to nothing.
-        k for k in openscm_to_cscm_dict if "'" not in k
+        k
+        for k in openscm_to_cscm_dict
+        if "'" not in k  # Exclude stray key with trailing apostrophe (upstream typo)
     )
     cc = frozenset(carbon_cycle_outputs)
     return direct, cc
@@ -145,20 +143,15 @@ _STRUCTURAL_LIMITS: dict[str, tuple[str, ...]] = {
         "Sea Level Change|Thermal Expansion",
     ),
     "no per-species aerosol-cloud (indirect) split — only the lumped SO4_IND term": (
-        "Effective Radiative Forcing|Anthropogenic|Aerosol|Aerosol-cloud Interactions|BC",
-        "Effective Radiative Forcing|Anthropogenic|Aerosol|Aerosol-cloud Interactions|OC",
-        "Effective Radiative Forcing|Anthropogenic|Aerosol|Aerosol-cloud Interactions|Sulfate",
+        "Effective Radiative Forcing|Anthropogenic|Aerosol|Aerosol-cloud Interactions|BC",  # noqa: E501
+        "Effective Radiative Forcing|Anthropogenic|Aerosol|Aerosol-cloud Interactions|OC",  # noqa: E501
+        "Effective Radiative Forcing|Anthropogenic|Aerosol|Aerosol-cloud Interactions|Sulfate",  # noqa: E501
     ),
     "tropospheric ozone forcing is lumped (TROP_O3); no precursor decomposition": (
         "Effective Radiative Forcing|Anthropogenic|Tropospheric Ozone|NOx",
         "Effective Radiative Forcing|Anthropogenic|Tropospheric Ozone|CO",
         "Effective Radiative Forcing|Anthropogenic|Tropospheric Ozone|VOC",
         "Effective Radiative Forcing|Anthropogenic|Tropospheric Ozone|CH4",
-    ),
-    "input-side forcing in CICERO-SCM (read from bundle files, not back-reported)": (
-        "Effective Radiative Forcing|Anthropogenic|Albedo Change|Land use",
-        "Effective Radiative Forcing|Natural|Solar",
-        "Effective Radiative Forcing|Natural|Volcanic",
     ),
     "back-calculated CO2 not attributed by sector (FFI vs AFOLU not separated)": (
         "Emissions|CO2|MAGICC Fossil and Industrial",
@@ -262,8 +255,7 @@ def _structural_reason(variable: str) -> str | None:
 
 def _shares_family(variable: str, example: str) -> bool:
     """
-    True when ``variable`` and ``example`` share enough leading path
-    segments to be considered part of the same structural family.
+    Return True when variable and example share enough leading path segments.
 
     Conservative: require a 2-segment overlap so e.g. "Effective
     Radiative Forcing|Anthropogenic|CO2" does not match the
