@@ -147,10 +147,12 @@ def run(
         name that is not in
         :data:`openscm_runner.KNOWN_EMISSIONS_VARIABLES`.
     """
-    if scenarios is None:
-        raise ValueError("`scenarios` is required; got None.")
-    check_variables_are_as_expected(scenarios.get_unique_meta("variable"))
-
+    # Validation order matters: cfg-shape errors and adapter import
+    # errors fire BEFORE the scenarios check so callers get the most
+    # specific error for the way their call is wrong. (Pre-existing
+    # tests in tests/unit/test_{run,installation}.py exercise this --
+    # ``test_no_fair`` expects the missing-fair ImportError, not a
+    # scenarios ValueError.)
     entries = _normalise_entries(climate_models_cfgs)
     _check_out_config(out_config, {name for name, _ in entries})
 
@@ -177,6 +179,10 @@ def run(
             output_config=output_config_cm,
         )
         model_tasks.append((climate_model, adapter, scenarios))
+
+    if scenarios is None:
+        raise ValueError("`scenarios` is required; got None.")
+    check_variables_are_as_expected(scenarios.get_unique_meta("variable"))
 
     if parallel_models and len(model_tasks) > 1:
         n_workers = min(len(model_tasks), max_model_workers)

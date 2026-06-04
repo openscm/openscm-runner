@@ -125,6 +125,7 @@ import logging
 import os
 from typing import Any
 
+import pandas as pd
 from scmdata import ScmRun, run_append
 
 from ..._run_mode import RunMode

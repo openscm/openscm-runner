@@ -4,7 +4,7 @@ Integration smoke tests for the FaIRv2 and CICEROSCMPY2 adapters.
 Four parameterised cases (FaIRv2 emissions/concentration-driven,
 CICEROSCMPY2 emissions/concentration-driven). Each test constructs
 the adapter via ``from_native_distribution``, runs the full 3-member
-mini-bundle ensemble across ssp126/ssp245/ssp370, and checks GSAT
+mini-bundle ensemble on ssp245, and checks GSAT
 and total ERF at 1850/1900/2000/2025/2050/2100 against a
 pytest-regressions snapshot.
 
@@ -53,7 +53,11 @@ _OUTPUT_VARIABLES = (
     "Effective Radiative Forcing",
 )
 _MEMBER_INDICES = [0, 1, 2]
-_TEST_SCENARIOS = ("ssp126", "ssp245", "ssp370")
+# Scoped to ssp245 (rather than the ssp126/245/370 trio Zeb suggested)
+# because the CICERO mini-bundle ships only ssp245 conc files, and the
+# FaIRv2 CD path also goes through that bundle. Expanding the bundles
+# to cover ssp126 / ssp370 conc is a follow-up.
+_TEST_SCENARIOS = ("ssp245",)
 _REGRESSION_YEARS = (1850, 1900, 2000, 2025, 2050, 2100)
 _REGRESSION_VARIABLES = (
     "Surface Air Temperature Change",
@@ -187,7 +191,7 @@ def _result_to_regression_dict(result):
 def test_adapter_smoke(adapter_factory, smoke_scenarios, num_regression):
     """
     Construct the adapter via its native-distribution classmethod,
-    run a 3-member ensemble across ssp126/ssp245/ssp370, and check
+    run a 3-member ensemble on ssp245, and check
     GSAT and total ERF against a pytest-regressions snapshot at
     1850, 1900, 2000, 2025, 2050 and 2100.
     """
