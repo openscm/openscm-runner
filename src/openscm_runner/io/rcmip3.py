@@ -217,6 +217,78 @@ _RCMIP3_CMIP7_CATEGORY_TO_SSP: dict[str, str] = {
 }
 
 
+# Default SSP-RCP scenario → CMIP7 ScenarioMIP category mapping for
+# the canonical per-category irrigation / land-use albedo split.
+# There is no canonical SSP-RCP → category mapping (the categories
+# are a separate scenario hierarchy in CMIP7 ScenarioMIP, not a
+# rename of SSP-RCP); the defaults below pick the category whose
+# underlying SSP + emissions intensity best matches each SSP-RCP
+# scenario. Callers can override per-cfg via the
+# ``scenario_to_category`` cfg key passed to FaIR2 / CICEROSCMPY2.
+RCMIP3_DEFAULT_SCENARIO_TO_CATEGORY: dict[str, str] = {
+    # SSP1: very low emissions / 1.9 W/m^2 stabilisation -> VL.
+    "ssp119": "VL",
+    "ssp126": "VL",
+    # SSP2: middle of the road. ssp245 is the canonical "medium"
+    # IMAGE -> M; ssp434 / ssp460 are SSP4 with no direct CMIP7
+    # category match, mapped to the closest SSP2 intensity surrogate.
+    "ssp245": "M",
+    "ssp434": "L",
+    "ssp460": "ML",
+    "ssp534-over": "LN",
+    # SSP3: high baseline -> H (GCAM).
+    "ssp370": "H",
+    # SSP5: fossil-fuelled development. HL is "Medium-Low SSP5" —
+    # only the SSP5 category in the CMIP7 set; closest by SSP.
+    "ssp585": "HL",
+}
+
+
+def resolve_scenario_category(
+    scenario: str,
+    overrides: dict[str, str] | None = None,
+) -> str | None:
+    """Resolve an openscm-runner scenario name to a CMIP7 category.
+
+    Returns the category key (``"VL"``, ``"LN"``, ``"L"``, ``"ML"``,
+    ``"M"``, ``"H"`` or ``"HL"``) suitable for
+    :func:`load_rcmip3_albedo_categories`. Returns ``None`` for
+    scenarios that should be handled outside the category lookup
+    (``"historical"`` and ``"historical-cmip6"``, which have their own
+    per-component breakdown in the canonical forcing CSV).
+
+    Lookup order:
+
+    1. ``overrides`` (per-cfg user mapping), if provided.
+    2. Native CMIP7 category names (``"scen7-M"`` → ``"M"`` etc.).
+    3. :data:`RCMIP3_DEFAULT_SCENARIO_TO_CATEGORY`.
+
+    Raises
+    ------
+    KeyError
+        Scenario isn't in any of the three sources and isn't a
+        recognised historical alias. Caller should either add an
+        override or skip the scenario as idealised.
+    """
+    if overrides and scenario in overrides:
+        return overrides[scenario]
+    if scenario in ("historical", "historical-cmip6"):
+        return None
+    if scenario.startswith("scen7-"):
+        candidate = scenario.split("scen7-", 1)[1]
+        if candidate in _RCMIP3_CMIP7_CATEGORY_TO_SSP:
+            return candidate
+    if scenario in RCMIP3_DEFAULT_SCENARIO_TO_CATEGORY:
+        return RCMIP3_DEFAULT_SCENARIO_TO_CATEGORY[scenario]
+    raise KeyError(
+        f"No CMIP7 ScenarioMIP category mapping for {scenario!r}. "
+        "Either pass a `scenario_to_category` override on the cfg "
+        f"(e.g. `{{{scenario!r}: 'M'}}`), or set the scenario's "
+        "`protocol_land_use_forcing` meta to 'constant_zero' so "
+        "Land use + Irrigation are zeroed instead of category-looked-up."
+    )
+
+
 def load_rcmip3_albedo_categories(
     path: Path | str,
     category: str,

@@ -7,12 +7,14 @@ import pandas as pd
 import pytest
 
 from openscm_runner.io import (
+    RCMIP3_DEFAULT_SCENARIO_TO_CATEGORY,
     RCMIP3_METADATA_COLS,
     load_rcmip3,
     load_rcmip3_albedo_categories,
     load_rcmip3_concentrations,
     load_rcmip3_emissions,
     load_rcmip3_forcings,
+    resolve_scenario_category,
 )
 from openscm_runner.io.rcmip3 import _RCMIP3_CMIP7_CATEGORY_TO_SSP
 
@@ -118,3 +120,59 @@ def test_albedo_categories_unknown_category_raises():
 def test_category_to_ssp_map_covers_published_categories():
     expected = {"VL", "LN", "L", "ML", "M", "H", "HL"}
     assert set(_RCMIP3_CMIP7_CATEGORY_TO_SSP) == expected
+
+
+def test_default_scenario_to_category_covers_all_ssp_rcps():
+    # SSP-RCP scenarios published in the canonical RCMIP3 forcing CSV.
+    expected = {
+        "ssp119", "ssp126", "ssp245", "ssp370",
+        "ssp434", "ssp460", "ssp534-over", "ssp585",
+    }
+    assert set(RCMIP3_DEFAULT_SCENARIO_TO_CATEGORY) == expected
+
+
+def test_resolve_scenario_category_default():
+    assert resolve_scenario_category("ssp245") == "M"
+    assert resolve_scenario_category("ssp585") == "HL"
+    assert resolve_scenario_category("ssp119") == "VL"
+
+
+def test_resolve_scenario_category_override_takes_precedence():
+    assert (
+        resolve_scenario_category("ssp245", overrides={"ssp245": "L"})
+        == "L"
+    )
+
+
+def test_resolve_scenario_category_native_scen7_name():
+    assert resolve_scenario_category("scen7-M") == "M"
+    assert resolve_scenario_category("scen7-VL") == "VL"
+
+
+def test_resolve_scenario_category_historical_returns_none():
+    # Historical has its own per-component breakdown in the canonical
+    # CSV; the resolver signals that by returning None.
+    assert resolve_scenario_category("historical") is None
+    assert resolve_scenario_category("historical-cmip6") is None
+
+
+def test_resolve_scenario_category_unknown_raises():
+    with pytest.raises(KeyError, match="No CMIP7 ScenarioMIP category"):
+        resolve_scenario_category("1pctCO2")
+
+
+def test_forcings_has_historical_albedo_breakdown():
+    # Historical scenario carries per-component Land Use and
+    # Irrigation rows in the canonical CSV; ssp scenarios only have
+    # the lumped Albedo Change. Confirm both sub-components exist for
+    # historical.
+    for component in ("Land Use", "Irrigation"):
+        df = load_rcmip3_forcings(
+            MINI_BUNDLE,
+            scenarios=["historical"],
+            variables=[
+                f"Effective Radiative Forcing|Anthropogenic|"
+                f"Albedo Change|{component}"
+            ],
+        )
+        assert len(df) == 1, f"{component}: expected 1 row, got {len(df)}"

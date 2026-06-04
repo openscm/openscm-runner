@@ -661,16 +661,29 @@ def _build_scendata_list(
                 : min(nyend, scen_nat_n2o.index.max())
             ],
         }
-        # LUC: mirror FaIR's runtime mask. Non-idealised scenarios use
-        # the bundle's historical file as-is; idealised scenarios get a
-        # zeros DataFrame matching the simulation window (same effect
-        # as FaIR's ``zero_land_use_scenarios`` mask, without needing a
-        # separate ``constant_zero`` bundle file).
+        # LUC: three routes.
+        # 1. Idealised scenarios (``protocol_land_use_forcing ==
+        #    "constant_zero"``) -> in-memory zeros DataFrame, same as
+        #    FaIR's runtime mask.
+        # 2. Canonical RCMIP3 path (``rcmip3_bundle_path`` cfg key
+        #    set) -> per-scenario Land Use from the bundle's
+        #    ``input_datafiles_generation/data/Forcing_AFOLU_CO2.csv``,
+        #    keyed by CMIP7 ScenarioMIP category.
+        # 3. Legacy path -> the bundle's pre-computed
+        #    ``rf_luc_file`` path, single trajectory for all scenarios.
         if lu_zero:
             import pandas as pd
             scendata["rf_luc_data"] = pd.DataFrame(
                 {0: [0.0] * (nyend - nystart + 1)},
                 index=range(nystart, nyend + 1),
+            )
+        elif cfg.get("rcmip3_bundle_path") is not None:
+            scendata["rf_luc_data"] = _build_rf_luc_data_from_rcmip3(
+                scenario_name=scenario_name,
+                rcmip3_bundle_path=cfg["rcmip3_bundle_path"],
+                scenario_to_category=cfg.get("scenario_to_category"),
+                nystart=nystart,
+                nyend=nyend,
             )
         else:
             scendata["rf_luc_file"] = cfg["rf_luc_file"]
@@ -1077,3 +1090,90 @@ def _resolve_protocol_spec(
                 "land_use_forcing": str(sub["protocol_land_use_forcing"].iloc[0]),
             }
     return {"natural_forcing": "on", "land_use_forcing": "historical"}
+
+
+def _build_rf_luc_data_from_rcmip3(
+    *,
+    scenario_name: str,
+    rcmip3_bundle_path,
+    scenario_to_category: dict[str, str] | None,
+    nystart: int,
+    nyend: int,
+):
+    """
+    Build a per-scenario LUC albedo DataFrame from the canonical
+    RCMIP3 Zenodo 20430630 bundle.
+
+    Returns a year-indexed DataFrame with a single unnamed column
+    (column key ``0``) covering ``[nystart, nyend]``, ready for the
+    CICEROSCM ``rf_luc_data`` scendata slot — same shape as the
+    in-memory zeros DataFrame used for the idealised
+    ``protocol_land_use_forcing == "constant_zero"`` path. Values
+    are pulled from the bundle's
+    ``input_datafiles_generation/data/Forcing_AFOLU_CO2.csv``,
+    keyed by the CMIP7 ScenarioMIP category the scenario resolves
+    to (default mapping + per-cfg override applied via
+    :func:`openscm_runner.io.rcmip3.resolve_scenario_category`).
+
+    For ``historical`` / ``historical-cmip6`` the per-component
+    ``Effective Radiative Forcing|Anthropogenic|Albedo Change|Land Use``
+    row from the canonical forcing CSV is used instead.
+
+    CICEROSCMPY2 has no irrigation channel, so the Irrigation
+    component is dropped — only the Land Use trajectory is written
+    into ``rf_luc_data``. (FaIR fills Irrigation as a separate
+    species; CICERO does not.)
+    """
+    import pandas as pd
+
+    from ...io.rcmip3 import (
+        load_rcmip3_albedo_categories,
+        load_rcmip3_forcings,
+        resolve_scenario_category,
+    )
+
+    years = pd.RangeIndex(nystart, nyend + 1, name="year")
+    try:
+        category = resolve_scenario_category(
+            scenario_name, overrides=scenario_to_category,
+        )
+    except KeyError as exc:
+        LOGGER.warning(
+            "CICEROSCMPY2 RCMIP3 land-use path: scenario %r has no "
+            "CMIP7 category mapping (%s). Falling back to zero "
+            "Land use forcing.",
+            scenario_name, exc,
+        )
+        return pd.DataFrame({0: [0.0] * len(years)}, index=years)
+
+    if category is None:
+        df = load_rcmip3_forcings(
+            rcmip3_bundle_path,
+            scenarios=[scenario_name],
+            variables=[
+                "Effective Radiative Forcing|Anthropogenic|"
+                "Albedo Change|Land Use"
+            ],
+        )
+        if df.empty:
+            LOGGER.warning(
+                "CICEROSCMPY2 RCMIP3 land-use path: scenario %r has "
+                "no Albedo Change|Land Use row in the canonical "
+                "forcing CSV. Falling back to zero.",
+                scenario_name,
+            )
+            return pd.DataFrame({0: [0.0] * len(years)}, index=years)
+        year_cols = [c for c in df.columns if c.isdigit()]
+        series = (
+            df[year_cols].iloc[0]
+            .rename(lambda y: int(y))
+            .astype(float)
+            .reindex(years).fillna(0.0)
+        )
+        return pd.DataFrame({0: series.values}, index=years)
+
+    albedo = load_rcmip3_albedo_categories(
+        rcmip3_bundle_path, category=category,
+    )
+    series = albedo["Land Use"].reindex(years).fillna(0.0)
+    return pd.DataFrame({0: series.values}, index=years)
