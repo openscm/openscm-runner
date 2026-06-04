@@ -19,7 +19,7 @@ def test_run_out_config_conflict_error(caplog):
         with pytest.raises(NotImplementedError):
             openscm_runner.run.run(
                 climate_models_cfgs={"model_a": ["config list"]},
-                scenarios="not used",
+                scenarios=_dummy_scenarios(),
                 out_config={"another model": ("hi",)},
             )
 
