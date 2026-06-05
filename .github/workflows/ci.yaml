@@ -206,6 +206,13 @@ jobs:
           COVERAGE_FILE: .coverage.env2-py${{ matrix.python-version }}
         run: |
           .venv-env2/bin/pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-fail-under=0 -m "(faircicero2_only or magicc) and not faircicero1x_only"
+      - name: Upload generated pytest-regressions snapshots (on first-run failures)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-regressions-snapshots-py${{ matrix.python-version }}
+          path: tests/integration/test_modern_adapters/*.csv
+          if-no-files-found: ignore
       - name: Combine coverage from both environments
         run: |
           .venv-env1/bin/coverage combine \
