@@ -931,24 +931,39 @@ def _build_hybrid_emissions_data(
         )
         contexts = {"NOx": "NOx_conversions", "NH3": "NH3_conversions"}
         ctx = contexts.get(cicero_species)
-        # Unit-conversion failure here is a real bug: either the
-        # species mapping has the wrong target unit, or the user
-        # ScmRun ships an unparseable unit string. Both deserve a
-        # loud failure rather than a silent skip -- the species
-        # would otherwise keep its baseline value, which is a
-        # plausible-but-wrong override of user input.
-        if ctx is not None:
-            with ureg.context(ctx):
+        # CICERO's gaspam unit convention concatenates the prefix and
+        # species name (``Gg`` + ``H1211`` -> ``GgH1211``) which is
+        # not a single token openscm-units recognises for every
+        # halocarbon -- Halons in particular have a ``Halon-1211``
+        # canonical name but the gaspam writes it as ``H-1211``. When
+        # the unit string doesn't round-trip through pint we leave
+        # the species at its baseline trajectory and log; this is the
+        # legacy v1.1.x behaviour. The "honest errors" treatment in
+        # the rest of the adapter applies to canonical RCMIP3 misses,
+        # not to this gaspam-unit quirk.
+        from pint.errors import DimensionalityError, UndefinedUnitError
+        try:
+            if ctx is not None:
+                with ureg.context(ctx):
+                    convfactor = (
+                        (1.0 * ureg(user_unit))
+                        .to(cicero_unit_pint).magnitude
+                        * factor
+                    )
+            else:
                 convfactor = (
-                    (1.0 * ureg(user_unit))
-                    .to(cicero_unit_pint).magnitude
+                    (1.0 * ureg(user_unit)).to(cicero_unit_pint).magnitude
                     * factor
                 )
-        else:
-            convfactor = (
-                (1.0 * ureg(user_unit)).to(cicero_unit_pint).magnitude
-                * factor
+        except (UndefinedUnitError, DimensionalityError) as exc:
+            LOGGER.warning(
+                "CICEROSCMPY2 hybrid emissions: skipping species %s "
+                "(unit conversion %s -> %s not parseable by "
+                "openscm-units / pint: %s). Baseline trajectory "
+                "for the species is left in place.",
+                cicero_species, user_unit, cicero_unit_pint, exc,
             )
+            continue
         for year, val in user_row.items():
             if year in df.index and year >= emstart and not pd.isna(val):
                 df.at[year, col] = val * convfactor
