@@ -60,25 +60,23 @@ keys listed below.
   (``EM_UNIT``, ``CONC_UNIT``, ``BETA``, ``TAU*``, ``NAT_EM``).
   Must match the species set the ``distribution_json`` posterior
   was calibrated against.
-- ``historical_em_file`` (path): CICERO-format historical emissions
+- ``historical_em_file`` (path): RCMIP-format historical emissions
   baseline. Provides the species-column coverage and pre-1850 values
   that the user's ``Emissions|*`` overlay extends.
-- ``historical_conc_file`` (path): CICERO-format historical
+- ``historical_conc_file`` (path): RCMIP-format historical
   concentrations baseline. Same role for the CD path; also provides
   the pre-industrial concentration values CICEROSCM needs to seed
   the concentration solver in ED mode.
 - ``nat_ch4_file`` / ``nat_n2o_file`` (paths): natural CH4 / N2O
   emissions trajectories.
-- ``rf_solar_file`` / ``rf_volc_file`` / ``rf_luc_file`` (paths):
-  default solar / volcanic / LUC albedo forcing files.
+- ``rcmip3_bundle_path`` (path): canonical RCMIP Phase 3 Zenodo
+  20430630 bundle. Solar, volcanic and LUC-albedo forcings are
+  always read in-memory from this bundle (the upstream
+  ``rf_sun_file`` / ``rf_volc_file`` / ``rf_luc_file`` keys are
+  not used). Per-scenario rows are required; missing rows raise.
 
 **Optional cfg sidecar keys**
 
-- ``rf_luc_constant_zero_file`` (path): used in place of
-  ``rf_luc_file`` for scenarios whose
-  ``protocol_land_use_forcing == "constant_zero"`` meta column is
-  set. Without this key, idealised scenarios fall back to the
-  historical LUC file with a warning.
 - ``member_indices`` (sequence of int): zero-based row indices into
   the parameter posterior. Defaults to all members.
 - ``max_workers`` (int): forwarded to
@@ -101,9 +99,9 @@ When the scenarios ScmRun carries ``protocol_natural_forcing`` and
 these), per-scenario natural-forcing and LUC handling is driven by
 them: ``natural_forcing == "off"`` flattens the natural CH4 / N2O
 trajectories to their 1750 value and zeros ``sunvolc``;
-``land_use_forcing == "constant_zero"`` substitutes
-``rf_luc_constant_zero_file`` for ``rf_luc_file`` (or warns if not
-available). When the meta columns are absent, the defaults are
+``land_use_forcing == "constant_zero"`` zeros the LUC-albedo
+trajectory in-memory (no separate file needed). When the meta
+columns are absent, the defaults are
 ``natural_forcing="on"`` and ``land_use_forcing="historical"`` (no
 idealised treatment); idealised users should set those meta columns
 on their ScmRun or override at the cfg level.
@@ -123,12 +121,13 @@ import logging
 import os
 from typing import Any
 
+import pandas as pd
 from scmdata import ScmRun, run_append
 
 from ..._run_mode import RunMode
 from ...settings import config
 from ..base import _Adapter
-from ._compat import HAS_CICEROSCM_PY2, _ciceroscm_major_version, cscmpy2
+from ._compat import HAS_CICEROSCM_PY2, cscmpy2, require_modern_ciceroscm
 
 try:
     from ...settings import get_worker_count
@@ -172,6 +171,9 @@ _OPENSCM_TO_CICERO_CONC = {
 # follow the same convention.
 _DEFAULT_CANONICAL_FILES: dict[str, str] = {
     "gaspam_file": "gases_vupdate_2024_WMO_added_new.txt",
+    # historical_em / historical_conc files anchor the CICERO species
+    # column structure + units; the actual scenario time series are
+    # overlaid on top from the canonical RCMIP3 bundle merge.
     "historical_em_file": (
         "historical_em_gases_vupdate_2024_WMO_added_new.txt"
     ),
@@ -184,9 +186,6 @@ _DEFAULT_CANONICAL_FILES: dict[str, str] = {
     "nat_n2o_file": (
         "natemis_N2O_ode_method_from_March2026_vupdate_2024_WMO_added_new.txt"
     ),
-    "rf_solar_file": "solar_RCMIP_historical_RCMIP3.txt",
-    "rf_volc_file": "VOLC_RCMIP_historical_RCMIP3.txt",
-    "rf_luc_file": "LUCalbedo_RCMIP_historical_RCMIP3.txt",
 }
 # Idealised LUC handling for CICEROSCM mirrors FaIR's runtime approach
 # (see fair2_adapter._fill_natural_forcings): the calibration bundle
@@ -213,21 +212,7 @@ class CICEROSCMPY2(_Adapter):
     )
 
     def _init_model(self):
-        if not HAS_CICEROSCM_PY2:
-            raise ImportError(
-                "ciceroscm is not installed. Run 'pip install \"ciceroscm>=2,<3\"' "
-                "or 'pip install openscm-runner[ciceroscmpy2]'. Note this "
-                "conflicts with the v1.1.x adapter's 'ciceroscm<2' pin; only "
-                "one major version of ciceroscm can be installed at a time."
-            )
-        major = _ciceroscm_major_version()
-        if major < 2:
-            raise ImportError(
-                f"ciceroscm major version {major} is installed but the "
-                "CICEROSCMPY2 adapter requires >=2. Either upgrade "
-                "('pip install \"ciceroscm>=2,<3\"') or use the v1.1.x "
-                "adapter (CICEROSCMPY) instead."
-            )
+        require_modern_ciceroscm()
 
     def _run(self, scenarios, cfgs, output_variables, output_config):
         if output_config is not None:
@@ -238,7 +223,7 @@ class CICEROSCMPY2(_Adapter):
         from ._output_variables import validate_output_variables
         validate_output_variables(output_variables)
 
-        from ._upstream_patches import (
+        from ._output_variables import (
             _CARBON_CYCLE_VARIABLES,
             output_vars_need_carbon_cycle,
         )
@@ -262,9 +247,7 @@ class CICEROSCMPY2(_Adapter):
             "historical_conc_file",
             "nat_ch4_file",
             "nat_n2o_file",
-            "rf_solar_file",
-            "rf_volc_file",
-            "rf_luc_file",
+            "rcmip3_bundle_path",
         )
         for cfg_index, cfg in enumerate(cfgs):
             missing = [k for k in required if k not in cfg]
@@ -297,53 +280,57 @@ class CICEROSCMPY2(_Adapter):
     @classmethod
     def from_native_distribution(
         cls,
-        native_distribution_path,
+        calibration_dir,
+        rcmip3_bundle_path,
+        *,
         mode: RunMode = RunMode.EMISSIONS_DRIVEN,
         distribution_json=None,
         member_indices=None,
         output_variables=None,
         output_config=None,
-        **cfg_overrides: Any,
+        max_workers: int | None = None,
     ) -> "CICEROSCMPY2":
         """
-        Construct from a CICERO-SCM 2.x calibration directory.
+        Construct from a CICERO-SCM 2.x calibration directory + canonical RCMIP3.
 
-        The calibration directory carries the gaspam, historical_em /
-        historical_conc baselines, natural CH4 / N2O emissions, default
-        solar / volcanic / LUC forcing files, and a parameter posterior
-        JSON. The classmethod resolves each by canonical filename glob
-        (see ``_CANONICAL_FILE_PATTERNS``) and writes the resolved
-        paths into a single cfg dict.
+        The two arguments correspond to two distinct data sources that
+        used to be conflated:
 
-        Per-scenario emissions / concentration files in the directory
-        (e.g. ``{scen}_em_*``, ``{scen}_conc_*``) are NOT read; the
-        scenarios DataFrame passed to :meth:`run` is the source of
-        truth for per-scenario inputs. Translate any reference bundle
-        into openscm-runner format on the application side and pass it
-        in via ``scenarios``.
+        * ``calibration_dir`` -- model-specific calibration only.
+          Carries the gaspam (species properties), the natural CH4 /
+          N2O emissions baselines, and the parameter posterior JSON.
+          These have no canonical RCMIP3 equivalent.
+        * ``rcmip3_bundle_path`` -- protocol/scenario inputs from the
+          canonical RCMIP Phase 3 Zenodo bundle (record 20430630):
+          per-scenario emissions, concentrations, solar, volcanic and
+          land-use albedo forcings. The adapter loads them via
+          :mod:`openscm_runner.io.rcmip3`.
+
+        Per-scenario emissions / concentration files inside
+        ``calibration_dir`` (e.g. ``{scen}_em_*``, ``{scen}_conc_*``)
+        are NOT read; the scenarios ScmRun passed to :meth:`run`
+        overlays on top of the canonical RCMIP3 baseline.
 
         Parameters
         ----------
-        native_distribution_path
-            Calibration directory root.
+        calibration_dir
+            Calibration directory root. Must contain the gaspam file,
+            both natemis files, and a discoverable parameter posterior
+            JSON (see :func:`_resolve_distribution_json`).
+        rcmip3_bundle_path
+            Directory of the canonical Zenodo 20430630 RCMIP3 bundle.
         mode
             Driving mode. Maps to ``cicero_conc_run`` internally.
         distribution_json
             Optional explicit path to the parameter posterior JSON.
-            Defaults to the single ``calibrated_*ensemble*.json``
-            (Marit's Zenodo convention, e.g.
-            ``calibrated_ciceroscm_ensemble.json`` in
-            `10.5281/zenodo.20506399`), ``*distribution*.json``, or
-            ``draw_samples_*.json`` in the directory.
+            Defaults to the single ``calibrated_*ensemble*.json``,
+            ``*distribution*.json``, or ``draw_samples_*.json`` in
+            the calibration directory.
         member_indices
             Optional zero-based row indices into the parameter
             posterior. ``None`` (default) selects all members.
         output_variables, output_config
             Forwarded to the adapter constructor.
-        **cfg_overrides
-            Forwarded as keys on the cfg dict, overriding any
-            auto-resolved canonical filenames. Use this to point a
-            specific input at a non-canonical location.
 
         Returns
         -------
@@ -352,7 +339,7 @@ class CICEROSCMPY2(_Adapter):
         """
         from pathlib import Path
 
-        cal_dir = Path(native_distribution_path)
+        cal_dir = Path(calibration_dir)
         if not cal_dir.exists():
             raise FileNotFoundError(
                 f"CICERO-SCM calibration directory not found: {cal_dir}"
@@ -362,15 +349,10 @@ class CICEROSCMPY2(_Adapter):
                 f"CICERO-SCM calibration path is not a directory: {cal_dir}"
             )
 
-        cfg: dict[str, Any] = {}
+        cfg: dict[str, Any] = {
+            "rcmip3_bundle_path": str(rcmip3_bundle_path),
+        }
         for key, fname in _DEFAULT_CANONICAL_FILES.items():
-            # Skip the canonical-file existence check for any key the
-            # caller is overriding via ``**cfg_overrides``. The whole
-            # point of an override is to point at a non-canonical
-            # location, so missing the canonical file in ``cal_dir``
-            # is not an error in that case.
-            if key in cfg_overrides:
-                continue
             candidate = cal_dir / fname
             if not candidate.is_file():
                 raise FileNotFoundError(
@@ -379,20 +361,18 @@ class CICEROSCMPY2(_Adapter):
                     f"expected {fname!r}. The calibration directory "
                     "must follow the cscm-calibrate rcmip-march2026 "
                     "layout (canonical filenames anchored on the "
-                    "v2024 WMO-added-new gaspam endpoint), or pass an "
-                    f"explicit {key}=... cfg override pointing at "
-                    "the actual file location."
+                    "v2024 WMO-added-new gaspam endpoint)."
                 )
             cfg[key] = str(candidate)
 
-        if distribution_json is None and "distribution_json" not in cfg_overrides:
+        if distribution_json is None:
             distribution_json = _resolve_distribution_json(cal_dir)
-        if distribution_json is not None:
-            cfg["distribution_json"] = str(distribution_json)
+        cfg["distribution_json"] = str(distribution_json)
 
         if member_indices is not None:
             cfg["member_indices"] = list(member_indices)
-        cfg.update(cfg_overrides)
+        if max_workers is not None:
+            cfg["max_workers"] = max_workers
 
         return cls(
             cfgs=[cfg],
@@ -486,9 +466,16 @@ def _run_one_distribution(scenarios, cfg: dict[str, Any], output_variables) -> S
 
     Builds scenariodata dicts from ``scenarios``, applies any
     ``member_indices`` subset to the JSON cfgs, and returns the
-    concatenated ScmRun across all scenarios and members.
+    concatenated ScmRun across all scenarios and members. Variables
+    in :data:`._output_variables.RCMIP3_BACK_REPORTABLE_VARIABLES`
+    (Solar / Volcanic / Land-use albedo ERF) are stripped from the
+    upstream request and back-reported from the scendata's
+    ``rf_sun_data`` / ``rf_volc_data`` / ``rf_luc_data`` trajectories
+    after the model run finishes.
     """
     from ciceroscm.parallel.distributionrun import DistributionRun
+
+    from ._output_variables import RCMIP3_BACK_REPORTABLE_VARIABLES
 
     distribution_json = cfg["distribution_json"]
     if not os.path.exists(distribution_json):
@@ -506,6 +493,28 @@ def _run_one_distribution(scenarios, cfg: dict[str, Any], output_variables) -> S
                 "omit the key (or pass a non-empty sequence) to run the "
                 "full distribution."
             )
+
+    output_variables = list(output_variables)
+    requested_backreport = [
+        v for v in output_variables if v in RCMIP3_BACK_REPORTABLE_VARIABLES
+    ]
+    upstream_variables = [
+        v for v in output_variables if v not in RCMIP3_BACK_REPORTABLE_VARIABLES
+    ]
+
+    if requested_backreport and cfg.get("rcmip3_bundle_path") is None:
+        raise ValueError(
+            f"CICEROSCMPY2: back-reportable variables "
+            f"{requested_backreport} require the `rcmip3_bundle_path` "
+            "cfg key to be set (the canonical RCMIP3 Zenodo 20430630 "
+            "path). Either supply the bundle or drop these variables "
+            "from `output_variables`."
+        )
+
+    if not upstream_variables and not requested_backreport:
+        raise ValueError(
+            "CICEROSCMPY2: no output variables to produce after filtering."
+        )
 
     scendata_list = _build_scendata_list(scenarios, cfg)
 
@@ -531,10 +540,41 @@ def _run_one_distribution(scenarios, cfg: dict[str, Any], output_variables) -> S
         max_workers,
     )
 
-    result = dist.run_over_distribution(
-        scendata_list, list(output_variables), max_workers=max_workers
-    )
-    return ScmRun(result) if not isinstance(result, ScmRun) else result
+    if upstream_variables:
+        result = dist.run_over_distribution(
+            scendata_list, upstream_variables, max_workers=max_workers
+        )
+        result = ScmRun(result) if not isinstance(result, ScmRun) else result
+    else:
+        # Pure back-report request -- skip the model dispatch.
+        result = None
+
+    if requested_backreport:
+        backreport = _build_rcmip3_backreport_scmrun(
+            scendata_list=scendata_list,
+            backreport_variables=requested_backreport,
+            dist_cfgs=dist.cfgs,
+        )
+        if backreport is None:
+            LOGGER.info(
+                "CICEROSCMPY2: no scendata trajectories matched the "
+                "requested back-report variables %s (likely all "
+                "idealised scenarios); back-report omitted.",
+                requested_backreport,
+            )
+        elif result is None:
+            result = backreport
+        else:
+            result = run_append([result, backreport])
+
+    if result is None:
+        raise ValueError(
+            "CICEROSCMPY2: no output produced -- the upstream run was "
+            "skipped (only back-report variables requested) and the "
+            "back-report had no trajectories to copy. Add at least one "
+            "non-back-reportable variable to ``output_variables``."
+        )
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -569,6 +609,22 @@ def _build_scendata_list(
             "or hand-build with Emissions|* (ED) / "
             "Atmospheric Concentrations|* (CD) rows."
         )
+
+    # Canonical RCMIP3 path: union the canonical
+    # ``rcmip_phase3_emissions_v2.0.0.csv`` and
+    # ``rcmip_phase3_concentrations_v2.0.0.csv`` rows into the user's
+    # scenarios ScmRun so the existing per-scenario overlay logic
+    # below picks them up. User rows take precedence per
+    # ``(scenario, variable)`` -- canonical rows are dropped when the
+    # user supplies the same key. Variable names from the canonical
+    # CSV are canonicalised (CO2 sub-sector MAGICC names; flat F-gas/
+    # HFC/halocarbon names) so the existing ``cicero_comp_dict``
+    # suffix matching works without changes.
+    if cfg.get("rcmip3_bundle_path"):
+        scenarios = _merge_rcmip3_canonical_into_user(
+            scenarios, cfg["rcmip3_bundle_path"],
+        )
+
     scenario_years = scenarios.time_points.years()
     nyend = int(cfg.get("nyend", max(scenario_years)))
     scenario_names = sorted(set(scenarios["scenario"]))
@@ -652,8 +708,6 @@ def _build_scendata_list(
             "scenname": scenario_name,
             "gaspam_file": cfg["gaspam_file"],
             "emissions_data": em_data,
-            "rf_solar_file": cfg["rf_solar_file"],
-            "rf_volc_file": cfg["rf_volc_file"],
             "nat_ch4_data": scen_nat_ch4.loc[
                 : min(nyend, scen_nat_ch4.index.max())
             ],
@@ -661,19 +715,36 @@ def _build_scendata_list(
                 : min(nyend, scen_nat_n2o.index.max())
             ],
         }
-        # LUC: mirror FaIR's runtime mask. Non-idealised scenarios use
-        # the bundle's historical file as-is; idealised scenarios get a
-        # zeros DataFrame matching the simulation window (same effect
-        # as FaIR's ``zero_land_use_scenarios`` mask, without needing a
-        # separate ``constant_zero`` bundle file).
+        # Solar + Volcanic: per-scenario in-memory DataFrames from
+        # the canonical RCMIP3 forcing CSV. The sunvolc=0 suppression
+        # for idealised scenarios is handled via the scendata flag
+        # above; upstream zeros internally when sunvolc=0.
+        nat = _build_natural_data_from_rcmip3(
+            scenario_name=scenario_name,
+            rcmip3_bundle_path=cfg["rcmip3_bundle_path"],
+            nystart=nystart,
+            nyend=nyend,
+        )
+        scendata["rf_sun_data"] = nat["rf_sun_data"]
+        scendata["rf_volc_data"] = nat["rf_volc_data"]
+
+        # Land use albedo: in-memory DataFrame. Idealised scenarios
+        # (``protocol_land_use_forcing == "constant_zero"``) get zeros;
+        # everything else is per-scenario from canonical RCMIP3 keyed
+        # by CMIP7 ScenarioMIP category.
         if lu_zero:
-            import pandas as pd
             scendata["rf_luc_data"] = pd.DataFrame(
                 {0: [0.0] * (nyend - nystart + 1)},
                 index=range(nystart, nyend + 1),
             )
         else:
-            scendata["rf_luc_file"] = cfg["rf_luc_file"]
+            scendata["rf_luc_data"] = _build_rf_luc_data_from_rcmip3(
+                scenario_name=scenario_name,
+                rcmip3_bundle_path=cfg["rcmip3_bundle_path"],
+                scenario_to_category=cfg.get("scenario_to_category"),
+                nystart=nystart,
+                nyend=nyend,
+            )
         if conc_data is not None:
             scendata["concentrations_data"] = conc_data
         else:
@@ -770,7 +841,7 @@ def _build_hybrid_emissions_data(
     zero_unsupplied: bool = False,
 ):
     """
-    Build a CICERO-format emissions DataFrame for one scenario.
+    Build an RCMIP-format emissions DataFrame for one scenario.
 
     Reads ``baseline_em_file`` as the species-coverage and
     historical-trajectory source, then overlays the user's
@@ -845,7 +916,6 @@ def _build_hybrid_emissions_data(
 
     overlaid: list[str] = []
     overlaid_df_cols: set[str] = set()
-    skipped_unmapped: list[str] = []
     for cicero_species, (openscm_suffix, factor) in cicero_comp_dict.items():
         col = cicero_to_df_col.get(cicero_species, cicero_species)
         if col not in df.columns:
@@ -861,6 +931,17 @@ def _build_hybrid_emissions_data(
         )
         contexts = {"NOx": "NOx_conversions", "NH3": "NH3_conversions"}
         ctx = contexts.get(cicero_species)
+        # CICERO's gaspam unit convention concatenates the prefix and
+        # species name (``Gg`` + ``H1211`` -> ``GgH1211``) which is
+        # not a single token openscm-units recognises for every
+        # halocarbon -- Halons in particular have a ``Halon-1211``
+        # canonical name but the gaspam writes it as ``H-1211``. When
+        # the unit string doesn't round-trip through pint we leave
+        # the species at its baseline trajectory and log; this is the
+        # legacy v1.1.x behaviour. The "honest errors" treatment in
+        # the rest of the adapter applies to canonical RCMIP3 misses,
+        # not to this gaspam-unit quirk.
+        from pint.errors import DimensionalityError, UndefinedUnitError
         try:
             if ctx is not None:
                 with ureg.context(ctx):
@@ -874,13 +955,14 @@ def _build_hybrid_emissions_data(
                     (1.0 * ureg(user_unit)).to(cicero_unit_pint).magnitude
                     * factor
                 )
-        except Exception as exc:  # pylint: disable=broad-except
+        except (UndefinedUnitError, DimensionalityError) as exc:
             LOGGER.warning(
                 "CICEROSCMPY2 hybrid emissions: skipping species %s "
-                "(unit conversion %s -> %s failed: %s)",
+                "(unit conversion %s -> %s not parseable by "
+                "openscm-units / pint: %s). Baseline trajectory "
+                "for the species is left in place.",
                 cicero_species, user_unit, cicero_unit_pint, exc,
             )
-            skipped_unmapped.append(cicero_species)
             continue
         for year, val in user_row.items():
             if year in df.index and year >= emstart and not pd.isna(val):
@@ -909,10 +991,8 @@ def _build_hybrid_emissions_data(
 
     LOGGER.info(
         "CICEROSCMPY2 hybrid emissions for scenario %r: overlaid %d "
-        "species from user ScmRun (%s); %d skipped on unit errors "
-        "(%s); others use baseline %s.",
+        "species from user ScmRun (%s); others use baseline %s.",
         scenario_name, len(overlaid), overlaid,
-        len(skipped_unmapped), skipped_unmapped,
         os.path.basename(baseline_em_file),
     )
 
@@ -928,7 +1008,7 @@ def _build_hybrid_concentrations_data(
     hold_unsupplied_at_pi: bool = False,
 ):
     """
-    Build a CICERO-format concentrations DataFrame for one CD scenario.
+    Build an RCMIP-format concentrations DataFrame for one CD scenario.
 
     Reads ``baseline_conc_path`` as the species-coverage and
     historical-trajectory source, forward-fills the last available
@@ -1077,3 +1157,315 @@ def _resolve_protocol_spec(
                 "land_use_forcing": str(sub["protocol_land_use_forcing"].iloc[0]),
             }
     return {"natural_forcing": "on", "land_use_forcing": "historical"}
+
+
+def _build_natural_data_from_rcmip3(
+    *,
+    scenario_name: str,
+    rcmip3_bundle_path,
+    nystart: int,
+    nyend: int,
+):
+    """
+    Build per-scenario Solar + Volcanic DataFrames from the canonical
+    RCMIP3 Zenodo 20430630 bundle.
+
+    Returns a dict with two keys:
+
+    * ``rf_sun_data``: year-indexed single-column DataFrame of the
+      ``Effective Radiative Forcing|Natural|Solar`` trajectory for
+      ``scenario_name``, sliced to ``[nystart, nyend]``.
+    * ``rf_volc_data``: same shape, from
+      ``Effective Radiative Forcing|Natural|Volcanic``. Upstream
+      :class:`ciceroscm.input_handler.InputHandler` propagates this
+      to ``rf_volc_n_data`` and ``rf_volc_s_data`` automatically (see
+      ``set_sun_volc_luc_defaults``), and the input handler's data
+      coercion (``arr[:, None]`` for the volcanic single-column case,
+      ``reshape(-1)`` for solar) handles the shape adjustment for
+      both natural-forcing axes.
+
+    Annual values are passed through unchanged; upstream's per-year
+    integration treats the single column as the year's mean forcing.
+
+    Raises ``KeyError`` if the requested scenario has no Solar or
+    Volcanic row in the canonical CSV (e.g. native CMIP7
+    ``scen7-{cat}`` names). Caller is expected to either remap the
+    scenario name to one published in the CSV or supply explicit
+    natural-forcing data.
+    """
+    import pandas as pd
+
+    from ...io.rcmip3 import load_rcmip3_forcings
+
+    years = pd.RangeIndex(nystart, nyend + 1, name="year")
+
+    out: dict[str, pd.DataFrame] = {}
+    for label, variable in (
+        ("rf_sun_data", "Effective Radiative Forcing|Natural|Solar"),
+        ("rf_volc_data", "Effective Radiative Forcing|Natural|Volcanic"),
+    ):
+        df = load_rcmip3_forcings(
+            rcmip3_bundle_path,
+            scenarios=[scenario_name],
+            variables=[variable],
+        )
+        if df.empty:
+            raise KeyError(
+                f"CICEROSCMPY2 RCMIP3 natural-forcing path: scenario "
+                f"{scenario_name!r} has no {variable!r} row in the "
+                "canonical RCMIP3 forcing CSV. Either drop the "
+                "scenario from the input ScmRun or add a "
+                "corresponding row to the canonical bundle."
+            )
+        year_cols = [c for c in df.columns if c.isdigit()]
+        series = (
+            df[year_cols].iloc[0]
+            .rename(lambda y: int(y))
+            .astype(float)
+            .reindex(years).fillna(0.0)
+        )
+        out[label] = pd.DataFrame({0: series.values}, index=years)
+    return out
+
+
+def _build_rf_luc_data_from_rcmip3(
+    *,
+    scenario_name: str,
+    rcmip3_bundle_path,
+    scenario_to_category: dict[str, str] | None,
+    nystart: int,
+    nyend: int,
+):
+    """
+    Build a per-scenario LUC albedo DataFrame from the canonical
+    RCMIP3 Zenodo 20430630 bundle.
+
+    Returns a year-indexed DataFrame with a single unnamed column
+    (column key ``0``) covering ``[nystart, nyend]``, ready for the
+    CICEROSCM ``rf_luc_data`` scendata slot — same shape as the
+    in-memory zeros DataFrame used for the idealised
+    ``protocol_land_use_forcing == "constant_zero"`` path. Values
+    are pulled from the bundle's
+    ``input_datafiles_generation/data/Forcing_AFOLU_CO2.csv``,
+    keyed by the CMIP7 ScenarioMIP category the scenario resolves
+    to (default mapping + per-cfg override applied via
+    :func:`openscm_runner.io.rcmip3.resolve_scenario_category`).
+
+    For ``historical`` / ``historical-cmip6`` the per-component
+    ``Effective Radiative Forcing|Anthropogenic|Albedo Change|Land Use``
+    row from the canonical forcing CSV is used instead.
+
+    CICEROSCMPY2 has no irrigation channel, so the Irrigation
+    component is dropped — only the Land Use trajectory is written
+    into ``rf_luc_data``. (FaIR fills Irrigation as a separate
+    species; CICERO does not.)
+    """
+    import pandas as pd
+
+    from ...io.rcmip3 import (
+        load_rcmip3_albedo_categories,
+        load_rcmip3_forcings,
+        resolve_scenario_category,
+    )
+
+    years = pd.RangeIndex(nystart, nyend + 1, name="year")
+    # ``resolve_scenario_category`` raises ``KeyError`` for scenarios
+    # with no default mapping; let it propagate so callers know to
+    # add a ``scenario_to_category`` override (matches FaIR2's
+    # ``_fill_land_use_from_rcmip3``).
+    category = resolve_scenario_category(
+        scenario_name, overrides=scenario_to_category,
+    )
+
+    if category is None:
+        df = load_rcmip3_forcings(
+            rcmip3_bundle_path,
+            scenarios=[scenario_name],
+            variables=[
+                "Effective Radiative Forcing|Anthropogenic|"
+                "Albedo Change|Land Use"
+            ],
+        )
+        if df.empty:
+            raise KeyError(
+                f"CICEROSCMPY2 RCMIP3 land-use path: scenario "
+                f"{scenario_name!r} has no Albedo Change|Land Use "
+                "row in the canonical RCMIP3 forcing CSV."
+            )
+        year_cols = [c for c in df.columns if c.isdigit()]
+        series = (
+            df[year_cols].iloc[0]
+            .rename(lambda y: int(y))
+            .astype(float)
+            .reindex(years).fillna(0.0)
+        )
+        return pd.DataFrame({0: series.values}, index=years)
+
+    albedo = load_rcmip3_albedo_categories(
+        rcmip3_bundle_path, category=category,
+    )
+    series = albedo["Land Use"].reindex(years).fillna(0.0)
+    return pd.DataFrame({0: series.values}, index=years)
+
+
+# ---------------------------------------------------------------------------
+# RCMIP3 back-report
+# ---------------------------------------------------------------------------
+
+
+# Variable name -> scendata key holding the per-scenario trajectory. The
+# scendata keys are populated by ``_build_scendata_list`` whenever the
+# ``rcmip3_bundle_path`` cfg is set (Solar / Volcanic via
+# ``_build_natural_data_from_rcmip3``; Land use via
+# ``_build_rf_luc_data_from_rcmip3``).
+_BACKREPORT_VAR_TO_SCENDATA_KEY: dict[str, str] = {
+    "Effective Radiative Forcing|Natural|Solar": "rf_sun_data",
+    "Effective Radiative Forcing|Natural|Volcanic": "rf_volc_data",
+    "Effective Radiative Forcing|Anthropogenic|Albedo Change|Land use": "rf_luc_data",
+}
+
+
+def _build_rcmip3_backreport_scmrun(
+    *,
+    scendata_list: list[dict[str, Any]],
+    backreport_variables: list[str],
+    dist_cfgs: list[dict[str, Any]],
+) -> ScmRun | None:
+    """
+    Build an :class:`scmdata.ScmRun` of back-reported forcing inputs.
+
+    For each ``(scenario, run_id, variable)`` combination, copies the
+    scendata's per-scenario trajectory (``rf_sun_data`` /
+    ``rf_volc_data`` / ``rf_luc_data``) into an ScmRun row with the
+    metadata schema upstream's
+    :class:`ciceroscm.parallel.cscmparwrapper.CSCMParWrapper`
+    uses for its diagnostic output -- ``climate_model``, ``model``,
+    ``run_id``, ``scenario``, ``region``, ``variable``, ``unit``,
+    then one column per year.
+
+    The trajectory is per-scenario; every ensemble member sees the
+    same forcing input, so we replicate the same series across each
+    ``dist_cfgs`` entry's ``Index`` (run_id). The adapter post-
+    processing (:func:`CICEROSCMPY2._run`) overwrites the
+    ``climate_model`` column with the model's version string after
+    :func:`run_append` merges this with the upstream-produced result.
+    """
+    rows: list[dict[str, Any]] = []
+    for scendata in scendata_list:
+        scenario_name = scendata["scenname"]
+        for variable in backreport_variables:
+            data_key = _BACKREPORT_VAR_TO_SCENDATA_KEY[variable]
+            data = scendata.get(data_key)
+            if data is None:
+                # Scendata builder didn't populate this trajectory
+                # (e.g. lu_zero idealised scenario for Land use). Skip
+                # for this scenario so the back-report mirrors the
+                # actual model input.
+                continue
+            series = data.iloc[:, 0] if hasattr(data, "iloc") else data
+            year_pairs = [
+                (str(int(year)), float(val))
+                for year, val in zip(series.index, series.values)
+            ]
+            for cfg_dict in dist_cfgs:
+                row: dict[str, Any] = {
+                    "climate_model": "CICERO-SCM-PY",
+                    "model": scenario_name,
+                    "run_id": cfg_dict["Index"],
+                    "scenario": scenario_name,
+                    "region": "World",
+                    "variable": variable,
+                    "unit": "W/m^2",
+                }
+                row.update(year_pairs)
+                rows.append(row)
+
+    if not rows:
+        # No rows produced (e.g. every requested back-report skipped
+        # because the requested variable has no scendata entry --
+        # idealised scenarios that zero LUC, etc). Caller treats None
+        # as "no back-report to append".
+        return None
+
+    return ScmRun(pd.DataFrame(rows))
+
+
+# ---------------------------------------------------------------------------
+# RCMIP3 canonical emissions + concentrations merge
+# ---------------------------------------------------------------------------
+
+
+def _merge_rcmip3_canonical_into_user(scenarios, rcmip3_bundle_path):
+    """
+    Union canonical RCMIP3 emissions + concentrations into the user ScmRun.
+
+    Reads ``rcmip_phase3_emissions_v2.0.0.csv`` and
+    ``rcmip_phase3_concentrations_v2.0.0.csv`` from the bundle,
+    filters to the scenarios already present in ``scenarios``,
+    canonicalises variable names (CO2 sub-sectors get the MAGICC
+    suffix; F-gas/HFC/halocarbon intermediate IAMC categories are
+    stripped) and appends the canonical rows to the user ScmRun.
+
+    Deduplication is per ``(scenario, variable)``: canonical rows
+    that overlap a user-supplied key are dropped so the user's
+    values win. Variables the user doesn't supply for a given
+    scenario are filled from canonical.
+
+    The returned ScmRun is what the rest of
+    :func:`_build_scendata_list` operates on; the existing per-
+    scenario emissions / concentrations builders see the merged
+    object and run unchanged.
+    """
+    import pandas as pd
+
+    from ...io.rcmip3 import (
+        canonicalise_rcmip3_variable,
+        load_rcmip3_concentrations,
+        load_rcmip3_emissions,
+    )
+
+    scenario_names = sorted(set(scenarios["scenario"]))
+
+    user_keys: set[tuple[str, str]] = set()
+    user_meta = scenarios.meta
+    for scen, var in zip(user_meta["scenario"], user_meta["variable"]):
+        user_keys.add((str(scen), str(var)))
+
+    canon_rows: list[dict] = []
+    for kind, loader in (
+        ("emissions", load_rcmip3_emissions),
+        ("concentrations", load_rcmip3_concentrations),
+    ):
+        df = loader(rcmip3_bundle_path, scenarios=scenario_names)
+        if df.empty:
+            continue
+        year_cols = [
+            c for c in df.columns if isinstance(c, str) and c.isdigit()
+        ]
+        for _, csv_row in df.iterrows():
+            scen = str(csv_row["Scenario"])
+            variable = canonicalise_rcmip3_variable(csv_row["Variable"])
+            if (scen, variable) in user_keys:
+                continue
+            row: dict = {
+                "scenario": scen,
+                "variable": variable,
+                "region": csv_row.get("Region", "World"),
+                "unit": csv_row["Unit"],
+                "model": "RCMIP3-canonical",
+            }
+            for y in year_cols:
+                row[y] = float(csv_row[y])
+            canon_rows.append(row)
+
+    if not canon_rows:
+        return scenarios
+
+    canon_scmrun = ScmRun(pd.DataFrame(canon_rows))
+    LOGGER.info(
+        "CICEROSCMPY2 RCMIP3 canonical path: merged %d additional rows "
+        "from canonical CSVs into user ScmRun (user rows kept their "
+        "precedence per (scenario, variable)).",
+        len(canon_rows),
+    )
+    return run_append([scenarios, canon_scmrun])

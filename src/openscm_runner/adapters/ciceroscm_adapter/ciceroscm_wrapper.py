@@ -151,10 +151,8 @@ class CiceroSCMWrapper:  # pylint: disable=too-few-public-methods
         root_dir = config.get("CICEROSCM_WORKER_ROOT_DIR", None)
         self.rundir = tempfile.mkdtemp(prefix="ciceroscm-", dir=root_dir)
         LOGGER.info("Creating new CICERO-SCM instance: %s", self.rundir)
-        # shutil.copytree with dirs_exist_ok=True replaces the previous
-        # distutils.dir_util.copy_tree call, since distutils was removed
-        # in Python 3.12. tempfile.mkdtemp above has already created
-        # self.rundir so dirs_exist_ok=True is required.
+        # tempfile.mkdtemp above has already created self.rundir
+        # so dirs_exist_ok=True is required.
         shutil.copytree(
             os.path.join(os.path.dirname(__file__), "utils_templates", "run_dir"),
             self.rundir,

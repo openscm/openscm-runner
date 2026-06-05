@@ -17,12 +17,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from .._run_mode import RunMode
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 class _Adapter(ABC):
@@ -129,27 +126,3 @@ class _Adapter(ABC):
         the public :meth:`run` reads the three trailing args from
         instance state.
         """
-
-    @classmethod
-    def from_native_distribution(
-        cls,
-        native_distribution_path: "Path",
-        mode: RunMode = RunMode.EMISSIONS_DRIVEN,
-        output_variables: Iterable[str] | None = None,
-        output_config: Iterable[str] | None = None,
-        **kwargs: Any,
-    ) -> "_Adapter":
-        """
-        Construct from a native parameter distribution on disk.
-
-        Adapters that support a native bundle (e.g. FaIRv2's
-        Zenodo calibration, CICEROSCM's ``rcmip-march2026``
-        bundle) override this classmethod to load the distribution
-        into a list of cfgs and return a fully-configured adapter.
-
-        The default implementation raises :class:`NotImplementedError`.
-        """
-        raise NotImplementedError(
-            f"{cls.__name__} does not support native distribution "
-            "loading. Construct with explicit cfgs instead."
-        )

@@ -19,7 +19,7 @@ def test_run_out_config_conflict_error(caplog):
         with pytest.raises(NotImplementedError):
             openscm_runner.run.run(
                 climate_models_cfgs={"model_a": ["config list"]},
-                scenarios="not used",
+                scenarios=_dummy_scenarios(),
                 out_config={"another model": ("hi",)},
             )
 
@@ -52,6 +52,33 @@ def test_run_rejects_unknown_emissions_variables(test_scenarios):
             climate_models_cfgs={"model_a": [{}]},
             scenarios=bad,
         )
+
+
+def _dummy_scenarios():
+    """A minimal ScmRun the wrapper's input validation accepts.
+
+    Has a single ``Surface Temperature`` row -- the variable doesn't
+    start with ``Emissions|`` so ``check_variables_are_as_expected``
+    no-ops, and the object satisfies the
+    "``scenarios is not None`` and exposes
+    ``.get_unique_meta('variable')``" contract that the wrapper enforces
+    since PR97. Dummy-adapter tests use this because the
+    :class:`_DummyAdapterA` / ``B`` ``_run`` methods don't actually
+    consume scenarios; they just need the input-validation pre-check
+    to pass.
+    """
+    return scmdata.ScmRun(
+        pd.DataFrame(
+            {
+                "scenario": ["dummy"],
+                "model": ["dummy"],
+                "region": ["World"],
+                "variable": ["Surface Temperature"],
+                "unit": ["K"],
+                2020: [0.0],
+            }
+        )
+    )
 
 
 def _dummy_result(climate_model):
@@ -118,7 +145,7 @@ def dummy_adapters():
 def test_serial_dispatch_runs_each_model(dummy_adapters):
     res = openscm_runner.run.run(
         climate_models_cfgs={"DummyA": [{}], "DummyB": [{}]},
-        scenarios=None,
+        scenarios=_dummy_scenarios(),
         parallel_models=False,
     )
     assert set(res["climate_model"]) == {"DummyA", "DummyB"}
@@ -137,7 +164,7 @@ def test_parallel_models_single_model_skips_pool(dummy_adapters, monkeypatch):
 
     res = openscm_runner.run.run(
         climate_models_cfgs={"DummyA": [{}]},
-        scenarios=None,
+        scenarios=_dummy_scenarios(),
         parallel_models=True,
     )
 
@@ -182,7 +209,7 @@ def test_parallel_dispatch_uses_process_pool(dummy_adapters, monkeypatch):
 
     res = openscm_runner.run.run(
         climate_models_cfgs={"DummyA": [{}], "DummyB": [{}]},
-        scenarios=None,
+        scenarios=_dummy_scenarios(),
         parallel_models=True,
     )
 
@@ -219,7 +246,7 @@ def test_max_model_workers_caps_pool_size(dummy_adapters, monkeypatch):
 
     openscm_runner.run.run(
         climate_models_cfgs={"DummyA": [{}], "DummyB": [{}]},
-        scenarios=None,
+        scenarios=_dummy_scenarios(),
         parallel_models=True,
         max_model_workers=1,
     )

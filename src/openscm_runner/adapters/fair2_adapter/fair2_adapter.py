@@ -129,59 +129,62 @@ class FAIR2(_Adapter):
     @classmethod
     def from_native_distribution(
         cls,
-        native_distribution_path,
+        calibration_dir,
+        rcmip3_bundle_path,
+        *,
         mode: RunMode = RunMode.EMISSIONS_DRIVEN,
         member_indices=None,
         output_variables: Iterable[str] | None = None,
         output_config: Iterable[str] | None = None,
-        **cfg_overrides: Any,
+        stochastic_run: bool = False,
     ) -> "FAIR2":
         """
-        Construct from a FaIR 2.x calibration bundle on disk.
+        Construct from a FaIR 2.x calibration bundle + the canonical RCMIP3 bundle.
+
+        The two paths are not the same thing and shouldn't be
+        conflated: the calibration bundle is jointly-tuned model-
+        specific data (parameter posterior, species_configs, scale
+        factors), while the RCMIP3 bundle is the protocol's per-
+        scenario inputs (emissions, concentrations, natural and
+        land-use albedo forcings). Both are required.
 
         Parameters
         ----------
-        native_distribution_path
-            Directory of CSVs as published on Zenodo (e.g. record
-            18828694). Must contain at least the parameter posterior
-            and species_configs files; see
+        calibration_dir
+            Directory of FaIR 2.x calibration CSVs as published on
+            Zenodo (e.g. record 18828694). Must contain at least the
+            parameter posterior and species_configs files; see
             :class:`NativeFairCalibration` for the full file list.
+            Scenario inputs are NOT loaded from here -- only the
+            calibration's parameter posterior and species_configs.
+        rcmip3_bundle_path
+            Directory of the canonical RCMIP Phase 3 Zenodo bundle
+            (record 20430630). The adapter loads per-scenario
+            emissions, concentrations and forcings from this path
+            via :mod:`openscm_runner.io.rcmip3`.
         mode
-            Driving mode. ``RunMode.CONCENTRATION_DRIVEN`` requires
-            ``fair2_conc_bundle_dir`` to be passed as a ``cfg_override``
-            (path to the CICERO RCMIP bundle whose ``{scen}_conc_*``
-            files the adapter reads).
+            Driving mode.
         member_indices
             Optional zero-based row indices into the parameter
             posterior. ``None`` (default) selects all members.
         output_variables, output_config
             Forwarded to the adapter constructor.
-        **cfg_overrides
-            Forwarded as keys on the single native cfg dict. Useful
-            keys: ``fair2_conc_bundle_dir`` (optional fallback for CD
-            mode -- only used when the scenarios DataFrame has no
-            ``Atmospheric Concentrations|*`` rows),
-            ``fair2_conc_gases_ep`` (default ``"gases_vupdate_2024_WMO_added_new.txt"``),
-            ``fair2_stochastic_run`` (default ``False``).
+        stochastic_run
+            Sets ``fair2_stochastic_run`` on the cfg.
 
         Returns
         -------
         FAIR2
             Configured adapter, ready to call ``.run(scenarios)``.
-
-        Notes
-        -----
-        Construction does not check whether CD mode will have
-        concentrations available. If neither the scenarios DataFrame
-        passed at ``.run()`` time nor ``fair2_conc_bundle_dir`` supplies
-        them, the adapter raises ``ValueError`` from inside
-        ``.run()``.
         """
-        calibration = NativeFairCalibration(native_distribution_path)
-        cfg: dict[str, Any] = {"native_calibration": calibration}
+        calibration = NativeFairCalibration(calibration_dir)
+        cfg: dict[str, Any] = {
+            "native_calibration": calibration,
+            "rcmip3_bundle_path": str(rcmip3_bundle_path),
+            "fair2_stochastic_run": stochastic_run,
+        }
         if member_indices is not None:
             cfg["member_indices"] = member_indices
-        cfg.update(cfg_overrides)
 
         return cls(
             cfgs=[cfg],
@@ -301,13 +304,17 @@ def _run_native_cfgs(scenarios, cfgs, output_variables) -> ScmRun:
     )
     for cfg in cfgs:
         conc_driven = cfg.get("fair2_conc_driven") is True
-        if conc_driven and not cfg.get("fair2_conc_bundle_dir") and not scenarios_have_conc:
+        if (
+            conc_driven
+            and not cfg.get("rcmip3_bundle_path")
+            and not scenarios_have_conc
+        ):
             raise ValueError(
                 "FaIRv2 conc-driven mode needs concentrations from "
                 "either the scenarios DataFrame "
-                "(``Atmospheric Concentrations|*`` rows) or a bundle "
-                "directory of CICERO-format ``{scen}_conc_*`` files "
-                "(``fair2_conc_bundle_dir`` cfg key). Neither was "
+                "(``Atmospheric Concentrations|*`` rows) or the "
+                "canonical RCMIP3 Zenodo bundle "
+                "(``rcmip3_bundle_path`` cfg key). Neither was "
                 "supplied."
             )
 
@@ -333,12 +340,9 @@ def _run_native_cfgs(scenarios, cfgs, output_variables) -> ScmRun:
             output_variables=output_variables,
             run_id_offset=run_id_offset,
             conc_driven=cfg.get("fair2_conc_driven"),
-            conc_bundle_dir=cfg.get("fair2_conc_bundle_dir"),
-            conc_gases_ep=cfg.get(
-                "fair2_conc_gases_ep",
-                "gases_vupdate_2024_WMO_added_new.txt",
-            ),
             stochastic_run=cfg.get("fair2_stochastic_run", False),
+            rcmip3_bundle_path=cfg.get("rcmip3_bundle_path"),
+            scenario_to_category=cfg.get("scenario_to_category"),
         )
         results.append(scmrun_chunk)
         run_id_offset += len(members)
@@ -408,6 +412,34 @@ def _run_translated_cfgs(  # noqa: PLR0912, PLR0915
         )
     bundle_value = bundle_values[0]
     calibration = _resolve_calibration(bundle_value) if bundle_value else None
+
+    # All cfgs in one call must agree on the RCMIP3 forcing inputs
+    # too: the natural-forcing fill is shared. Same uniqueness rule
+    # as `emissions_bundle` above.
+    rcmip3_values = [cfg.get("rcmip3_bundle_path") for cfg in cfgs]
+    if len(set(rcmip3_values)) > 1:
+        raise NotImplementedError(
+            "All cfgs in a single FaIRv2 translated-cfg call must "
+            "share the same `rcmip3_bundle_path` (or all omit it). "
+            f"Got {len(set(rcmip3_values))} distinct values."
+        )
+    rcmip3_bundle_path = rcmip3_values[0]
+    scenario_to_category_values = [
+        cfg.get("scenario_to_category") for cfg in cfgs
+    ]
+    # dict isn't hashable; compare by id-or-content. Same rule applies.
+    if (
+        any(v is not None for v in scenario_to_category_values)
+        and not all(
+            v == scenario_to_category_values[0]
+            for v in scenario_to_category_values
+        )
+    ):
+        raise NotImplementedError(
+            "All cfgs in a single FaIRv2 translated-cfg call must "
+            "share the same `scenario_to_category` (or all omit it)."
+        )
+    scenario_to_category = scenario_to_category_values[0]
 
     # SCIENTIFIC CHOICE: same defaults as native mode (1750 start,
     # 1-year step). Made configurable in a follow-up.
@@ -479,11 +511,10 @@ def _run_translated_cfgs(  # noqa: PLR0912, PLR0915
         )
 
     if calibration is not None:
-        bundle_emissions_csv = calibration.file("historical_emissions")
         flags = _resolve_protocol_flags(scenario_run, scenario_names)
         natural_off = tuple(s for s, (nat, _) in flags.items() if nat)
         land_use_zero = tuple(s for s, (_, lu) in flags.items() if lu)
-        if bundle_emissions_csv is not None or (
+        if rcmip3_bundle_path is not None or (
             scenario_run is not None and not scenario_run.empty
         ):
             # Mixed-mode ScmRuns carry Atmospheric Concentrations rows
@@ -498,18 +529,18 @@ def _run_translated_cfgs(  # noqa: PLR0912, PLR0915
             # Genuinely idealised scenarios (natural_forcing=off AND
             # land_use_forcing=constant_zero — esm-flat*, esm-bell-*,
             # esm-pi-*, 1pctCO2*, abrupt-*) get non-CO2 zeroed across
-            # all years after the splice. Without this, the bundle's
-            # historical_emissions leaks through for species the
-            # loader doesn't supply (the protocol's flat/bell/pi/etc.
-            # CSV rows are CO2-only by construction) and FaIR runs
-            # with full historical CH4/Sulfur/NOx — the same
-            # "historical leak in idealised" bug CICERO's issue-5
-            # fix addresses on the other adapter.
+            # all years after the splice. Without this, the canonical
+            # RCMIP3 baseline leaks through for species the loader
+            # doesn't supply (the protocol's flat/bell/pi/etc. rows are
+            # CO2-only by construction) and FaIR runs with full
+            # historical CH4/Sulfur/NOx — the same "historical leak in
+            # idealised" bug CICERO's issue-5 fix addresses on the
+            # other adapter.
             idealised_scenarios = tuple(
                 s for s, (nat, lu) in flags.items() if nat and lu
             )
             emissions_df = build_emissions_df(
-                emissions_run, bundle_emissions_csv, scenario_names,
+                emissions_run, rcmip3_bundle_path, scenario_names,
                 co2_only_scenarios=idealised_scenarios,
             )
             if not emissions_df.empty:
@@ -526,29 +557,18 @@ def _run_translated_cfgs(  # noqa: PLR0912, PLR0915
             f, calibration,
             zero_natural_scenarios=natural_off,
             zero_land_use_scenarios=land_use_zero,
+            rcmip3_bundle_path=rcmip3_bundle_path,
+            scenario_to_category=scenario_to_category,
         )
     else:
-        # No bundle: fall back to FaIR's RCMIP defaults. Known to
-        # break on fair 2.2.4 for HFC-4310mee; recommend bundle path.
-        # User emissions overrides via the ScmRun input are NOT merged
-        # on top in this path (fill_from_pandas requires complete
-        # coverage of every species, or it errors on the unit lookup).
-        try:
-            f.fill_from_rcmip()
-        except Exception as exc:  # pylint: disable=broad-except
-            LOGGER.warning(
-                "FaIRv2 translated mode could not seed emissions from "
-                "RCMIP defaults (%s). Pass `emissions_bundle` in each "
-                "cfg to use a calibration bundle for emissions instead.",
-                exc,
-            )
-        if scenario_run is not None and not scenario_run.empty:
-            LOGGER.warning(
-                "FaIRv2 translated mode without `emissions_bundle` "
-                "ignores the user's `scenarios` input (RCMIP defaults "
-                "are used). Pass `emissions_bundle` to splice user "
-                "scenarios on top of bundle historicals."
-            )
+        raise ValueError(
+            "FaIRv2 translated-cfg mode requires an `emissions_bundle` "
+            "cfg key pointing at a FaIR calibration directory. The "
+            "previous `f.fill_from_rcmip()` fallback was removed when "
+            "the adapter switched to consuming canonical RCMIP3 inputs "
+            "exclusively; see `FAIR2.from_native_distribution` for the "
+            "supported construction path."
+        )
 
     try:
         f.run(progress=False, suppress_warnings=True)
@@ -584,9 +604,9 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
     output_variables,
     run_id_offset: int,
     conc_driven=None,
-    conc_bundle_dir=None,
-    conc_gases_ep="gases_vupdate_2024_WMO_added_new.txt",
     stochastic_run: bool = False,
+    rcmip3_bundle_path=None,
+    scenario_to_category=None,
 ) -> ScmRun:
     """
     Run FaIR 2.x once with a single calibration choice and return the
@@ -597,27 +617,26 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
     concatenations across multiple calibration choices in the same
     ``run.run`` call stay unique.
 
-    Concentration-driven mode (``conc_driven=True`` and
-    ``conc_bundle_dir`` set) flips the GHG species present in the
-    bundle's concentration files from emissions/calculated input
-    mode to ``concentration``, reads their trajectories per scenario
-    via :func:`_concentrations_translator.build_concentrations_df`,
+    Concentration-driven mode (``conc_driven=True``) flips the GHG
+    species present in the canonical RCMIP3 bundle's concentrations
+    CSV from emissions/calculated input mode to ``concentration``,
+    reads their trajectories per scenario via
+    :func:`_concentrations_translator.build_concentrations_df_from_rcmip3`,
     and feeds them to FaIR via ``fill_from_pandas(mode="concentration")``.
     FaIR's run loop calls ``unstep_concentration`` per timestep to
     back-calculate emissions for those species; the output extractor
     reads them out as ``Emissions|*`` variables.
 
     Auto-detect (``conc_driven=None``): mirrors CICEROSCMPY2's
-    convention - scenarios starting with ``esm-`` or ``methanemip``
+    convention -- scenarios starting with ``esm-`` or ``methanemip``
     run emissions-driven; everything else runs concentration-driven
-    if ``conc_bundle_dir`` is provided. With no bundle, defaults to
-    emissions-driven regardless of scenario name.
+    when ``rcmip3_bundle_path`` is provided.
 
     Stochastic forcing (``stochastic_run``) controls FaIR 2.x's
     AR(1) natural-variability term on the energy-balance model
     (Cummins et al. 2020). Default is ``False`` so the per-member
     trajectories are deterministic given the calibration parameters
-    - i.e. ensemble spread reflects parameter uncertainty only, not
+    -- i.e. ensemble spread reflects parameter uncertainty only, not
     internal-variability noise on top. The AR7-relevant
     ``fair-calibrate`` bundles ship ``stochastic_run=True`` for
     every posterior member (with per-member ``sigma_eta`` /
@@ -660,7 +679,7 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
     use_conc = False
     if conc_driven is True:
         use_conc = True
-    elif conc_driven is None and conc_bundle_dir is not None:
+    elif conc_driven is None and rcmip3_bundle_path is not None:
         # Auto-detect from first scenario name.
         first = scenario_names[0].lower()
         use_conc = not first.startswith(("esm-", "esm_", "methanemip"))
@@ -743,32 +762,26 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
                 LOGGER.info(
                     "FaIRv2 mixed mode (protocol-strict ED CO2-only): "
                     "consuming %d concentration species from the "
-                    "loader's ScmRun (CO2 stays emissions-driven). %s",
+                    "loader's ScmRun (CO2 stays emissions-driven).",
                     len(common_conc_species),
-                    "Bundle-based conc_df path skipped." if conc_bundle_dir
-                    else "",
                 )
     elif use_conc:
-        # `conc_bundle_dir is not None` is guaranteed by the cfg-level
-        # validation in _run_native_cfgs (raised before we get here).
-        from ._concentrations_translator import build_concentrations_df
+        # Canonical RCMIP3 path: per-scenario concentrations from the
+        # Zenodo 20430630 bundle. Only path supported on conc-driven
+        # mode now that the legacy ``fair2_conc_bundle_dir`` cfg key
+        # has been removed (PR97 review followup).
+        from ._concentrations_translator import (
+            build_concentrations_df_from_rcmip3,
+        )
 
-        conc_df = build_concentrations_df(
-            bundle_dir=conc_bundle_dir,
-            gases_ep=conc_gases_ep,
+        conc_df = build_concentrations_df_from_rcmip3(
+            rcmip3_bundle_path=rcmip3_bundle_path,
             scenario_names=scenario_names,
             fair_species=species,
             nystart=start_year,
             nyend=end_year,
         )
-        if conc_df.empty:
-            LOGGER.warning(
-                "FaIRv2 conc-driven: empty concentrations DataFrame "
-                "from bundle %s; falling back to emissions-driven.",
-                conc_bundle_dir,
-            )
-            use_conc = False
-        else:
+        if not conc_df.empty:
             # Flip input_mode for the GHG species we're driving with
             # concentrations. Other species (aerosols, forcing-mode
             # natural drivers) keep their bundle-specified mode and
@@ -848,56 +861,40 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
     # provides the baseline for every user scenario; user values
     # overwrite per-year where supplied. Species the user does not
     # provide (and species not in OPENSCM_TO_FAIR2_SPECIES) stay at
-    # bundle-historical values for the historical period; FaIR's
+    # the canonical RCMIP3 baseline's historical values; FaIR's
     # interpolator handles missing future years by leaving NaN, which
     # the model treats as zero forcing for those species.
-    bundle_emissions_csv = calibration.file("historical_emissions")
-    if bundle_emissions_csv is None:
-        LOGGER.warning(
-            "Calibration bundle at %s does not contain %s. The user's "
-            "scenario data will be passed straight through to FaIR; "
-            "FaIR's interpolator will leave NaN for years the user did "
-            "not cover.",
-            calibration.path,
-            calibration.FILES["historical_emissions"],
-        )
-
     flags = _resolve_protocol_flags(scenario_run, scenario_names)
     natural_off = tuple(s for s, (nat, _) in flags.items() if nat)
     land_use_zero = tuple(s for s, (_, lu) in flags.items() if lu)
 
-    if bundle_emissions_csv is not None or (
-        scenario_run is not None and not scenario_run.empty
-    ):
-        # Mixed-mode ScmRuns include Atmospheric Concentrations rows
-        # (handled separately via the conc_df path above). Filter them
-        # out before passing to build_emissions_df, otherwise the
-        # emissions translator tries to coerce ppb/ppt -> kt/yr and
-        # logs a unit-conversion warning per species.
-        emissions_run = (
-            scenario_run.filter(variable="Emissions|*")
-            if scenario_run is not None and not scenario_run.empty
-            else scenario_run
-        )
-        # Genuinely idealised scenarios (natural=off AND LU=constant_zero)
-        # need their non-CO2 zeroed post-splice so the bundle's
-        # historical_emissions don't leak through for species the
-        # loader doesn't supply. See the parallel comment in
-        # _run_translated_cfgs above and CICERO's issue-5 fix.
-        idealised_scenarios = tuple(
-            s for s, (nat, lu) in flags.items() if nat and lu
-        )
-        emissions_df = build_emissions_df(
-            emissions_run, bundle_emissions_csv, scenario_names,
-            co2_only_scenarios=idealised_scenarios,
-        )
-        if not emissions_df.empty:
-            # See parallel comment in _run_translated_cfgs: zero-fill so
-            # any species without scenario coverage (e.g. CD species
-            # whose values are written back by the concentration fill)
-            # gets a non-NaN array fair.FAIR.run will accept.
-            emissions_df = _zero_fill_year_columns(emissions_df)
-            f.fill_from_pandas(mode="emissions", df=emissions_df)
+    # Mixed-mode ScmRuns include Atmospheric Concentrations rows
+    # (handled separately via the conc_df path above). Filter them
+    # out before passing to build_emissions_df, otherwise the
+    # emissions translator tries to coerce ppb/ppt -> kt/yr and
+    # logs a unit-conversion warning per species.
+    emissions_run = (
+        scenario_run.filter(variable="Emissions|*")
+        if scenario_run is not None and not scenario_run.empty
+        else scenario_run
+    )
+    # Genuinely idealised scenarios (natural=off AND LU=constant_zero)
+    # need their non-CO2 zeroed post-splice so the canonical baseline
+    # doesn't leak through for species the loader doesn't supply.
+    idealised_scenarios = tuple(
+        s for s, (nat, lu) in flags.items() if nat and lu
+    )
+    emissions_df = build_emissions_df(
+        emissions_run, rcmip3_bundle_path, scenario_names,
+        co2_only_scenarios=idealised_scenarios,
+    )
+    if not emissions_df.empty:
+        # See parallel comment in _run_translated_cfgs: zero-fill so
+        # any species without scenario coverage (e.g. CD species
+        # whose values are written back by the concentration fill)
+        # gets a non-NaN array fair.FAIR.run will accept.
+        emissions_df = _zero_fill_year_columns(emissions_df)
+        f.fill_from_pandas(mode="emissions", df=emissions_df)
 
     # Fill concentrations for the species we flipped above. FaIR's
     # run loop calls unstep_concentration per timestep to back-
@@ -918,6 +915,8 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
         f, calibration,
         zero_natural_scenarios=natural_off,
         zero_land_use_scenarios=land_use_zero,
+        rcmip3_bundle_path=rcmip3_bundle_path,
+        scenario_to_category=scenario_to_category,
     )
 
     # Final NaN tolerance: zero-fill any species (or year) the caller
@@ -939,16 +938,6 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
         run_id_offset,
         properties_df=getattr(f, "properties_df", None),
     )
-
-
-# SCIENTIFIC CHOICE: which column of the multi-scenario land_use /
-# irrigation forcing CSVs to use. The bundle ships these forcings for
-# several CMIP7 climate-target categories (VL, LN, L, ML, M, H, HL);
-# we pick "M" (medium) as a sensible default. Will be made configurable
-# (probably via a per-cfg key like `land_use_forcing_scenario`) when a
-# real use case demands a specific mapping from user scenario names
-# (e.g. ssp245) to these categories.
-_DEFAULT_LAND_USE_SCENARIO = "M"
 
 
 def _is_idealised(scenario_name: str) -> bool:
@@ -1020,22 +1009,32 @@ def _fill_natural_forcings(
     *,
     zero_natural_scenarios: Iterable[str] = (),
     zero_land_use_scenarios: Iterable[str] = (),
+    rcmip3_bundle_path: str | None = None,
+    scenario_to_category: dict[str, str] | None = None,
 ) -> None:
     """
-    Populate FaIR's forcing arrays for the bundle's forcing-input species.
+    Populate FaIR's forcing arrays for the four forcing-input species.
 
     Solar, Volcanic, Land use, and Irrigation are forcing-input species
-    in the v1.6.0 calibration bundle (the species_configs CSV overrides
-    Land use and Irrigation from FaIR's default ``calculated`` mode to
-    ``forcing`` mode). They bypass ``fill_from_pandas``'s emissions
-    path, so we read each bundle CSV, reindex onto FaIR's timebounds,
-    broadcast across scenario / config, and write into ``f.forcing``
-    via ``fair.interface.fill``.
+    in the calibration's species_configs (Land use and Irrigation are
+    overridden from FaIR's default ``calculated`` mode to ``forcing``
+    mode). They bypass ``fill_from_pandas``'s emissions path; the
+    adapter reads the per-scenario trajectories from the canonical
+    RCMIP3 bundle, reindexes onto FaIR's timebounds, and writes into
+    ``f.forcing`` via ``fair.interface.fill``:
 
-    The Solar and Volcanic CSVs are simple year + value; the
-    Land use and Irrigation CSVs ship several CMIP7-target columns
-    (VL, LN, L, ML, M, H, HL) and we pick ``_DEFAULT_LAND_USE_SCENARIO``
-    (currently ``"M"``) with a warning.
+    - Solar / Volcanic come from
+      ``Effective Radiative Forcing|Natural|{Solar,Volcanic}`` rows in
+      ``rcmip_phase3_forcing_v2.0.0.csv``.
+    - Land use / Irrigation come from
+      ``input_datafiles_generation/data/Forcing_AFOLU_CO2.csv`` and
+      ``Forcing_irrigation_population_scale.csv``, with the scenario
+      resolved to a CMIP7 ScenarioMIP category via
+      :func:`openscm_runner.io.rcmip3.resolve_scenario_category`
+      (overrideable per scenario via ``scenario_to_category``).
+    - Historical scenarios use the published per-component
+      Albedo Change|{Land Use,Irrigation} breakdown in the canonical
+      forcing CSV directly.
 
     Two independent suppression sets:
 
@@ -1044,14 +1043,19 @@ def _fill_natural_forcings(
       idealised experiments and piControl).
     * ``zero_land_use_scenarios`` zeros Land use and Irrigation for
       the listed scenarios (RCMIP3 ``protocol_land_use_forcing ==
-      "constant_zero"``: same set in the current registry, but kept
-      separate so a future scenario could combine on/off pairings).
-
-    Missing CSVs leave the arrays at their default (zero) baseline.
+      "constant_zero"``).
     """
     import numpy as np
 
     from fair.interface import fill
+
+    if rcmip3_bundle_path is None:
+        raise ValueError(
+            "FaIRv2 requires the `rcmip3_bundle_path` cfg key "
+            "(directory of the canonical Zenodo 20430630 RCMIP3 "
+            "bundle); see `FAIR2.from_native_distribution` for the "
+            "supported construction path."
+        )
 
     n_t = len(f.timebounds)
     n_scen = len(f.scenarios)
@@ -1064,12 +1068,9 @@ def _fill_natural_forcings(
         [s in zero_land_use_scenarios for s in f.scenarios], dtype=bool,
     )
 
-    def _write(species_name, series, suppress_mask):
-        # Reindex onto FaIR's timebounds and fill missing as zero.
-        series = series.reindex(f.timebounds).fillna(0.0)
-        per_scen = np.broadcast_to(
-            series.values[:, None], (n_t, n_scen)
-        ).copy()
+    def _write_per_scenario(species_name, per_scen_2d, suppress_mask):
+        # per_scen_2d shape: (n_t, n_scen). Already aligned to f.timebounds.
+        per_scen = per_scen_2d.copy()
         if suppress_mask.any():
             per_scen[:, suppress_mask] = 0.0
         broadcasted = np.broadcast_to(
@@ -1077,76 +1078,177 @@ def _fill_natural_forcings(
         )
         fill(f.forcing, broadcasted, specie=species_name)
 
-    # Single-column long-form CSVs (Solar, Volcanic).
-    single_col = {
-        "Solar": ("solar_forcing", "solar_erf"),
-        "Volcanic": ("volcanic_forcing", "volcanic_erf"),
-    }
-    for species_name, (bundle_key, value_col_prefix) in single_col.items():
-        csv_path = calibration.file(bundle_key)
-        if csv_path is None:
-            LOGGER.warning(
-                "Calibration bundle is missing %s; FaIR will use the "
-                "default zero baseline for %s forcing.",
-                calibration.FILES[bundle_key],
-                species_name,
-            )
-            continue
-        df = pd.read_csv(csv_path)
-        year_col = next((c for c in df.columns if c.lower() == "year"), None)
-        value_col = next(
-            (c for c in df.columns if c.lower().startswith(value_col_prefix)),
-            None,
-        )
-        if year_col is None or value_col is None:
-            LOGGER.warning(
-                "Unexpected layout for %s; expected year + %s_* columns, "
-                "got %s. %s forcing left at default.",
-                csv_path,
-                value_col_prefix,
-                list(df.columns),
-                species_name,
-            )
-            continue
-        _write(species_name, df.set_index(year_col)[value_col], natural_mask)
+    _fill_natural_from_rcmip3(
+        f, rcmip3_bundle_path, natural_mask, _write_per_scenario,
+    )
+    _fill_land_use_from_rcmip3(
+        f, rcmip3_bundle_path, scenario_to_category,
+        land_use_mask, _write_per_scenario,
+    )
 
-    # Multi-column per-scenario CSVs (Land use, Irrigation). First
-    # column is the year index (unnamed); remaining columns are
-    # CMIP7-target categories.
-    multi_col = {
-        "Land use": "land_use_forcing",
-        "Irrigation": "irrigation_forcing",
+
+def _fill_natural_from_rcmip3(
+    f, rcmip3_bundle_path, natural_mask, _write_per_scenario,
+):
+    """
+    Canonical RCMIP3 path for Solar + Volcanic forcings.
+
+    Reads per-scenario ``Effective Radiative Forcing|Natural|{Solar,
+    Volcanic}`` rows from ``rcmip_phase3_forcing_v2.0.0.csv`` for each
+    scenario in ``f.scenarios``. Scenarios in the natural-zero
+    suppression set (``protocol_natural_forcing == "off"``) are left
+    at zero. Scenarios with no matching row in the canonical CSV log
+    a warning and stay at zero (e.g. native CMIP7
+    ``scen7-{cat}`` names — the canonical CSV is keyed by SSP-RCP
+    names).
+    """
+    import numpy as np
+
+    from ...io.rcmip3 import load_rcmip3_forcings
+
+    n_t = len(f.timebounds)
+    n_scen = len(f.scenarios)
+
+    components = {
+        "Solar": (
+            "Effective Radiative Forcing|Natural|Solar",
+            np.zeros((n_t, n_scen)),
+        ),
+        "Volcanic": (
+            "Effective Radiative Forcing|Natural|Volcanic",
+            np.zeros((n_t, n_scen)),
+        ),
     }
-    for species_name, bundle_key in multi_col.items():
-        csv_path = calibration.file(bundle_key)
-        if csv_path is None:
-            LOGGER.warning(
-                "Calibration bundle is missing %s; FaIR will use the "
-                "default zero baseline for %s forcing.",
-                calibration.FILES[bundle_key],
-                species_name,
-            )
+
+    for s_idx, scen in enumerate(f.scenarios):
+        if natural_mask[s_idx]:
             continue
-        df = pd.read_csv(csv_path, index_col=0)
-        choice = _DEFAULT_LAND_USE_SCENARIO
-        if choice not in df.columns:
-            LOGGER.warning(
-                "Bundle %s does not contain column %r; falling back to "
-                "the first available column %r. %s forcing will reflect "
-                "that choice. Override coming in a follow-up.",
-                csv_path,
-                choice,
-                df.columns[0],
-                species_name,
+        for species_name, (variable, arr) in components.items():
+            df = load_rcmip3_forcings(
+                rcmip3_bundle_path,
+                scenarios=[scen],
+                variables=[variable],
             )
-            choice = df.columns[0]
+            if df.empty:
+                raise KeyError(
+                    f"FaIR RCMIP3 natural-forcing path: scenario "
+                    f"{scen!r} has no {variable!r} row in the canonical "
+                    "RCMIP3 forcing CSV. Either drop the scenario from "
+                    "the input ScmRun or add a corresponding row to "
+                    "the canonical bundle."
+                )
+            year_cols = [c for c in df.columns if c.isdigit()]
+            series = (
+                df[year_cols].iloc[0]
+                .rename(lambda y: int(y))
+                .astype(float)
+                .reindex(f.timebounds).fillna(0.0)
+            )
+            arr[:, s_idx] = series.values
+
+    for species_name, (_, arr) in components.items():
+        _write_per_scenario(species_name, arr, natural_mask)
+
+
+def _fill_land_use_from_rcmip3(
+    f, rcmip3_bundle_path, scenario_to_category, land_use_mask,
+    _write_per_scenario,
+):
+    """
+    Canonical RCMIP3 path for Land use + Irrigation forcings.
+
+    For each scenario in ``f.scenarios``:
+
+    * If the scenario is in the land-use-zero set (caller-side mask),
+      leave the column as zeros.
+    * If the scenario resolves to a CMIP7 ScenarioMIP category
+      (``VL`` / ``LN`` / ``L`` / ``ML`` / ``M`` / ``H`` / ``HL``),
+      read Land Use + Irrigation from the bundle's
+      ``input_datafiles_generation/data/Forcing_AFOLU_CO2.csv`` and
+      ``Forcing_irrigation_population_scale.csv``.
+    * If the scenario is ``"historical"`` / ``"historical-cmip6"``,
+      read the published per-component breakdown from
+      ``rcmip_phase3_forcing_v2.0.0.csv``.
+    * Otherwise, log a warning and leave as zeros.
+
+    Both components are written separately to FaIR via
+    ``_write_per_scenario`` so the species_configs declaration of
+    Land use and Irrigation as distinct forcing-mode species is
+    preserved.
+    """
+    import numpy as np
+
+    from ...io.rcmip3 import (
+        load_rcmip3_albedo_categories,
+        load_rcmip3_forcings,
+        resolve_scenario_category,
+    )
+
+    n_t = len(f.timebounds)
+    n_scen = len(f.scenarios)
+
+    # (component name -> per-scenario stack)
+    components = {
+        "Land Use": np.zeros((n_t, n_scen)),
+        "Irrigation": np.zeros((n_t, n_scen)),
+    }
+
+    # Per-scenario data acquisition. Scenarios that don't resolve to
+    # a CMIP7 category or that have no canonical row raise -- the
+    # alternative of "silently zero" leaves the run producing
+    # wrong-but-plausible output (Marit's "AI cover all your bases"
+    # objection from the PR97 thread).
+    for s_idx, scen in enumerate(f.scenarios):
+        if land_use_mask[s_idx]:
+            continue  # zero by suppression
+        # ``resolve_scenario_category`` raises ``KeyError`` for
+        # scenarios with no default mapping; let it propagate so
+        # callers know to add a ``scenario_to_category`` override.
+        category = resolve_scenario_category(
+            scen, overrides=scenario_to_category,
+        )
+
+        if category is None:
+            # historical / historical-cmip6: read per-component
+            # breakdown from the canonical forcing CSV.
+            for component_name, var_suffix in (
+                ("Land Use", "Albedo Change|Land Use"),
+                ("Irrigation", "Albedo Change|Irrigation"),
+            ):
+                df = load_rcmip3_forcings(
+                    rcmip3_bundle_path,
+                    scenarios=[scen],
+                    variables=[
+                        f"Effective Radiative Forcing|Anthropogenic|"
+                        f"{var_suffix}"
+                    ],
+                )
+                if df.empty:
+                    raise KeyError(
+                        f"FaIR RCMIP3 land-use path: scenario {scen!r} "
+                        f"has no {var_suffix!r} row in the canonical "
+                        "RCMIP3 forcing CSV."
+                    )
+                year_cols = [c for c in df.columns if c.isdigit()]
+                series = (
+                    df[year_cols].iloc[0]
+                    .rename(lambda y: int(y))
+                    .astype(float)
+                    .reindex(f.timebounds).fillna(0.0)
+                )
+                components[component_name][:, s_idx] = series.values
         else:
-            LOGGER.info(
-                "Using %s column %r from %s for %s forcing (scientific "
-                "choice; configurable in a follow-up).",
-                csv_path.name,
-                choice,
-                bundle_key,
-                species_name,
+            albedo = load_rcmip3_albedo_categories(
+                rcmip3_bundle_path, category=category,
             )
-        _write(species_name, df[choice], land_use_mask)
+            for component_name in ("Land Use", "Irrigation"):
+                series = (
+                    albedo[component_name]
+                    .reindex(f.timebounds).fillna(0.0)
+                )
+                components[component_name][:, s_idx] = series.values
+
+    # Write into FaIR. species_configs labels these as "Land use" and
+    # "Irrigation"; the RCMIP3 component names are "Land Use" / "Irrigation".
+    _write_per_scenario("Land use", components["Land Use"], land_use_mask)
+    _write_per_scenario("Irrigation", components["Irrigation"], land_use_mask)

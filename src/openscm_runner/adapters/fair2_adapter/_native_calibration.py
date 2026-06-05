@@ -4,16 +4,17 @@ Loader for a FaIR 2.x native calibration bundle.
 A *calibration bundle* is a directory of CSVs as published with the
 AR7-relevant FaIR 2.x calibration on Zenodo (e.g.
 https://zenodo.org/records/18828694). The bundle contains a parameter
-posterior, per-species configuration, historical emissions, natural
-forcings (CMIP7-aligned), and several scale factors. All of these are
-jointly tuned, so the runner reads them as a unit from a single
-directory rather than letting users mix and match files from different
-calibrations.
+posterior, per-species configuration, and several scale factors --
+all model-specific calibration that has no canonical RCMIP3
+equivalent. Scenario inputs (emissions, concentrations) and per-
+scenario forcings (solar, volcanic, land-use albedo, irrigation) come
+from the canonical RCMIP3 Zenodo bundle (record 20430630) instead,
+loaded separately via the adapter's ``rcmip3_bundle_path``.
 
-Only the parameter posterior and species_configs file are strictly
-required; the other entries are optional and the loader returns ``None``
-for those that are absent so callers can decide how to handle missing
-inputs.
+Both the parameter posterior and species_configs file are strictly
+required; the optional scale-factor / lifetime tuning files are
+returned as ``None`` when absent so the adapter can decide whether
+to fall back to FaIR's defaults.
 
 This module deliberately knows nothing about the :class:`fair.FAIR`
 object itself; it just locates and reads the bundle files. The adapter
@@ -30,16 +31,11 @@ LOGGER = logging.getLogger(__name__)
 
 
 # Filenames as published on Zenodo record 18828694 (the AR7-relevant
-# Smith calibration). If a future calibration changes file names, this
-# table is the single source of truth.
+# Smith calibration). Scenario inputs and forcings come from RCMIP3
+# (Zenodo 20430630) -- they are NOT listed here.
 _BUNDLE_FILES = {
     "parameters": "calibrated_constrained_parameters.csv",
     "species_configs": "species_configs_properties.csv",
-    "historical_emissions": "historical_emissions_1750-2023_cmip7.csv",
-    "solar_forcing": "solar_forcing_timebounds_cmip7.csv",
-    "volcanic_forcing": "volcanic_forcing_timebounds_cmip7.csv",
-    "land_use_forcing": "land_use_forcing_timebounds_cmip7.csv",
-    "irrigation_forcing": "irrigation_forcing_timebounds_cmip7.csv",
     "landuse_scale_factor": "landuse_scale_factor.csv",
     "lapsi_scale_factor": "lapsi_scale_factor.csv",
     "ch4_lifetime": "CH4_lifetime.csv",
