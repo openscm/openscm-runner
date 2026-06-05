@@ -342,8 +342,15 @@ def test_fair2_emissions_canonical_path_translates_variables():
     df = _rcmip3_to_fair_emissions_df(MINI_BUNDLE, scenario_names=["ssp245"])
     assert not df.empty
     species_seen = set(df["variable"].unique())
-    # Mini fixture has CO2 AFOLU + CO2 FFI + CH4 for ssp245
-    assert species_seen == {"CO2 AFOLU", "CO2 FFI", "CH4"}
+    # Mini fixture covers every FaIR emissions-mode species so the
+    # integration smoke can iterate them; assert the FaIR-translated
+    # forms made it through for the sub-sector + intermediate-category
+    # cases that the translator has to handle (CO2 sub-sectors and an
+    # F-Gases / HFC / PFC / Halon / CFC representative).
+    assert {
+        "CO2 AFOLU", "CO2 FFI", "CH4",
+        "HFC-125", "C2F6", "Halon-1211", "CFC-11",
+    }.issubset(species_seen)
     # Year columns are integer keys (FaIR convention internally)
     year_cols = [c for c in df.columns if isinstance(c, int)]
     assert 1750 in year_cols and 2100 in year_cols
