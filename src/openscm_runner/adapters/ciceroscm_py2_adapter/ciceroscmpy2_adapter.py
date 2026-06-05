@@ -131,7 +131,7 @@ from scmdata import ScmRun, run_append
 from ..._run_mode import RunMode
 from ...settings import config
 from ..base import _Adapter
-from ._compat import HAS_CICEROSCM_PY2, _ciceroscm_major_version, cscmpy2
+from ._compat import HAS_CICEROSCM_PY2, cscmpy2, require_modern_ciceroscm
 
 try:
     from ...settings import get_worker_count
@@ -216,21 +216,7 @@ class CICEROSCMPY2(_Adapter):
     )
 
     def _init_model(self):
-        if not HAS_CICEROSCM_PY2:
-            raise ImportError(
-                "ciceroscm is not installed. Run 'pip install \"ciceroscm>=2,<3\"' "
-                "or 'pip install openscm-runner[ciceroscmpy2]'. Note this "
-                "conflicts with the v1.1.x adapter's 'ciceroscm<2' pin; only "
-                "one major version of ciceroscm can be installed at a time."
-            )
-        major = _ciceroscm_major_version()
-        if major < 2:
-            raise ImportError(
-                f"ciceroscm major version {major} is installed but the "
-                "CICEROSCMPY2 adapter requires >=2. Either upgrade "
-                "('pip install \"ciceroscm>=2,<3\"') or use the v1.1.x "
-                "adapter (CICEROSCMPY) instead."
-            )
+        require_modern_ciceroscm()
 
     def _run(self, scenarios, cfgs, output_variables, output_config):
         if output_config is not None:
@@ -241,7 +227,7 @@ class CICEROSCMPY2(_Adapter):
         from ._output_variables import validate_output_variables
         validate_output_variables(output_variables)
 
-        from ._upstream_patches import (
+        from ._output_variables import (
             _CARBON_CYCLE_VARIABLES,
             output_vars_need_carbon_cycle,
         )

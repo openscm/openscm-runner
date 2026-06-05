@@ -29,7 +29,7 @@ from openscm_runner import RunMode
 from openscm_runner.adapters import CICEROSCMPY2, FAIR2
 from openscm_runner.adapters.ciceroscm_py2_adapter._compat import (
     HAS_CICEROSCM_PY2,
-    _ciceroscm_major_version,
+    _ciceroscm_version_tuple,
 )
 from openscm_runner.adapters.fair2_adapter._compat import HAS_FAIR2
 
@@ -68,8 +68,8 @@ fair2_skip = pytest.mark.skipif(
     not HAS_FAIR2, reason="fair>=2 not installed"
 )
 cicero_skip = pytest.mark.skipif(
-    not HAS_CICEROSCM_PY2 or _ciceroscm_major_version() < 2,
-    reason="ciceroscm>=2 not installed",
+    not HAS_CICEROSCM_PY2 or _ciceroscm_version_tuple() < (2, 1, 1),
+    reason="ciceroscm>=2.1.1 not installed",
 )
 
 

@@ -137,6 +137,28 @@ RCMIP3_BACK_REPORTABLE_VARIABLES: frozenset[str] = frozenset({
     "Effective Radiative Forcing|Natural|Volcanic",
     "Effective Radiative Forcing|Anthropogenic|Albedo Change|Land use",
 })
+
+# Variables whose computation triggers the upstream CICERO-SCM
+# carbon-cycle back-calculation (mirrors
+# ``ciceroscm.formattingtools.reformat_cscm_results.carbon_cycle_outputs``).
+# Requesting any of these from the adapter is ~30-50x more expensive
+# per ensemble member on conc-driven runs; the adapter logs an INFO
+# message so users can decide whether they really need them.
+_CARBON_CYCLE_VARIABLES: frozenset[str] = frozenset(
+    {
+        "Carbon Flux|Land",
+        "Carbon Flux|Ocean",
+        "Airborne fraction CO2",
+        "Carbon Pool|Land",
+        "Carbon Pool|Ocean",
+        "Net Flux to Atmosphere|CO2",
+    }
+)
+
+
+def output_vars_need_carbon_cycle(output_variables) -> bool:
+    """Return ``True`` if any requested variable needs the carbon cycle."""
+    return bool(set(output_variables) & _CARBON_CYCLE_VARIABLES)
 """Forcing inputs the adapter back-reports on the canonical RCMIP3 path.
 
 CICERO-SCM v2.x treats Solar / Volcanic / Land-use albedo as input
