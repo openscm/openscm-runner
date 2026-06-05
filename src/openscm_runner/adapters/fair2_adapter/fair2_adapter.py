@@ -1130,13 +1130,13 @@ def _fill_natural_from_rcmip3(
                 variables=[variable],
             )
             if df.empty:
-                LOGGER.warning(
-                    "FaIR RCMIP3 natural-forcing path: scenario %r has "
-                    "no %r row in the canonical forcing CSV. Leaving "
-                    "%s at zero for that scenario.",
-                    scen, variable, species_name,
+                raise KeyError(
+                    f"FaIR RCMIP3 natural-forcing path: scenario "
+                    f"{scen!r} has no {variable!r} row in the canonical "
+                    "RCMIP3 forcing CSV. Either drop the scenario from "
+                    "the input ScmRun or add a corresponding row to "
+                    "the canonical bundle."
                 )
-                continue
             year_cols = [c for c in df.columns if c.isdigit()]
             series = (
                 df[year_cols].iloc[0]
@@ -1193,22 +1193,20 @@ def _fill_land_use_from_rcmip3(
         "Irrigation": np.zeros((n_t, n_scen)),
     }
 
-    # Per-scenario data acquisition.
+    # Per-scenario data acquisition. Scenarios that don't resolve to
+    # a CMIP7 category or that have no canonical row raise -- the
+    # alternative of "silently zero" leaves the run producing
+    # wrong-but-plausible output (Marit's "AI cover all your bases"
+    # objection from the PR97 thread).
     for s_idx, scen in enumerate(f.scenarios):
         if land_use_mask[s_idx]:
             continue  # zero by suppression
-        try:
-            category = resolve_scenario_category(
-                scen, overrides=scenario_to_category,
-            )
-        except KeyError as exc:
-            LOGGER.warning(
-                "FaIR RCMIP3 land-use path: scenario %r has no CMIP7 "
-                "category mapping (%s). Leaving Land use + Irrigation "
-                "at zero for that scenario.",
-                scen, exc,
-            )
-            continue
+        # ``resolve_scenario_category`` raises ``KeyError`` for
+        # scenarios with no default mapping; let it propagate so
+        # callers know to add a ``scenario_to_category`` override.
+        category = resolve_scenario_category(
+            scen, overrides=scenario_to_category,
+        )
 
         if category is None:
             # historical / historical-cmip6: read per-component
@@ -1226,13 +1224,11 @@ def _fill_land_use_from_rcmip3(
                     ],
                 )
                 if df.empty:
-                    LOGGER.warning(
-                        "FaIR RCMIP3 land-use path: scenario %r has no "
-                        "%r row in the canonical forcing CSV. Leaving "
-                        "%s at zero.",
-                        scen, var_suffix, component_name,
+                    raise KeyError(
+                        f"FaIR RCMIP3 land-use path: scenario {scen!r} "
+                        f"has no {var_suffix!r} row in the canonical "
+                        "RCMIP3 forcing CSV."
                     )
-                    continue
                 year_cols = [c for c in df.columns if c.isdigit()]
                 series = (
                     df[year_cols].iloc[0]

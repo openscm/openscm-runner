@@ -69,18 +69,14 @@ keys listed below.
   the concentration solver in ED mode.
 - ``nat_ch4_file`` / ``nat_n2o_file`` (paths): natural CH4 / N2O
   emissions trajectories.
-- ``rf_sun_file`` / ``rf_volc_file`` / ``rf_luc_file`` (paths):
-  default solar / volcanic / LUC albedo forcing files. Note the
-  solar key is ``rf_sun_file`` (matching upstream ``ciceroscm`` v2.x's
-  ``InputHandler``), not ``rf_solar_file``.
+- ``rcmip3_bundle_path`` (path): canonical RCMIP Phase 3 Zenodo
+  20430630 bundle. Solar, volcanic and LUC-albedo forcings are
+  always read in-memory from this bundle (the upstream
+  ``rf_sun_file`` / ``rf_volc_file`` / ``rf_luc_file`` keys are
+  not used). Per-scenario rows are required; missing rows raise.
 
 **Optional cfg sidecar keys**
 
-- ``rf_luc_constant_zero_file`` (path): used in place of
-  ``rf_luc_file`` for scenarios whose
-  ``protocol_land_use_forcing == "constant_zero"`` meta column is
-  set. Without this key, idealised scenarios fall back to the
-  historical LUC file with a warning.
 - ``member_indices`` (sequence of int): zero-based row indices into
   the parameter posterior. Defaults to all members.
 - ``max_workers`` (int): forwarded to
@@ -103,9 +99,9 @@ When the scenarios ScmRun carries ``protocol_natural_forcing`` and
 these), per-scenario natural-forcing and LUC handling is driven by
 them: ``natural_forcing == "off"`` flattens the natural CH4 / N2O
 trajectories to their 1750 value and zeros ``sunvolc``;
-``land_use_forcing == "constant_zero"`` substitutes
-``rf_luc_constant_zero_file`` for ``rf_luc_file`` (or warns if not
-available). When the meta columns are absent, the defaults are
+``land_use_forcing == "constant_zero"`` zeros the LUC-albedo
+trajectory in-memory (no separate file needed). When the meta
+columns are absent, the defaults are
 ``natural_forcing="on"`` and ``land_use_forcing="historical"`` (no
 idealised treatment); idealised users should set those meta columns
 on their ScmRun or override at the cfg level.
@@ -507,14 +503,13 @@ def _run_one_distribution(scenarios, cfg: dict[str, Any], output_variables) -> S
     ]
 
     if requested_backreport and cfg.get("rcmip3_bundle_path") is None:
-        LOGGER.warning(
-            "CICEROSCMPY2: back-reportable variables %s require the "
-            "`rcmip3_bundle_path` cfg key to be set (the canonical "
-            "RCMIP3 Zenodo 20430630 path); omitting them from the "
-            "output.",
-            requested_backreport,
+        raise ValueError(
+            f"CICEROSCMPY2: back-reportable variables "
+            f"{requested_backreport} require the `rcmip3_bundle_path` "
+            "cfg key to be set (the canonical RCMIP3 Zenodo 20430630 "
+            "path). Either supply the bundle or drop these variables "
+            "from `output_variables`."
         )
-        requested_backreport = []
 
     if not upstream_variables and not requested_backreport:
         raise ValueError(
@@ -921,7 +916,6 @@ def _build_hybrid_emissions_data(
 
     overlaid: list[str] = []
     overlaid_df_cols: set[str] = set()
-    skipped_unmapped: list[str] = []
     for cicero_species, (openscm_suffix, factor) in cicero_comp_dict.items():
         col = cicero_to_df_col.get(cicero_species, cicero_species)
         if col not in df.columns:
@@ -937,27 +931,24 @@ def _build_hybrid_emissions_data(
         )
         contexts = {"NOx": "NOx_conversions", "NH3": "NH3_conversions"}
         ctx = contexts.get(cicero_species)
-        try:
-            if ctx is not None:
-                with ureg.context(ctx):
-                    convfactor = (
-                        (1.0 * ureg(user_unit))
-                        .to(cicero_unit_pint).magnitude
-                        * factor
-                    )
-            else:
+        # Unit-conversion failure here is a real bug: either the
+        # species mapping has the wrong target unit, or the user
+        # ScmRun ships an unparseable unit string. Both deserve a
+        # loud failure rather than a silent skip -- the species
+        # would otherwise keep its baseline value, which is a
+        # plausible-but-wrong override of user input.
+        if ctx is not None:
+            with ureg.context(ctx):
                 convfactor = (
-                    (1.0 * ureg(user_unit)).to(cicero_unit_pint).magnitude
+                    (1.0 * ureg(user_unit))
+                    .to(cicero_unit_pint).magnitude
                     * factor
                 )
-        except Exception as exc:  # pylint: disable=broad-except
-            LOGGER.warning(
-                "CICEROSCMPY2 hybrid emissions: skipping species %s "
-                "(unit conversion %s -> %s failed: %s)",
-                cicero_species, user_unit, cicero_unit_pint, exc,
+        else:
+            convfactor = (
+                (1.0 * ureg(user_unit)).to(cicero_unit_pint).magnitude
+                * factor
             )
-            skipped_unmapped.append(cicero_species)
-            continue
         for year, val in user_row.items():
             if year in df.index and year >= emstart and not pd.isna(val):
                 df.at[year, col] = val * convfactor
@@ -985,10 +976,8 @@ def _build_hybrid_emissions_data(
 
     LOGGER.info(
         "CICEROSCMPY2 hybrid emissions for scenario %r: overlaid %d "
-        "species from user ScmRun (%s); %d skipped on unit errors "
-        "(%s); others use baseline %s.",
+        "species from user ScmRun (%s); others use baseline %s.",
         scenario_name, len(overlaid), overlaid,
-        len(skipped_unmapped), skipped_unmapped,
         os.path.basename(baseline_em_file),
     )
 
@@ -1183,15 +1172,17 @@ def _build_natural_data_from_rcmip3(
     Annual values are passed through unchanged; upstream's per-year
     integration treats the single column as the year's mean forcing.
 
-    Scenarios with no canonical row (e.g. native CMIP7
-    ``scen7-{cat}`` names) fall back to zeros with a warning.
+    Raises ``KeyError`` if the requested scenario has no Solar or
+    Volcanic row in the canonical CSV (e.g. native CMIP7
+    ``scen7-{cat}`` names). Caller is expected to either remap the
+    scenario name to one published in the CSV or supply explicit
+    natural-forcing data.
     """
     import pandas as pd
 
     from ...io.rcmip3 import load_rcmip3_forcings
 
     years = pd.RangeIndex(nystart, nyend + 1, name="year")
-    zeros = pd.DataFrame({0: [0.0] * len(years)}, index=years)
 
     out: dict[str, pd.DataFrame] = {}
     for label, variable in (
@@ -1204,15 +1195,13 @@ def _build_natural_data_from_rcmip3(
             variables=[variable],
         )
         if df.empty:
-            LOGGER.warning(
-                "CICEROSCMPY2 RCMIP3 natural-forcing path: scenario "
-                "%r has no %r row in the canonical forcing CSV. "
-                "Falling back to zero %s forcing.",
-                scenario_name, variable,
-                label.replace("rf_", "").replace("_data", ""),
+            raise KeyError(
+                f"CICEROSCMPY2 RCMIP3 natural-forcing path: scenario "
+                f"{scenario_name!r} has no {variable!r} row in the "
+                "canonical RCMIP3 forcing CSV. Either drop the "
+                "scenario from the input ScmRun or add a "
+                "corresponding row to the canonical bundle."
             )
-            out[label] = zeros.copy()
-            continue
         year_cols = [c for c in df.columns if c.isdigit()]
         series = (
             df[year_cols].iloc[0]
@@ -1265,18 +1254,13 @@ def _build_rf_luc_data_from_rcmip3(
     )
 
     years = pd.RangeIndex(nystart, nyend + 1, name="year")
-    try:
-        category = resolve_scenario_category(
-            scenario_name, overrides=scenario_to_category,
-        )
-    except KeyError as exc:
-        LOGGER.warning(
-            "CICEROSCMPY2 RCMIP3 land-use path: scenario %r has no "
-            "CMIP7 category mapping (%s). Falling back to zero "
-            "Land use forcing.",
-            scenario_name, exc,
-        )
-        return pd.DataFrame({0: [0.0] * len(years)}, index=years)
+    # ``resolve_scenario_category`` raises ``KeyError`` for scenarios
+    # with no default mapping; let it propagate so callers know to
+    # add a ``scenario_to_category`` override (matches FaIR2's
+    # ``_fill_land_use_from_rcmip3``).
+    category = resolve_scenario_category(
+        scenario_name, overrides=scenario_to_category,
+    )
 
     if category is None:
         df = load_rcmip3_forcings(
@@ -1288,13 +1272,11 @@ def _build_rf_luc_data_from_rcmip3(
             ],
         )
         if df.empty:
-            LOGGER.warning(
-                "CICEROSCMPY2 RCMIP3 land-use path: scenario %r has "
-                "no Albedo Change|Land Use row in the canonical "
-                "forcing CSV. Falling back to zero.",
-                scenario_name,
+            raise KeyError(
+                f"CICEROSCMPY2 RCMIP3 land-use path: scenario "
+                f"{scenario_name!r} has no Albedo Change|Land Use "
+                "row in the canonical RCMIP3 forcing CSV."
             )
-            return pd.DataFrame({0: [0.0] * len(years)}, index=years)
         year_cols = [c for c in df.columns if c.isdigit()]
         series = (
             df[year_cols].iloc[0]

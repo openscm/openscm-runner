@@ -161,14 +161,14 @@ def _context_for(species_name: str) -> str | None:
 
 def _unit_scale(
     from_unit: object, to_unit: object, variable: str
-) -> float | None:
+) -> float:
     """
     Return the multiplicative factor that converts ``from_unit`` into
-    ``to_unit`` for ``variable``, using openscm-units, or ``None`` if
-    the conversion is not available.
+    ``to_unit`` for ``variable``, using openscm-units.
 
-    Equal units (or missing user unit) returns ``1.0`` so callers can
-    treat ``None`` strictly as "could not convert, do not overlay".
+    Equal units (or missing user unit) returns ``1.0``. Unparseable
+    or dimensionally incompatible units raise (via openscm-units /
+    pint) rather than silently disabling the overlay.
     """
     if from_unit is None or pd.isna(from_unit):
         return 1.0
@@ -178,18 +178,22 @@ def _unit_scale(
         return 1.0
     import openscm_units
 
-    try:
-        context = _context_for(variable)
-        if context is not None:
-            with openscm_units.unit_registry.context(context):
-                return float(
-                    openscm_units.unit_registry(from_str).to(to_str).magnitude
-                )
-        return float(
-            openscm_units.unit_registry(from_str).to(to_str).magnitude
-        )
-    except Exception:  # pylint: disable=broad-except
-        return None
+    # Unit-conversion failure here is a real bug: either the species
+    # mapping has the wrong target unit or the user ScmRun ships an
+    # unparseable unit string. Let pint's
+    # ``UndefinedUnitError`` / ``DimensionalityError`` propagate so
+    # the caller fails loudly rather than silently leaving the
+    # bundle value in place (Marit's PR97 "AI cover all your bases"
+    # objection).
+    context = _context_for(variable)
+    if context is not None:
+        with openscm_units.unit_registry.context(context):
+            return float(
+                openscm_units.unit_registry(from_str).to(to_str).magnitude
+            )
+    return float(
+        openscm_units.unit_registry(from_str).to(to_str).magnitude
+    )
 
 
 def _scmrun_to_fair2_rows(scmrun, scenario_names: Iterable[str]) -> pd.DataFrame:
@@ -328,16 +332,6 @@ def _splice_bundle_with_user(
         bundle_unit = spliced_df.loc[mask, "unit"].iloc[0]
         user_unit = user_row.get("unit")
         scale = _unit_scale(user_unit, bundle_unit, user_row["variable"])
-        if scale is None:
-            LOGGER.warning(
-                "Could not convert %r emissions from user unit %r to "
-                "bundle unit %r; user data NOT overlaid for this species, "
-                "bundle values left in place.",
-                user_row["variable"],
-                user_unit,
-                bundle_unit,
-            )
-            continue
 
         for year in user_year_cols:
             value = user_row[year]
