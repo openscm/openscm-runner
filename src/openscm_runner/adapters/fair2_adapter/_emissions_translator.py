@@ -363,6 +363,16 @@ def _splice_bundle_with_user(
     if year_cols_sorted:
         spliced_df[year_cols_sorted] = spliced_df[year_cols_sorted].ffill(axis=1)
 
+    # Year columns must end up in strictly monotonic order so FaIR's
+    # ``_check_csv`` accepts the frame. When the user introduces year
+    # columns the bundle did not cover (e.g. user supplies 2015-2100
+    # decadal but the bundle ships 1750/1850/1900/...), pd.concat
+    # parks the user's new columns at the right edge in user-row
+    # order, which generally is not monotonic relative to the bundle
+    # tail (e.g. bundle ends 2100, user adds 2015,2020,...).
+    meta_cols = [c for c in spliced_df.columns if not isinstance(c, int)]
+    spliced_df = spliced_df[meta_cols + year_cols_sorted]
+
     return spliced_df
 
 
