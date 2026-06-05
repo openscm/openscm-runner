@@ -310,9 +310,12 @@ def _splice_bundle_with_user(
     # 1000 and the historicals get destroyed.
     #
     # Fix: convert the user's values into the bundle's unit before
-    # writing them, and keep the bundle's unit on the row. If the
-    # conversion fails (unknown unit / species pair), log a warning
-    # and skip the overlay for that row.
+    # writing them, and keep the bundle's unit on the row. Conversion
+    # failures (unknown unit / dimensional mismatch) raise out of
+    # ``_unit_scale`` -- silently skipping the overlay would leave
+    # the bundle's historical values masquerading as the user's
+    # scenario for that species (Marit's PR97 "AI cover all your
+    # bases" objection).
     user_year_cols = [c for c in user_df.columns if isinstance(c, int)]
     for _, user_row in user_df.iterrows():
         mask = (spliced_df["scenario"] == user_row["scenario"]) & (
@@ -385,10 +388,10 @@ def _rcmip3_to_fair_emissions_df(
 
     Returns a DataFrame in the same horizontal layout that
     :func:`_scmrun_to_fair2_rows` produces (one row per
-    ``(scenario, FaIR-species)``, integer year columns), keyed by user
-    scenario rather than a single bundle ``"historical"`` row -- so
-    :func:`_splice_bundle_with_user` must be called with
-    ``bundle_per_scenario=True``.
+    ``(scenario, FaIR-species)``, integer year columns), already
+    per-scenario -- :func:`_splice_bundle_with_user` consumes it
+    directly without needing to broadcast a single
+    ``"historical"`` row across the scenario set.
 
     Variable names from the canonical CSV are canonicalised via
     :func:`openscm_runner.io.canonicalise_rcmip3_variable` (strips

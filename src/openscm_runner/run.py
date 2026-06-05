@@ -42,6 +42,15 @@ def _normalise_entries(climate_models_cfgs):
     """Coerce dict or iterable input into ``[(name, value), ...]`` pairs."""
     if isinstance(climate_models_cfgs, Mapping):
         return list(climate_models_cfgs.items())
+    # Reject strings explicitly: ``"magicc7"`` is iterable, would
+    # unpack into ('m', 'a') etc. and produce a low-signal
+    # ``ValueError: too many values to unpack`` downstream.
+    if isinstance(climate_models_cfgs, (str, bytes)):
+        raise TypeError(
+            "`climate_models_cfgs` must be a dict or an iterable of "
+            "entries (adapter instances or ``(name, cfgs_list)`` "
+            f"tuples); got a {type(climate_models_cfgs).__name__}."
+        )
     entries = []
     for item in climate_models_cfgs:
         if _looks_like_adapter(item):
@@ -53,7 +62,21 @@ def _normalise_entries(climate_models_cfgs):
                 )
             entries.append((name, item))
         else:
-            name, value = item  # expect a (name, cfgs) tuple
+            if isinstance(item, (str, bytes)):
+                raise TypeError(
+                    "Each entry in `climate_models_cfgs` must be an "
+                    "adapter instance or a ``(name, cfgs_list)`` "
+                    f"tuple; got a stray {type(item).__name__}: "
+                    f"{item!r}."
+                )
+            try:
+                name, value = item
+            except (TypeError, ValueError) as exc:
+                raise TypeError(
+                    "Each entry in `climate_models_cfgs` must be an "
+                    "adapter instance or a ``(name, cfgs_list)`` "
+                    f"tuple; got {item!r}."
+                ) from exc
             entries.append((name, value))
     return entries
 
@@ -99,8 +122,11 @@ def run(
           adapter instance or a ``(model_name, cfgs_list)`` tuple.
           Same semantics as the dict shape, applied per entry.
 
-    scenarios : :obj:`pyam.IamDataFrame`
-        Scenarios to run.
+    scenarios : :class:`scmdata.ScmRun`
+        Scenarios to run. Must expose ``get_unique_meta("variable")``
+        (the ScmRun protocol used by every adapter); historical
+        ``pyam.IamDataFrame`` inputs no longer work directly -- wrap
+        them in :class:`scmdata.ScmRun` first.
 
     output_variables : list[str]
         Variables to include in the output. Used only for entries
@@ -136,16 +162,23 @@ def run(
 
     Raises
     ------
-    KeyError
-        ``out_config`` has keys which are not in ``climate_models_cfgs``.
-
     TypeError
-        A value in ``out_config`` is not a :obj:`tuple`.
+        A value in ``out_config`` is not a :obj:`tuple`, or
+        ``climate_models_cfgs`` is an iterable of entries containing
+        a stray string / object that is neither an adapter instance
+        nor a ``(name, cfgs_list)`` tuple.
 
     ValueError
         ``scenarios`` is ``None``, or carries an emissions variable
         name that is not in
         :data:`openscm_runner.KNOWN_EMISSIONS_VARIABLES`.
+
+    Notes
+    -----
+    Keys in ``out_config`` that are not present in
+    ``climate_models_cfgs`` are warned about (not raised) so callers
+    can pass a shared ``out_config`` dict across several
+    :func:`run` calls without trimming it per-call.
     """
     # Validation order: cfg-shape -> scenarios -> adapter construction.
     # User-input errors fire before package-import errors so callers

@@ -132,6 +132,18 @@ Their union plus :data:`RCMIP3_BACK_REPORTABLE_VARIABLES` is what
 :func:`validate_output_variables` accepts."""
 
 
+# Forcing inputs the adapter back-reports on the canonical RCMIP3 path.
+#
+# CICERO-SCM v2.x treats Solar / Volcanic / Land-use albedo as input
+# forcings (read from the canonical bundle's per-scenario forcing rows)
+# rather than diagnostic outputs. The model neither computes nor
+# exposes them through :data:`SUPPORTED_VARIABLES`. The adapter
+# back-reports them by echoing the per-scenario trajectories it
+# already has in scope from ``_build_natural_data_from_rcmip3`` /
+# ``_build_rf_luc_data_from_rcmip3``. Requesting any of these without
+# the ``rcmip3_bundle_path`` cfg set raises (canonical-only policy;
+# legacy per-scenario forcing files were removed in the PR97 review
+# followup).
 RCMIP3_BACK_REPORTABLE_VARIABLES: frozenset[str] = frozenset({
     "Effective Radiative Forcing|Natural|Solar",
     "Effective Radiative Forcing|Natural|Volcanic",
@@ -159,18 +171,6 @@ _CARBON_CYCLE_VARIABLES: frozenset[str] = frozenset(
 def output_vars_need_carbon_cycle(output_variables) -> bool:
     """Return ``True`` if any requested variable needs the carbon cycle."""
     return bool(set(output_variables) & _CARBON_CYCLE_VARIABLES)
-"""Forcing inputs the adapter back-reports on the canonical RCMIP3 path.
-
-CICERO-SCM v2.x treats Solar / Volcanic / Land-use albedo as input
-forcings (read from the bundle's per-scenario forcing files) rather
-than diagnostic outputs. The model neither computes nor exposes them
-through :data:`SUPPORTED_VARIABLES`. The adapter back-reports them by
-echoing the per-scenario trajectories it already has in scope when
-the ``rcmip3_bundle_path`` cfg key is set (see
-:func:`_build_natural_data_from_rcmip3` and
-:func:`_build_rf_luc_data_from_rcmip3` in the adapter module). On
-the legacy bundle path the adapter logs a warning and omits the
-back-report from the output."""
 
 
 # Structurally-unsupported variables, grouped by the reason CICERO-SCM
