@@ -36,7 +36,6 @@ column names so FaIR's ``fill_from_pandas`` doesn't have to
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import Iterable
 
 import pandas as pd
@@ -71,111 +70,6 @@ RCMIP_TO_FAIR2_SPECIES = {
     # PFCs / misc.
     "cC4F8": "c-C4F8",
 }
-
-
-def _read_rcmip_conc_file(path: str) -> tuple[pd.DataFrame, dict[str, str]]:
-    """
-    Parse an RCMIP-format concentration file.
-
-    Returns (df, column_units):
-    - ``df``: year-indexed DataFrame with RCMIP species names as
-      columns and float values.
-    - ``column_units``: dict mapping each species column to its RCMIP
-      unit string (typically ``ppm``, ``ppb``, ``ppt``).
-    """
-    df = (
-        pd.read_csv(path, delimiter="\t", index_col=0, skiprows=[1, 2, 3])
-        .rename(columns=lambda x: x.strip())
-        .astype(float)
-    )
-    df.index = df.index.astype(int)
-
-    # Pull units from header line 2 ("Unit \t ppm\t ppb\t ...").
-    with open(path) as fh:
-        _ = next(fh)  # "Component" row
-        unit_line = next(fh)
-    unit_tokens = [t.strip() for t in unit_line.rstrip("\n").split("\t")]
-    # First token is "Unit" label; the rest line up positionally with df.columns.
-    column_units = dict(zip(df.columns, unit_tokens[1:]))
-    return df, column_units
-
-
-def build_concentrations_df(  # noqa: PLR0913
-    bundle_dir: str,
-    gases_ep: str,
-    scenario_names: Iterable[str],
-    fair_species: Iterable[str],
-    nystart: int = 1750,
-    nyend: int = 2500,
-) -> pd.DataFrame:
-    """
-    Build a FaIR-compatible concentrations DataFrame from RCMIP bundle files.
-
-    One file per scenario is read from ``{bundle_dir}/{scen}_conc_{gases_ep}``,
-    with fallback to ``{bundle_dir}/historical_conc_{gases_ep}`` for
-    scenarios the bundle has no scen-specific file for (mirrors the
-    fallback logic in
-    :func:`openscm_runner.adapters.ciceroscm_py2_adapter._build_scendata_list_bundle`
-    so CICERO and FaIR see the same concentration trajectory per scenario).
-
-    ``fair_species`` filters the output to species the FaIR FAIR
-    instance actually has defined; species in the RCMIP file but not
-    in FaIR's species list are silently dropped. Species in the
-    RCMIP_TO_FAIR2_SPECIES map are translated before this filter.
-
-    The returned DataFrame has the shape ``fill_from_pandas(mode="concentration")``
-    wants: one row per ``(scenario, variable)`` with ``scenario``,
-    ``variable``, ``region``, ``unit`` columns and one column per year
-    in ``[nystart, nyend]``. Column names are lowercased to match
-    upstream's expectation.
-    """
-    fair_species_set = set(fair_species)
-    rows: list[dict] = []
-    dropped: set[str] = set()
-
-    for scenario_name in scenario_names:
-        conc_path = _pick_conc_file(bundle_dir, scenario_name, gases_ep)
-        if conc_path is None:
-            LOGGER.warning(
-                "FaIRv2 conc-driven: no bundle conc file for scenario %r "
-                "(and no historical_conc fallback). Skipping.",
-                scenario_name,
-            )
-            continue
-
-        df, column_units = _read_rcmip_conc_file(conc_path)
-        df = df.loc[nystart:nyend]
-
-        for rcmip_name in df.columns:
-            fair_name = RCMIP_TO_FAIR2_SPECIES.get(rcmip_name, rcmip_name)
-            if fair_name not in fair_species_set:
-                dropped.add(rcmip_name)
-                continue
-            row = {
-                "scenario": scenario_name,
-                "variable": fair_name,
-                "region": "World",
-                "unit": column_units[rcmip_name],
-            }
-            # Year columns as strings to match fair's str.lower-friendly form.
-            for year in df.index:
-                row[str(year)] = float(df.at[year, rcmip_name])
-            rows.append(row)
-
-    if dropped:
-        LOGGER.info(
-            "FaIRv2 conc-driven: %d RCMIP species in the bundle conc file "
-            "are not in the FaIR species set and were dropped: %s",
-            len(dropped),
-            sorted(dropped),
-        )
-
-    if not rows:
-        return pd.DataFrame()
-    out = pd.DataFrame(rows)
-    # Lowercase columns the way fair.fill_from_pandas does internally.
-    out.columns = [c.lower() if not c.isdigit() else c for c in out.columns]
-    return out
 
 
 def build_concentrations_df_from_scmrun(
@@ -233,18 +127,6 @@ def build_concentrations_df_from_scmrun(
     out = pd.DataFrame(rows)
     out.columns = [c.lower() if not c.isdigit() else c for c in out.columns]
     return out
-
-
-def _pick_conc_file(bundle_dir: str, scenario_name: str, gases_ep: str):
-    """Scenario-specific bundle conc file, falling back to historical."""
-    for candidate in (
-        f"{scenario_name}_conc_{gases_ep}",
-        f"historical_conc_{gases_ep}",
-    ):
-        path = os.path.join(bundle_dir, candidate)
-        if os.path.exists(path):
-            return path
-    return None
 
 
 def build_concentrations_df_from_rcmip3(

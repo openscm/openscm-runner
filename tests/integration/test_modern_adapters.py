@@ -47,6 +47,9 @@ FAIR2_MINI_BUNDLE = (
 CICERO_MINI_BUNDLE = (
     Path(__file__).parent.parent / "test-data" / "ciceroscm-mini-bundle"
 )
+RCMIP3_MINI_BUNDLE = (
+    Path(__file__).parent.parent / "test-data" / "rcmip3-mini"
+)
 
 _OUTPUT_VARIABLES = (
     "Surface Air Temperature Change",
@@ -73,41 +76,16 @@ cicero_skip = pytest.mark.skipif(
 )
 
 
-# Explicit ssp245-specific overrides for the CICERO calibration
-# directory. Phase F's canonical-filename resolver looks for
-# ``historical_em_*`` etc. by default; the mini-bundle was generated
-# pre-Phase F with ssp245-specific names, so we wire them in via the
-# cfg-override mechanism. This is also the "power-user reproduction"
-# pattern the AR7 application repo follows.
-_CICERO_SSP245_OVERRIDES = {
-    "historical_em_file": str(
-        CICERO_MINI_BUNDLE / "ssp245_em_gases_vupdate_2024_WMO_added_new.txt"
-    ),
-    "historical_conc_file": str(
-        CICERO_MINI_BUNDLE
-        / "ssp245_conc_gases_vupdate_2024_WMO_added_new.txt"
-    ),
-    "rf_sun_file": str(
-        CICERO_MINI_BUNDLE / "solar_RCMIP_ssp245_RCMIP3.txt"
-    ),
-    "rf_volc_file": str(
-        CICERO_MINI_BUNDLE / "VOLC_RCMIP_ssp245_RCMIP3.txt"
-    ),
-    "rf_luc_file": str(
-        CICERO_MINI_BUNDLE / "LUCalbedo_RCMIP_ssp245_RCMIP3.txt"
-    ),
-}
-
-
 @pytest.fixture
 def smoke_scenarios(test_scenarios):
-    """SSP126/SSP245/SSP370 subset used in the smoke tests."""
+    """ssp245 subset used in the smoke tests."""
     return test_scenarios.filter(scenario=list(_TEST_SCENARIOS))
 
 
 def _build_fair2_ed():
     return FAIR2.from_native_distribution(
-        FAIR2_MINI_BUNDLE,
+        calibration_dir=FAIR2_MINI_BUNDLE,
+        rcmip3_bundle_path=RCMIP3_MINI_BUNDLE,
         mode=RunMode.EMISSIONS_DRIVEN,
         member_indices=_MEMBER_INDICES,
         output_variables=_OUTPUT_VARIABLES,
@@ -116,33 +94,33 @@ def _build_fair2_ed():
 
 def _build_fair2_cd():
     return FAIR2.from_native_distribution(
-        FAIR2_MINI_BUNDLE,
+        calibration_dir=FAIR2_MINI_BUNDLE,
+        rcmip3_bundle_path=RCMIP3_MINI_BUNDLE,
         mode=RunMode.CONCENTRATION_DRIVEN,
         member_indices=_MEMBER_INDICES,
         output_variables=_OUTPUT_VARIABLES,
-        fair2_conc_bundle_dir=str(CICERO_MINI_BUNDLE),
     )
 
 
 def _build_cicero_ed():
     return CICEROSCMPY2.from_native_distribution(
-        CICERO_MINI_BUNDLE,
+        calibration_dir=CICERO_MINI_BUNDLE,
+        rcmip3_bundle_path=RCMIP3_MINI_BUNDLE,
         mode=RunMode.EMISSIONS_DRIVEN,
         member_indices=_MEMBER_INDICES,
         output_variables=_OUTPUT_VARIABLES,
         max_workers=1,
-        **_CICERO_SSP245_OVERRIDES,
     )
 
 
 def _build_cicero_cd():
     return CICEROSCMPY2.from_native_distribution(
-        CICERO_MINI_BUNDLE,
+        calibration_dir=CICERO_MINI_BUNDLE,
+        rcmip3_bundle_path=RCMIP3_MINI_BUNDLE,
         mode=RunMode.CONCENTRATION_DRIVEN,
         member_indices=_MEMBER_INDICES,
         output_variables=_OUTPUT_VARIABLES,
         max_workers=1,
-        **_CICERO_SSP245_OVERRIDES,
     )
 
 

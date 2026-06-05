@@ -175,6 +175,9 @@ _OPENSCM_TO_CICERO_CONC = {
 # follow the same convention.
 _DEFAULT_CANONICAL_FILES: dict[str, str] = {
     "gaspam_file": "gases_vupdate_2024_WMO_added_new.txt",
+    # historical_em / historical_conc files anchor the CICERO species
+    # column structure + units; the actual scenario time series are
+    # overlaid on top from the canonical RCMIP3 bundle merge.
     "historical_em_file": (
         "historical_em_gases_vupdate_2024_WMO_added_new.txt"
     ),
@@ -187,9 +190,6 @@ _DEFAULT_CANONICAL_FILES: dict[str, str] = {
     "nat_n2o_file": (
         "natemis_N2O_ode_method_from_March2026_vupdate_2024_WMO_added_new.txt"
     ),
-    "rf_sun_file": "solar_RCMIP_historical_RCMIP3.txt",
-    "rf_volc_file": "VOLC_RCMIP_historical_RCMIP3.txt",
-    "rf_luc_file": "LUCalbedo_RCMIP_historical_RCMIP3.txt",
 }
 # Idealised LUC handling for CICEROSCM mirrors FaIR's runtime approach
 # (see fair2_adapter._fill_natural_forcings): the calibration bundle
@@ -251,9 +251,7 @@ class CICEROSCMPY2(_Adapter):
             "historical_conc_file",
             "nat_ch4_file",
             "nat_n2o_file",
-            "rf_sun_file",
-            "rf_volc_file",
-            "rf_luc_file",
+            "rcmip3_bundle_path",
         )
         for cfg_index, cfg in enumerate(cfgs):
             missing = [k for k in required if k not in cfg]
@@ -286,53 +284,57 @@ class CICEROSCMPY2(_Adapter):
     @classmethod
     def from_native_distribution(
         cls,
-        native_distribution_path,
+        calibration_dir,
+        rcmip3_bundle_path,
+        *,
         mode: RunMode = RunMode.EMISSIONS_DRIVEN,
         distribution_json=None,
         member_indices=None,
         output_variables=None,
         output_config=None,
-        **cfg_overrides: Any,
+        max_workers: int | None = None,
     ) -> "CICEROSCMPY2":
         """
-        Construct from a CICERO-SCM 2.x calibration directory.
+        Construct from a CICERO-SCM 2.x calibration directory + canonical RCMIP3.
 
-        The calibration directory carries the gaspam, historical_em /
-        historical_conc baselines, natural CH4 / N2O emissions, default
-        solar / volcanic / LUC forcing files, and a parameter posterior
-        JSON. The classmethod resolves each by canonical filename glob
-        (see ``_CANONICAL_FILE_PATTERNS``) and writes the resolved
-        paths into a single cfg dict.
+        The two arguments correspond to two distinct data sources that
+        used to be conflated:
 
-        Per-scenario emissions / concentration files in the directory
-        (e.g. ``{scen}_em_*``, ``{scen}_conc_*``) are NOT read; the
-        scenarios DataFrame passed to :meth:`run` is the source of
-        truth for per-scenario inputs. Translate any reference bundle
-        into openscm-runner format on the application side and pass it
-        in via ``scenarios``.
+        * ``calibration_dir`` -- model-specific calibration only.
+          Carries the gaspam (species properties), the natural CH4 /
+          N2O emissions baselines, and the parameter posterior JSON.
+          These have no canonical RCMIP3 equivalent.
+        * ``rcmip3_bundle_path`` -- protocol/scenario inputs from the
+          canonical RCMIP Phase 3 Zenodo bundle (record 20430630):
+          per-scenario emissions, concentrations, solar, volcanic and
+          land-use albedo forcings. The adapter loads them via
+          :mod:`openscm_runner.io.rcmip3`.
+
+        Per-scenario emissions / concentration files inside
+        ``calibration_dir`` (e.g. ``{scen}_em_*``, ``{scen}_conc_*``)
+        are NOT read; the scenarios ScmRun passed to :meth:`run`
+        overlays on top of the canonical RCMIP3 baseline.
 
         Parameters
         ----------
-        native_distribution_path
-            Calibration directory root.
+        calibration_dir
+            Calibration directory root. Must contain the gaspam file,
+            both natemis files, and a discoverable parameter posterior
+            JSON (see :func:`_resolve_distribution_json`).
+        rcmip3_bundle_path
+            Directory of the canonical Zenodo 20430630 RCMIP3 bundle.
         mode
             Driving mode. Maps to ``cicero_conc_run`` internally.
         distribution_json
             Optional explicit path to the parameter posterior JSON.
-            Defaults to the single ``calibrated_*ensemble*.json``
-            (Marit's Zenodo convention, e.g.
-            ``calibrated_ciceroscm_ensemble.json`` in
-            `10.5281/zenodo.20506399`), ``*distribution*.json``, or
-            ``draw_samples_*.json`` in the directory.
+            Defaults to the single ``calibrated_*ensemble*.json``,
+            ``*distribution*.json``, or ``draw_samples_*.json`` in
+            the calibration directory.
         member_indices
             Optional zero-based row indices into the parameter
             posterior. ``None`` (default) selects all members.
         output_variables, output_config
             Forwarded to the adapter constructor.
-        **cfg_overrides
-            Forwarded as keys on the cfg dict, overriding any
-            auto-resolved canonical filenames. Use this to point a
-            specific input at a non-canonical location.
 
         Returns
         -------
@@ -341,7 +343,7 @@ class CICEROSCMPY2(_Adapter):
         """
         from pathlib import Path
 
-        cal_dir = Path(native_distribution_path)
+        cal_dir = Path(calibration_dir)
         if not cal_dir.exists():
             raise FileNotFoundError(
                 f"CICERO-SCM calibration directory not found: {cal_dir}"
@@ -351,15 +353,10 @@ class CICEROSCMPY2(_Adapter):
                 f"CICERO-SCM calibration path is not a directory: {cal_dir}"
             )
 
-        cfg: dict[str, Any] = {}
+        cfg: dict[str, Any] = {
+            "rcmip3_bundle_path": str(rcmip3_bundle_path),
+        }
         for key, fname in _DEFAULT_CANONICAL_FILES.items():
-            # Skip the canonical-file existence check for any key the
-            # caller is overriding via ``**cfg_overrides``. The whole
-            # point of an override is to point at a non-canonical
-            # location, so missing the canonical file in ``cal_dir``
-            # is not an error in that case.
-            if key in cfg_overrides:
-                continue
             candidate = cal_dir / fname
             if not candidate.is_file():
                 raise FileNotFoundError(
@@ -368,20 +365,18 @@ class CICEROSCMPY2(_Adapter):
                     f"expected {fname!r}. The calibration directory "
                     "must follow the cscm-calibrate rcmip-march2026 "
                     "layout (canonical filenames anchored on the "
-                    "v2024 WMO-added-new gaspam endpoint), or pass an "
-                    f"explicit {key}=... cfg override pointing at "
-                    "the actual file location."
+                    "v2024 WMO-added-new gaspam endpoint)."
                 )
             cfg[key] = str(candidate)
 
-        if distribution_json is None and "distribution_json" not in cfg_overrides:
+        if distribution_json is None:
             distribution_json = _resolve_distribution_json(cal_dir)
-        if distribution_json is not None:
-            cfg["distribution_json"] = str(distribution_json)
+        cfg["distribution_json"] = str(distribution_json)
 
         if member_indices is not None:
             cfg["member_indices"] = list(member_indices)
-        cfg.update(cfg_overrides)
+        if max_workers is not None:
+            cfg["max_workers"] = max_workers
 
         return cls(
             cfgs=[cfg],
@@ -725,40 +720,29 @@ def _build_scendata_list(
                 : min(nyend, scen_nat_n2o.index.max())
             ],
         }
-        # Solar + Volcanic: two routes (sunvolc=0 suppression already
-        # handled via the scendata flag above; upstream zeros internally).
-        # 1. Canonical RCMIP3 path (``rcmip3_bundle_path`` cfg key set):
-        #    per-scenario in-memory DataFrames from canonical forcing CSV.
-        # 2. Legacy path: ``rf_sun_file`` + ``rf_volc_file`` paths.
-        if cfg.get("rcmip3_bundle_path") is not None:
-            nat = _build_natural_data_from_rcmip3(
-                scenario_name=scenario_name,
-                rcmip3_bundle_path=cfg["rcmip3_bundle_path"],
-                nystart=nystart,
-                nyend=nyend,
-            )
-            scendata["rf_sun_data"] = nat["rf_sun_data"]
-            scendata["rf_volc_data"] = nat["rf_volc_data"]
-        else:
-            scendata["rf_sun_file"] = cfg["rf_sun_file"]
-            scendata["rf_volc_file"] = cfg["rf_volc_file"]
-        # LUC: three routes.
-        # 1. Idealised scenarios (``protocol_land_use_forcing ==
-        #    "constant_zero"``) -> in-memory zeros DataFrame, same as
-        #    FaIR's runtime mask.
-        # 2. Canonical RCMIP3 path (``rcmip3_bundle_path`` cfg key
-        #    set) -> per-scenario Land Use from the bundle's
-        #    ``input_datafiles_generation/data/Forcing_AFOLU_CO2.csv``,
-        #    keyed by CMIP7 ScenarioMIP category.
-        # 3. Legacy path -> the bundle's pre-computed
-        #    ``rf_luc_file`` path, single trajectory for all scenarios.
+        # Solar + Volcanic: per-scenario in-memory DataFrames from
+        # the canonical RCMIP3 forcing CSV. The sunvolc=0 suppression
+        # for idealised scenarios is handled via the scendata flag
+        # above; upstream zeros internally when sunvolc=0.
+        nat = _build_natural_data_from_rcmip3(
+            scenario_name=scenario_name,
+            rcmip3_bundle_path=cfg["rcmip3_bundle_path"],
+            nystart=nystart,
+            nyend=nyend,
+        )
+        scendata["rf_sun_data"] = nat["rf_sun_data"]
+        scendata["rf_volc_data"] = nat["rf_volc_data"]
+
+        # Land use albedo: in-memory DataFrame. Idealised scenarios
+        # (``protocol_land_use_forcing == "constant_zero"``) get zeros;
+        # everything else is per-scenario from canonical RCMIP3 keyed
+        # by CMIP7 ScenarioMIP category.
         if lu_zero:
-            import pandas as pd
             scendata["rf_luc_data"] = pd.DataFrame(
                 {0: [0.0] * (nyend - nystart + 1)},
                 index=range(nystart, nyend + 1),
             )
-        elif cfg.get("rcmip3_bundle_path") is not None:
+        else:
             scendata["rf_luc_data"] = _build_rf_luc_data_from_rcmip3(
                 scenario_name=scenario_name,
                 rcmip3_bundle_path=cfg["rcmip3_bundle_path"],
@@ -766,8 +750,6 @@ def _build_scendata_list(
                 nystart=nystart,
                 nyend=nyend,
             )
-        else:
-            scendata["rf_luc_file"] = cfg["rf_luc_file"]
         if conc_data is not None:
             scendata["concentrations_data"] = conc_data
         else:
