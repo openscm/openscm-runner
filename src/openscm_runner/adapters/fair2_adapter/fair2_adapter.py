@@ -68,6 +68,25 @@ from ._output_extractor import extract_outputs
 LOGGER = logging.getLogger(__name__)
 
 
+def _select_ch4_method(calibration) -> str:
+    """Pick FaIR's methane lifetime scheme to match the calibration bundle.
+
+    fair-calibrate bundles that ship a ``CH4_lifetime.csv`` (e.g. the
+    AR7-relevant Smith calibrations, Zenodo record 18828694) are calibrated
+    for the multi-species methane lifetime of Thornhill et al. (2021): the
+    per-precursor sensitivities (CH4, NOx, VOC, EESC, N2O, temperature) are
+    baked into ``species_configs_properties.csv``. FaIR only applies those
+    sensitivities when constructed with ``ch4_method="thornhill2021"``; under
+    its default ``leach2021`` the chemistry is bypassed and methane runs at
+    its unperturbed base lifetime (~16 yr), so concentrations come out far too
+    high (e.g. ~2600 ppb rather than ~1900 ppb in 2020). Fall back to FaIR's
+    default when there is no lifetime calibration to honour (or no bundle).
+    """
+    if calibration is not None and calibration.file("ch4_lifetime") is not None:
+        return "thornhill2021"
+    return "leach2021"
+
+
 class FAIR2(_Adapter):
     """
     Adapter for running FaIR 2.x with a native calibration bundle.
@@ -459,7 +478,7 @@ def _run_translated_cfgs(  # noqa: PLR0912, PLR0915
 
     config_labels = [f"config_{i}" for i in range(len(cfgs))]
 
-    f = fair2.FAIR()
+    f = fair2.FAIR(ch4_method=_select_ch4_method(calibration))
     f.define_time(start_year, end_year, 1)
     f.define_scenarios(scenario_names)
     f.define_configs(config_labels)
@@ -808,7 +827,7 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
     # sensitive. Pass the parameter DataFrame's index values through
     # with their native dtype (typically int seed labels for the
     # AR7-relevant fair-calibrate bundles).
-    f = fair2.FAIR()
+    f = fair2.FAIR(ch4_method=_select_ch4_method(calibration))
     f.define_time(start_year, end_year, 1)
     f.define_scenarios(scenario_names)
     f.define_configs(list(members.index))
