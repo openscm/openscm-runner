@@ -94,15 +94,47 @@ No `changelog/*.md` entry yet — needs the MR/PR number, add after opening one.
   concentration rows (verified by checking the
   `tests/test-data/rcmip_scen_ssp_world_emissions.csv` fixture).
 
-## Not yet verified (blocked on this machine)
+## Verified end-to-end (2026-06-20, aarch64 Linux + qemu)
 
-- Running the unit tests under a real pytest (no pixi/poetry env
-  available, no system python with scmdata installed).
-- Running the integration test under a real pytest + pymagicc.
-- End-to-end run against the MAGICC binary (unsigned binary
-  restriction on this machine; the binary at
-  `~/Downloads/magicc-v7.5.3/bin/magicc-darwin-arm64` cannot
-  execute).
+Picked up on an aarch64 Linux box. The MAGICC distribution only
+ships an *x86-64* Linux binary (`bin/magicc`, statically linked), so
+it runs here under `qemu-user` binfmt emulation (`qemu-user-binfmt`
++ `libc6:amd64` for the dynamically-linked CICEROSCM probe binary
+that `conftest.py` runs at import). `MAGICC7.get_version()` returns
+`v7.5.3` through the wrapper, satisfying the `@pytest.mark.magicc`
+gate.
+
+- Unit tests pass: `tests/unit/adapters/test_magicc7_concentrations.py`
+  (7 tests).
+- Integration tests pass: the conc-file-writing smoke and the
+  `rcmip3_bundle_path`-required guard.
+- **Bug found and fixed by the real binary.** The first end-to-end
+  conc-driven run died with a Fortran `End of file` in `readdata`
+  (`MAGICC7.f90:11903`) on our written `*_CO2_CONC.IN`. Root cause:
+  the writer emitted only the (sparse, 6-point) years present in the
+  bundle, but MAGICC reads every `CONC.IN` as a *contiguous annual*
+  series over its full 1700-2500 window (its own shipped files are
+  `ANNUALSTEPS = 1`, 801 rows). Fix: `_to_annual_magicc_grid` in
+  `_concentrations_translator.py` resamples onto the annual grid
+  (linear interp inside the supplied range, constant hold outside)
+  before `write_conc_in_file`. A new `@pytest.mark.magicc`
+  end-to-end test (`test_conc_driven_end_to_end_runs_the_binary`)
+  now exercises the binary so this can't regress silently.
+- Open items from the list below, all confirmed during the run:
+  `get_version()[1]` round-trip is fine; switch-year `9999` is
+  accepted; pymagicc writes `THISFILE_REGIONMODE = 'FOURBOX'`.
+- ssp245 GSAT@2100: emissions-driven ~2.77 K vs conc-driven ~2.88 K
+  (CS=3, member 1) — same ballpark, as expected.
+
+Also fixed: the conc-file-writing integration test asserted the
+wrong cfg-key name (`file_co2_concentration`); the verified-correct
+key is `file_co2_conc` (matches `MAGCFG_DEFAULTALL.CFG`).
+
+Pre-existing, unrelated: `TestMagicc7Adapter::test_run` fails in a
+bleeding-edge dependency env (numpy/pandas-3.0 `float()`-of-array in
+the shared `src/openscm_runner/testing.py` regression helper).
+Confirmed it reproduces identically on the pre-magicc commit
+`00e2ee4`, so it is environmental, not from this branch.
 
 ## Pick up on another machine
 

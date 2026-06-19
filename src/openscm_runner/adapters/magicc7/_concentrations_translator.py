@@ -357,6 +357,40 @@ def _load_rcmip3_baseline(
     return pd.DataFrame(rows)
 
 
+# MAGICC7 reads every ``*_CONC.IN`` file as a contiguous *annual*
+# series spanning its full internal integration window: the binary's
+# own shipped concentration files (e.g. ``SSP245_CO2_CONC.IN``) all
+# carry ``THISFILE_ANNUALSTEPS = 1`` over 1700-2500 (801 rows). Feeding
+# it a sparse / shorter series makes the Fortran ``readdata`` routine
+# hit end-of-file. We therefore resample whatever (possibly sparse)
+# trajectory we have onto this grid before writing.
+MAGICC_CONC_FIRSTYEAR = 1700
+MAGICC_CONC_LASTYEAR = 2500
+
+
+def _to_annual_magicc_grid(series: pd.Series) -> pd.Series:
+    """
+    Resample a (year-indexed) concentration series onto MAGICC's
+    annual 1700-2500 grid.
+
+    Values are linearly interpolated between supplied years and held
+    constant (the nearest endpoint) outside the supplied range, so a
+    bundle that only covers, say, 1750-2100 still yields a file MAGICC
+    can read end to end.
+    """
+    s = series.copy()
+    s.index = s.index.astype(int)
+    s = s.sort_index()
+    annual = pd.Index(range(MAGICC_CONC_FIRSTYEAR, MAGICC_CONC_LASTYEAR + 1))
+    return (
+        s.reindex(s.index.union(annual))
+        .interpolate(method="index")
+        .reindex(annual)
+        .ffill()
+        .bfill()
+    )
+
+
 def write_conc_in_file(
     out_path: str,
     scenario: str,
@@ -369,16 +403,19 @@ def write_conc_in_file(
     Write a single MAGICC ``CONC.IN`` file via pymagicc and return its path.
 
     Wraps :class:`pymagicc.io.MAGICCData` with the right per-gas
-    metadata. pymagicc derives ``THISFILE_FIRSTYEAR`` / ``LASTYEAR``
-    from the series index and sets ``THISFILE_REGIONMODE`` /
-    ``THISFILE_DATTYPE`` automatically for concentration files; we
-    only need to set the variable name, unit and region.
+    metadata. The trajectory is first resampled onto MAGICC's annual
+    1700-2500 grid (see :func:`_to_annual_magicc_grid`); pymagicc then
+    derives ``THISFILE_FIRSTYEAR`` / ``LASTYEAR`` / ``ANNUALSTEPS`` from
+    that index and sets ``THISFILE_REGIONMODE`` / ``THISFILE_DATTYPE``
+    automatically for concentration files; we only need to set the
+    variable name, unit and region.
     """
     if series.empty:
         raise ValueError(
             f"Cannot write concentration .IN for {scenario}/{species}: "
             "trajectory is empty.",
         )
+    series = _to_annual_magicc_grid(series)
     frame = pd.DataFrame({
         "model": ["unspecified"],
         "scenario": [scenario],

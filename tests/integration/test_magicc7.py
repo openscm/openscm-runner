@@ -227,10 +227,10 @@ def test_conc_driven_writes_conc_in_files_and_patches_cfgs(
     ``out_directory=tmp_path`` (so we don't need ``_run_dir()`` and a
     real MAGICC install), and verifies that:
 
-    - The per-(scenario, model) patch sets ``file_co2_concentration``,
-      ``file_ch4_concentration``, ``file_n2o_concentration`` to paths
-      of written ``.IN`` files (RCMIP3-mini's ssp245 baseline supplies
-      all three).
+    - The per-(scenario, model) patch sets ``file_co2_conc``,
+      ``file_ch4_conc``, ``file_n2o_conc`` to paths of written
+      ``.IN`` files (RCMIP3-mini's ssp245 baseline supplies all
+      three).
     - The matching ``*_switchfromconc2emis_year`` flags default to
       9999.
     - User-supplied ``Atmospheric Concentrations|CO2`` rows shadow
@@ -273,15 +273,64 @@ def test_conc_driven_writes_conc_in_files_and_patches_cfgs(
     patch = patches[("ssp245", "test-model")]
     for gas in ("co2", "ch4", "n2o"):
         assert patch[f"{gas}_switchfromconc2emis_year"] == 9999
-        path = patch[f"file_{gas}_concentration"]
+        path = patch[f"file_{gas}_conc"]
         assert os.path.exists(path), path
         assert path.endswith(f"_{gas.upper()}_CONC.IN")
 
     # User CO2 trajectory survived into the written file.
-    co2_data = pymagicc.io.MAGICCData(patch["file_co2_concentration"])
+    co2_data = pymagicc.io.MAGICCData(patch["file_co2_conc"])
     co2_ts = co2_data.timeseries(time_axis="year")
     assert co2_ts.iloc[0].loc[2050] == pytest.approx(999.0)
     assert co2_ts.iloc[0].loc[2100] == pytest.approx(999.0)
+
+    # MAGICC reads CONC.IN as a contiguous annual series over its full
+    # internal window; a sparse / truncated file trips a Fortran
+    # end-of-file error at runtime. Assert the writer resampled the
+    # (here sparse) bundle onto the annual 1700-2500 grid.
+    years = co2_ts.columns.astype(int)
+    assert years.min() == 1700
+    assert years.max() == 2500
+    assert list(years) == list(range(1700, 2501))
+    # Values are held constant beyond the last supplied year (2100).
+    assert co2_ts.iloc[0].loc[2500] == pytest.approx(999.0)
+
+
+@pytest.mark.magicc
+def test_conc_driven_end_to_end_runs_the_binary(test_scenarios):
+    """Drive the real MAGICC binary in concentration-driven mode.
+
+    The file-writing tests above bypass the binary, so they can't catch
+    a malformed ``CONC.IN`` (e.g. a sparse / truncated grid that trips
+    MAGICC's Fortran ``readdata`` end-of-file check). This runs ssp245
+    through the binary in both modes and asserts conc-driven produces a
+    finite GSAT in the same ballpark as emissions-driven.
+    """
+    scenarios = test_scenarios.filter(scenario="ssp245")
+
+    gsat = {}
+    for mode in (RunMode.EMISSIONS_DRIVEN, RunMode.CONCENTRATION_DRIVEN):
+        adapter = MAGICC7(
+            cfgs=[
+                {
+                    "core_climatesensitivity": 3,
+                    "rcmip3_bundle_path": str(RCMIP3_MINI_BUNDLE),
+                },
+            ],
+            mode=mode,
+            output_variables=("Surface Air Temperature Change",),
+        )
+        res = openscm_runner.run.run([adapter], scenarios=scenarios)
+        vals = res.filter(
+            variable="Surface Air Temperature Change", year=2100,
+        ).values.flatten()
+        assert len(vals) > 0
+        assert all(pd.notna(vals))
+        gsat[mode] = float(vals[0])
+
+    # Physically-consistent bundle: the two modes should land close.
+    assert gsat[RunMode.CONCENTRATION_DRIVEN] == pytest.approx(
+        gsat[RunMode.EMISSIONS_DRIVEN], abs=0.5,
+    )
 
 
 @pytest.mark.magicc
