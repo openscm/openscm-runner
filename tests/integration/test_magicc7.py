@@ -1,13 +1,20 @@
 import os.path
+from pathlib import Path
 
+import pandas as pd
 import pymagicc.io
 import pytest
 from scmdata import ScmRun
 
 import openscm_runner.run
+from openscm_runner import RunMode
 from openscm_runner.adapters import MAGICC7
 from openscm_runner.testing import _AdapterTester
 from openscm_runner.utils import calculate_quantiles
+
+RCMIP3_MINI_BUNDLE = (
+    Path(__file__).parent.parent / "test-data" / "rcmip3-mini"
+)
 
 
 @pytest.mark.magicc
@@ -207,6 +214,86 @@ class TestMagicc7Adapter(_AdapterTester):
         missing_vars = set(common_variables) - set(res["variable"])
         if missing_vars:
             raise AssertionError(missing_vars)
+
+
+@pytest.mark.magicc
+def test_conc_driven_writes_conc_in_files_and_patches_cfgs(
+    tmp_path, monkeypatch,
+):
+    """Focused test of the conc-file-writing path.
+
+    Builds an adapter in CONCENTRATION_DRIVEN mode, runs
+    ``_write_conc_in_files_and_cfg_updates`` directly with
+    ``out_directory=tmp_path`` (so we don't need ``_run_dir()`` and a
+    real MAGICC install), and verifies that:
+
+    - The per-(scenario, model) patch sets ``file_co2_concentration``,
+      ``file_ch4_concentration``, ``file_n2o_concentration`` to paths
+      of written ``.IN`` files (RCMIP3-mini's ssp245 baseline supplies
+      all three).
+    - The matching ``*_switchfromconc2emis_year`` flags default to
+      9999.
+    - User-supplied ``Atmospheric Concentrations|CO2`` rows shadow
+      the baseline CO2 trajectory in the written file.
+    """
+    monkeypatch.setattr(
+        MAGICC7, "get_version", classmethod(lambda cls: "v7.5.3"),
+    )
+
+    user_run = ScmRun(pd.DataFrame({
+        "model": ["test-model"],
+        "scenario": ["ssp245"],
+        "region": ["World"],
+        "variable": ["Atmospheric Concentrations|CO2"],
+        "unit": ["ppm"],
+        2050: [999.0],
+        2100: [999.0],
+    }))
+
+    adapter = MAGICC7(
+        cfgs=[
+            {
+                "core_climatesensitivity": 3,
+                "rcmip3_bundle_path": str(RCMIP3_MINI_BUNDLE),
+                "scenario": "ssp245",
+                "model": "test-model",
+            },
+        ],
+        mode=RunMode.CONCENTRATION_DRIVEN,
+        output_variables=("Surface Air Temperature Change",),
+    )
+
+    patches = adapter._write_conc_in_files_and_cfg_updates(
+        scenarios=user_run,
+        cfgs=adapter.cfgs,
+        out_directory=str(tmp_path),
+    )
+
+    assert ("ssp245", "test-model") in patches
+    patch = patches[("ssp245", "test-model")]
+    for gas in ("co2", "ch4", "n2o"):
+        assert patch[f"{gas}_switchfromconc2emis_year"] == 9999
+        path = patch[f"file_{gas}_concentration"]
+        assert os.path.exists(path), path
+        assert path.endswith(f"_{gas.upper()}_CONC.IN")
+
+    # User CO2 trajectory survived into the written file.
+    co2_data = pymagicc.io.MAGICCData(patch["file_co2_concentration"])
+    co2_ts = co2_data.timeseries(time_axis="year")
+    assert co2_ts.iloc[0].loc[2050] == pytest.approx(999.0)
+    assert co2_ts.iloc[0].loc[2100] == pytest.approx(999.0)
+
+
+@pytest.mark.magicc
+def test_conc_driven_requires_rcmip3_bundle_path():
+    """No rcmip3_bundle_path -> clear ValueError on conc-driven dispatch."""
+    adapter = MAGICC7(
+        cfgs=[{"core_climatesensitivity": 3}],
+        mode=RunMode.CONCENTRATION_DRIVEN,
+        output_variables=("Surface Air Temperature Change",),
+    )
+    with pytest.raises(ValueError, match="rcmip3_bundle_path"):
+        adapter._resolve_rcmip3_bundle_path(adapter.cfgs)
 
 
 @pytest.mark.magicc
