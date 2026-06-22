@@ -356,6 +356,76 @@ def test_fair2_emissions_canonical_path_translates_variables():
     assert 1750 in year_cols and 2100 in year_cols
 
 
+def test_fair2_splice_empty_bundle_returns_user_rows():
+    """Idealised scenarios (abrupt-4xCO2, 1pctCO2, esm-flat10*) have no
+    RCMIP3 emissions baseline, so the bundle frame is empty. The splice
+    must return the user's rows instead of raising ``KeyError`` on the
+    missing ``scenario`` column."""
+    from openscm_runner.adapters.fair2_adapter._emissions_translator import (
+        _splice_bundle_with_user,
+    )
+
+    user_df = pd.DataFrame([{
+        "scenario": "abrupt-4xCO2",
+        "variable": "CO2 FFI",
+        "region": "World",
+        "unit": "Gt CO2/yr",
+        1750: 0.0,
+        1850: 36.0,
+    }])
+
+    out = _splice_bundle_with_user(
+        pd.DataFrame(), user_df, scenario_names=["abrupt-4xCO2"],
+    )
+    assert not out.empty
+    assert set(out["variable"]) == {"CO2 FFI"}
+    assert out.loc[out["variable"] == "CO2 FFI", 1850].iloc[0] == 36.0
+
+    # Empty bundle + empty user -> empty frame (no crash).
+    assert _splice_bundle_with_user(
+        pd.DataFrame(), pd.DataFrame(), scenario_names=["abrupt-4xCO2"],
+    ).empty
+
+
+def test_fair2_build_emissions_df_idealised_scenario_with_user_emissions():
+    """End-to-end: an idealised scenario (no RCMIP3 baseline) with a
+    user emissions overlay must build without KeyError, keep CO2, and
+    zero the non-CO2 species via the ``co2_only_scenarios`` path."""
+    from scmdata import ScmRun
+
+    from openscm_runner.adapters.fair2_adapter._emissions_translator import (
+        build_emissions_df,
+    )
+
+    scmrun = ScmRun(pd.DataFrame({
+        "model": ["test", "test"],
+        "scenario": ["abrupt-4xCO2", "abrupt-4xCO2"],
+        "region": ["World", "World"],
+        "variable": [
+            "Emissions|CO2|MAGICC Fossil and Industrial",
+            "Emissions|CH4",
+        ],
+        "unit": ["Mt CO2/yr", "Mt CH4/yr"],
+        1750: [0.0, 100.0],
+        1850: [1000.0, 300.0],
+    }))
+
+    out = build_emissions_df(
+        scmrun, MINI_BUNDLE, scenario_names=["abrupt-4xCO2"],
+        co2_only_scenarios=("abrupt-4xCO2",),
+    )
+    assert not out.empty
+    variables = set(out["variable"])
+    assert "CO2 FFI" in variables and "CH4" in variables
+    # build_emissions_df stringifies year columns at the boundary.
+    year_cols = [c for c in out.columns if isinstance(c, str) and c.isdigit()]
+    co2 = out[out["variable"] == "CO2 FFI"]
+    ch4 = out[out["variable"] == "CH4"]
+    # CO2 survives; non-CO2 is zeroed for the idealised scenario.
+    assert (co2[year_cols].to_numpy() != 0).any()
+    assert (ch4[year_cols].fillna(0).to_numpy() == 0).all()
+
+
 def test_fair2_concentrations_canonical_path_translates_variables():
     from openscm_runner.adapters.fair2_adapter._concentrations_translator import (
         build_concentrations_df_from_rcmip3,
