@@ -286,6 +286,43 @@ def _zero_fill_fair_arrays(f) -> None:
             values[mask] = 0.0
 
 
+# CO2 source species are concentration-driven (or back-calculated) in the
+# idealised conc experiments, so they must NOT be pinned to baseline.
+_CO2_SOURCE_SPECIES = frozenset({"CO2 FFI", "CO2 AFOLU"})
+
+
+def _hold_idealised_nonco2_at_baseline(f, idealised_scenarios) -> None:
+    """
+    Pin non-CO2 emissions-mode species to ``baseline_emissions`` for the
+    given idealised scenarios, so their PI forcing is ~0.
+
+    FaIR computes emissions-driven forcing relative to each species'
+    ``baseline_emissions`` (aerosol ERF in particular). Leaving idealised
+    non-CO2 species at zero emissions therefore produces a constant
+    non-zero ERF (anomaly ``0 - baseline_emissions``). Setting their
+    emissions to ``baseline_emissions`` makes the anomaly -- and hence the
+    forcing -- zero, which is the intended "everything but CO2 at PI"
+    state. Concentration-driven species (e.g. CH4 / N2O when supplied as
+    concentrations) are not emissions-mode and are left untouched.
+    """
+    if not idealised_scenarios:
+        return
+
+    run_scenarios = set(f.scenarios)
+    baseline = f.species_configs["baseline_emissions"]
+    for scenario in idealised_scenarios:
+        if scenario not in run_scenarios:
+            continue
+        for specie in f.species:
+            if specie in _CO2_SOURCE_SPECIES:
+                continue
+            if f.properties_df.loc[specie, "input_mode"] != "emissions":
+                continue
+            f.emissions.loc[
+                {"scenario": scenario, "specie": specie}
+            ] = baseline.sel(specie=specie)
+
+
 def _resolve_calibration(value: Any) -> NativeFairCalibration:
     """
     Accept either a path-like or an already-loaded
@@ -946,6 +983,15 @@ def _run_one_calibration(  # noqa: PLR0912, PLR0913, PLR0915
     # emissions-mode siblings (CO2 FFI / CO2 AFOLU when only CO2 is
     # supplied as a concentration, etc.).
     _zero_fill_fair_arrays(f)
+
+    # Idealised experiments (abrupt-4xCO2, 1pctCO2, esm-flat10*) hold
+    # everything but CO2 at pre-industrial. Zero emissions (from the
+    # co2_only zeroing / the zero-fill above) is NOT the PI reference:
+    # FaIR evaluates emissions-driven forcing -- notably aerosols --
+    # relative to each species' baseline_emissions, so zero emissions
+    # leaves a constant spurious ERF. Hold the non-CO2 emissions-mode
+    # species at baseline_emissions instead, so their PI forcing is ~0.
+    _hold_idealised_nonco2_at_baseline(f, idealised_scenarios)
 
     f.run(progress=False, suppress_warnings=True)
 
