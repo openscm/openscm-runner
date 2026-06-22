@@ -264,6 +264,19 @@ def _splice_bundle_with_user(
     overlay on the matching ``(scenario, variable)`` pair with unit
     scaling so the bundle's unit is preserved.
     """
+    # Idealised scenarios (abrupt-4xCO2, 1pctCO2, esm-flat10*) have no
+    # RCMIP3 emissions baseline, so _rcmip3_to_fair_emissions_df returns
+    # an empty (column-less) frame. Indexing ``bundle_df["scenario"]``
+    # below would then KeyError; short-circuit to the user's rows (the
+    # ``if spliced_df.empty`` branch further down is unreachable in this
+    # case because the KeyError fires first).
+    if bundle_df.empty:
+        return (
+            user_df.reset_index(drop=True)
+            if not user_df.empty
+            else pd.DataFrame()
+        )
+
     # Normalise bundle column names; FaIR is case-insensitive on them.
     bundle_df = bundle_df.copy()
     bundle_df.columns = [
