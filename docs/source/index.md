@@ -28,6 +28,7 @@
 ```{toctree}
 :caption: Contents
 :maxdepth: 2
+concentration-driven
 notebooks
 development
 api/openscm_runner

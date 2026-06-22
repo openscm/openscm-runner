@@ -9,13 +9,18 @@ rows the caller supplies on top, then write one MAGICC ``CONC.IN``
 file per (scenario, species) and emit cfg patches pointing MAGICC at
 those files.
 
-Per-gas mixed-mode: a species qualifies for conc-driven only when
-*every* scenario in the batch supplies an ``Atmospheric Concentrations|<species>``
-trajectory (either directly in the user ScmRun, or — failing that —
-via the RCMIP3 baseline). Species the batch doesn't fully cover fall
-back silently to the SCEN7 emissions-driven path. This matches the
-FaIR2 mixed-mode logic at
-``fair2_adapter._run_one_calibration`` (intersection over scenarios).
+Per-scenario mixed-mode: a gas is concentration-driven for a given
+scenario iff that scenario supplies an
+``Atmospheric Concentrations|<species>`` trajectory (either directly
+in the user ScmRun, or — failing that — via the RCMIP3 baseline).
+Because MAGICC writes an independent cfg + ``CONC.IN`` files per
+``(scenario, model)``, the decision is genuinely per-scenario: a gas
+can be conc-driven in one scenario and emissions-driven in another in
+the same batch. This differs from the FaIR2 adapter, whose
+``input_mode`` is a per-species flag shared across the whole FaIR
+*instance* (all scenarios), forcing a batch-consistency rule that
+MAGICC does not need. Species not supplied for a scenario fall back
+silently to that scenario's SCEN7 emissions-driven path.
 
 .. _20430630: https://zenodo.org/records/20430630
 """
@@ -53,6 +58,49 @@ RCMIP_TO_MAGICC_SPECIES: dict[str, str] = {
 }
 
 
+# MAGICC's namelist binds the bundled-array concentration flags
+# (``FGAS_FILES_CONC`` / ``MHALO_FILES_CONC``) *positionally* to these
+# species-name lists, taken verbatim from ``MAGCFG_DEFAULTALL.CFG``.
+# They are hardcoded (rather than read from the run dir) so this
+# translator stays binary-free and unit-testable; a
+# ``@pytest.mark.magicc`` cross-check test asserts they still match the
+# installed binary's ``fgas_names`` / ``mhalo_names``. Order matters:
+# the writer fills one array slot per name below.
+FGAS_NAMES: tuple[str, ...] = (
+    "CF4", "C2F6", "C3F8", "C4F10", "C5F12", "C6F14", "C7F16", "C8F18",
+    "CC4F8", "HFC23", "HFC32", "HFC4310", "HFC125", "HFC134A", "HFC143A",
+    "HFC152A", "HFC227EA", "HFC236FA", "HFC245FA", "HFC365MFC", "NF3",
+    "SF6", "SO2F2",
+)
+MHALO_NAMES: tuple[str, ...] = (
+    "CFC11", "CFC12", "CFC113", "CFC114", "CFC115", "HCFC22", "HCFC141B",
+    "HCFC142B", "CH3CCL3", "CCL4", "CH3CL", "CH2CL2", "CHCL3", "CH3BR",
+    "HALON1211", "HALON1301", "HALON2402", "HALON1202",
+)
+_FGAS_SET: frozenset[str] = frozenset(FGAS_NAMES)
+_MHALO_SET: frozenset[str] = frozenset(MHALO_NAMES)
+
+
+def to_magicc_species(species_short: str) -> str:
+    """
+    Map an RCMIP3 leaf species name to its MAGICC-side name.
+
+    Applies the explicit :data:`RCMIP_TO_MAGICC_SPECIES` renames first
+    (halons ``H-1211`` -> ``HALON1211``, ``HFC4310mee`` -> ``HFC4310``,
+    ``cC4F8`` -> ``CC4F8``), then falls back to an upper-casing rule for
+    pure case differences: RCMIP3 ships mixed-case leaves (``HFC134a``,
+    ``CCl4``, ``CH3Cl``, ``Halon1211``) whereas MAGICC's
+    ``FGAS_NAMES`` / ``MHALO_NAMES`` are upper-case. Anything else
+    round-trips unchanged.
+    """
+    if species_short in RCMIP_TO_MAGICC_SPECIES:
+        return RCMIP_TO_MAGICC_SPECIES[species_short]
+    upper = species_short.upper()
+    if upper in _FGAS_SET or upper in _MHALO_SET:
+        return upper
+    return species_short
+
+
 # Default fall-back concentration units, used when
 # ``pymagicc.definitions.MAGICC7_CONCENTRATIONS_UNITS`` does not list
 # a species (e.g. on older pymagicc versions). The triplet ppm/ppb/ppt
@@ -62,19 +110,42 @@ _FALLBACK_CONC_UNITS: dict[str, str] = {
     "CO2": "ppm",
     "CH4": "ppb",
     "N2O": "ppb",
+    # All F-gases / PFCs / SF6 / Montreal halocarbons report in ppt.
+    **{sp: "ppt" for sp in FGAS_NAMES},
+    **{sp: "ppt" for sp in MHALO_NAMES},
 }
 
 
-# MAGICC7 namelist exposes per-gas concentration-driving flags
+# MAGICC7 exposes per-gas concentration-driving flags
 # (``FILE_<gas>_CONC`` + ``<gas>_SWITCHFROMCONC2EMIS_YEAR``) only for
-# the three main WMGHGs. F-gases and Montreal halocarbons share
+# the three main WMGHGs. F-gases and Montreal halocarbons instead share
 # bundled-array flags (``FGAS_FILES_CONC`` indexed positionally by
-# ``FGAS_NAMES``, ``MHALO_FILES_CONC`` indexed by ``MHALO_NAMES``,
-# each with a single shared ``*_SWITCHFROMCONC2EMIS_YEAR``) which
-# this v1 implementation does not yet write; user overlays for those
-# species are logged and ignored, with the SCEN7 emissions path
-# handling them as today. Extension is a follow-up.
-SUPPORTED_PER_GAS_CONC_SPECIES: frozenset[str] = frozenset({"CO2", "CH4", "N2O"})
+# :data:`FGAS_NAMES`, ``MHALO_FILES_CONC`` by :data:`MHALO_NAMES`, each
+# with a single shared ``*_SWITCHFROMCONC2EMIS_YEAR``). :func:`classify_conc_species`
+# routes a species to the right path; everything else is unsupported and
+# falls back to the SCEN7 emissions path.
+PER_GAS_CONC_SPECIES: frozenset[str] = frozenset({"CO2", "CH4", "N2O"})
+SUPPORTED_PER_GAS_CONC_SPECIES: frozenset[str] = (
+    PER_GAS_CONC_SPECIES | _FGAS_SET | _MHALO_SET
+)
+
+
+def classify_conc_species(magicc_species: str) -> str | None:
+    """
+    Classify a MAGICC-side species into its conc-driving cfg mechanism.
+
+    Returns ``"per_gas"`` for CO2/CH4/N2O (per-gas ``FILE_<gas>_CONC``
+    flags), ``"fgas"`` / ``"mhalo"`` for species in the bundled-array
+    groups, or ``None`` if MAGICC has no concentration-driving path for
+    it (caller should fall back to SCEN7 emissions).
+    """
+    if magicc_species in PER_GAS_CONC_SPECIES:
+        return "per_gas"
+    if magicc_species in _FGAS_SET:
+        return "fgas"
+    if magicc_species in _MHALO_SET:
+        return "mhalo"
+    return None
 
 
 def cfg_keys_for_species(magicc_species: str) -> tuple[str, str]:
@@ -82,15 +153,16 @@ def cfg_keys_for_species(magicc_species: str) -> tuple[str, str]:
     Return the ``(file_<gas>_conc, <gas>_switchfromconc2emis_year)``
     MAGICC cfg flag pair for a given MAGICC-side species name.
 
-    Only valid for species in :data:`SUPPORTED_PER_GAS_CONC_SPECIES`
-    (``CO2`` / ``CH4`` / ``N2O``); raises :class:`ValueError`
-    otherwise. F-gases / Montreal halocarbons use bundled-array
-    flags handled separately.
+    Only valid for the per-gas WMGHGs (``CO2`` / ``CH4`` / ``N2O``);
+    raises :class:`ValueError` otherwise. F-gases / Montreal halocarbons
+    use bundled-array flags handled separately (see
+    :func:`classify_conc_species`).
     """
-    if magicc_species not in SUPPORTED_PER_GAS_CONC_SPECIES:
+    if magicc_species not in PER_GAS_CONC_SPECIES:
         raise ValueError(
-            f"MAGICC7 conc-driven v1 supports only "
-            f"{sorted(SUPPORTED_PER_GAS_CONC_SPECIES)}; got {magicc_species!r}."
+            f"cfg_keys_for_species only handles per-gas species "
+            f"{sorted(PER_GAS_CONC_SPECIES)}; got {magicc_species!r}. "
+            f"F-gases / Montreal halocarbons use the bundled-array path."
         )
     name = magicc_species.lower()
     return (f"file_{name}_conc", f"{name}_switchfromconc2emis_year")
@@ -135,12 +207,14 @@ def build_concentrations_overlay(
     """
     Build per-(scenario, MAGICC-species) overlay rows for conc-driven mode.
 
-    Reads ``rcmip_phase3_concentrations_v2.0.0.csv`` for the baseline,
-    overlays any ``Atmospheric Concentrations|*`` rows the caller
-    supplied in ``scenario_run``, and applies the per-gas mixed-mode
-    filter: a species survives only when every scenario in
-    ``scenario_names`` supplies a trajectory for it (the FaIR2 batch-
-    consistency rule).
+    Reads ``rcmip_phase3_concentrations_v2.0.0.csv`` for the baseline
+    and overlays any ``Atmospheric Concentrations|*`` rows the caller
+    supplied in ``scenario_run``. The decision is per-scenario: every
+    ``(scenario, species)`` for which a trajectory exists (baseline or
+    overlay) and which MAGICC can concentration-drive
+    (:func:`classify_conc_species`) survives. There is no
+    batch-consistency requirement — a gas can be conc-driven in one
+    scenario and emissions-driven in another in the same batch.
 
     Returns a DataFrame with one row per (scenario, MAGICC-species):
 
@@ -171,9 +245,7 @@ def build_concentrations_overlay(
                     continue
                 variable = meta["variable"]
                 species_short = variable.split("|", 1)[1]
-                magicc_species = RCMIP_TO_MAGICC_SPECIES.get(
-                    species_short, species_short,
-                )
+                magicc_species = to_magicc_species(species_short)
                 series = pd.Series({
                     int(year): float(val)
                     for year, val in values.items()
@@ -233,21 +305,18 @@ def build_concentrations_overlay(
                 merged_rows.append(dict(brow))
         merged = pd.DataFrame(merged_rows)
 
-    # v1 supports only the WMGHGs that MAGICC exposes via per-gas
-    # ``FILE_<gas>_CONC`` cfg flags. F-gases / Montreal halocarbons
-    # fall through to the SCEN7 emissions-driven path until the
-    # bundled-array (``FGAS_FILES_CONC`` / ``MHALO_FILES_CONC``)
-    # support lands.
+    # Keep only species MAGICC can concentration-drive (per-gas WMGHGs
+    # plus the bundled-array F-gas / Montreal-halocarbon groups).
+    # Anything else falls through to the SCEN7 emissions-driven path.
     unsupported = (
         set(merged["magicc_species"].unique())
         - SUPPORTED_PER_GAS_CONC_SPECIES
     )
     if unsupported:
         LOGGER.info(
-            "MAGICC7 conc-driven v1: dropping %d species without per-gas "
-            "cfg flag support; they will be driven by SCEN7 emissions "
-            "instead. Bundled-array F-gas / Montreal-halocarbon support "
-            "is a follow-up. Dropped: %s",
+            "MAGICC7 conc-driven: dropping %d species MAGICC cannot "
+            "concentration-drive; they will be driven by SCEN7 emissions "
+            "instead: %s",
             len(unsupported), sorted(unsupported),
         )
     merged = merged[
@@ -256,38 +325,20 @@ def build_concentrations_overlay(
     if merged.empty:
         return pd.DataFrame()
 
-    # Per-gas mixed-mode filter: a species qualifies only when all
-    # batch scenarios supply a trajectory for it. Drop the rest so the
-    # SCEN7 emissions-driven path handles them uniformly.
-    species_per_scenario = (
-        merged.groupby("scenario")["magicc_species"].agg(set).to_dict()
-    )
-    if not species_per_scenario:
-        return pd.DataFrame()
-    common_species: set[str] = set.intersection(
-        *(species_per_scenario.get(s, set()) for s in scenario_names)
-    )
-    dropped = {
-        sp
-        for spset in species_per_scenario.values()
-        for sp in spset
-    } - common_species
-    if dropped:
-        LOGGER.info(
-            "MAGICC7 conc-driven: %d species dropped from concentration "
-            "overlay (not present in every batch scenario); will be "
-            "driven by emissions instead: %s",
-            len(dropped), sorted(dropped),
+    # No batch-consistency filter: every surviving (scenario, species)
+    # row is conc-driven for that scenario. MAGICC writes an independent
+    # cfg + CONC.IN per (scenario, model), so unlike FaIR2 a gas need
+    # not be supplied by every scenario in the batch.
+    for scenario in scenario_names:
+        species = sorted(
+            merged.loc[merged["scenario"] == scenario, "magicc_species"]
         )
-    if not common_species:
-        return pd.DataFrame()
-
-    LOGGER.info(
-        "MAGICC7 conc-driven: %d species driven by concentration: %s",
-        len(common_species), sorted(common_species),
-    )
-
-    merged = merged[merged["magicc_species"].isin(common_species)].copy()
+        if species:
+            LOGGER.info(
+                "MAGICC7 conc-driven: scenario %s — %d species driven by "
+                "concentration: %s",
+                scenario, len(species), species,
+            )
 
     # Apply MAGICC's canonical concentration units. Conversion from
     # the RCMIP3 / user-supplied unit is currently a no-op assumption
@@ -338,9 +389,7 @@ def _load_rcmip3_baseline(
         if "|" not in variable:
             continue
         species_short = variable.split("|", 1)[1]
-        magicc_species = RCMIP_TO_MAGICC_SPECIES.get(
-            species_short, species_short,
-        )
+        magicc_species = to_magicc_species(species_short)
         series = pd.Series({
             int(year): float(csv_row[year])
             for year in year_cols
@@ -416,11 +465,19 @@ def write_conc_in_file(
             "trajectory is empty.",
         )
     series = _to_annual_magicc_grid(series)
+    # pymagicc cross-checks the data variable against the one it parses
+    # back out of the filename, and it uses its own openscm naming
+    # (``HFC134a``, ``Halon1211``, ``CCl4``) rather than MAGICC's
+    # upper-case species token. Derive that canonical name so the check
+    # passes; for CO2/CH4/N2O it is identical to ``species``.
+    openscm_variable = pymagicc.definitions.convert_magicc7_to_openscm_variables(
+        f"{species}_CONC",
+    )
     frame = pd.DataFrame({
         "model": ["unspecified"],
         "scenario": [scenario],
         "region": ["World"],
-        "variable": [f"Atmospheric Concentrations|{species}"],
+        "variable": [openscm_variable],
         "unit": [unit],
         "todo": ["SET"],
         **{int(year): [float(value)] for year, value in series.items()},

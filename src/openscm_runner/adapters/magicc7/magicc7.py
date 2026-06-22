@@ -13,8 +13,11 @@ from ...settings import config
 from ..base import _Adapter
 from ._compat import pymagicc
 from ._concentrations_translator import (
+    FGAS_NAMES,
+    MHALO_NAMES,
     build_concentrations_overlay,
     cfg_keys_for_species,
+    classify_conc_species,
     write_conc_in_file,
 )
 from ._run_magicc_parallel import run_magicc_parallel
@@ -213,13 +216,18 @@ class MAGICC7(_Adapter):
         return per-(scenario, model) cfg patches that point MAGICC at
         them.
 
-        Gases the user wants conc-driven must appear in every scenario
-        in the batch (per-gas mixed-mode detection lives inside
-        :func:`build_concentrations_overlay`); gases that don't qualify
-        produce no patch and remain emissions-driven via the existing
-        SCEN7 path. The switch year defaults to 9999 (concentration-
-        driven for the whole run); callers can override per-cfg with
-        their own ``*_switchfromconc2emis_year`` value (see
+        The decision is per-scenario: a gas is concentration-driven for
+        a scenario iff that scenario supplies a trajectory for it
+        (baseline or overlay); gases it doesn't supply remain
+        emissions-driven via the existing SCEN7 path. CO2/CH4/N2O use
+        per-gas ``file_<gas>_conc`` + ``<gas>_switchfromconc2emis_year``
+        flags (switch year defaults to 9999). F-gases / Montreal
+        halocarbons share the bundled-array flags ``fgas_files_conc`` /
+        ``mhalo_files_conc`` (positional, one slot per
+        :data:`FGAS_NAMES` / :data:`MHALO_NAMES` entry) with a single
+        shared ``*_switchfromconc2emis_year`` (defaults to 10000) — so
+        within a group conc-driving is all-or-nothing. Callers can
+        override any ``*_switchfromconc2emis_year`` per cfg (see
         :meth:`_merge_conc_patch`).
         """
         rcmip3_bundle_path = self._resolve_rcmip3_bundle_path(cfgs)
@@ -247,9 +255,10 @@ class MAGICC7(_Adapter):
             if scen_overlay.empty:
                 continue
             cfg_patch: dict = {}
+            fgas_written: dict[str, str] = {}
+            mhalo_written: dict[str, str] = {}
             for _, row in scen_overlay.iterrows():
                 species = row["magicc_species"]
-                file_key, switch_key = cfg_keys_for_species(species)
                 file_name = (
                     f"{scenario}_{model}_{species}_CONC.IN".upper()
                     .replace("/", "-")
@@ -265,10 +274,63 @@ class MAGICC7(_Adapter):
                     series=row["series"],
                     magicc_version=magicc_version,
                 )
-                cfg_patch[file_key] = out_path
-                cfg_patch[switch_key] = 9999
+                kind = classify_conc_species(species)
+                if kind == "per_gas":
+                    file_key, switch_key = cfg_keys_for_species(species)
+                    cfg_patch[file_key] = out_path
+                    cfg_patch[switch_key] = 9999
+                elif kind == "fgas":
+                    fgas_written[species] = out_path
+                elif kind == "mhalo":
+                    mhalo_written[species] = out_path
+
+            if fgas_written:
+                cfg_patch["fgas_files_conc"] = self._build_bundled_conc_array(
+                    FGAS_NAMES, fgas_written, "F-gas", scenario,
+                )
+                cfg_patch["fgas_switchfromconc2emis_year"] = 10000
+            if mhalo_written:
+                cfg_patch["mhalo_files_conc"] = self._build_bundled_conc_array(
+                    MHALO_NAMES, mhalo_written, "Montreal-halocarbon",
+                    scenario,
+                )
+                cfg_patch["mhalo_switchfromconc2emis_year"] = 10000
+
             patches[(scenario, model)] = cfg_patch
         return patches
+
+    # Bundled-array slots MAGICC ships with no concentration file of its
+    # own (it falls back to a built-in default); leaving these empty is
+    # expected, not a sign of a missing trajectory.
+    _EXPECTED_EMPTY_CONC_SLOTS = frozenset({"HALON1202"})
+
+    @classmethod
+    def _build_bundled_conc_array(cls, names, written, group_label, scenario):
+        """
+        Build a positional ``*_files_conc`` array over ``names``.
+
+        ``written`` maps MAGICC species name -> CONC.IN path. Slots with
+        no written file become ``""`` (MAGICC uses its built-in default
+        for that species). Because the group shares a single switch year,
+        an empty slot is concentration-driven from MAGICC's default
+        rather than from emissions, so warn on any unexpected gap.
+        """
+        array = [written.get(name, "") for name in names]
+        unexpected = [
+            name
+            for name in names
+            if name not in written
+            and name not in cls._EXPECTED_EMPTY_CONC_SLOTS
+        ]
+        if unexpected:
+            LOGGER.warning(
+                "MAGICC7 conc-driven: scenario %s — %s group is "
+                "concentration-driven but %d species have no trajectory "
+                "(baseline or overlay) and will use MAGICC's built-in "
+                "default concentrations, not emissions: %s",
+                scenario, group_label, len(unexpected), sorted(unexpected),
+            )
+        return array
 
     @staticmethod
     def _resolve_rcmip3_bundle_path(cfgs):

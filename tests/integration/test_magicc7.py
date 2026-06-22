@@ -15,6 +15,11 @@ from openscm_runner.utils import calculate_quantiles
 RCMIP3_MINI_BUNDLE = (
     Path(__file__).parent.parent / "test-data" / "rcmip3-mini"
 )
+# Variant bundle that also ships a few F-gas / Montreal-halocarbon ssp245
+# concentration trajectories, for exercising the bundled-array path.
+RCMIP3_MINI_HALO_BUNDLE = (
+    Path(__file__).parent.parent / "test-data" / "rcmip3-mini-halo"
+)
 
 
 @pytest.mark.magicc
@@ -296,6 +301,100 @@ def test_conc_driven_writes_conc_in_files_and_patches_cfgs(
 
 
 @pytest.mark.magicc
+def test_conc_driven_writes_fgas_mhalo_bundled_arrays(tmp_path, monkeypatch):
+    """F-gases / Montreal halocarbons drive via the bundled-array flags.
+
+    The halo bundle supplies ssp245 trajectories for HFC134a (F-gas),
+    SF6 (F-gas) and CFC12 (Montreal halocarbon). Verify the per-(scenario,
+    model) patch builds the positional ``fgas_files_conc`` /
+    ``mhalo_files_conc`` arrays in ``FGAS_NAMES`` / ``MHALO_NAMES`` order,
+    fills only the supplied slots, leaves the rest (incl. HALON1202)
+    empty, and sets the shared group switch year to 10000.
+    """
+    from openscm_runner.adapters.magicc7._concentrations_translator import (
+        FGAS_NAMES,
+        MHALO_NAMES,
+    )
+
+    monkeypatch.setattr(
+        MAGICC7, "get_version", classmethod(lambda cls: "v7.5.3"),
+    )
+
+    adapter = MAGICC7(
+        cfgs=[
+            {
+                "core_climatesensitivity": 3,
+                "rcmip3_bundle_path": str(RCMIP3_MINI_HALO_BUNDLE),
+                "scenario": "ssp245",
+                "model": "test-model",
+            },
+        ],
+        mode=RunMode.CONCENTRATION_DRIVEN,
+        output_variables=("Surface Air Temperature Change",),
+    )
+
+    # No user overlay: drive purely from the halo bundle baseline.
+    empty_run = ScmRun(pd.DataFrame({
+        "model": ["test-model"],
+        "scenario": ["ssp245"],
+        "region": ["World"],
+        "variable": ["Emissions|CO2|MAGICC Fossil and Industrial"],
+        "unit": ["GtC / yr"],
+        2050: [10.0],
+        2100: [10.0],
+    }))
+
+    patches = adapter._write_conc_in_files_and_cfg_updates(
+        scenarios=empty_run,
+        cfgs=adapter.cfgs,
+        out_directory=str(tmp_path),
+    )
+    patch = patches[("ssp245", "test-model")]
+
+    # F-gas group: positional array over all 23 names, switch year 10000.
+    fgas_array = patch["fgas_files_conc"]
+    assert len(fgas_array) == len(FGAS_NAMES) == 23
+    assert patch["fgas_switchfromconc2emis_year"] == 10000
+    sf6_slot = fgas_array[FGAS_NAMES.index("SF6")]
+    hfc134a_slot = fgas_array[FGAS_NAMES.index("HFC134A")]
+    assert sf6_slot.endswith("_SF6_CONC.IN") and os.path.exists(sf6_slot)
+    assert hfc134a_slot.endswith("_HFC134A_CONC.IN")
+    assert os.path.exists(hfc134a_slot)
+    # Unsupplied F-gas slots are empty (fall back to MAGICC defaults):
+    assert fgas_array[FGAS_NAMES.index("CF4")] == ""
+
+    # Montreal-halocarbon group: 18 names, CFC12 filled, HALON1202 empty.
+    mhalo_array = patch["mhalo_files_conc"]
+    assert len(mhalo_array) == len(MHALO_NAMES) == 18
+    assert patch["mhalo_switchfromconc2emis_year"] == 10000
+    cfc12_slot = mhalo_array[MHALO_NAMES.index("CFC12")]
+    assert cfc12_slot.endswith("_CFC12_CONC.IN") and os.path.exists(cfc12_slot)
+    assert mhalo_array[MHALO_NAMES.index("HALON1202")] == ""
+
+
+@pytest.mark.magicc
+def test_fgas_mhalo_name_lists_match_binary_config():
+    """The hardcoded FGAS_NAMES / MHALO_NAMES must track the installed
+    binary's namelist order; the positional arrays bind to it."""
+    from openscm_runner.adapters.magicc7._compat import f90nml
+    from openscm_runner.adapters.magicc7._concentrations_translator import (
+        FGAS_NAMES,
+        MHALO_NAMES,
+    )
+
+    run_dir = Path(MAGICC7()._run_dir())
+    defaultall = run_dir / "MAGCFG_DEFAULTALL.CFG"
+    if not defaultall.exists():
+        pytest.skip(f"MAGCFG_DEFAULTALL.CFG not found at {defaultall}")
+
+    cfg = f90nml.read(str(defaultall))["nml_allcfgs"]
+    binary_fgas = tuple(s.strip().upper() for s in cfg["fgas_names"])
+    binary_mhalo = tuple(s.strip().upper() for s in cfg["mhalo_names"])
+    assert FGAS_NAMES == binary_fgas
+    assert MHALO_NAMES == binary_mhalo
+
+
+@pytest.mark.magicc
 def test_conc_driven_end_to_end_runs_the_binary(test_scenarios):
     """Drive the real MAGICC binary in concentration-driven mode.
 
@@ -303,7 +402,9 @@ def test_conc_driven_end_to_end_runs_the_binary(test_scenarios):
     a malformed ``CONC.IN`` (e.g. a sparse / truncated grid that trips
     MAGICC's Fortran ``readdata`` end-of-file check). This runs ssp245
     through the binary in both modes and asserts conc-driven produces a
-    finite GSAT in the same ballpark as emissions-driven.
+    finite GSAT in the same ballpark as emissions-driven. It also checks
+    that the prescribed CO2 concentration round-trips: requested as an
+    output, MAGICC should echo what was written into ``CO2_CONC.IN``.
     """
     scenarios = test_scenarios.filter(scenario="ssp245")
 
@@ -317,7 +418,10 @@ def test_conc_driven_end_to_end_runs_the_binary(test_scenarios):
                 },
             ],
             mode=mode,
-            output_variables=("Surface Air Temperature Change",),
+            output_variables=(
+                "Surface Air Temperature Change",
+                "Atmospheric Concentrations|CO2",
+            ),
         )
         res = openscm_runner.run.run([adapter], scenarios=scenarios)
         vals = res.filter(
@@ -326,6 +430,15 @@ def test_conc_driven_end_to_end_runs_the_binary(test_scenarios):
         assert len(vals) > 0
         assert all(pd.notna(vals))
         gsat[mode] = float(vals[0])
+
+        if mode == RunMode.CONCENTRATION_DRIVEN:
+            # Round-trip: the prescribed CO2 concentration (rcmip3-mini
+            # ssp245 baseline, ~602.78 ppm at 2100) should come back out.
+            co2_out = res.filter(
+                variable="Atmospheric Concentrations|CO2", year=2100,
+            ).values.flatten()
+            assert len(co2_out) > 0
+            assert co2_out[0] == pytest.approx(602.78, rel=1e-2)
 
     # Physically-consistent bundle: the two modes should land close.
     assert gsat[RunMode.CONCENTRATION_DRIVEN] == pytest.approx(
