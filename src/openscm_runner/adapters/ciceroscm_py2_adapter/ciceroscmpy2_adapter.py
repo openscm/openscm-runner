@@ -685,6 +685,13 @@ def _build_scendata_list(
             nyend=nyend,
             emstart=scen_emstart,
             zero_unsupplied=idealised,
+            # Idealised runs hold every non-CO2 forcer at PI. On the
+            # conc-driven path scen_emstart is nyend (keeping CO2
+            # concentration-driven), but the supplied PI-flat aerosol /
+            # ozone-precursor emissions must apply across the whole
+            # window rather than fall back to the rising historical
+            # baseline. Pin the overlay to nystart for idealised runs.
+            overlay_from=nystart if idealised else None,
         )
 
         conc_data = None
@@ -839,6 +846,7 @@ def _build_hybrid_emissions_data(
     nyend: int,
     emstart: int,
     zero_unsupplied: bool = False,
+    overlay_from: int | None = None,
 ):
     """
     Build an RCMIP-format emissions DataFrame for one scenario.
@@ -859,6 +867,18 @@ def _build_hybrid_emissions_data(
 
     Parameters
     ----------
+    overlay_from
+        Year from which the user's supplied emissions overwrite the
+        baseline trajectory. Defaults to ``emstart``. For idealised
+        concentration-driven runs the model ``emstart`` is ``nyend``
+        (so CO2 stays concentration-driven), but the supplied PI-flat
+        aerosol / ozone-precursor emissions must still apply across the
+        whole window -- otherwise the species fall back to the rising
+        historical baseline (a spurious growing aerosol cooling that
+        drifts ERF down through abrupt-4xCO2 / 1pctCO2). Pass
+        ``nystart`` in that case to pin the supplied emissions from the
+        run start; CO2 is unaffected because it is not supplied on the
+        conc-driven path (it stays concentration-driven via conc_run).
     zero_unsupplied
         When ``True``, every species column the user does NOT supply
         is overwritten with ``0.0`` across the whole ``[nystart, nyend]``
@@ -880,6 +900,8 @@ def _build_hybrid_emissions_data(
     from openscm_units import unit_registry as ureg
 
     from ..utils.cicero_utils.make_scenario_common import cicero_comp_dict
+
+    apply_from = emstart if overlay_from is None else overlay_from
 
     df = (
         pd.read_csv(
@@ -965,7 +987,7 @@ def _build_hybrid_emissions_data(
             )
             continue
         for year, val in user_row.items():
-            if year in df.index and year >= emstart and not pd.isna(val):
+            if year in df.index and year >= apply_from and not pd.isna(val):
                 df.at[year, col] = val * convfactor
         overlaid.append(cicero_species)
         overlaid_df_cols.add(col)
