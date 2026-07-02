@@ -36,6 +36,7 @@ maxdepth: 1
 ---
 notebooks/fair/run-fair.py
 notebooks/fair/fair-gmst-ohu-factors.py
+notebooks/fair2/run-fair2.py
 ```
 
 ### CICERO-SCM
@@ -46,6 +47,7 @@ maxdepth: 1
 ---
 notebooks/cicero-scm/run-ciceroscmpy.py
 notebooks/cicero-scm/run-ciceroscm.py
+notebooks/cicero-scm/run-ciceroscmpy2.py
 ```
 
 ## Notebook execution info

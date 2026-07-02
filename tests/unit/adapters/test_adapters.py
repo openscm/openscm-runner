@@ -84,3 +84,20 @@ def test_get_adapter(custom_adapters):
     adapter = get_adapter("custom")
 
     assert isinstance(adapter, CustomAdapter)
+
+
+def test_adapter_run_raises_on_unsupported_mode():
+    from openscm_runner import RunMode
+
+    # CustomAdapter inherits the base default of EMISSIONS_DRIVEN-only.
+    adapter = CustomAdapter(mode=RunMode.CONCENTRATION_DRIVEN)
+    with pytest.raises(NotImplementedError, match="CustomAdapter does not support"):
+        adapter.run(scenarios=None)
+
+
+def test_adapter_run_accepts_supported_mode():
+    from openscm_runner import RunMode
+
+    adapter = CustomAdapter(mode=RunMode.EMISSIONS_DRIVEN)
+    # _run returns None on CustomAdapter; just check no NotImplementedError.
+    adapter.run(scenarios=None)

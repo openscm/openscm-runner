@@ -17,7 +17,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           os: "ubuntu-latest"
-          python-version: "3.9"
+          python-version: "3.10"
           venv-id: "docs"
           poetry-dependency-install-flags: "--all-extras --only 'main,dev'"
       - name: mypy
@@ -32,13 +32,26 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           os: "ubuntu-latest"
-          python-version: "3.9"
+          python-version: "3.10"
           venv-id: "docs"
           poetry-dependency-install-flags: "--all-extras --only 'main,docs'"
       - name: Download MAGICC
+        # Same magicc.org TLS-flakiness retry wrapper as the
+        # ``tests`` and ``tests-multi-env`` jobs. A single SSL
+        # handshake hang would otherwise kill the docs build on a
+        # transient network blip (observed post-merge of #97).
         run: |
           mkdir -p bin/magicc/magicc-v7.5.3
-          wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+          for attempt in 1 2 3; do
+            if wget --tries=2 --waitretry=10 --timeout=60 \
+                    -O "bin/magicc/magicc-v7.5.3.tar.gz" \
+                    "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"; then
+              echo "MAGICC download succeeded on attempt $attempt"
+              break
+            fi
+            echo "MAGICC download attempt $attempt failed; retrying in 15s"
+            sleep 15
+          done
           tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
       - name: docs
         run: poetry run sphinx-build -W --keep-going -T -b html docs/source docs/build
@@ -47,7 +60,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.9", "3.10", "3.11" ]
+        python-version: [ "3.10", "3.11" ]
         os: [ "ubuntu-latest", "macos-latest", "windows-latest" ]
     runs-on: "${{ matrix.os }}"
     defaults:
@@ -67,9 +80,24 @@ jobs:
           poetry-dependency-install-flags: "--all-extras"
       - name: Download MAGICC non-windows
         if: runner.os != 'Windows'
+        # magicc.org's TLS endpoint has been observed to time out
+        # intermittently (30s SSL handshake hang). Retry a few times
+        # rather than failing the whole matrix job on a single transient
+        # network blip; wget's `--tries` only covers connection errors,
+        # so wrap the call in a for-loop that also retries on SSL
+        # failures.
         run: |
           mkdir -p bin/magicc/magicc-v7.5.3
-          wget -O "bin/magicc/magicc-v7.5.3.tar.gz" "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"
+          for attempt in 1 2 3; do
+            if wget --tries=2 --waitretry=10 --timeout=60 \
+                    -O "bin/magicc/magicc-v7.5.3.tar.gz" \
+                    "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"; then
+              echo "MAGICC download succeeded on attempt $attempt"
+              break
+            fi
+            echo "MAGICC download attempt $attempt failed; retrying in 15s"
+            sleep 15
+          done
           tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
       - name: Run tests linux
         if: runner.os == 'Linux'
@@ -77,24 +105,136 @@ jobs:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
         run: |
           poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
+          # Coverage gate is enforced on Linux only (where the test
+          # matrix actually exercises every adapter under the lockfile
+          # resolution). macOS and Windows jobs are about platform
+          # compat, not coverage; running the gate there would force
+          # repeated threshold tuning every time `[fair]` vs `[fair2]`
+          # / `[ciceroscmpy]` vs `[ciceroscmpy2]` mutual-exclusion
+          # skips a different set of tests.
           poetry run coverage report
       - name: Run tests macOS
         if: runner.os == 'macOS'
         env:
           MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc-darwin-amd64
         run: |
-          # Locate the gfortran library. The location can change when the image is updated
-          GFORTRAN_LIBS=$(find /usr/local/Cellar/gcc@11 -name libgfortran.5.dylib | head -n 1 | xargs dirname)
-          echo $GFORTRAN_LIBS
+          # Locate the gfortran library. The runner image's Homebrew
+          # layout changes over time (gcc@11 -> gcc@current, intel ->
+          # arm64 prefix). Use `brew --prefix` so this finds whatever
+          # gcc is installed today, in whichever Cellar root the
+          # current runner image uses.
+          GFORTRAN_LIBS=$(find "$(brew --prefix)" -name libgfortran.5.dylib 2>/dev/null | head -n 1 | xargs dirname)
+          if [ -z "$GFORTRAN_LIBS" ]; then
+            echo "libgfortran.5.dylib not found under $(brew --prefix); brew gcc may not be installed on this runner image" >&2
+            exit 1
+          fi
+          echo "GFORTRAN_LIBS=$GFORTRAN_LIBS"
           export DYLD_LIBRARY_PATH=$GFORTRAN_LIBS:$DYLD_LIBRARY_PATH
-          # TODO: loosen coverage requirements if CI fails, otherwise delete this comment
-          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
+          # Don't enforce the coverage threshold on macOS / Windows.
+          # pytest-cov reads `[tool.coverage.report] fail_under` from
+          # pyproject, so just dropping `coverage report` isn't
+          # sufficient -- we have to drop `--cov*` from pytest too.
+          # See the Linux job above for the gated coverage step.
+          poetry run pytest -r a -v src tests --doctest-modules
       - name: Run tests windows
         if: runner.os == 'Windows'
         run: |
-          poetry run pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-report=xml
+          # Coverage gate is Linux-only; see comment in the macOS job.
+          poetry run pytest -r a -v src tests --doctest-modules
       - name: Upload coverage reports to Codecov (Linux only)
         if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v3
+
+  tests-multi-env:
+    # Test with two different dependency environments:
+    # env1: fair<2, ciceroscmpy<2 (v1.x adapters)
+    # env2: fair>=2, ciceroscmpy>=2 (v2.x adapters)
+    # Each environment gets its own isolated virtualenv to avoid any
+    # package-swap conflicts inside a shared poetry venv.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.10", "3.11" ]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+        with:
+          os: "ubuntu-latest"
+          python-version: "${{ matrix.python-version }}"
+          venv-id: "tests-multi-env-${{ matrix.python-version }}"
+          # Only install main deps so the correct Python version is
+          # available; each test environment uses its own venv below.
+          poetry-dependency-install-flags: "--only main"
+      - name: Download MAGICC
+        run: |
+          mkdir -p bin/magicc/magicc-v7.5.3
+          for attempt in 1 2 3; do
+            if wget --tries=2 --waitretry=10 --timeout=60 \
+                    -O "bin/magicc/magicc-v7.5.3.tar.gz" \
+                    "${{ secrets.MAGICC_LINK_FROM_MAGICC_DOT_ORG }}"; then
+              echo "MAGICC download succeeded on attempt $attempt"
+              break
+            fi
+            echo "MAGICC download attempt $attempt failed; retrying in 15s"
+            sleep 15
+          done
+          tar -xf bin/magicc/magicc-v7.5.3.tar.gz -C bin/magicc/magicc-v7.5.3
+      - name: Create env1 virtualenv and install packages
+        run: |
+          python -m venv .venv-env1
+          .venv-env1/bin/pip install --upgrade pip
+          # Install version constraints first, then the editable package
+          # This ensures pip resolver sees the constraints before resolving dependencies
+          # Constrain pandas/numpy to versions compatible with fair 1.x and ciceroscm 1.x
+          .venv-env1/bin/pip install --no-cache-dir \
+            "fair>=1.6,<2" "ciceroscm>=1.1,<2" "pymagicc<3" "numpy<2" "pandas<2.2" \
+            pytest pytest-regressions pytest-cov coverage
+          .venv-env1/bin/pip install --no-cache-dir -e ".[magicc,ciceroscmpy]"
+          echo "=== ENV1 PACKAGES ==="
+          .venv-env1/bin/pip list | grep -E '^(fair|ciceroscm|pymagicc|numpy|pandas)\s'
+      - name: Run env1 tests
+        env:
+          MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
+          COVERAGE_FILE: .coverage.env1-py${{ matrix.python-version }}
+        run: |
+          .venv-env1/bin/pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-fail-under=0 -m "faircicero1x_only or magicc"
+      - name: Create env2 virtualenv and install packages
+        run: |
+          python -m venv .venv-env2
+          .venv-env2/bin/pip install --upgrade pip
+          # Install version constraints first, then the editable package
+          # This ensures pip resolver sees the constraints before resolving dependencies.
+          # Constrain numpy<2 because pymagicc<3 uses numpy 1.x APIs.
+          .venv-env2/bin/pip install --no-cache-dir \
+            "fair>=2,<3" "ciceroscm>=2.1.1,<3" "pymagicc<3" "numpy<2" \
+            pytest pytest-regressions pytest-cov coverage
+          .venv-env2/bin/pip install --no-cache-dir -e ".[magicc,ciceroscmpy2]"
+          echo "=== ENV2 PACKAGES ==="
+          .venv-env2/bin/pip list | grep -E '^(fair|ciceroscm|pymagicc|numpy)\s'
+      - name: Run env2 tests
+        env:
+          MAGICC_EXECUTABLE_7: bin/magicc/magicc-v7.5.3/bin/magicc
+          COVERAGE_FILE: .coverage.env2-py${{ matrix.python-version }}
+        run: |
+          .venv-env2/bin/pytest -r a -v src tests --doctest-modules --cov=src --cov-report=term-missing --cov-fail-under=0 -m "(faircicero2_only or magicc) and not faircicero1x_only"
+      - name: Upload generated pytest-regressions snapshots (on first-run failures)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-regressions-snapshots-py${{ matrix.python-version }}
+          path: tests/integration/test_modern_adapters/*.csv
+          if-no-files-found: ignore
+      - name: Combine coverage from both environments
+        run: |
+          .venv-env1/bin/coverage combine \
+            .coverage.env1-py${{ matrix.python-version }} \
+            .coverage.env2-py${{ matrix.python-version }}
+          echo "Combined coverage report:"
+          .venv-env1/bin/coverage report
+          .venv-env1/bin/coverage xml
+      - name: Upload combined coverage to Codecov
         uses: codecov/codecov-action@v3
 
   imports-without-extras:
@@ -102,7 +242,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ "ubuntu-latest" ]
-        python-version: [ "3.9", "3.10", "3.11" ]
+        python-version: [ "3.10", "3.11" ]
     runs-on: "${{ matrix.os }}"
     steps:
       - name: Check out repository
@@ -124,7 +264,7 @@ jobs:
         uses: actions/checkout@v3
       - uses: ./.github/actions/setup
         with:
-          python-version: "3.9"
+          python-version: "3.10"
           venv-id: "check-build-${{ runner.os }}"
           run-poetry-install: false
           poetry-dependency-install-flags: "not used"
@@ -142,9 +282,14 @@ jobs:
         uses: actions/checkout@v3
       - uses: ./.github/actions/setup
         with:
-          python-version: "3.9"
+          python-version: "3.10"
           venv-id: "licence-check"
           poetry-dependency-install-flags: "--all-extras"
+      - name: Install poetry-plugin-export
+        # `poetry export` moved out of poetry core in poetry 2.x; it's now
+        # provided by the poetry-plugin-export plugin. Without this the
+        # next step fails with `The requested command export does not exist.`
+        run: poetry self add poetry-plugin-export
       - name: Check licences of dependencies
         shell: bash
         run: |

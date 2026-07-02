@@ -131,9 +131,16 @@ mathjax3_config = {"chtml": {"displayAlign": "center"}}
 
 # myst configuration
 myst_enable_extensions = ["amsmath", "dollarmath"]
-# cache because we save our notebooks as `.py` files i.e. without output
-# stored so auto doesn't work (it just ends up being run every time)
-nb_execution_mode = "cache"
+# Notebook execution is disabled because the project's `[fair]` /
+# `[fair2]` and `[ciceroscmpy]` / `[ciceroscmpy2]` optional extras
+# install mutually exclusive major versions of the same PyPI
+# packages (fair < 2 vs fair >= 2, ciceroscm < 2 vs ciceroscm >= 2),
+# so any single docs build can have at most one major version of
+# each installed. That means the per-adapter example notebooks can
+# never all execute together. Render them as source instead; users
+# running them locally pick the extras matching the adapter they
+# want.
+nb_execution_mode = "off"
 nb_execution_raise_on_error = True
 nb_execution_show_tb = True
 nb_execution_timeout = 300  # long to handle slow builds on rtd
