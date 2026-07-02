@@ -158,17 +158,35 @@ def _concentration_unit(species_name: str) -> str:
 # properties_df, available_species) and returns a 1-D numpy array
 # along the time axis (or None if the recipe can't be computed against
 # the species set FaIR actually ran).
+def _forcing_to_numpy(forcing_da):
+    """
+    Materialise FaIR's forcing DataArray as a plain numpy array once.
+
+    Returns ``(forcing_np, species_index)`` where ``forcing_np`` has axis
+    order ``(timebounds, scenario, config, specie)`` and ``species_index``
+    maps species name -> position on the last axis. Extracting/aggregating
+    per (scenario, member) against this numpy array with integer indexing
+    is orders of magnitude faster than repeated xarray ``.sel().isel()``
+    orthogonal indexing (the dominant cost for large ensembles), and is
+    numerically identical (same species order, same summation order).
+    """
+    da = forcing_da.transpose("timebounds", "scenario", "config", "specie")
+    species = list(da["specie"].values)
+    return np.asarray(da.values), {name: i for i, name in enumerate(species)}
+
+
 def _sum_forcing_over(
-    forcing_da, sc_idx: int, member_offset: int, species_to_sum: list[str]
+    forcing_np,
+    species_index: "dict[str, int]",
+    sc_idx: int,
+    member_offset: int,
+    species_to_sum: list[str],
 ) -> np.ndarray:
-    """Helper: sum FaIR's forcing array over a list of species names."""
-    species_present = [s for s in species_to_sum if s in forcing_da["specie"].values]
-    if not species_present:
+    """Sum the forcing array over a list of species names (numpy path)."""
+    idx = [species_index[s] for s in species_to_sum if s in species_index]
+    if not idx:
         return None
-    sliced = forcing_da.sel(specie=species_present).isel(
-        scenario=sc_idx, config=member_offset
-    )
-    return sliced.sum(dim="specie").values
+    return forcing_np[:, sc_idx, member_offset, idx].sum(axis=-1)
 
 
 def _species_by_property(properties_df, predicate) -> list[str]:
@@ -179,7 +197,8 @@ def _species_by_property(properties_df, predicate) -> list[str]:
 
 
 def _build_forcing_aggregations(  # noqa: PLR0912, PLR0915
-    forcing_da, sc_idx: int, member_offset: int, properties_df
+    forcing_np, species_index, species_in_run, sc_idx: int,
+    member_offset: int, properties_df,
 ) -> "dict[str, tuple[np.ndarray, str]]":
     """
     Build the value arrays for the supported forcing aggregations.
@@ -187,12 +206,12 @@ def _build_forcing_aggregations(  # noqa: PLR0912, PLR0915
     Returns a dict keyed by openscm-runner variable name; values are
     ``(values, unit)`` tuples. Aggregations whose species list does
     not intersect FaIR's actual species are omitted, not zero-filled.
+    Operates on the pre-materialised numpy forcing array (see
+    :func:`_forcing_to_numpy`) for speed.
     """
-    species_in_run = list(forcing_da["specie"].values)
-
     def sum_over(species_list: list[str]) -> np.ndarray:
         return _sum_forcing_over(
-            forcing_da, sc_idx, member_offset, species_list
+            forcing_np, species_index, sc_idx, member_offset, species_list
         )
 
     ghgs = _species_by_property(
@@ -230,11 +249,7 @@ def _build_forcing_aggregations(  # noqa: PLR0912, PLR0915
         out[name] = (values, forcing_unit)
 
     # Anthropogenic = total forcing minus Solar minus Volcanic
-    total = (
-        forcing_da.isel(scenario=sc_idx, config=member_offset)
-        .sum(dim="specie")
-        .values
-    )
+    total = forcing_np[:, sc_idx, member_offset, :].sum(axis=-1)
     natural_species = [s for s in ("Solar", "Volcanic") if s in species_in_run]
     if natural_species:
         natural = sum_over(natural_species)
@@ -283,13 +298,9 @@ def _build_forcing_aggregations(  # noqa: PLR0912, PLR0915
         "Effective Radiative Forcing|Solar": "Solar",
     }
     for openscm_name, fair_specie in single_specie_aliases.items():
-        if fair_specie not in species_in_run:
+        if fair_specie not in species_index:
             continue
-        values = (
-            forcing_da.sel(specie=fair_specie)
-            .isel(scenario=sc_idx, config=member_offset)
-            .values
-        )
+        values = forcing_np[:, sc_idx, member_offset, species_index[fair_specie]]
         maybe(openscm_name, values)
 
     # RCMIP-aligned hierarchical aggregations. Most are aliases for
@@ -367,12 +378,8 @@ def _build_forcing_aggregations(  # noqa: PLR0912, PLR0915
     for spec_leaf, spec in (
         ("CO2", "CO2"), ("CH4", "CH4"), ("N2O", "N2O"),
     ):
-        if spec in species_in_run:
-            v = (
-                forcing_da.sel(specie=spec)
-                .isel(scenario=sc_idx, config=member_offset)
-                .values
-            )
+        if spec in species_index:
+            v = forcing_np[:, sc_idx, member_offset, species_index[spec]]
             maybe(f"Effective Radiative Forcing|Anthropogenic|{spec_leaf}", v)
 
     return out
@@ -406,6 +413,9 @@ def extract_outputs(  # noqa: PLR0913, PLR0912, PLR0915
     rows: list = []
 
     species_in_run = list(f.forcing["specie"].values)
+    # Materialise the forcing array once (dominant cost otherwise is
+    # repeated xarray orthogonal indexing per member); aggregate in numpy.
+    forcing_np, forcing_species_index = _forcing_to_numpy(f.forcing)
 
     # Pre-compute aggregations once per (scenario, member) since the
     # recipes share intermediate sums.
@@ -415,7 +425,8 @@ def extract_outputs(  # noqa: PLR0913, PLR0912, PLR0915
 
             aggregations = (
                 _build_forcing_aggregations(
-                    f.forcing, sc_idx, member_offset, properties_df
+                    forcing_np, forcing_species_index, species_in_run,
+                    sc_idx, member_offset, properties_df,
                 )
                 if properties_df is not None
                 else {}
