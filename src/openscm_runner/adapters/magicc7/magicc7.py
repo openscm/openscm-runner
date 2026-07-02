@@ -7,10 +7,19 @@ from subprocess import check_output  # nosec
 
 from scmdata import ScmRun, run_append
 
+from ..._run_mode import RunMode
 from ...progress import progress
 from ...settings import config
 from ..base import _Adapter
 from ._compat import pymagicc
+from ._concentrations_translator import (
+    FGAS_NAMES,
+    MHALO_NAMES,
+    build_concentrations_overlay,
+    cfg_keys_for_species,
+    classify_conc_species,
+    write_conc_in_file,
+)
 from ._run_magicc_parallel import run_magicc_parallel
 
 LOGGER = logging.getLogger(__name__)
@@ -42,6 +51,18 @@ def _convert_to_pymagicc_var(in_var):
     return out
 
 
+def _with_mode_applied(cfg, mode):
+    """
+    Inject the adapter-level ``mode`` into a cfg as the internal
+    ``magicc_conc_driven`` flag.
+
+    Returns a new dict; the caller's cfg is not mutated.
+    """
+    new = dict(cfg)
+    new["magicc_conc_driven"] = mode == RunMode.CONCENTRATION_DRIVEN
+    return new
+
+
 class MAGICC7(_Adapter):
     """
     Adapter for running MAGICC7
@@ -51,6 +72,9 @@ class MAGICC7(_Adapter):
     """
 
     model_name = "MAGICC7"
+    supported_modes = frozenset(
+        {RunMode.EMISSIONS_DRIVEN, RunMode.CONCENTRATION_DRIVEN}
+    )
 
     def _init_model(self):  # pylint:disable=arguments-differ
         if pymagicc is None:
@@ -97,15 +121,34 @@ class MAGICC7(_Adapter):
         # TODO: add use of historical data properly  # pylint:disable=fixme
         LOGGER.warning("Historical data has not been checked")
 
-        magicc_df = scenarios.timeseries().reset_index()
-        magicc_df["variable"] = magicc_df["variable"].apply(
+        cfgs = [_with_mode_applied(cfg, self.mode) for cfg in cfgs]
+
+        emissions_df = scenarios.timeseries().reset_index()
+        # Filter to emissions before the variable rename: the rename's
+        # ``HFC4310mee`` -> ``HFC4310`` substring substitution would
+        # otherwise mangle ``Atmospheric Concentrations|HFC4310mee``
+        # rows too. Concentration rows are handled separately below
+        # via the conc-driven path.
+        emissions_df = emissions_df[
+            emissions_df["variable"].str.startswith("Emissions|")
+        ].copy()
+        emissions_df["variable"] = emissions_df["variable"].apply(
             lambda x: x.replace("Sulfur", "SOx")
             .replace("HFC4310mee", "HFC4310")
             .replace("VOC", "NMVOC")
         )
 
-        magicc_scmdf = self._convert_to_magicc_units(magicc_df)
+        magicc_scmdf = self._convert_to_magicc_units(emissions_df)
         full_cfgs = self._write_scen_files_and_make_full_cfgs(magicc_scmdf, cfgs)
+
+        if self.mode == RunMode.CONCENTRATION_DRIVEN:
+            conc_patches = self._write_conc_in_files_and_cfg_updates(
+                scenarios=scenarios, cfgs=cfgs,
+            )
+            full_cfgs = [
+                self._merge_conc_patch(cfg, conc_patches)
+                for cfg in full_cfgs
+            ]
 
         pymagicc_vars = [_convert_to_pymagicc_var(v) for v in output_variables]
         res = run_magicc_parallel(full_cfgs, pymagicc_vars, output_config)
@@ -145,6 +188,171 @@ class MAGICC7(_Adapter):
                 out = run_append([rest_ts, odd_unit_ts])
 
         return out
+
+    @staticmethod
+    def _merge_conc_patch(cfg, conc_patches):
+        """
+        Layer the auto-generated conc cfg patch under the caller cfg.
+
+        Caller-supplied ``*_switchfromconc2emis_year`` keys win over
+        the auto-generated default of 9999, mirroring the precedence
+        rule used elsewhere in the adapter (caller cfgs > built-in
+        scenario setup).
+        """
+        patch = conc_patches.get((cfg["scenario"], cfg["model"]), {})
+        if not patch:
+            return cfg
+        overrides = {
+            k: v for k, v in cfg.items()
+            if k.endswith("_switchfromconc2emis_year")
+        }
+        return {**cfg, **patch, **overrides}
+
+    def _write_conc_in_files_and_cfg_updates(
+        self, scenarios, cfgs, out_directory=None,
+    ):
+        """
+        Write per-(scenario, gas) concentration ``.IN`` files and
+        return per-(scenario, model) cfg patches that point MAGICC at
+        them.
+
+        The decision is per-scenario: a gas is concentration-driven for
+        a scenario iff that scenario supplies a trajectory for it
+        (baseline or overlay); gases it doesn't supply remain
+        emissions-driven via the existing SCEN7 path. CO2/CH4/N2O use
+        per-gas ``file_<gas>_conc`` + ``<gas>_switchfromconc2emis_year``
+        flags (switch year defaults to 9999). F-gases / Montreal
+        halocarbons share the bundled-array flags ``fgas_files_conc`` /
+        ``mhalo_files_conc`` (positional, one slot per
+        :data:`FGAS_NAMES` / :data:`MHALO_NAMES` entry) with a single
+        shared ``*_switchfromconc2emis_year`` (defaults to 10000) — so
+        within a group conc-driving is all-or-nothing. Callers can
+        override any ``*_switchfromconc2emis_year`` per cfg (see
+        :meth:`_merge_conc_patch`).
+        """
+        rcmip3_bundle_path = self._resolve_rcmip3_bundle_path(cfgs)
+
+        if out_directory is None:
+            out_directory = os.path.join(self._run_dir(), "openscm-runner")
+            os.makedirs(out_directory, exist_ok=True)
+
+        scenario_model_pairs = list(
+            scenarios.meta[["scenario", "model"]]
+            .drop_duplicates()
+            .itertuples(index=False, name=None)
+        )
+        scenario_names = sorted({s for s, _ in scenario_model_pairs})
+        overlay = build_concentrations_overlay(
+            scenarios, rcmip3_bundle_path, scenario_names,
+        )
+        if overlay.empty:
+            return {}
+
+        magicc_version = self.get_version()[1]
+        patches: dict = {}
+        for scenario, model in scenario_model_pairs:
+            scen_overlay = overlay[overlay["scenario"] == scenario]
+            if scen_overlay.empty:
+                continue
+            cfg_patch: dict = {}
+            fgas_written: dict[str, str] = {}
+            mhalo_written: dict[str, str] = {}
+            for _, row in scen_overlay.iterrows():
+                species = row["magicc_species"]
+                file_name = (
+                    f"{scenario}_{model}_{species}_CONC.IN".upper()
+                    .replace("/", "-")
+                    .replace("\\", "-")
+                    .replace(" ", "-")
+                )
+                out_path = os.path.join(out_directory, file_name)
+                write_conc_in_file(
+                    out_path=out_path,
+                    scenario=scenario,
+                    species=species,
+                    unit=row["unit"],
+                    series=row["series"],
+                    magicc_version=magicc_version,
+                )
+                kind = classify_conc_species(species)
+                if kind == "per_gas":
+                    file_key, switch_key = cfg_keys_for_species(species)
+                    cfg_patch[file_key] = out_path
+                    cfg_patch[switch_key] = 9999
+                elif kind == "fgas":
+                    fgas_written[species] = out_path
+                elif kind == "mhalo":
+                    mhalo_written[species] = out_path
+
+            if fgas_written:
+                cfg_patch["fgas_files_conc"] = self._build_bundled_conc_array(
+                    FGAS_NAMES, fgas_written, "F-gas", scenario,
+                )
+                cfg_patch["fgas_switchfromconc2emis_year"] = 10000
+            if mhalo_written:
+                cfg_patch["mhalo_files_conc"] = self._build_bundled_conc_array(
+                    MHALO_NAMES, mhalo_written, "Montreal-halocarbon",
+                    scenario,
+                )
+                cfg_patch["mhalo_switchfromconc2emis_year"] = 10000
+
+            patches[(scenario, model)] = cfg_patch
+        return patches
+
+    # Bundled-array slots MAGICC ships with no concentration file of its
+    # own (it falls back to a built-in default); leaving these empty is
+    # expected, not a sign of a missing trajectory.
+    _EXPECTED_EMPTY_CONC_SLOTS = frozenset({"HALON1202"})
+
+    @classmethod
+    def _build_bundled_conc_array(cls, names, written, group_label, scenario):
+        """
+        Build a positional ``*_files_conc`` array over ``names``.
+
+        ``written`` maps MAGICC species name -> CONC.IN path. Slots with
+        no written file become ``""`` (MAGICC uses its built-in default
+        for that species). Because the group shares a single switch year,
+        an empty slot is concentration-driven from MAGICC's default
+        rather than from emissions, so warn on any unexpected gap.
+        """
+        array = [written.get(name, "") for name in names]
+        unexpected = [
+            name
+            for name in names
+            if name not in written
+            and name not in cls._EXPECTED_EMPTY_CONC_SLOTS
+        ]
+        if unexpected:
+            LOGGER.warning(
+                "MAGICC7 conc-driven: scenario %s — %s group is "
+                "concentration-driven but %d species have no trajectory "
+                "(baseline or overlay) and will use MAGICC's built-in "
+                "default concentrations, not emissions: %s",
+                scenario, group_label, len(unexpected), sorted(unexpected),
+            )
+        return array
+
+    @staticmethod
+    def _resolve_rcmip3_bundle_path(cfgs):
+        """
+        Pull the (required) ``rcmip3_bundle_path`` cfg key from the
+        first cfg; raise a clear error if no cfg supplies it.
+
+        Mirrors the FaIRv2 / CICEROSCMPY2 adapter convention so
+        conc-driven runs are reproducible across machines (the
+        baseline does not depend on the binary's bundled
+        historical data).
+        """
+        for cfg in cfgs:
+            if cfg.get("rcmip3_bundle_path"):
+                return cfg["rcmip3_bundle_path"]
+        raise ValueError(
+            "MAGICC7 concentration-driven mode requires the "
+            "``rcmip3_bundle_path`` cfg key. Pass the path to a local "
+            "copy of the RCMIP Phase 3 Zenodo bundle "
+            "(https://zenodo.org/records/20430630) or the bundle root "
+            "directory."
+        )
 
     def _write_scen_files_and_make_full_cfgs(self, scenarios, cfgs, out_directory=None):
         full_cfgs = []

@@ -107,6 +107,9 @@ def _run_func(
         scenario = cfg.pop("scenario")
         model = cfg.pop("model")
         output_config = cfg.pop("output_config")
+        # Adapter-internal dispatch keys (not MAGICC namelist entries):
+        cfg.pop("magicc_conc_driven", None)
+        cfg.pop("rcmip3_bundle_path", None)
 
         res = magicc.run(**cfg)
         if res.metadata["stderr"]:

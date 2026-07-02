@@ -1,0 +1,10 @@
+Model,Scenario,Region,Variable,Unit,Activity_Id,Type,Priority,Mip_Era,Version,1750,1850,1900,2000,2050,2100
+unspecified,historical,World,Atmospheric Concentrations|CH4,ppb,input4MIPs,non-idealised,1,CMIP6,RCMIP Phase 3 v2.0.0,720.8548,798.79926,907.6626,1778.9182,,
+unspecified,historical,World,Atmospheric Concentrations|CO2,ppm,input4MIPs,non-idealised,1,CMIP6,RCMIP Phase 3 v2.0.0,278.00745,284.29727,295.62943,369.2326,,
+unspecified,historical,World,Atmospheric Concentrations|N2O,ppb,input4MIPs,non-idealised,1,CMIP6,RCMIP Phase 3 v2.0.0,266.57,271.57,278.32245,315.70068,,
+MESSAGE-GLOBIOM,ssp245,World,Atmospheric Concentrations|CH4,ppb,input4MIPs,non-idealised,2,CMIP6,RCMIP Phase 3 v2.0.0,731.405995686849,808.2490285237631,925.5521138509116,1778.0101216634114,2020.2396647135413,1683.1598612467449
+MESSAGE-GLOBIOM,ssp245,World,Atmospheric Concentrations|CO2,ppm,input4MIPs,non-idealised,2,CMIP6,RCMIP Phase 3 v2.0.0,277.1470031738281,284.3169987996419,295.6749954223633,369.1249745686849,506.8749542236328,602.781982421875
+MESSAGE-GLOBIOM,ssp245,World,Atmospheric Concentrations|N2O,ppb,input4MIPs,non-idealised,2,CMIP6,RCMIP Phase 3 v2.0.0,273.86505126953125,273.0210469563802,279.4540481567383,315.75899505615234,356.1659749348958,377.2639795939128
+MESSAGE-GLOBIOM,ssp245,World,Atmospheric Concentrations|F-Gases|HFC|HFC134a,ppt,input4MIPs,non-idealised,2,CMIP6,RCMIP Phase 3 v2.0.0,0.0,0.0,0.0,15.3,118.7,182.4
+MESSAGE-GLOBIOM,ssp245,World,Atmospheric Concentrations|F-Gases|SF6,ppt,input4MIPs,non-idealised,2,CMIP6,RCMIP Phase 3 v2.0.0,0.0,0.0,0.0,4.52,11.9,18.3
+MESSAGE-GLOBIOM,ssp245,World,Atmospheric Concentrations|Montreal Gases|CFC|CFC12,ppt,input4MIPs,non-idealised,2,CMIP6,RCMIP Phase 3 v2.0.0,0.0,0.0,0.0,540.1,402.6,251.8
