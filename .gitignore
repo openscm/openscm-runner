@@ -1,14 +1,24 @@
-# ruff
-.ruff_cache
-
 # Notebooks
 *.ipynb
+
+# Auto-generated docs and helper files
+docs/api/*
+!docs/api/.gitkeep
+
+# pdm stuff
+.pdm-python
 
 # Databases
 *.db
 
 # Jupyter cache
 .jupyter_cache
+
+# IDE stuff
+.idea/
+
+# Ruff cache
+.ruff_cache
 
 # Licence check
 licence-check.txt
@@ -20,34 +30,6 @@ __pycache__/
 
 # C extensions
 *.so
-
-# Binary files
-bin
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-*.o
-*.c
-*.o.d
-
-# header files
-*.h
-
-#backup files
-*~
-
-# Fortran module files
-*.mod
-*.smod
-*.fpp
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
 
 # Distribution / packaging
 .Python
@@ -147,14 +129,11 @@ celerybeat.pid
 # Environments
 .env
 .venv
-.venv3
 env/
 venv/
-venv3/
 ENV/
 env.bak/
 venv.bak/
-venv3.bak/
 
 # Spyder project settings
 .spyderproject
@@ -176,6 +155,3 @@ dmypy.json
 
 # Mac stuff
 *.DS_Store
-
-# Swap files
-*.swp

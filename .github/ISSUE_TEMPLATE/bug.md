@@ -35,7 +35,6 @@ def test_bug_12():
 
  - OS: [e.g. Windows, Linux, macOS]
  - Python version [e.g. Python 3.11]
- - Please also upload your `poetry.lock` file (first run `poetry lock` to make sure the lock file is up-to-date)
 
 ## Additional context
 <!--- Add any other context about the problem here. -->

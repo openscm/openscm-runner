@@ -1,6 +1,7 @@
 """
-Thin wrapper to run emissions scenarios with simple climate models
+Standardised interfaces for running simple climate models (SCMs)
 """
+
 import importlib.metadata
 
-__version__ = importlib.metadata.version(__package__)
+__version__ = importlib.metadata.version("openscm_runner")

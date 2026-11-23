@@ -1,15 +1,20 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: v0.5.0
-_src_path: /Users/znicholls/Documents/repos/copier-core-python-repository
+_commit: v0.15.4
+_src_path: gl:openscm/copier-core-python-repository
+conda_release: false
 email: zebedee.nicholls@climate-energy-college.org
-initial_setup: true
-name: Zebedee Nicholls
-notebook_dependencies: true
+include_cli: false
+include_mypy: true
+include_ty: true
+name: Zebede Nicholls
+notebook_based_docs: true
+package_manager: uv
 pandas_doctests: true
-plot_dependencies: false
-project_description_short: Thin wrapper to run emissions scenarios with simple climate
-    models
+plot_dependencies: true
+project_description_short: Standardised interfaces for running simple climate models
+    (SCMs)
 project_name_human: OpenSCM-Runner
 project_name_pip: openscm-runner
 project_name_python: openscm_runner
 project_url: https://github.com/openscm/openscm-runner
+track_lock_file: true
