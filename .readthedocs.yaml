@@ -1,0 +1,21 @@
+# .readthedocs.yaml
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+# Required
+version: 2
+
+# Set the version of Python and other tools you might need
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.11"
+  jobs:
+    install:
+      # For simplicity, use requirements files and pip directly.
+      - python -m pip install -r requirements-docs-locked.txt
+      - python -m pip install --no-deps .
+      - python -m pip list
+    build:
+      html:
+        - python -m properdocs build --strict --site-dir "$READTHEDOCS_OUTPUT/html"

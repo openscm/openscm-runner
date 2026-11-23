@@ -1,0 +1,67 @@
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_rule:
+        type: choice
+        description: How to bump the project's version (see https://docs.astral.sh/uv/reference/cli/#uv-version or `uv version --help`)
+        options:
+          - patch
+          - minor
+          - major
+          - stable
+          - alpha
+          - beta
+          - rc
+          - post
+          - dev
+        required: true
+
+jobs:
+  bump_version:
+    name: "Bump version and create changelog"
+    if: "!startsWith(github.event.head_commit.message, 'bump:')"
+    strategy:
+      matrix:
+        os: [ "ubuntu-latest" ]
+        python-version: [ "3.11" ]
+    runs-on: "${{ matrix.os }}"
+    env:
+      CI_COMMIT_EMAIL: "ci-runner@openscm-runner.invalid"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+
+      - uses: ./.github/actions/setup
+        with:
+          python-version: ${{ matrix.python-version }}
+          uv-dependency-install-flags: "--all-extras --group dev"
+
+      - name: Create bump and changelog
+        run: |
+          git config --global user.name "$GITHUB_ACTOR"
+          git config --global user.email "$CI_COMMIT_EMAIL"
+
+          BASE_VERSION=`uv version --short`
+          NEW_VERSION=`uv version --bump ${{ github.event.inputs.bump_rule }} --short --no-sync`
+          echo "Bumping version $BASE_VERSION > $NEW_VERSION"
+          # Build CHANGELOG
+          uv sync --group dev
+          uv run --group dev towncrier build --yes --version v$NEW_VERSION
+          # Commit and tag (no verify to avoid pre-commit)
+          git commit --no-verify -a -m "bump: version $BASE_VERSION > $NEW_VERSION"
+          git tag v$NEW_VERSION
+          # Bump to post
+          # (so that future commits do not have the same version as the tagged commit)
+          BASE_VERSION=`uv version --short`
+          NEW_VERSION=`uv version --bump post --short --no-sync`
+          echo "Bumping version $BASE_VERSION > $NEW_VERSION"
+          # Commit (no verify to avoid pre-commit)
+          git commit --no-verify -a -m "bump(pre-release): version $BASE_VERSION > $NEW_VERSION"
+          # Push commits and tags
+          git push
+          git push --tags
