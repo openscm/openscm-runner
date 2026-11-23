@@ -33,6 +33,12 @@ class AdapterAR7Scenario(OutputCapabilities, Protocol):
 
     The adapter has to add on AR7's history and use other forcings (e.g. volcanic)
     in line with the standard AR7 choices not supplied by the input.
+
+    Note that the AR7 history and other forcings are not defined yet,
+    so you should consider this unstable.
+    TODO: roadmap item and consider removing this
+    (we have the CMIP7 branch from history runners also in the roadmap
+    and their definition is clear)
     """
 
     def __call__(
