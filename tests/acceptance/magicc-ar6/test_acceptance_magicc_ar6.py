@@ -343,7 +343,7 @@ def test_ar6_scenario_full_ensemble_matches_ar6() -> None:
         adapters=(
             MAGICCAR6AdapterAR6Scenario(
                 configuration=MAGICCAR6AdapterConfiguration.from_environment(
-                    n_workers=os.cpu_count() or 1
+                    n_workers=(os.cpu_count() - 2) or 1
                 )
             ),
         ),

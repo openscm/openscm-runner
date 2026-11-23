@@ -118,12 +118,66 @@ jobs:
           # Don't need interactive plots
           MPLBACKEND: Agg
         run: |
-          uv run --group tests pytest -r a -v src tests --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report=term-missing --cov-report=xml
+          uv run --group tests pytest -r a -v src tests --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report=term-missing --cov-report=xml -m 'not magicc'
           uv run --group dev coverage report
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v6
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    # One job per adapter group here, see docs/testing.md.
+
+    # The MAGICC AR6 adapters' integration and acceptance tests.
+    # MAGICC is downloaded with a magicc.org token (a repository secret),
+    # so this fails for pull requests from forks (which don't get secrets).
+    tests-magicc-ar6:
+      name: Test MAGICC AR6 (${{ matrix.os }}, Python ${{ matrix.python }})
+      matrix:
+        # Minimal choice here (save compute time)
+        # TODO: consider how to handle adapter tests in PyPI installation tests
+        os: [ "ubuntu-latest" ]
+        python-version: [ "3.13" ]
+      runs-on: "${{ matrix.os }}"
+      defaults:
+        run:
+          # This might be needed for Windows
+          # and doesn't seem to affect unix-based systems so we include it.
+          # If you have better proof of whether this is needed or not,
+          # feel free to update.
+          shell: bash
+      timeout-minutes: 30
+      steps:
+        - name: Check out repository
+          uses: actions/checkout@v4
+          with:
+            persist-credentials: false
+        - uses: ./.github/actions/setup
+          with:
+            python-version: ${{ matrix.python-version }}
+            # When running the tests, install with all optional dependencies
+            # to get maximum test coverage.
+            # If we find that we're getting failures
+            # when people try to run without installing optional dependencies,
+            # we should add a CI step that runs the tests without optional dependencies too.
+            # We don't have that right now, because we're not sure this pain point exists.
+            # TODO: rename extra group to magicc-ar6
+            uv-dependency-install-flags: "--group tests --extra magicc"
+        - name: Install gfortran's libraries (the macOS MAGICC binary needs them)
+          if: runner.os == 'macOS'
+          run: brew install gcc
+        - name: Cache the MAGICC and AR6 probabilistic distribution downloads
+          uses: actions/cache@v4
+          with:
+            # pooch's cache directory (see `openscm_runner.adapters.magicc_ar6.download`)
+            path: ${{ runner.os == 'macOS' && '~/Library/Caches/openscm-runner/magicc-ar6' || '~/.cache/openscm-runner/magicc-ar6' }}
+            # The downloads' hashes are pinned in download.py
+            key: magicc-ar6-${{ runner.os }}-${{ hashFiles('src/openscm_runner/adapters/magicc_ar6/download.py') }}
+        - name: Run tests
+          env:
+            MAGICC_AR6_DOWNLOAD_TOKEN: ${{ secrets.MAGICC_AR6_DOWNLOAD_TOKEN }}
+          run: |
+            uv run --group tests --extra magicc pytest -m "magicc_ar6" -r a -v src tests --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report=
+            uv run --group tests coverage report --include='*/adapters/magicc_ar6/*' --show-missing --skip-covered --fail-under=100
 
   tests-resolution-strategies:
     strategy:

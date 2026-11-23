@@ -38,8 +38,12 @@ ruff-fixes:  ## fix the code using ruff
 	uv run --group dev ruff format src tests scripts docs
 
 .PHONY: test
-test:  ## run the tests
+test:  ## run the tests ('fast' mode i.e. skip slow tests, skip adapter specific tests)
 	uv run --group tests pytest src tests -r a -v --doctest-modules --doctest-report ndiff --cov=openscm_runner
+
+.PHONY: test-magicc-ar6
+test-magicc-ar6:  ## run the MAGICC AR6 adapter tests
+	uv run --group tests --extra magicc pytest -m "magicc_ar6" src tests -r a -v --doctest-modules --doctest-report ndiff --cov=openscm_runner
 
 # Note on code coverage and testing:
 # You must specify cov=src.

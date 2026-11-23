@@ -159,6 +159,7 @@ addopts = [
     "--import-mode=importlib",
     "--strict-markers",
     "-m not slow",
+    "-m not magicc_ar6",
 ]
 markers = [
   "slow: slow tests (e.g. full ensembles), not run by default",
