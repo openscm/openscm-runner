@@ -46,6 +46,7 @@ repos:
         name: uv-lock-check
         args: ["--check"]
       # Put requirements.txt files in the repo too
+      # TODO: update copier template
       - id: uv-export
         name: export-requirements
         args: ["-o", "requirements-locked.txt", "--no-hashes", "--no-dev", "--no-emit-project"]
@@ -61,3 +62,6 @@ repos:
       - id: uv-export
         name: export-requirements-only-tests
         args: ["-o", "requirements-only-tests-locked.txt", "--no-hashes", "--no-dev", "--no-emit-project", "--only-group", "tests"]
+      - id: uv-export
+        name: export-requirements-magicc
+        args: ["-o", "requirements-magicc-locked.txt", "--no-hashes", "--no-dev", "--no-emit-project", "--extra", "magicc"]
