@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import pint
 import pytest
+
 from openscm_runner.adapters.magicc_ar6.base import (
     format_conc_in,
     format_hemispheric_monthly_forcing_in,

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from openscm_runner.adapters.magicc_ar6 import (
     MAGICCAR6AdapterConfiguration,
     MAGICCAR6NotFoundError,
@@ -80,7 +81,7 @@ def test_no_token_raises(monkeypatch: pytest.MonkeyPatch, value: str | None) -> 
     if value is not None:
         monkeypatch.setenv(MAGICC_AR6_DOWNLOAD_TOKEN_ENV_VAR, value)
 
-    with pytest.raises(MAGICCAR6NotFoundError, match=".env.sample"):
+    with pytest.raises(MAGICCAR6NotFoundError, match=r"\.env\.sample"):
         get_magicc_download_token()
 
 

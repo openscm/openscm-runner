@@ -9,6 +9,7 @@ authors = [
 license = { text = "3-Clause BSD License" }
 requires-python = ">=3.10"
 dependencies = [
+    "exceptiongroup>=1.0.0 ; python_full_version < '3.11'",
     # If you use numpy, we suggest pinning to >2.1.0
     # based on the minimum supported python version
     "pandas>=2.2.0",  # pin based on minimum supported python version
@@ -153,9 +154,17 @@ include = ["src"]
 formats = "ipynb,py:percent"
 
 [tool.pytest.ini_options]
+# Slow tests only run if asked for (`-m slow`)
 addopts = [
     "--import-mode=importlib",
+    "--strict-markers",
+    "-m not slow",
 ]
+markers = [
+  "slow: slow tests (e.g. full ensembles), not run by default",
+  "magicc_ar6: the MAGICC AR6 adapters' tests (they need MAGICC, see docs/testing.md)",
+]
+
 
 [tool.ruff]
 src = [

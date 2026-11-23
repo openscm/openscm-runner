@@ -11,6 +11,20 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pytest
+from openscm_units import unit_registry
+
+from openscm_runner import (
+    run_co2_concentration_driven_from_cmip6_pre_industrial,
+    run_co2_concentration_driven_from_cmip7_pre_industrial,
+    run_co2_emission_driven_from_cmip6_pre_industrial,
+    run_co2_emission_driven_from_cmip7_pre_industrial,
+    run_concentration_driven_from_cmip6_pre_industrial,
+    run_concentration_driven_from_cmip7_pre_industrial,
+    run_esm_all_ghg_from_cmip6_pre_industrial,
+    run_esm_all_ghg_from_cmip7_pre_industrial,
+    run_esm_from_cmip6_pre_industrial,
+    run_esm_from_cmip7_pre_industrial,
+)
 from openscm_runner.adapters.magicc_ar6 import (
     MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP6PreIndustrial,
     MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial,
@@ -28,7 +42,6 @@ from openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch import (
     EMISSIONS_DRIVEN_FILE_RULES,
     SUPPORTED_OUTPUT_VARIABLES,
     derive_emissions_driven_files,
-    get_pi_control_concentrations,
     load_historical_emissions,
     make_history_files,
     run_pre_industrial_branch_experiments,
@@ -54,20 +67,6 @@ from openscm_runner.cmip_pre_industrial_branch.inputs import (
     CO2_ESM_EMISSION_VARIABLES,
 )
 from openscm_runner.output_specs import OutputSpecs
-from openscm_units import unit_registry
-
-from openscm_runner import (
-    run_co2_concentration_driven_from_cmip6_pre_industrial,
-    run_co2_concentration_driven_from_cmip7_pre_industrial,
-    run_co2_emission_driven_from_cmip6_pre_industrial,
-    run_co2_emission_driven_from_cmip7_pre_industrial,
-    run_concentration_driven_from_cmip6_pre_industrial,
-    run_concentration_driven_from_cmip7_pre_industrial,
-    run_esm_all_ghg_from_cmip6_pre_industrial,
-    run_esm_all_ghg_from_cmip7_pre_industrial,
-    run_esm_from_cmip6_pre_industrial,
-    run_esm_from_cmip7_pre_industrial,
-)
 
 # These are the MAGICC AR6 adapters' tests (see docs/testing.md)
 pytestmark = pytest.mark.magicc_ar6
@@ -109,22 +108,23 @@ def get_pi_control_emissions(
     Get the emissions we use as piControl emissions (unit, value)
 
     The CMIP era's historical emissions in 1850
-    (see `PreIndustrialValues.historical_emissions_1850` and roadmap item B19),
-    in RCMIP phase 3's units (the adapters convert them).
+    (see `PreIndustrialValues.historical_emissions_1850` and decision B19),
+    in MAGICC's units.
     """
-    if variable not in pre_industrial.historical_emissions_1850:
-        return EMISSIONS_VARIABLES[variable].unit, 0.0
+    spec = EMISSIONS_VARIABLES[variable]
+    if spec.gas not in pre_industrial.historical_emissions_1850:
+        return spec.unit, 0.0
 
-    value, unit = pre_industrial.historical_emissions_1850[variable]
+    value, unit = pre_industrial.historical_emissions_1850[spec.gas]
 
     return unit, value
 
 
 def get_historical_emissions_1850(
-    pre_industrial: PreIndustrialValues, variable: str, unit: str
+    pre_industrial: PreIndustrialValues, gas: str, unit: str
 ) -> float:
-    """Get the CMIP era's historical emissions of `variable` in 1850 in `unit`"""
-    value, value_unit = pre_industrial.historical_emissions_1850[variable]
+    """Get the CMIP era's historical emissions of `gas` in 1850 in `unit`"""
+    value, value_unit = pre_industrial.historical_emissions_1850[gas]
 
     return float(unit_registry.Quantity(value, value_unit).to(unit).magnitude)
 
@@ -181,10 +181,9 @@ def make_concentrations(  # noqa: PLR0913
     )
     growth_rates = {"CO2": co2_growth_rate, "CH4": ch4_growth_rate}
     rows = {}
-    pi_control_concentrations = get_pi_control_concentrations(pre_industrial)
     for variable in variables:
         gas = to_magicc_gas(variable.split("|")[1])
-        pi = pi_control_concentrations[gas]
+        pi = pre_industrial.pi_control_concentrations[gas]
         values = pi * (1 + growth_rates.get(gas, 0.0)) ** np.arange(n_years)
         rows[("1pctCO2", variable, "World", CONCENTRATION_UNITS[gas])] = values
 
@@ -274,16 +273,16 @@ def test_cmip_concentration_driven_runs(
     assert res.columns.min() == 1850
 
     for _, member in res.groupby("ensemble_member"):
-        member = member.droplevel(["ensemble_member", "scenario", "region", "unit"])
+        member_d = member.droplevel(["ensemble_member", "scenario", "region", "unit"])
         # Starts in equilibrium (1pctCO2 has piControl CO2 in 1850)
-        is_erf = member.index.str.startswith("Effective Radiative Forcing")
-        np.testing.assert_allclose(member.loc[is_erf, 1850], 0.0, atol=1e-12)
+        is_erf = member_d.index.str.startswith("Effective Radiative Forcing")
+        np.testing.assert_allclose(member_d.loc[is_erf, 1850], 0.0, atol=1e-12)
         # Solar and volcanic forcing are zero, as in the input
         # (i.e. MAGICC's historical natural forcing isn't used)
         # and aerosols etc. stay at piControl levels
         # (i.e. MAGICC's historical aerosol forcing isn't used)
         np.testing.assert_allclose(
-            member.loc[
+            member_d.loc[
                 [
                     "Effective Radiative Forcing|Solar",
                     "Effective Radiative Forcing|Volcanic",
@@ -294,13 +293,13 @@ def test_cmip_concentration_driven_runs(
             atol=1e-12,
         )
         # CO2 forcing and warming increase
-        assert member.loc["Effective Radiative Forcing|CO2"].iloc[-1] > 5.0
-        assert member.loc["Surface Air Temperature Change"].iloc[-1] > 1.0
+        assert member_d.loc["Effective Radiative Forcing|CO2"].iloc[-1] > 5.0
+        assert member_d.loc["Surface Air Temperature Change"].iloc[-1] > 1.0
         # The total includes more than the GHGs
         # (e.g. the ozone response to warming), but not much more
         np.testing.assert_allclose(
-            member.loc["Effective Radiative Forcing"],
-            member.loc[list(GHG_ERF_COMPONENTS)].sum(),
+            member_d.loc["Effective Radiative Forcing"],
+            member_d.loc[list(GHG_ERF_COMPONENTS)].sum(),
             atol=0.5,
         )
 
@@ -451,11 +450,9 @@ def test_cmip_inputs_away_from_pi_control_in_the_first_year(
     ch4 = output.as_df().xs("Atmospheric Concentrations|CH4", level="variable")
 
     np.testing.assert_allclose(
-        ch4[1850], get_pi_control_concentrations(pre_industrial)["CH4"]
+        ch4[1850], pre_industrial.pi_control_concentrations["CH4"]
     )
-    assert (
-        ch4[1851] > get_pi_control_concentrations(pre_industrial)["CH4"] + 1.0
-    ).all()
+    assert (ch4[1851] > pre_industrial.pi_control_concentrations["CH4"] + 1.0).all()
 
 
 @pytest.mark.parametrize(
@@ -589,16 +586,16 @@ def test_cmip_natural_forcing_comes_from_the_input(
     res = output.as_df()
 
     for _, member in res.groupby("ensemble_member"):
-        member = member.droplevel(["ensemble_member", "scenario", "region", "unit"])
-        solar_erf = member.loc["Effective Radiative Forcing|Solar"]
-        volcanic_erf = member.loc["Effective Radiative Forcing|Volcanic"]
+        member_d = member.droplevel(["ensemble_member", "scenario", "region", "unit"])
+        solar_erf = member_d.loc["Effective Radiative Forcing|Solar"]
+        volcanic_erf = member_d.loc["Effective Radiative Forcing|Volcanic"]
         # Each member scales the input (and applies its efficacy),
         # so the output isn't the input, but it is proportional to it
         assert solar_erf[1855] > 0.0
         np.testing.assert_allclose(solar_erf.loc[1851:], solar_erf[1855])
         assert volcanic_erf[1860] < -0.5
         np.testing.assert_allclose(volcanic_erf.loc[1862:], 0.0, atol=1e-12)
-        temperature = member.loc["Surface Air Temperature Change"]
+        temperature = member_d.loc["Surface Air Temperature Change"]
         assert temperature[1861] < temperature[1859]
 
 
@@ -639,7 +636,7 @@ ERF_COMPONENTS = tuple(
 
 GHG_ERF_COMPONENTS_AND_CHEMISTRY = (
     *GHG_ERF_COMPONENTS,
-    # Responds to CH4 (MAGICC has interactive chemistry, see roadmap item B18)
+    # Responds to CH4 (MAGICC has interactive chemistry, see decision B18)
     "Effective Radiative Forcing|Tropospheric Ozone",
     # Responds to the Montreal Protocol gases
     "Effective Radiative Forcing|Stratospheric Ozone",
@@ -707,12 +704,12 @@ def test_cmip_only_some_inputs_change(  # noqa: PLR0913
     e.g. like hist-nat (natural forcing), hist-GHG (GHG concentrations)
     and hist-aer (aerosol emissions).
     The forcing the other inputs drive stays at zero.
-    MAGICC has interactive chemistry (see roadmap item B18),
+    MAGICC has interactive chemistry (see decision B18),
     so ozone forcing responds to e.g. CH4 too.
     The natural forcing is RCMIP phase 3's, which isn't zero in 1850,
     i.e. it isn't relative to piControl as the input definition says
     (what zero means for natural forcing is still to be decided,
-    see roadmap item B19).
+    see decision B19).
     """
     data = pd.read_csv(data_file).set_index(["scenario", "variable", "region", "unit"])
     data.columns = data.columns.astype(int)
@@ -831,7 +828,7 @@ def test_cmip_ozone_responds_to_methane(
     reason=(
         "The CO2-only adapters turn off MAGICC's ozone forcing due to temperature, "
         "the full concentration-driven adapters don't "
-        "(see `NO_OZONE_DUE_TO_TEMPERATURE` and roadmap items B16 and B18)"
+        "(see `NO_OZONE_DUE_TO_TEMPERATURE` and decisions B16 and B18)"
     ),
     raises=AssertionError,
     strict=True,
@@ -1220,7 +1217,6 @@ def make_emissions_driven_input(  # noqa: PLR0913
             add(variable, unit, value)
 
     else:
-        pi_control_concentrations = get_pi_control_concentrations(pre_industrial)
         for variable in CMIP7_CONCENTRATION_VARIABLES:
             if variable == "Atmospheric Concentrations|CO2":
                 continue
@@ -1229,7 +1225,7 @@ def make_emissions_driven_input(  # noqa: PLR0913
             add(
                 variable,
                 CONCENTRATION_UNITS[gas],
-                pi_control_concentrations[gas],
+                pre_industrial.pi_control_concentrations[gas],
             )
 
     for variable in (
@@ -1340,7 +1336,7 @@ def check_stays_near_pi_control(
     for gas, atol in (("CO2", 0.5), ("CH4", 1.0), ("N2O", 0.1)):
         np.testing.assert_allclose(
             res.xs(f"Atmospheric Concentrations|{gas}", level="variable").to_numpy(),
-            get_pi_control_concentrations(pre_industrial)[gas],
+            pre_industrial.pi_control_concentrations[gas],
             atol=atol,
             err_msg=gas,
         )
@@ -1370,7 +1366,7 @@ def test_co2_emission_driven_pre_industrial_emissions(
     Constant pre-industrial CO2 emissions only cause CO2-induced change
 
     The adapter uses zero piControl CO2 emissions
-    (see `test_co2_emission_driven_pi_control` and roadmap item B19),
+    (see `test_co2_emission_driven_pi_control` and decision B19),
     but historical CO2 emissions in 1850 aren't
     (we use the CMIP era's historical fossil CO2 emissions in 1850,
     ~0.05 GtC/yr, see `PreIndustrialValues.historical_emissions_1850`).
@@ -1383,17 +1379,14 @@ def test_co2_emission_driven_pre_industrial_emissions(
         adapter_cls,
         "co2_emissions",
         make_co2_emissions(
-            get_historical_emissions_1850(
-                pre_industrial, "Emissions|CO2|Fossil", "Gt C/yr"
-            ),
-            150,
+            get_historical_emissions_1850(pre_industrial, "CO2I", "Gt C/yr"), 150
         ),
     )
 
     for gas in ("CH4", "N2O"):
         np.testing.assert_allclose(
             res.xs(f"Atmospheric Concentrations|{gas}", level="variable").to_numpy(),
-            get_pi_control_concentrations(pre_industrial)[gas],
+            pre_industrial.pi_control_concentrations[gas],
             rtol=1e-6,
             err_msg=gas,
         )
@@ -1445,7 +1438,7 @@ def test_co2_emission_driven_flat10(
     temperature = res.xs("Surface Air Temperature Change", level="variable")
 
     assert (
-        co2.iloc[:, -1] > get_pi_control_concentrations(pre_industrial)["CO2"] + 150
+        co2.iloc[:, -1] > pre_industrial.pi_control_concentrations["CO2"] + 150
     ).all()
     # A TCRE-ish amount of warming (roughly 1-2.5 K per 1000 GtC,
     # more for the most sensitive members:
@@ -1483,9 +1476,7 @@ def test_esm_land_use_responds_to_biosphere_emissions(
     land_use = res.xs("Effective Radiative Forcing|Land-use Change", level="variable")
 
     # 100 GtC, a good part of which the land and ocean take up
-    assert (
-        co2.iloc[:, -1] > get_pi_control_concentrations(pre_industrial)["CO2"] + 5
-    ).all()
+    assert (co2.iloc[:, -1] > pre_industrial.pi_control_concentrations["CO2"] + 5).all()
     assert (land_use.iloc[:, -1] < -0.01).all()
 
 
@@ -1508,7 +1499,7 @@ def test_esm_pre_industrial_emissions(
     The mineral dust forcing drift could be avoided
     by prescribing zero biosphere CO2 emissions instead
     (whether that makes sense depends on what we use as pre-industrial,
-    see roadmap item B19).
+    see decision B19).
     """
     res = run_emissions_driven(
         run,
@@ -1518,11 +1509,9 @@ def test_esm_pre_industrial_emissions(
             pre_industrial,
             all_ghg=False,
             n_years=150,
-            co2_fossil=get_historical_emissions_1850(
-                pre_industrial, "Emissions|CO2|Fossil", "Gt C/yr"
-            ),
+            co2_fossil=get_historical_emissions_1850(pre_industrial, "CO2I", "Gt C/yr"),
             co2_biosphere=get_historical_emissions_1850(
-                pre_industrial, "Emissions|CO2|Biosphere", "Gt C/yr"
+                pre_industrial, "CO2B", "Gt C/yr"
             ),
         ),
     )
@@ -1530,7 +1519,7 @@ def test_esm_pre_industrial_emissions(
     for gas in ("CH4", "N2O"):
         np.testing.assert_allclose(
             res.xs(f"Atmospheric Concentrations|{gas}", level="variable").to_numpy(),
-            get_pi_control_concentrations(pre_industrial)[gas],
+            pre_industrial.pi_control_concentrations[gas],
             rtol=1e-6,
             err_msg=gas,
         )
@@ -1689,7 +1678,7 @@ def test_esm_all_ghg_pre_industrial_emissions(
       the piControl emissions of some halogenated gases
       (the CMIP era's 1850 historical emissions)
       aren't quite in balance with MAGICC's lifetimes,
-      so their concentrations drift (see roadmap item B19)
+      so their concentrations drift (see decision B19)
     """
     res = run_emissions_driven(
         run,
@@ -1699,11 +1688,9 @@ def test_esm_all_ghg_pre_industrial_emissions(
             pre_industrial,
             all_ghg=True,
             n_years=150,
-            co2_fossil=get_historical_emissions_1850(
-                pre_industrial, "Emissions|CO2|Fossil", "Gt C/yr"
-            ),
+            co2_fossil=get_historical_emissions_1850(pre_industrial, "CO2I", "Gt C/yr"),
             co2_biosphere=get_historical_emissions_1850(
-                pre_industrial, "Emissions|CO2|Biosphere", "Gt C/yr"
+                pre_industrial, "CO2B", "Gt C/yr"
             ),
         ),
     )
@@ -1765,10 +1752,10 @@ def test_esm_all_ghg_ch4_emissions(
     ch4 = res.xs("Atmospheric Concentrations|CH4", level="variable")
     n2o = res.xs("Atmospheric Concentrations|N2O", level="variable")
 
-    pi_ch4 = get_pi_control_concentrations(pre_industrial)["CH4"]
+    pi_ch4 = pre_industrial.pi_control_concentrations["CH4"]
     # Doubling the piControl anthropogenic emissions
     # (the natural emissions are much bigger)
     assert (ch4.iloc[:, -1] > 1.2 * pi_ch4).all()
     np.testing.assert_allclose(
-        n2o.to_numpy(), get_pi_control_concentrations(pre_industrial)["N2O"], atol=0.1
+        n2o.to_numpy(), pre_industrial.pi_control_concentrations["N2O"], atol=0.1
     )

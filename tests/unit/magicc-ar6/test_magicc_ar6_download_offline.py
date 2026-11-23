@@ -10,6 +10,7 @@ from typing import Any
 import pooch
 import pytest
 import requests
+
 from openscm_runner.adapters.magicc_ar6 import download as download_module
 from openscm_runner.adapters.magicc_ar6.download import (
     MAGICC_V753_DOWNLOAD,
@@ -30,11 +31,11 @@ def raise_http_error(url: str, *args: Any, **kwargs: Any) -> None:
     response.status_code = 400
     response._content = b'{"error":"Invalid token"}'
     # Like requests' own messages, includes the URL
-    raise requests.HTTPError(f"400 Client Error for url: {url}", response=response)
+    raise requests.HTTPError(f"400 Client Error for url: {url}", response=response)  # noqa: TRY003
 
 
 def raise_connection_error(url: str, *args: Any, **kwargs: Any) -> None:
-    raise requests.ConnectionError(f"Max retries exceeded with url: {url}")
+    raise requests.ConnectionError(f"Max retries exceeded with url: {url}")  # noqa: TRY003
 
 
 @pytest.mark.parametrize(
@@ -104,7 +105,7 @@ def test_given_cache_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Non
         return cache_dir / item.extract_dir
 
     def os_cache(name: str) -> Path:
-        raise AssertionError("The default cache directory shouldn't be used")
+        raise AssertionError("The default cache directory shouldn't be used")  # noqa: TRY003
 
     monkeypatch.setattr(pooch, "os_cache", os_cache)
     monkeypatch.setattr(download_module, "download", fake_download)

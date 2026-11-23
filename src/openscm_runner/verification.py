@@ -37,7 +37,7 @@ They must have a single value within each input
 """
 
 
-def verify_wide_timeseries_inputs(
+def verify_wide_timeseries_inputs(  # noqa: PLR0913
     inputs: tuple[pd.DataFrame, ...],
     *,
     input_name: str,

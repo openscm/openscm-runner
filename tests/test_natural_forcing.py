@@ -1,7 +1,8 @@
 import pandas as pd
 import pytest
-from openscm_runner.natural_forcing import read_natural_forcing
 from pandas.testing import assert_frame_equal
+
+from openscm_runner.natural_forcing import read_natural_forcing
 
 
 @pytest.fixture

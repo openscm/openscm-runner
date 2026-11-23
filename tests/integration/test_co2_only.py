@@ -8,7 +8,7 @@ Integration tests: CO2-only runs only have CO2 forcing
 # You could also include feedbacks from CO2-driven changes
 # (e.g. on CH4 lifetimes, or ozone's response to warming),
 # in which case you get some non-CO2 forcing too.
-# This test assumes not (see roadmap item B16).
+# This test assumes not (see decision B16).
 #
 # Adapters are made inside the test (not at collection time),
 # so an adapter which can't be set up (e.g. MAGICC isn't available)

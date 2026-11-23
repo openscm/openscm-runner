@@ -9,9 +9,9 @@ between the cases and it is obvious what the difference between them is
 rather than people having to diff multi-hundred line files.
 
 **This may still change**: what is meant by CO2-only is still unclear
-(e.g. which feedbacks should be included, see roadmap item B16,
+(e.g. which feedbacks should be included, see decision B16,
 and whether the input is fossil CO2 emissions only
-or both fossil and biosphere CO2 emissions, see roadmap item B17),
+or both fossil and biosphere CO2 emissions, see decision B17),
 so this case (and the adapter) may still change.
 
 The input is the CO2 emissions from the same scenario as for `ar6-scenario`
@@ -24,7 +24,7 @@ and everything except CO2 is held at pre-industrial (1750) for the whole run:
   MAGICC's CO2 forcing depends on the N2O concentration
   (the overlap term in its `OLBL` forcing method)
   and concentrations of other gases would vary with temperature
-  (this is part of the feedback question, see roadmap item B16)
+  (this is part of the feedback question, see decision B16)
 - fossil CH4 emissions are zero (history included).
   Otherwise MAGICC adds the CO2 from their oxidation to the fossil CO2 emissions,
   even if CH4 is concentration-driven

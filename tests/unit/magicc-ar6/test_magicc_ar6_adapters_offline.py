@@ -6,13 +6,14 @@ Mostly error paths and options our integration tests don't use.
 
 from __future__ import annotations
 
-import importlib
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
 import pandas as pd
 import pytest
+
+from openscm_runner.adapter_errors import InvalidInputError
 from openscm_runner.adapters.magicc_ar6 import (
     MAGICCAR6AdapterAR6Scenario,
     MAGICCAR6AdapterAR6ScenarioAnthropogenicOnly,
@@ -37,29 +38,21 @@ from openscm_runner.adapters.magicc_ar6.base import (
     _to_member_result,
 )
 from openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch import (
-    ALL_CONCENTRATION_GASES,
     PI_CONTROL_EMISSIONS_GASES,
-    get_pi_control_concentrations,
     get_pi_control_emissions,
 )
 from openscm_runner.adapters.magicc_ar6.ensemble import load_ar6_ensemble
 from openscm_runner.adapters.magicc_ar6.naming import EMISSIONS_VARIABLES
-from openscm_runner.adapters.magicc_ar6.optional_dependencies import (
-    MissingOptionalDependencyError,
-    import_optional_dependency,
-)
 from openscm_runner.adapters.magicc_ar6.pre_industrial import (
-    CMIP6_PRE_INDUSTRIAL,
     CMIP7_PRE_INDUSTRIAL,
     PreIndustrialValues,
+    _complete,
 )
 from openscm_runner.adapters.magicc_ar6.running import (
     EnsembleMember,
     MAGICCMemberResult,
 )
 from openscm_runner.output_specs import OutputSpecs
-
-from openscm_runner.adapter_errors import InvalidInputError
 
 # These are the MAGICC AR6 adapters' tests (see docs/testing.md)
 pytestmark = pytest.mark.magicc_ar6
@@ -214,10 +207,7 @@ def test_get_pi_control_emissions_only_co2() -> None:
         name="only-co2",
         pi_control_concentrations=CMIP7_PRE_INDUSTRIAL.pi_control_concentrations,
         historical_emissions_1850=MappingProxyType(
-            {
-                "Emissions|CO2|Fossil": (1.0, "Gt C/yr"),
-                "Emissions|CO2|Biosphere": (1.0, "Gt C/yr"),
-            }
+            {"CO2I": (1.0, "Gt C/yr"), "CO2B": (1.0, "Gt C/yr")}
         ),
     )
 
@@ -226,71 +216,6 @@ def test_get_pi_control_emissions_only_co2() -> None:
     )
 
 
-def test_get_pi_control_values_converted_to_magicc() -> None:
-    """The pre-industrial values are converted to MAGICC's names and units"""
-    concentrations = get_pi_control_concentrations(CMIP6_PRE_INDUSTRIAL)
-    assert list(concentrations) == list(ALL_CONCENTRATION_GASES)
-    assert concentrations["CO2"] == pytest.approx(284.3169987996419)
-    assert concentrations["CH3CL"] == pytest.approx(457.00000254313153)
-    # Not in the CMIP datasets
-    assert concentrations["HALON1202"] == 0.0
-
-    emissions = get_pi_control_emissions(CMIP6_PRE_INDUSTRIAL)
-    assert list(emissions) == list(PI_CONTROL_EMISSIONS_GASES)
-    # CO2 is zero (see roadmap item B19)
-    assert emissions["CO2I"] == 0.0
-    assert emissions["CO2B"] == 0.0
-    # 13.46 Mt NOx (as NO2) / yr
-    assert emissions["NOX"] == pytest.approx(4.095479910026472)
-    # 4.54 Mt SO2 / yr
-    assert emissions["SOX"] == pytest.approx(2.272231887773452)
-    # 559 kt N2O / yr
-    assert emissions["N2O"] == pytest.approx(0.3557483535357818)
-    # 9.60 Mt NH3 / yr
-    assert emissions["NH3"] == pytest.approx(7.909310341080795)
-    assert emissions["NMVOC"] == pytest.approx(66.78304875030415)
-    assert emissions["CH3CL"] == pytest.approx(4267.6083)
-
-
-def test_pre_industrial_unknown_concentration() -> None:
-    pre_industrial = PreIndustrialValues(
-        name="unknown-concentration",
-        pi_control_concentrations=MappingProxyType(
-            {"Atmospheric Concentrations|NOT_A_GAS": (1.0, "ppt")}
-        ),
-        historical_emissions_1850=MappingProxyType({}),
-    )
-    with pytest.raises(ValueError, match="NOT_A_GAS"):
-        get_pi_control_concentrations(pre_industrial)
-
-
-def test_pre_industrial_unknown_emissions() -> None:
-    pre_industrial = PreIndustrialValues(
-        name="unknown-emissions",
-        pi_control_concentrations=MappingProxyType({}),
-        historical_emissions_1850=MappingProxyType(
-            {"Emissions|NOT_A_GAS": (1.0, "kt NOT_A_GAS/yr")}
-        ),
-    )
-    with pytest.raises(ValueError, match="NOT_A_GAS"):
-        get_pi_control_emissions(pre_industrial)
-
-
-def test_missing_optional_dependency(monkeypatch: pytest.MonkeyPatch) -> None:
-    real_import_module = importlib.import_module
-
-    def import_module(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name == "f90nml":
-            raise ImportError(name)
-
-        return real_import_module(name, *args, **kwargs)
-
-    monkeypatch.setattr(importlib, "import_module", import_module)
-
-    with pytest.raises(
-        MissingOptionalDependencyError,
-        match=r"`read_namelist` requires f90nml to be installed",
-    ):
-        import_optional_dependency(
-            "f90nml", requirement="f90nml", callable_name="read_namelist"
-        )
+def test_pre_industrial_unknown_gas() -> None:
+    with pytest.raises(AssertionError, match="NOT_A_GAS"):
+        _complete({"CO2": 280.0, "NOT_A_GAS": 1.0})

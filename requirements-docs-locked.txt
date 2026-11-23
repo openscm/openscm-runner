@@ -79,6 +79,7 @@ exceptiongroup==1.3.0 ; python_full_version < '3.11'
     # via
     #   anyio
     #   ipython
+    #   openscm-runner
 executing==2.2.1
     # via stack-data
 f90nml==1.5

@@ -4,12 +4,17 @@ Integration tests: the MAGICC AR6 adapter for ERF-driven runs from equilibrium
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
 import pytest
+
+from openscm_runner import (
+    run_erf_driven_from_equilibrium,
+)
 from openscm_runner.adapters.magicc_ar6 import (
     MAGICCAR6AdapterConfiguration,
     MAGICCAR6AdapterERFDrivenFromEquilibrium,
@@ -18,9 +23,8 @@ from openscm_runner.adapters.magicc_ar6.base import MAGICC_VERSION
 from openscm_runner.adapters.magicc_ar6.running import MAGICCRunError
 from openscm_runner.output_specs import OutputSpecs
 
-from openscm_runner import (
-    run_erf_driven_from_equilibrium,
-)
+if sys.version_info < (3, 11):
+    from exceptiongroup import ExceptionGroup
 
 # These are the MAGICC AR6 adapters' tests (see docs/testing.md)
 pytestmark = pytest.mark.magicc_ar6

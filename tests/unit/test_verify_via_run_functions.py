@@ -13,13 +13,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pytest
-from openscm_runner.cmip_pre_industrial_branch.inputs import (
-    CMIP_CONCENTRATION_DRIVEN_VARIABLES,
-    CMIP_ESM_ALL_GHG_VARIABLES,
-    CMIP_ESM_VARIABLES,
-    CO2_CONCENTRATION_VARIABLES,
-    CO2_EMISSION_VARIABLES,
-)
 
 from openscm_runner import (
     InvalidInputError,
@@ -44,6 +37,14 @@ from openscm_runner import (
 from openscm_runner.ar_scenarios.inputs import (
     AR6_SCENARIO_CO2_EMISSIONS_VARIABLES,
     AR6_SCENARIO_EMISSIONS_VARIABLES,
+    AR7_SCENARIO_EMISSIONS_VARIABLES,
+)
+from openscm_runner.cmip_pre_industrial_branch.inputs import (
+    CMIP_CONCENTRATION_DRIVEN_VARIABLES,
+    CMIP_ESM_ALL_GHG_VARIABLES,
+    CMIP_ESM_VARIABLES,
+    CO2_CONCENTRATION_VARIABLES,
+    CO2_EMISSION_VARIABLES,
 )
 from openscm_runner.output import EnsembleMemberResult, OpenSCMRunnerOutput
 
@@ -109,7 +110,7 @@ class Case:
 
 
 CASES = (
-    Case("ar7", run_ar7_scenarios, "ar7_scenarios", AR6_SCENARIO_EMISSIONS_VARIABLES,
+    Case("ar7", run_ar7_scenarios, "ar7_scenarios", AR7_SCENARIO_EMISSIONS_VARIABLES,
          2023, True, 2500),
     Case("ar6", run_ar6_scenarios, "ar6_scenarios", AR6_SCENARIO_EMISSIONS_VARIABLES,
          2015, True, None),
@@ -311,14 +312,14 @@ def test_non_tuple_inputs_are_caught(case: Case) -> None:
     assert not adapter.calls
 
 
-@pytest.mark.parametrize("case", [CASES[0], CASES[1]], ids=["ar7", "ar6"])
+@pytest.mark.parametrize("case", [CASES[0]], ids=["ar7"])
 def test_scenario_inputs_do_not_require_halon1202(case: Case) -> None:
     valid = case.make_valid_input()
     adapter = RecordingAdapter()
     assert case.call_run((valid,), adapter).all_succeeded
 
     halon = valid.iloc[:1, :].rename(lambda _: "Emissions|Halon1202", level="variable")
-    with pytest.raises(InvalidInputError, match="unexpected variables.*Halon1202"):
+    with pytest.raises(InvalidInputError, match=r"unexpected variables.*Halon1202"):
         case.call_run((pd.concat([valid, halon]),), adapter)
 
     assert len(adapter.calls) == 1

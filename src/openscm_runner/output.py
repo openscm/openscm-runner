@@ -21,11 +21,15 @@ so failures aren't silently missed.
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
 import pandas as pd
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import ExceptionGroup
 
 AdapterT = TypeVar("AdapterT")
 
@@ -156,7 +160,6 @@ class OpenSCMRunnerOutput:
                 f"{len(failures)} of {len(self.members)} ensemble members failed: "
                 f"{names}"
             )
-            # TODO: add python 3.10 support
             raise ExceptionGroup(msg, [m.error for m in failures if m.error])
 
     def as_df(

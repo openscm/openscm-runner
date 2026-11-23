@@ -1,13 +1,14 @@
 """
 Adapter protocols and run functions for AR7 and AR6 scenarios
-
-As well as the full scenarios, there are AR6 variants
-which turn off part of the forcing (anthropogenic-only, CO2-forcing-only).
-The anthropogenic-only variant takes exactly the same input as the full scenarios,
-the CO2-forcing-only variant only takes the scenario's CO2 emissions
-(nothing else would be used).
-They are separate entry points so users have to be explicit about what they run.
 """
+# Developer notes
+#
+# As well as the full scenarios, there are AR6 variants
+# which turn off part of the forcing (anthropogenic-only, CO2-forcing-only).
+# The anthropogenic-only variant takes exactly the same input as the full scenarios,
+# the CO2-forcing-only variant only takes the scenario's CO2 emissions
+# (nothing else would be used).
+# They are separate entry points so users have to be explicit about what they run.
 
 from __future__ import annotations
 

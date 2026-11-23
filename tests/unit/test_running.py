@@ -1,5 +1,7 @@
 """Exercise the promoted public runners without a native model."""
 
+import sys
+
 import pandas as pd
 import pytest
 
@@ -14,6 +16,9 @@ from openscm_runner import (
     UnsupportedOutputError,
     run_erf_driven_from_equilibrium,
 )
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import ExceptionGroup
 
 SPECS = OutputSpecs(("Surface Air Temperature Change",))
 
@@ -216,7 +221,8 @@ def test_unchecked_execution_does_not_read_capabilities():
     class ExpertAdapter(RecordingAdapter):
         def __getattribute__(self, name):
             if name == "supported_output_variables":
-                raise AssertionError("Capabilities should not be read")
+                msg = "Capabilities should not be read"
+                raise AssertionError(msg)
             return super().__getattribute__(name)
 
     adapter = ExpertAdapter()

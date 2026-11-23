@@ -4,13 +4,23 @@ Integration tests: the MAGICC AR6 adapters for AR scenarios
 
 from __future__ import annotations
 
+import multiprocessing
 from collections.abc import Callable
+from concurrent.futures import Executor, Future, ProcessPoolExecutor, ThreadPoolExecutor
 from pathlib import Path
-from typing import Any
+from typing import Any, ParamSpec, TypeVar
 
 import numpy as np
 import pandas as pd
 import pytest
+
+from openscm_runner import (
+    run_ar6_scenarios,
+    run_ar6_scenarios_anthropogenic_only,
+    run_ar6_scenarios_co2_forcing_only,
+    run_ar7_scenarios,
+)
+from openscm_runner.adapter_errors import InvalidInputError
 from openscm_runner.adapters.magicc_ar6 import (
     MAGICCAR6AdapterAR6Scenario,
     MAGICCAR6AdapterAR6ScenarioAnthropogenicOnly,
@@ -24,14 +34,6 @@ from openscm_runner.adapters.magicc_ar6.ar_scenarios import (
 from openscm_runner.adapters.magicc_ar6.base import run_experiments
 from openscm_runner.output_specs import OutputSpecs
 
-from openscm_runner import (
-    run_ar6_scenarios,
-    run_ar6_scenarios_anthropogenic_only,
-    run_ar6_scenarios_co2_forcing_only,
-    run_ar7_scenarios,
-)
-from openscm_runner.adapter_errors import InvalidInputError
-
 # These are the MAGICC AR6 adapters' tests (see docs/testing.md)
 pytestmark = pytest.mark.magicc_ar6
 
@@ -39,6 +41,9 @@ TEST_DATA_DIR = Path(__file__).parents[2] / "test-data"
 
 N_MEMBERS = 2
 N_WORKERS = N_MEMBERS
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 
 def load_ar6_scenario() -> pd.DataFrame:
@@ -104,6 +109,66 @@ def test_ar6_subset_of_members_matches() -> None:
     )((scenario,), output_specs=output_specs)
 
     pd.testing.assert_frame_equal(one.members[0].data, two.members[0].data)
+
+
+class RecordingExecutor(Executor):
+    """Executor which counts what is submitted to it, then passes it on"""
+
+    def __init__(self, executor: Executor) -> None:
+        self.executor = executor
+        self.n_submitted = 0
+
+    def submit(
+        self, fn: Callable[P, T], /, *args: P.args, **kwargs: P.kwargs
+    ) -> Future[T]:
+        self.n_submitted += 1
+
+        return self.executor.submit(fn, *args, **kwargs)
+
+
+@pytest.mark.parametrize(
+    "make_executor",
+    (
+        pytest.param(lambda: ThreadPoolExecutor(max_workers=N_WORKERS), id="threads"),
+        pytest.param(
+            lambda: ProcessPoolExecutor(
+                max_workers=N_WORKERS, mp_context=multiprocessing.get_context("spawn")
+            ),
+            id="spawned-processes",
+        ),
+    ),
+)
+def test_ar6_given_executor(make_executor: Callable[[], Executor]) -> None:
+    """
+    Running with an executor we're given gives the same result as running serially
+
+    The executor is used for all the work, isn't shut down and can be re-used.
+    """
+    scenario = load_ar6_scenario()
+    output_specs = OutputSpecs(output_variables=("Surface Air Temperature Change",))
+
+    (expected,) = MAGICCAR6AdapterAR6Scenario(
+        configuration=MAGICCAR6AdapterConfiguration.from_environment(
+            testing_only_n_members=N_MEMBERS, n_workers=1
+        )
+    )((scenario,), output_specs=output_specs)
+
+    with make_executor() as pool:
+        executor = RecordingExecutor(pool)
+        adapter = MAGICCAR6AdapterAR6Scenario(
+            configuration=MAGICCAR6AdapterConfiguration.from_environment(
+                testing_only_n_members=N_MEMBERS,
+                n_workers=N_WORKERS,
+                executor=executor,
+            )
+        )
+        n_calls = 2
+        for _ in range(n_calls):
+            (res,) = adapter((scenario,), output_specs=output_specs)
+            pd.testing.assert_frame_equal(res.as_df(), expected.as_df())
+
+    # One experiment, so the members are split into `N_WORKERS` pieces each call
+    assert executor.n_submitted == n_calls * N_WORKERS
 
 
 def test_ar6_adapter_verifies_inputs() -> None:

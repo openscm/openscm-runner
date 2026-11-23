@@ -17,13 +17,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pytest
-from openscm_runner.adapters.magicc_ar6 import (
-    MAGICCAR6AdapterAR6Scenario,
-    MAGICCAR6AdapterAR6ScenarioAnthropogenicOnly,
-    MAGICCAR6AdapterAR6ScenarioCO2ForcingOnly,
-    MAGICCAR6AdapterConfiguration,
-    MAGICCAR6AdapterERFDrivenFromEquilibrium,
-)
 from pandas_openscm.comparison import compare_close
 from pandas_openscm.io import load_timeseries_csv
 
@@ -33,6 +26,13 @@ from openscm_runner import (
     run_ar6_scenarios_anthropogenic_only,
     run_ar6_scenarios_co2_forcing_only,
     run_erf_driven_from_equilibrium,
+)
+from openscm_runner.adapters.magicc_ar6 import (
+    MAGICCAR6AdapterAR6Scenario,
+    MAGICCAR6AdapterAR6ScenarioAnthropogenicOnly,
+    MAGICCAR6AdapterAR6ScenarioCO2ForcingOnly,
+    MAGICCAR6AdapterConfiguration,
+    MAGICCAR6AdapterERFDrivenFromEquilibrium,
 )
 
 # These are the MAGICC AR6 adapters' tests (see docs/testing.md)
@@ -137,7 +137,7 @@ ACCEPTANCE_CASES = (
         tolerance=Tolerance(absolute=1e-6, relative=1e-5),
     ),
     # This may still change: what is meant by CO2-only is still unclear
-    # (e.g. which feedbacks should be included, see roadmap item B16)
+    # (e.g. which feedbacks should be included, see decision B16)
     AcceptanceCase(
         experiment="ar6-scenario-co2-forcing-only",
         input_file=AR6_SCENARIO_FILE,

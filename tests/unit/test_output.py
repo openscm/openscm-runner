@@ -1,5 +1,7 @@
 """Success, partial failure and dataframe access for the promoted containers."""
 
+import sys
+
 import pandas as pd
 import pytest
 
@@ -9,6 +11,9 @@ from openscm_runner import (
     OpenSCMRunnerOutput,
     RunResults,
 )
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import ExceptionGroup
 
 
 def make_data() -> pd.DataFrame:

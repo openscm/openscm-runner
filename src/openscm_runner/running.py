@@ -86,38 +86,7 @@ def run_adapters(
 
             outputs = call(adapter)
 
-            # TODO: split out verify_outputs function (also solves TRY301 issues below)?
-            if not isinstance(outputs, tuple):
-                msg = (
-                    f"{adapter!r} must return a tuple of `OpenSCMRunnerOutput`s, "
-                    f"received {type(outputs).__name__!r}"
-                )
-                raise AdapterOutputError(msg)
-
-            if len(outputs) != n_inputs:
-                msg = (
-                    f"{adapter!r} returned {len(outputs)} outputs "
-                    f"for {n_inputs} inputs (it must return exactly one per input)"
-                )
-                raise AdapterOutputError(msg)
-
-            wrong_types = sorted(
-                {
-                    type(o).__name__
-                    for o in outputs
-                    if not isinstance(o, OpenSCMRunnerOutput)
-                }
-            )
-            if wrong_types:
-                msg = (
-                    f"{adapter!r} must return `OpenSCMRunnerOutput`s, "
-                    f"received {wrong_types!r}"
-                )
-                raise AdapterOutputError(msg)
-
-            # TODO: check the requested variables are all in the output.
-            # TODO: check ensemble member IDs follow the agreed naming scheme.
-            # TODO: decide which additional output checks `run_checks=False` skips.
+            verify_adapter_outputs(adapter, outputs, n_inputs=n_inputs)
 
         except Exception as exc:
             results.append(AdapterRunResult.from_failure(adapter, exc))
@@ -126,3 +95,58 @@ def run_adapters(
         results.append(AdapterRunResult.from_success(adapter, outputs))
 
     return RunResults(tuple(results))
+
+
+def verify_adapter_outputs(
+    adapter: object,
+    outputs: object,
+    *,
+    n_inputs: int,
+) -> None:
+    """
+    Verify that an adapter's outputs follow the shared output rules
+
+    Parameters
+    ----------
+    adapter
+        Adapter that produced `outputs` (used in error messages)
+
+    outputs
+        Outputs returned by the adapter
+
+    n_inputs
+        Number of inputs the adapter was given.
+        The adapter must return exactly this many outputs.
+
+    Raises
+    ------
+    AdapterOutputError
+        `outputs` is not a tuple of `OpenSCMRunnerOutput`s
+        with exactly one element per input
+    """
+    if not isinstance(outputs, tuple):
+        msg = (
+            f"{adapter!r} must return a tuple of `OpenSCMRunnerOutput`s, "
+            f"received {type(outputs).__name__!r}"
+        )
+        raise AdapterOutputError(msg)
+
+    if len(outputs) != n_inputs:
+        msg = (
+            f"{adapter!r} returned {len(outputs)} outputs "
+            f"for {n_inputs} inputs (it must return exactly one per input)"
+        )
+        raise AdapterOutputError(msg)
+
+    wrong_types = sorted(
+        {type(o).__name__ for o in outputs if not isinstance(o, OpenSCMRunnerOutput)}
+    )
+    if wrong_types:
+        msg = (
+            f"{adapter!r} must return `OpenSCMRunnerOutput`s, received {wrong_types!r}"
+        )
+        raise AdapterOutputError(msg)
+
+    # TODO: check the requested variables are all in the output.
+    # TODO: check ensemble member IDs follow the agreed naming scheme.
+    # TODO: decide which additional output checks `run_checks=False` skips.

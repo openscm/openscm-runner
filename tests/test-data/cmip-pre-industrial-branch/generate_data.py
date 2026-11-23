@@ -22,7 +22,7 @@ and aerosol (and aerosol/ozone precursor) emissions, 1850-2100.
 
 The natural forcing is RCMIP phase 3's,
 so it isn't zero in 1850 (i.e. it isn't relative to piControl,
-see roadmap item B19).
+see decision B19).
 The data comes from the RCMIP phase 3 protocol
 (https://gitlab.com/rcmip/rcmip-phase-3, tag v3.0.1, pinned to its commit).
 This script must never import `openscm_runner`.

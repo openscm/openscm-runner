@@ -44,7 +44,7 @@ def test_standard_outputs_and_extended_request():
     )
     specs = OutputSpecs(STANDARD_OUTPUT_VARIABLES)
     assert specs.output_variables == STANDARD_OUTPUT_VARIABLES
-    extended = STANDARD_OUTPUT_VARIABLES + ("Additional Diagnostic",)
+    extended = (*STANDARD_OUTPUT_VARIABLES, "Additional Diagnostic")
     assert OutputSpecs(extended).output_variables == extended
 
 

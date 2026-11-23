@@ -192,7 +192,7 @@ CASES = {
         ),
     ),
     # This may still change: what is meant by CO2-only is still unclear
-    # (e.g. which feedbacks should be included, see roadmap item B16).
+    # (e.g. which feedbacks should be included, see decision B16).
     "ar6-scenario-co2-forcing-only": Case(
         rf_total_runmodus="CO2",
         # As for anthropogenic-only, MAGICC still reports every forcing
@@ -424,7 +424,7 @@ def write_scenario_file(magicc: MAGICC7, emissions: MAGICCData) -> None:
     writer.write(str(Path(magicc.run_dir) / SCENARIO_FILE), magicc_version=7)
 
 
-def run(
+def run(  # noqa: PLR0913
     magicc: MAGICC7,
     config: dict[str, object],
     last_year: int,

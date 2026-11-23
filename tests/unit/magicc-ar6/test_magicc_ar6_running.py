@@ -10,6 +10,7 @@ import platform
 from pathlib import Path
 
 import pytest
+
 from openscm_runner.adapters.magicc_ar6 import running as running_module
 from openscm_runner.adapters.magicc_ar6.running import (
     MAGICCInstallation,
@@ -149,5 +150,5 @@ def test_installation_check_version(
     if version == installation.expected_version and exit_code == "0":
         installation.check()
     else:
-        with pytest.raises(MAGICCRunError, match="Expected MAGICC v7.5.3"):
+        with pytest.raises(MAGICCRunError, match=r"Expected MAGICC v7\.5\.3"):
             installation.check()

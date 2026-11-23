@@ -31,8 +31,6 @@ from functools import partial
 from pathlib import Path
 
 import pandas as pd
-from gcages.hashing import get_file_hash
-from gcages.renaming import SupportedNamingConventions, convert_variable_name
 
 HERE = Path(__file__).parent
 
@@ -64,18 +62,8 @@ AGGREGATE_VARIABLES = (
     "Emissions|PFC",
 )
 
-# Halon1202 was an AR6 input, but its emissions were zero in every AR6 scenario,
-# so we drop it for simplicity and consistency with AR7 scenarios
-# (it isn't one of `AR6_SCENARIO_EMISSIONS_VARIABLES` in openscm-runner).
-DROPPED_VARIABLES = ("Emissions|Halon1202",)
+DROPPED_VARIABLES = ()
 
-# The AR6 scenario input uses gcages' names.
-# gcages 0.14.0 calls AR6 WG3's names `IAMC` (later versions call them `AR6_WG3`).
-to_gcages_name = partial(
-    convert_variable_name,
-    from_convention=SupportedNamingConventions.IAMC,
-    to_convention=SupportedNamingConventions.GCAGES,
-)
 
 UNIT_RENAMING = {
     # HFC245ca was a mislabelling in AR6.
@@ -86,6 +74,9 @@ UNIT_RENAMING = {
 
 
 def check_hash(path: Path) -> None:
+    # Lazy import so tests load
+    from gcages.hashing import get_file_hash  # noqa: PLC0415
+
     sha256 = get_file_hash(path, algorithm="sha256")
     if sha256 != AR6_DATABASE_SHA256:
         msg = f"sha256 of {path} is {sha256}, not {AR6_DATABASE_SHA256}"
@@ -106,12 +97,26 @@ def load_scenario(path: Path) -> pd.DataFrame:
 
 
 def make_emissions(raw: pd.DataFrame) -> pd.DataFrame:
+    # Lazy import so tests load
+    from gcages.renaming import (  # noqa: PLC0415
+        SupportedNamingConventions,
+        convert_variable_name,
+    )
+
     infilled = raw.loc[
         raw.index.get_level_values("variable").str.startswith(INFILLED_PREFIX)
     ].rename(lambda v: v.removeprefix(INFILLED_PREFIX), level="variable")
     infilled = infilled.loc[
         ~infilled.index.get_level_values("variable").isin(AGGREGATE_VARIABLES)
     ]
+
+    # The AR6 scenario input uses gcages' names.
+    # gcages 0.14.0 calls AR6 WG3's names `IAMC` (later versions call them `AR6_WG3`).
+    to_gcages_name = partial(
+        convert_variable_name,
+        from_convention=SupportedNamingConventions.IAMC,
+        to_convention=SupportedNamingConventions.GCAGES,
+    )
     out = infilled.rename(to_gcages_name, level="variable").rename(
         lambda u: UNIT_RENAMING.get(u, u), level="unit"
     )
