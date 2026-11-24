@@ -94,6 +94,11 @@ The rules:
   (model version, calibration etc.), separate from operational settings
   (paths, number of workers).
   Never silently fall back to a different calibration.
+- **Don't read configuration from the environment implicitly.**
+  Configuration is passed explicitly in Python.
+  You can offer an opt-in way to read it from environment variables
+  (e.g. `MAGICCAR6AdapterConfiguration.from_environment`, which the tests use),
+  but nothing should read environment variables (or a `.env` file) behind the user's back.
 - **Check the checksums of your resources** (calibration, history etc.)
   against expected values before running.
 - **Keep imports cheap.** Importing `openscm_runner` must not import your model.

@@ -31,6 +31,15 @@ Try and keep your merge requests as small as possible
 This makes life much easier for reviewers
 which allows contributions to be accepted at a faster rate.
 
+## What never goes in the repository
+
+Never commit model binaries, tokens or other credentials,
+private or licensed calibration data, local absolute paths,
+or environment files containing any of these (e.g. `.env`).
+Some models (e.g. MAGICC) are licensed:
+keep their files outside the repository (or in a gitignored location)
+and point to them with environment variables (see `.env.sample`).
+
 ## Language
 
 We use British English for our development.
