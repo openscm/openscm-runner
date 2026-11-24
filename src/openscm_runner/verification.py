@@ -135,8 +135,6 @@ def get_wide_timeseries_problems(  # noqa: PLR0913
     last_year_at_most: int | None,
     regions: Collection[str],
     timeseries_levels: Collection[str],
-    # TODO: switch to problem container with a __repr__ method or something
-    # throughout this module rather than plain strings
 ) -> list[str]:
     """
     Get the problems with one input

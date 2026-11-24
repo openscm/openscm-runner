@@ -96,3 +96,6 @@ Candidates for "Next", not yet prioritised.
 - [](){#w20}**W20** Check that adapters' outputs contain all the requested variables
   (in `verify_adapter_outputs`).
   Whether `run_checks=False` skips this is decision [A4][a4].
+- [](){#w21}**W21** Report input problems as structured objects rather than plain strings
+  (in `verification.py`), so code can inspect them (e.g. via an attribute on
+  `InvalidInputError`) instead of parsing the error message.
