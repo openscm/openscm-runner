@@ -356,7 +356,7 @@ def test_output_variable_requests_checked_by_every_runner(case, variables):
         **{case.input_kwarg: inputs}, adapters=(adapter,), output_specs=specs
     )
     assert not adapter.calls
-    assert isinstance(results[0].error, UnsupportedOutputError)
+    assert isinstance(results[0].error_if_no_outputs, UnsupportedOutputError)
     with pytest.raises(UnsupportedOutputError):
         _ = results[0].outputs
 

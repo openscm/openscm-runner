@@ -259,7 +259,6 @@ def test_acceptance(case: AcceptanceCase) -> None:
 
     assert len(outputs) == len(expected)
     for res, exp in zip(outputs, expected, strict=True):
-        res.raise_if_any_failed()
         if case.n_members == 1:
             # We are comparing the member we think we are
             assert [m.ensemble_member for m in res.members] == [
@@ -351,7 +350,6 @@ def test_ar6_scenario_full_ensemble_matches_ar6() -> None:
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     assert len(output.members) == AR6_N_MEMBERS
 
     res = to_ar6_temperature_percentiles(

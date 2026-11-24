@@ -222,22 +222,16 @@ class AdapterRunResult(Generic[AdapterT]):
     """
     Result of running one adapter
 
-    Create with [from_success][(c).from_success] or [from_failure][(c).from_failure].
+    Create with [from_outputs][(c).from_outputs] or [from_error][(c).from_error].
 
-    TODO: think through if this is actually the logic we want.
-    Probably we just need to change the names.
-    `outputs_if_succeeded` --> `outputs`
-    (the information about success is held by the OpenSCMRunnerOutput instance).
-    `error` --> `error_if_no_output`
-    (only use this if an OpenSCMRunnerOutput instance wasn't created).
-    `succeeded` --> `has_outputs` and introduce new `succeeded` method
-    that checks if any output has failures.
-    `from_success` --> `from_outputs`
-    `from_failure` --> `from_error`
+    There are two ways for things to go wrong:
 
-    If the adapter ran, but some ensemble members failed,
-    the adapter still succeeded:
-    the failures are recorded in each [OpenSCMRunnerOutput][(m).].
+    - the adapter fails as a whole (e.g. it raised),
+      so there are no outputs, only an error
+      (see [has_outputs][(c).has_outputs])
+    - the adapter returns outputs, but some ensemble members failed.
+      These failures are recorded in each [OpenSCMRunnerOutput][(m).]
+      (see [all_succeeded][(c).all_succeeded]).
 
     Notes
     -----
@@ -248,39 +242,59 @@ class AdapterRunResult(Generic[AdapterT]):
     adapter: AdapterT
     """Adapter that was run"""
 
-    outputs_if_succeeded: tuple[OpenSCMRunnerOutput, ...] | None
+    outputs_if_no_error: tuple[OpenSCMRunnerOutput, ...] | None
     """
-    Outputs, `None` if the adapter failed
+    Outputs, `None` if the adapter failed as a whole
 
-    To read the data, you normally should use `outputs`
+    To read the outputs, you normally should use [outputs][(c).outputs].
     """
 
-    error: Exception | None
-    """Error raised by (or about) the adapter, `None` if it succeeded"""
+    error_if_no_outputs: Exception | None
+    """Error raised by (or about) the adapter, `None` if it returned outputs"""
 
     def __post_init__(self) -> None:  # noqa: D105
-        if (self.outputs_if_succeeded is None) == (self.error is None):
-            msg = "Exactly one of `outputs_if_succeeded` and `error` must be set"
+        if (self.outputs_if_no_error is None) == (self.error_if_no_outputs is None):
+            msg = (
+                "Exactly one of `outputs_if_no_error` "
+                "and `error_if_no_outputs` must be set"
+            )
             raise ValueError(msg)
 
     @classmethod
-    def from_success(
+    def from_outputs(
         cls, adapter: AdapterT, outputs: tuple[OpenSCMRunnerOutput, ...]
     ) -> AdapterRunResult[AdapterT]:
-        """Create a result for an adapter that ran successfully"""
-        return cls(adapter=adapter, outputs_if_succeeded=outputs, error=None)
+        """Create a result for an adapter that returned outputs"""
+        return cls(
+            adapter=adapter, outputs_if_no_error=outputs, error_if_no_outputs=None
+        )
 
     @classmethod
-    def from_failure(
+    def from_error(
         cls, adapter: AdapterT, error: Exception
     ) -> AdapterRunResult[AdapterT]:
-        """Create a result for an adapter that failed"""
-        return cls(adapter=adapter, outputs_if_succeeded=None, error=error)
+        """Create a result for an adapter that failed as a whole"""
+        return cls(adapter=adapter, outputs_if_no_error=None, error_if_no_outputs=error)
 
     @property
-    def succeeded(self) -> bool:
-        """Whether the adapter ran successfully"""
-        return self.error is None
+    def has_outputs(self) -> bool:
+        """
+        Whether the adapter returned outputs (i.e. didn't fail as a whole)
+
+        Some ensemble members may still have failed,
+        see [all_succeeded][(c).all_succeeded].
+        """
+        return self.error_if_no_outputs is None
+
+    @property
+    def all_succeeded(self) -> bool:
+        """
+        Whether the adapter returned outputs and every ensemble member succeeded
+        """
+        if self.outputs_if_no_error is None:
+            return False
+
+        return all(o.all_succeeded for o in self.outputs_if_no_error)
 
     @property
     def outputs(self) -> tuple[OpenSCMRunnerOutput, ...]:
@@ -290,17 +304,46 @@ class AdapterRunResult(Generic[AdapterT]):
         Raises
         ------
         Exception
-            The stored error, if the adapter failed.
+            The stored error, if the adapter failed as a whole.
             This means failures can't be silently ignored.
         """
-        if self.error is not None:
-            raise self.error
+        if self.error_if_no_outputs is not None:
+            raise self.error_if_no_outputs
 
-        if self.outputs_if_succeeded is None:  # pragma: no cover
+        if self.outputs_if_no_error is None:  # pragma: no cover
             # Can't happen because of the check in `__post_init__`
             raise AssertionError
 
-        return self.outputs_if_succeeded
+        return self.outputs_if_no_error
+
+    def raise_if_any_failed(self) -> None:
+        """
+        Raise if the adapter failed as a whole or any ensemble member failed
+
+        Raises
+        ------
+        Exception
+            The stored error, if the adapter failed as a whole
+
+        ExceptionGroup
+            Group containing, for each output with failed ensemble members,
+            the group raised by its
+            [raise_if_any_failed][(m).OpenSCMRunnerOutput.raise_if_any_failed]
+        """
+        errors = []
+        for i, output in enumerate(self.outputs):
+            try:
+                output.raise_if_any_failed()
+            except ExceptionGroup as exc:
+                errors.append((i, exc))
+
+        if errors:
+            positions = ", ".join(str(i) for i, _ in errors)
+            msg = (
+                f"Ensemble members failed in {len(errors)} of {len(self.outputs)} "
+                f"outputs of {type(self.adapter).__name__}: outputs {positions}"
+            )
+            raise ExceptionGroup(msg, [exc for _, exc in errors])
 
 
 @dataclass(frozen=True, slots=True)
@@ -310,12 +353,15 @@ class RunResults(Generic[AdapterT]):
 
     The results are in the same order as the adapters that were passed in.
 
+    As for [AdapterRunResult][(m).], adapters can fail as a whole
+    (see [without_outputs][(c).without_outputs]
+    and [all_have_outputs][(c).all_have_outputs])
+    or return outputs in which some ensemble members failed
+    (see [failures][(c).failures] and [all_succeeded][(c).all_succeeded]).
+
     TODO: combine everything into a single dataframe.
     This needs an index level that identifies the adapter/model,
     which we haven't designed yet.
-
-    TODO: similar tweaks to AdapterRunResult in terms of differentiating between
-    no output at all, some output or all ensemble members ran successfully.
     """
 
     results: tuple[AdapterRunResult[AdapterT], ...]
@@ -331,34 +377,65 @@ class RunResults(Generic[AdapterT]):
         return self.results[index]
 
     @property
+    def without_outputs(self) -> tuple[AdapterRunResult[AdapterT], ...]:
+        """Results for the adapters that failed as a whole (no outputs)"""
+        return tuple(r for r in self.results if not r.has_outputs)
+
+    @property
     def failures(self) -> tuple[AdapterRunResult[AdapterT], ...]:
-        """Results for the adapters that failed as a whole"""
-        return tuple(r for r in self.results if not r.succeeded)
+        """
+        Results for the adapters that didn't fully succeed
+
+        I.e. the adapters that failed as a whole
+        or in whose outputs any ensemble member failed.
+        """
+        return tuple(r for r in self.results if not r.all_succeeded)
+
+    @property
+    def all_have_outputs(self) -> bool:
+        """
+        Whether every adapter returned outputs (i.e. none failed as a whole)
+
+        Some ensemble members may still have failed,
+        see [all_succeeded][(c).all_succeeded].
+        """
+        return not self.without_outputs
 
     @property
     def all_succeeded(self) -> bool:
         """
-        Whether every adapter ran successfully
-
-        This doesn't check individual ensemble members,
-        see [OpenSCMRunnerOutput][(m).] for that.
-        TODO: consider a method
-        that does consider whether any individual ensemble failed.
+        Whether every adapter returned outputs and every ensemble member succeeded
         """
         return not self.failures
 
     def raise_if_any_failed(self) -> None:
         """
-        Raise if any adapter failed as a whole
+        Raise if any adapter failed as a whole or any ensemble member failed
 
         Raises
         ------
         ExceptionGroup
-            Group containing the error from each failed adapter.
-            The message names the failed adapters (position and type).
+            Group containing, for each adapter that didn't fully succeed,
+            its error (if it failed as a whole)
+            or the group raised by its
+            [raise_if_any_failed][(m).AdapterRunResult.raise_if_any_failed].
+            The message names these adapters (position and type).
         """
-        failed = [(i, r) for i, r in enumerate(self.results) if not r.succeeded]
-        if failed:
-            names = ", ".join(f"{i} ({type(r.adapter).__name__})" for i, r in failed)
-            msg = f"{len(failed)} of {len(self.results)} adapters failed: {names}"
-            raise ExceptionGroup(msg, [r.error for _, r in failed if r.error])
+        errors: list[tuple[int, AdapterRunResult[AdapterT], Exception]] = []
+        for i, result in enumerate(self.results):
+            if result.error_if_no_outputs is not None:
+                errors.append((i, result, result.error_if_no_outputs))
+                continue
+
+            try:
+                result.raise_if_any_failed()
+            except ExceptionGroup as exc:
+                errors.append((i, result, exc))
+
+        if errors:
+            names = ", ".join(f"{i} ({type(r.adapter).__name__})" for i, r, _ in errors)
+            msg = (
+                f"{len(errors)} of {len(self.results)} adapters didn't fully succeed: "
+                f"{names}"
+            )
+            raise ExceptionGroup(msg, [exc for _, _, exc in errors])

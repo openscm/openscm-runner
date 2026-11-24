@@ -90,10 +90,10 @@ def run_adapters(
             verify_adapter_outputs(adapter, outputs, n_inputs=n_inputs)
 
         except Exception as exc:
-            results.append(AdapterRunResult.from_failure(adapter, exc))
+            results.append(AdapterRunResult.from_error(adapter, exc))
             continue
 
-        results.append(AdapterRunResult.from_success(adapter, outputs))
+        results.append(AdapterRunResult.from_outputs(adapter, outputs))
 
     return RunResults(tuple(results))
 

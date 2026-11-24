@@ -115,9 +115,11 @@ def test_failure_does_not_discard_other_adapters():
     results = run_erf_driven_from_equilibrium(
         (make_input("test"),), adapters=(failed, succeeded), output_specs=SPECS
     )
+    assert not results.all_have_outputs
     assert not results.all_succeeded
+    assert results.without_outputs == (results[0],)
     assert results.failures == (results[0],)
-    assert results[1].succeeded
+    assert results[1].all_succeeded
     assert len(succeeded.calls) == 1
     with pytest.raises(RuntimeError, match="native failure") as exc:
         _ = results[0].outputs
@@ -165,9 +167,9 @@ def test_malformed_adapter_outputs_are_recorded(outputs, message, run_checks):
         run_checks=run_checks,
     )
     assert [r.adapter for r in results] == [first, malformed, last]
-    assert results[0].succeeded and results[2].succeeded
+    assert results[0].all_succeeded and results[2].all_succeeded
     assert len(first.calls) == len(last.calls) == 1
-    assert isinstance(results[1].error, AdapterOutputError)
+    assert isinstance(results[1].error_if_no_outputs, AdapterOutputError)
     assert results.failures == (results[1],)
     with pytest.raises(AdapterOutputError, match=message):
         _ = results[1].outputs
@@ -206,15 +208,15 @@ def test_incompatible_adapter_is_not_called_and_others_continue():
         output_specs=SPECS,
     )
     assert [r.adapter for r in results] == [first, incompatible, last]
-    assert results[0].succeeded
-    assert results[2].succeeded
+    assert results[0].all_succeeded
+    assert results[2].all_succeeded
     assert len(first.calls) == len(last.calls) == 1
     assert not incompatible.calls
-    assert isinstance(results[1].error, UnsupportedOutputError)
+    assert isinstance(results[1].error_if_no_outputs, UnsupportedOutputError)
     assert results.failures == (results[1],)
     with pytest.raises(ExceptionGroup) as exc:
         results.raise_if_any_failed()
-    assert exc.value.exceptions == (results[1].error,)
+    assert exc.value.exceptions == (results[1].error_if_no_outputs,)
 
 
 def test_unchecked_execution_does_not_read_capabilities():
@@ -250,5 +252,5 @@ def test_request_can_change_between_calls_on_one_adapter():
         inputs, adapters=(adapter,), output_specs=SPECS
     )
     assert first.all_succeeded and third.all_succeeded
-    assert isinstance(second[0].error, UnsupportedOutputError)
+    assert isinstance(second[0].error_if_no_outputs, UnsupportedOutputError)
     assert len(adapter.calls) == 2

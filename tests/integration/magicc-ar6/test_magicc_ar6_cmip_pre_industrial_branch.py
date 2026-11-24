@@ -273,7 +273,6 @@ def test_cmip_concentration_driven_runs(
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     res = output.as_df()
     assert res.columns.min() == 1850
 
@@ -358,7 +357,6 @@ def test_cmip_pi_control_stays_at_zero(
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     res = output.as_df()
 
     for variable, values in res.groupby("variable"):
@@ -430,7 +428,6 @@ def test_cmip_inputs_away_from_pi_control_in_the_first_year(
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     res = output.as_df()
 
     for variable, sign in (
@@ -451,7 +448,6 @@ def test_cmip_inputs_away_from_pi_control_in_the_first_year(
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     ch4 = output.as_df().xs("Atmospheric Concentrations|CH4", level="variable")
 
     np.testing.assert_allclose(
@@ -500,7 +496,6 @@ def test_cmip_abrupt_4xco2_has_forcing_from_the_first_year(
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     res = output.as_df()
     co2_erf = res.xs("Effective Radiative Forcing|CO2", level="variable")
 
@@ -542,7 +537,6 @@ def test_cmip_1pct_co2_forcing_increases_linearly_from_zero(
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     res = output.as_df()
     co2_erf = res.xs("Effective Radiative Forcing|CO2", level="variable")
 
@@ -587,7 +581,6 @@ def test_cmip_natural_forcing_comes_from_the_input(
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     res = output.as_df()
 
     for _, member in res.groupby("ensemble_member"):
@@ -748,7 +741,6 @@ def test_cmip_only_some_inputs_change(  # noqa: PLR0913
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     res = output.as_df()
 
     for component in ERF_COMPONENTS:
@@ -820,7 +812,6 @@ def test_cmip_ozone_responds_to_methane(
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     res = output.as_df()
     tropospheric_ozone = res.xs(
         "Effective Radiative Forcing|Tropospheric Ozone", level="variable"
@@ -884,7 +875,6 @@ def test_cmip_co2_only_matches_full_input_at_pi_control(
     )
     co2_only_results.raise_if_any_failed()
     (co2_only_output,) = co2_only_results[0].outputs
-    co2_only_output.raise_if_any_failed()
     co2_only = co2_only_output.as_df()
 
     full_results = run(
@@ -902,7 +892,6 @@ def test_cmip_co2_only_matches_full_input_at_pi_control(
     )
     full_results.raise_if_any_failed()
     (full_output,) = full_results[0].outputs
-    full_output.raise_if_any_failed()
     full = full_output.as_df()
 
     pd.testing.assert_frame_equal(co2_only, full)
@@ -938,7 +927,6 @@ def test_cmip_ozone_responds_to_emissions(
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     res = output.as_df()
     tropospheric_ozone = res.xs(
         "Effective Radiative Forcing|Tropospheric Ozone", level="variable"
@@ -975,7 +963,6 @@ def run_aerosol_growth(
     )
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     res = output.as_df()
 
     return res.xs("Effective Radiative Forcing|Aerosols", level="variable")
@@ -1632,8 +1619,6 @@ def test_esm_single_year_aerosol_emissions_change(
         output_specs=CMIP_OUTPUTS,
     )
     results.raise_if_any_failed()
-    for output in results[0].outputs:
-        output.raise_if_any_failed()
 
     base_res, *changed_res = (
         output.as_df().droplevel("scenario") for output in results[0].outputs

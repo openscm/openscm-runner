@@ -146,6 +146,17 @@ The `run_*` functions return a [`RunResults`][openscm_runner.output.RunResults] 
   each holding that member's data or its error.
   `as_df()` combines the members, with an `ensemble_member` index level.
 
+There are two ways for things to go wrong:
+
+- an adapter fails as a whole (e.g. it raises),
+  so it has no outputs, only an error
+  (`has_outputs` on [`AdapterRunResult`][openscm_runner.output.AdapterRunResult],
+  `all_have_outputs` and `without_outputs` on [`RunResults`][openscm_runner.output.RunResults])
+- an adapter returns outputs, but some of their ensemble members failed.
+
+`all_succeeded`, `failures` and `raise_if_any_failed()` cover both,
+at every level, so `results.raise_if_any_failed()` checks everything.
+
 There are dedicated accessors which raise if anything failed,
 so failures can't be silently ignored.
 We recommend using them.

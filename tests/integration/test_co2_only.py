@@ -146,7 +146,6 @@ def test_co2_only_runs_only_have_co2_forcing(
 
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     output_df = output.as_df()
 
     co2 = output_df.xs("Effective Radiative Forcing|CO2", level="variable")

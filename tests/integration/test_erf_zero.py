@@ -69,7 +69,6 @@ def test_zero_erf_gives_zero_outputs(make_adapter: Callable[[], Any]) -> None:
 
     results.raise_if_any_failed()
     (output,) = results[0].outputs
-    output.raise_if_any_failed()
     output_df = output.as_df()
 
     assert not output_df.empty

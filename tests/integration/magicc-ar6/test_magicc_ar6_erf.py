@@ -73,8 +73,6 @@ def test_erf_driven_from_equilibrium() -> None:
         ),
     )
     results.raise_if_any_failed()
-    for output in results[0].outputs:
-        output.raise_if_any_failed()
 
     abrupt, zero, ramp = (o.as_df() for o in results[0].outputs)
 

@@ -48,8 +48,21 @@ def test_successful_members_combine_in_member_order():
     assert output.as_df(ensemble_member_level="member").index.names[0] == "member"
     pd.testing.assert_frame_equal(first, before)
 
+    result = AdapterRunResult.from_outputs("adapter", (output,))
+    results = RunResults((result,))
+    assert result.has_outputs
+    assert result.all_succeeded
+    result.raise_if_any_failed()
+    assert results.all_have_outputs
+    assert results.all_succeeded
+    assert results.without_outputs == ()
+    assert results.failures == ()
+    assert list(results) == [result]
+    assert results[0] is result
+    results.raise_if_any_failed()
 
-def test_partial_member_failure_is_not_adapter_failure():
+
+def test_partial_member_failure():
     error = RuntimeError("member failed")
     failed = EnsembleMemberResult.from_failure("failed", error)
     succeeded = EnsembleMemberResult.from_success("ok", make_data())
@@ -67,14 +80,24 @@ def test_partial_member_failure_is_not_adapter_failure():
         output.as_df(raise_if_any_failed=False).xs("ok", level="ensemble_member"),
         succeeded.data,
     )
-    result = AdapterRunResult.from_success("adapter", (output,))
+
+    # The adapter returned outputs, but it didn't fully succeed
+    result = AdapterRunResult.from_outputs("adapter", (output,))
     results = RunResults((result,))
-    assert result.succeeded
-    assert results.all_succeeded
-    assert results.failures == ()
-    assert list(results) == [result]
-    assert results[0] is result
-    results.raise_if_any_failed()
+    assert result.has_outputs
+    assert not result.all_succeeded
+    assert results.all_have_outputs
+    assert not results.all_succeeded
+    assert results.without_outputs == ()
+    assert results.failures == (result,)
+    with pytest.raises(ExceptionGroup, match="outputs 0") as adapter_group:
+        result.raise_if_any_failed()
+    (output_group,) = adapter_group.value.exceptions
+    assert output_group.exceptions == (error,)
+    with pytest.raises(ExceptionGroup, match=r"0 \(str\)") as run_group:
+        results.raise_if_any_failed()
+    (nested,) = run_group.value.exceptions
+    assert nested.exceptions[0].exceptions == (error,)
 
 
 def test_no_successful_members():
@@ -104,3 +127,28 @@ def test_result_requires_exactly_one_of_data_and_error(both_set):
     outputs = () if both_set else None
     with pytest.raises(ValueError, match="Exactly one"):
         AdapterRunResult("adapter", outputs, error)
+
+
+def test_adapter_failed_as_a_whole():
+    error = RuntimeError("adapter failed")
+    ok = AdapterRunResult.from_outputs(
+        "ok",
+        (OpenSCMRunnerOutput((EnsembleMemberResult.from_success("a", make_data()),)),),
+    )
+    failed = AdapterRunResult.from_error("failed", error)
+    results = RunResults((ok, failed))
+
+    assert not failed.has_outputs
+    assert not failed.all_succeeded
+    with pytest.raises(RuntimeError, match="adapter failed"):
+        _ = failed.outputs
+    with pytest.raises(RuntimeError, match="adapter failed"):
+        failed.raise_if_any_failed()
+
+    assert not results.all_have_outputs
+    assert not results.all_succeeded
+    assert results.without_outputs == (failed,)
+    assert results.failures == (failed,)
+    with pytest.raises(ExceptionGroup, match=r"1 of 2 .*1 \(str\)") as group:
+        results.raise_if_any_failed()
+    assert group.value.exceptions == (error,)
