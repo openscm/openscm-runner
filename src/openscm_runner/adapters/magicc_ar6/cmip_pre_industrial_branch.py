@@ -1495,6 +1495,9 @@ class MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP-style concentration-driven runs from CMIP7 pre-industrial
 
+    For the experiment, see
+    [AdapterConcentrationDrivenFromCMIP7PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
+
     Uses the AR6 probabilistic distribution,
     with MAGICC's pre-industrial state set to the CMIP7 piControl state
     (see [openscm_runner.adapters.magicc_ar6.pre_industrial][]
@@ -1550,7 +1553,7 @@ class MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_cmip7_pre_industrial_branch_concentrations(concentrations)
 
@@ -1566,6 +1569,9 @@ class MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial:
 class MAGICCAR6AdapterConcentrationDrivenFromCMIP6PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP-style concentration-driven runs from CMIP6 pre-industrial
+
+    For the experiment, see
+    [AdapterConcentrationDrivenFromCMIP6PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     As for [MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial][(m).]
     (including the warnings),
@@ -1586,7 +1592,7 @@ class MAGICCAR6AdapterConcentrationDrivenFromCMIP6PreIndustrial:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_cmip6_pre_industrial_branch_concentrations(concentrations)
 
@@ -1602,6 +1608,9 @@ class MAGICCAR6AdapterConcentrationDrivenFromCMIP6PreIndustrial:
 class MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial:
     """
     MAGICC AR6 adapter for CO2-concentration-driven runs from CMIP7 pre-industrial
+
+    For the experiment, see
+    [AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     Same back-end as
     [MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial][(m).],
@@ -1626,7 +1635,7 @@ class MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_cmip7_pre_industrial_branch_co2_concentrations(co2_concentrations)
 
@@ -1644,6 +1653,9 @@ class MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial:
 class MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP6PreIndustrial:
     """
     MAGICC AR6 adapter for CO2-concentration-driven runs from CMIP6 pre-industrial
+
+    For the experiment, see
+    [AdapterCO2ConcentrationDrivenFromCMIP6PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     As for [MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial][(m).],
     with CMIP6 pre-industrial values.
@@ -1663,7 +1675,7 @@ class MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP6PreIndustrial:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_cmip6_pre_industrial_branch_co2_concentrations(co2_concentrations)
 
@@ -1682,8 +1694,10 @@ class MAGICCAR6AdapterCO2EmissionDrivenFromCMIP7PreIndustrial:
     """
     MAGICC AR6 adapter for CO2-emission-driven runs from CMIP7 pre-industrial
 
-    Fossil CO2 emissions from the input,
-    no biosphere CO2 emissions (no land-use change),
+    For the experiment, see
+    [AdapterCO2EmissionDrivenFromCMIP7PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
+
+    No biosphere CO2 emissions (no land-use change),
     every other gas held at its CMIP7 piControl concentration,
     emissions held at piControl,
     solar and volcanic forcing at zero
@@ -1713,7 +1727,7 @@ class MAGICCAR6AdapterCO2EmissionDrivenFromCMIP7PreIndustrial:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_cmip7_pre_industrial_branch_co2_emissions(co2_emissions)
 
@@ -1732,11 +1746,12 @@ class MAGICCAR6AdapterESMFromCMIP7PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP esm-style runs from CMIP7 pre-industrial
 
-    CO2 is emission-driven (fossil and biosphere CO2 emissions),
-    the other GHGs are concentration-driven.
-    Otherwise as for
+    For the experiment, see
+    [AdapterESMFromCMIP7PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
+
+    As for
     [MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial][(m).]
-    (including the warnings).
+    (including the warnings), apart from the emission-driven CO2.
 
     See the module docstring for how emission-driven runs are set up.
 
@@ -1761,7 +1776,7 @@ class MAGICCAR6AdapterESMFromCMIP7PreIndustrial:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_cmip7_pre_industrial_branch_esm_inputs(esm_inputs)
 
@@ -1778,10 +1793,12 @@ class MAGICCAR6AdapterESMAllGHGFromCMIP7PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP esm-allGHG-style runs from CMIP7 pre-industrial
 
-    Every GHG is emission-driven.
-    Otherwise as for
+    For the experiment, see
+    [AdapterESMAllGHGFromCMIP7PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
+
+    As for
     [MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial][(m).]
-    (including the warnings).
+    (including the warnings), apart from the emission-driven GHGs.
 
     See the module docstring for how emission-driven runs are set up.
 
@@ -1806,7 +1823,7 @@ class MAGICCAR6AdapterESMAllGHGFromCMIP7PreIndustrial:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_cmip7_pre_industrial_branch_esm_all_ghg_inputs(esm_all_ghg_inputs)
 
@@ -1823,8 +1840,10 @@ class MAGICCAR6AdapterCO2EmissionDrivenFromCMIP6PreIndustrial:
     """
     MAGICC AR6 adapter for CO2-emission-driven runs from CMIP6 pre-industrial
 
-    Fossil CO2 emissions from the input,
-    no biosphere CO2 emissions (no land-use change),
+    For the experiment, see
+    [AdapterCO2EmissionDrivenFromCMIP6PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
+
+    No biosphere CO2 emissions (no land-use change),
     every other gas held at its CMIP6 piControl concentration,
     emissions held at piControl,
     solar and volcanic forcing at zero
@@ -1854,7 +1873,7 @@ class MAGICCAR6AdapterCO2EmissionDrivenFromCMIP6PreIndustrial:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_cmip6_pre_industrial_branch_co2_emissions(co2_emissions)
 
@@ -1873,11 +1892,12 @@ class MAGICCAR6AdapterESMFromCMIP6PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP esm-style runs from CMIP6 pre-industrial
 
-    CO2 is emission-driven (fossil and biosphere CO2 emissions),
-    the other GHGs are concentration-driven.
-    Otherwise as for
+    For the experiment, see
+    [AdapterESMFromCMIP6PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
+
+    As for
     [MAGICCAR6AdapterConcentrationDrivenFromCMIP6PreIndustrial][(m).]
-    (including the warnings).
+    (including the warnings), apart from the emission-driven CO2.
 
     See the module docstring for how emission-driven runs are set up.
 
@@ -1902,7 +1922,7 @@ class MAGICCAR6AdapterESMFromCMIP6PreIndustrial:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_cmip6_pre_industrial_branch_esm_inputs(esm_inputs)
 
@@ -1919,10 +1939,12 @@ class MAGICCAR6AdapterESMAllGHGFromCMIP6PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP esm-allGHG-style runs from CMIP6 pre-industrial
 
-    Every GHG is emission-driven.
-    Otherwise as for
+    For the experiment, see
+    [AdapterESMAllGHGFromCMIP6PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
+
+    As for
     [MAGICCAR6AdapterConcentrationDrivenFromCMIP6PreIndustrial][(m).]
-    (including the warnings).
+    (including the warnings), apart from the emission-driven GHGs.
 
     See the module docstring for how emission-driven runs are set up.
 
@@ -1947,7 +1969,7 @@ class MAGICCAR6AdapterESMAllGHGFromCMIP6PreIndustrial:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_cmip6_pre_industrial_branch_esm_all_ghg_inputs(esm_all_ghg_inputs)
 

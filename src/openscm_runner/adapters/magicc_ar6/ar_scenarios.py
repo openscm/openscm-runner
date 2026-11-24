@@ -90,6 +90,8 @@ class MAGICCAR6AdapterAR7Scenario:
     """
     MAGICC adapter for AR7 scenarios
 
+    For the experiment, see [AdapterAR7Scenario][openscm_runner.ar_scenarios.running.].
+
     Unlikely to be implemented.
     Doing so would require us to create a way to join AR6 history
     (which this relies on)
@@ -105,7 +107,7 @@ class MAGICCAR6AdapterAR7Scenario:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run AR7 scenarios"""
+        """Run the experiments (not implemented)"""
         raise NotImplementedError
 
 
@@ -113,6 +115,8 @@ class MAGICCAR6AdapterAR7Scenario:
 class MAGICCAR6AdapterAR6Scenario:
     """
     MAGICC AR6 adapter for AR6 scenarios
+
+    For the experiment, see [AdapterAR6Scenario][openscm_runner.ar_scenarios.running.].
 
     Differences from AR6 WG3 that we know of:
 
@@ -168,22 +172,7 @@ class MAGICCAR6AdapterAR6Scenario:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """
-        Run AR6 scenarios
-
-        Parameters
-        ----------
-        ar6_scenarios
-            Scenarios to run (each one is exactly one scenario)
-
-        output_specs
-            Outputs to return
-
-        Returns
-        -------
-        :
-            One output per scenario, in the same order as `ar6_scenarios`
-        """
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_ar6_scenarios(ar6_scenarios)
 
@@ -202,11 +191,11 @@ class MAGICCAR6AdapterAR6ScenarioAnthropogenicOnly:
     """
     MAGICC AR6 adapter for AR6 scenarios with anthropogenic forcing only
 
+    For the experiment, see
+    [AdapterAR6ScenarioAnthropogenicOnly][openscm_runner.ar_scenarios.running.].
+
     As for [MAGICCAR6AdapterAR6Scenario][(m).],
-    except that solar and volcanic forcing are left out of the total forcing
-    which drives the climate, for the whole run
-    (`RF_TOTAL_RUNMODUS = "ANTHROPOGENIC"`).
-    Land-use forcing is anthropogenic, so it is included.
+    with `RF_TOTAL_RUNMODUS = "ANTHROPOGENIC"`.
     The outputs don't include solar and volcanic forcing
     ([AR6_ANTHROPOGENIC_ONLY_SUPPORTED_OUTPUT_VARIABLES][(m).]).
     """
@@ -225,7 +214,7 @@ class MAGICCAR6AdapterAR6ScenarioAnthropogenicOnly:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the scenarios, returning one output per scenario, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_ar6_scenarios(ar6_scenarios)
 
@@ -246,17 +235,15 @@ class MAGICCAR6AdapterAR6ScenarioCO2ForcingOnly:
     """
     MAGICC AR6 adapter for AR6 scenarios with CO2 forcing only
 
+    For the experiment, see
+    [AdapterAR6ScenarioCO2ForcingOnly][openscm_runner.ar_scenarios.running.].
+
     As for [MAGICCAR6AdapterAR6Scenario][(m).],
-    except that the total forcing which drives the climate is CO2's forcing only,
-    for the whole run (`RF_TOTAL_RUNMODUS = "CO2"`).
-    The carbon cycle sees all the CO2 emissions (fossil and biosphere),
-    but land-use (albedo) forcing and all non-CO2 forcing are left out.
+    with `RF_TOTAL_RUNMODUS = "CO2"`.
     The only forcing outputs are the total and CO2 forcing
     ([AR6_CO2_FORCING_ONLY_SUPPORTED_OUTPUT_VARIABLES][(m).]).
 
     /// warning | Everything except CO2 is held at pre-industrial (1750)
-    The input is only the scenario's CO2 emissions
-    (nothing else would be used for the forcing).
     Everything else is held at its pre-industrial (1750) state
     for the whole run, history included:
     every gas except CO2 is concentration-driven for the whole run,
@@ -315,7 +302,7 @@ class MAGICCAR6AdapterAR6ScenarioCO2ForcingOnly:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the scenarios, returning one output per scenario, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_ar6_scenario_co2_emissions(ar6_co2_emissions)
 

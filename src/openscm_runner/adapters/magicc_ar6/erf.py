@@ -192,6 +192,9 @@ def _to_input_years(
 class MAGICCAR6AdapterERFDrivenFromEquilibrium:
     """
     MAGICC AR6 adapter for ERF-driven experiments starting from equilibrium
+
+    For the experiment, see
+    [AdapterERFDrivenFromEquilibrium][openscm_runner.erf.running.].
     """
 
     supported_output_variables: ClassVar[frozenset[str]] = frozenset(
@@ -208,7 +211,7 @@ class MAGICCAR6AdapterERFDrivenFromEquilibrium:
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the experiments, returning one output per input, in input order"""
+        """Run the experiments"""
         if self.configuration.run_checks:
             verify_erf(erf)
 

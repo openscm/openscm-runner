@@ -9,6 +9,10 @@ Adapter protocols and run functions for AR7 and AR6 scenarios
 # the CO2-forcing-only variant only takes the scenario's CO2 emissions
 # (nothing else would be used).
 # They are separate entry points so users have to be explicit about what they run.
+#
+# The run functions in all the experiment subpackages follow the same pattern
+# (verify the inputs if `run_checks`, then run each adapter with `run_adapters`),
+# so their docstrings are the same apart from the experiment and the input's name.
 
 from __future__ import annotations
 
@@ -30,15 +34,19 @@ from .inputs import (
 
 class AdapterAR7Scenario(OutputCapabilities, Protocol):
     """
-    Adapter that can run emissions scenarios defined in AR7 terms
+    Adapter that can run AR7 scenarios
 
-    The adapter has to add on AR7's history and use other forcings (e.g. volcanic)
-    in line with the standard AR7 choices not supplied by the input.
+    Runs an emissions scenario defined in AR7 terms.
 
-    Note that the AR7 history and other forcings are not defined yet,
-    so you should consider this unstable.
-    Whether to keep this experiment until they are defined
-    is still to be decided (decision [B23][b23]).
+    The adapter is responsible for adding AR7's history
+    and the forcing the scenario doesn't supply (e.g. volcanic),
+    in line with the standard AR7 choices.
+
+    Forcing: all (anthropogenic and natural).
+
+    Open decisions: AR7's history and other forcing aren't defined yet,
+    so this experiment is unstable
+    (whether to keep it until they are is decision [B23][b23]).
     """
 
     def __call__(
@@ -48,32 +56,36 @@ class AdapterAR7Scenario(OutputCapabilities, Protocol):
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
         """
-        Run the scenarios
+        Run the experiments
+
+        Adapters don't have to verify the inputs (the `run_*` function does).
 
         Parameters
         ----------
         ar7_scenarios
-            Scenarios to run (each one is exactly one scenario)
+            Inputs to run (each element is exactly one experiment)
 
         output_specs
             Outputs to return
 
-            Unsupported requests are recorded as `UnsupportedOutputError` for
-            that adapter without calling it. Compatible adapters still run.
-
         Returns
         -------
         :
-            One output per scenario, in the same order as `ar7_scenarios`
+            One output per input, in the same order as `ar7_scenarios`
         """
 
 
 class AdapterAR6Scenario(OutputCapabilities, Protocol):
     """
-    Adapter that can run emissions scenarios defined in AR6 terms
+    Adapter that can run AR6 scenarios
 
-    The adapter has to add on AR6's history and use other forcings (e.g. volcanic)
-    in line with the standard AR6 choices not supplied by the input.
+    Runs an emissions scenario defined in AR6 terms.
+
+    The adapter is responsible for adding AR6's history
+    and the forcing the scenario doesn't supply (e.g. volcanic),
+    in line with the standard AR6 choices.
+
+    Forcing: all (anthropogenic and natural).
     """
 
     def __call__(
@@ -83,12 +95,14 @@ class AdapterAR6Scenario(OutputCapabilities, Protocol):
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
         """
-        Run the scenarios
+        Run the experiments
+
+        Adapters don't have to verify the inputs (the `run_*` function does).
 
         Parameters
         ----------
         ar6_scenarios
-            Scenarios to run (each one is exactly one scenario)
+            Inputs to run (each element is exactly one experiment)
 
         output_specs
             Outputs to return
@@ -96,7 +110,7 @@ class AdapterAR6Scenario(OutputCapabilities, Protocol):
         Returns
         -------
         :
-            One output per scenario, in the same order as `ar6_scenarios`
+            One output per input, in the same order as `ar6_scenarios`
         """
 
 
@@ -108,9 +122,13 @@ class AdapterAR6ScenarioAnthropogenicOnly(OutputCapabilities, Protocol):
     (including AR6's history and land-use treatment),
     except that there is no natural (solar and volcanic) forcing
     for the whole run.
-    This must be done by turning the natural forcing off,
-    not by subtracting a natural-only run from a full run
+
+    The adapter is responsible for turning the natural forcing off,
+    not for subtracting a natural-only run from a full run
     (the response isn't linear).
+
+    Forcing: anthropogenic only
+    (land-use forcing is anthropogenic, so it is included).
     """
 
     def __call__(
@@ -119,7 +137,24 @@ class AdapterAR6ScenarioAnthropogenicOnly(OutputCapabilities, Protocol):
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the scenarios, returning one output per scenario, in input order"""
+        """
+        Run the experiments
+
+        Adapters don't have to verify the inputs (the `run_*` function does).
+
+        Parameters
+        ----------
+        ar6_scenarios
+            Inputs to run (each element is exactly one experiment)
+
+        output_specs
+            Outputs to return
+
+        Returns
+        -------
+        :
+            One output per input, in the same order as `ar6_scenarios`
+        """
 
 
 class AdapterAR6ScenarioCO2ForcingOnly(OutputCapabilities, Protocol):
@@ -127,14 +162,15 @@ class AdapterAR6ScenarioCO2ForcingOnly(OutputCapabilities, Protocol):
     Adapter that can run AR6 scenarios with CO2 forcing only
 
     As for [AdapterAR6Scenario][(m).] (including AR6's history),
-    except that the only forcing is CO2's for the whole run.
-    Non-CO2 forcing and land-use (albedo) forcing are absent.
-    The carbon cycle sees all the CO2 emissions
-    (fossil and biosphere).
+    except that the only forcing is CO2's, for the whole run.
 
-    The input is only the scenario's CO2 emissions.
-    So any CO2 from the oxidation of (fossil) CH4 in the scenario isn't included
-    (see decision [B16][b16]).
+    Forcing: CO2 only.
+    Non-CO2 forcing and land-use (albedo) forcing are absent.
+    The carbon cycle sees all the CO2 emissions (fossil and biosphere).
+    Any CO2 from the oxidation of (fossil) CH4 in the scenario isn't included.
+
+    Open decisions: which feedbacks to include (decision [B16][b16])
+    and whether to use fossil CO2 emissions only (decision [B17][b17]).
     """
 
     def __call__(
@@ -143,7 +179,24 @@ class AdapterAR6ScenarioCO2ForcingOnly(OutputCapabilities, Protocol):
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
-        """Run the scenarios, returning one output per scenario, in input order"""
+        """
+        Run the experiments
+
+        Adapters don't have to verify the inputs (the `run_*` function does).
+
+        Parameters
+        ----------
+        ar6_co2_emissions
+            Inputs to run (each element is exactly one experiment)
+
+        output_specs
+            Outputs to return
+
+        Returns
+        -------
+        :
+            One output per input, in the same order as `ar6_co2_emissions`
+        """
 
 
 def run_ar7_scenarios(
@@ -156,28 +209,28 @@ def run_ar7_scenarios(
     """
     Run AR7 scenarios with each adapter
 
-    This is the interface we recommend for users:
-    it guarantees that the inputs are verified.
-    Calling adapters directly is for experts
+    This is the interface we recommend:
+    calling adapters directly is for experts
     (adapters don't have to verify their inputs).
 
     Parameters
     ----------
     ar7_scenarios
-        Scenarios to run (each one is exactly one scenario)
+        Inputs to run (each element is exactly one experiment)
 
     adapters
-        Adapters to run the scenarios with
+        Adapters to run the experiments with
 
     output_specs
-        Outputs to return
+        Outputs to return.
+        If `run_checks`, an adapter which doesn't support them all isn't called
+        (the error is recorded in its result).
 
     run_checks
-        Whether to verify inputs and check each adapter's output capabilities.
+        Whether to verify the inputs and check each adapter's output support.
         Only turn this off if you know what you are doing.
-
-        Returned-output count/type checks are still performed.
-        Adapters may retain their own native/resource safety checks.
+        The checks of the returned outputs (count and type) are always done
+        and adapters may still do their own checks.
 
     Returns
     -------
@@ -208,22 +261,28 @@ def run_ar6_scenarios(
     """
     Run AR6 scenarios with each adapter
 
-    See [run_ar7_scenarios][(m).] for details,
-    this is the same except for the input definition.
+    This is the interface we recommend:
+    calling adapters directly is for experts
+    (adapters don't have to verify their inputs).
 
     Parameters
     ----------
     ar6_scenarios
-        Scenarios to run (each one is exactly one scenario)
+        Inputs to run (each element is exactly one experiment)
 
     adapters
-        Adapters to run the scenarios with
+        Adapters to run the experiments with
 
     output_specs
-        Outputs to return
+        Outputs to return.
+        If `run_checks`, an adapter which doesn't support them all isn't called
+        (the error is recorded in its result).
 
     run_checks
-        Whether to verify inputs and check each adapter's output capabilities
+        Whether to verify the inputs and check each adapter's output support.
+        Only turn this off if you know what you are doing.
+        The checks of the returned outputs (count and type) are always done
+        and adapters may still do their own checks.
 
     Returns
     -------
@@ -254,23 +313,28 @@ def run_ar6_scenarios_anthropogenic_only(
     """
     Run AR6 scenarios with anthropogenic forcing only with each adapter
 
-    See [run_ar6_scenarios][(m).] for details,
-    this is the same except for the forcing the adapters include
-    (see [AdapterAR6ScenarioAnthropogenicOnly][(m).]).
+    This is the interface we recommend:
+    calling adapters directly is for experts
+    (adapters don't have to verify their inputs).
 
     Parameters
     ----------
     ar6_scenarios
-        Scenarios to run (each one is exactly one scenario)
+        Inputs to run (each element is exactly one experiment)
 
     adapters
-        Adapters to run the scenarios with
+        Adapters to run the experiments with
 
     output_specs
-        Outputs to return
+        Outputs to return.
+        If `run_checks`, an adapter which doesn't support them all isn't called
+        (the error is recorded in its result).
 
     run_checks
-        Whether to verify the inputs before running
+        Whether to verify the inputs and check each adapter's output support.
+        Only turn this off if you know what you are doing.
+        The checks of the returned outputs (count and type) are always done
+        and adapters may still do their own checks.
 
     Returns
     -------
@@ -301,24 +365,28 @@ def run_ar6_scenarios_co2_forcing_only(
     """
     Run AR6 scenarios with CO2 forcing only with each adapter
 
-    See [run_ar6_scenarios][(m).] for details,
-    this is the same except that the input is only the scenarios' CO2 emissions
-    and the adapters only include CO2 forcing
-    (see [AdapterAR6ScenarioCO2ForcingOnly][(m).]).
+    This is the interface we recommend:
+    calling adapters directly is for experts
+    (adapters don't have to verify their inputs).
 
     Parameters
     ----------
     ar6_co2_emissions
-        CO2 emissions of the scenarios to run (each one is exactly one scenario)
+        Inputs to run (each element is exactly one experiment)
 
     adapters
-        Adapters to run the scenarios with
+        Adapters to run the experiments with
 
     output_specs
-        Outputs to return
+        Outputs to return.
+        If `run_checks`, an adapter which doesn't support them all isn't called
+        (the error is recorded in its result).
 
     run_checks
-        Whether to verify the inputs before running
+        Whether to verify the inputs and check each adapter's output support.
+        Only turn this off if you know what you are doing.
+        The checks of the returned outputs (count and type) are always done
+        and adapters may still do their own checks.
 
     Returns
     -------
