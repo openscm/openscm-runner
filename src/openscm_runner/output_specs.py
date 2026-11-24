@@ -37,8 +37,9 @@ class OutputSpecs:
     output_variables: tuple[str, ...]
 
     def __post_init__(self) -> None:  # noqa: D105
+        # Runtime check for callers who don't use a type checker
         if not isinstance(self.output_variables, tuple):
-            msg = "output_variables must be a tuple of strings"
+            msg = "output_variables must be a tuple of strings"  # type: ignore[unreachable]
             raise TypeError(msg)
 
         if not self.output_variables:

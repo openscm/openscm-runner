@@ -93,8 +93,9 @@ def verify_wide_timeseries_inputs(  # noqa: PLR0913
         The message lists every problem found.
     """
     # TODO: check units (needs a unit registry wired in, default openscm-units).
+    # Runtime check for callers who don't use a type checker
     if not isinstance(inputs, tuple):
-        msg = (
+        msg = (  # type: ignore[unreachable]
             f"{input_name} inputs must be a tuple of dataframes "
             f"(one per experiment), received {type(inputs)}"
         )
@@ -322,7 +323,7 @@ def get_value_problems(inp: pd.DataFrame) -> list[str]:
 
     not_finite = ~np.isfinite(inp.to_numpy(dtype=float))
     if not_finite.any():
-        rows = inp.index[not_finite.any(axis=1)].tolist()
+        rows = inp.index[np.any(not_finite, axis=1)].tolist()
         return [f"values must be finite (no NaN or inf), check rows {rows!r}"]
 
     return []
