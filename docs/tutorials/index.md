@@ -4,8 +4,7 @@ This part of the project documentation
 will focus on a **learning-oriented** approach.
 
 - [Running MAGICC AR6](running-magicc-ar6.py):
-  running MAGICC for CMIP-style experiments (1pctCO2, abrupt-4xCO2, flat10)
-  and AR6 scenarios
+  running MAGICC using examples from selected adapters
 
 What else we offer for getting started, running a specific model
 and running multiple models is still to be decided

@@ -10,9 +10,6 @@ IDs never change and aren't re-used.
 ## Now
 
 - [](#w01){#w01}**W01** Merge the MAGICC AR6 adapters (PR link TBD).
-  Before merging, add the `MAGICC_AR6_DOWNLOAD_TOKEN` environment variable
-  to the Read the Docs project (the tutorials run MAGICC,
-  see [Read the Docs](index.md#read-the-docs)).
 - [](#w02){#w02}**W02** CICERO AR7 (PR lnk TBD).
 
 ## Next

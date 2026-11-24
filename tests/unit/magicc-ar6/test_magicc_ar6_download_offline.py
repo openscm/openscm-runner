@@ -18,13 +18,9 @@ from openscm_runner.adapters.magicc_ar6.download import (
     get_magicc_ar6_adapter_pieces,
 )
 
-# From the MAGICC AR6 extra (`openscm-runner[magicc-ar6]`),
-# skip these tests if it isn't installed
-# (they're also deselected by default, see `addopts` in `pyproject.toml`)
 pooch = pytest.importorskip("pooch")
 requests = pytest.importorskip("requests")
 
-# These are the MAGICC AR6 adapters' tests (see docs/development/testing.md)
 pytestmark = pytest.mark.magicc_ar6
 
 TOKEN = "not-a-real-token"  # noqa: S105

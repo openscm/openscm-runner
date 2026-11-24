@@ -98,11 +98,3 @@ The RtD configuration can be found in the `.readthedocs.yaml` file
 in the root of this repository.
 The docs are automatically deployed at
 [openscm-runner.readthedocs.io](https://openscm-runner.readthedocs.io/en/latest/).
-
-The tutorials run MAGICC, so the RtD build needs a magicc.org download token
-in the `MAGICC_AR6_DOWNLOAD_TOKEN` environment variable.
-This has to be set in the project's settings on RtD
-(Admin, Environment variables, not public).
-Except for release (tag) builds,
-the tutorials only run a few ensemble members, to keep the build quick.
-The CI `docs` job builds the docs the same way.

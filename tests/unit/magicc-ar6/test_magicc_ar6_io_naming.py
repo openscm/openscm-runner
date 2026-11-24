@@ -31,12 +31,8 @@ from openscm_runner.adapters.magicc_ar6.naming import (
 )
 from openscm_runner.adapters.magicc_ar6.running import MAGICCInstallation
 
-# From the MAGICC AR6 extra (`openscm-runner[magicc-ar6]`),
-# skip these tests if it isn't installed
-# (they're also deselected by default, see `addopts` in `pyproject.toml`)
 pint = pytest.importorskip("pint")
 
-# These are the MAGICC AR6 adapters' tests (see docs/development/testing.md)
 pytestmark = pytest.mark.magicc_ar6
 
 TEST_DATA_DIR = Path(__file__).parents[2] / "test-data"

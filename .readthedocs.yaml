@@ -20,6 +20,6 @@ build:
       # The tutorials run MAGICC, so this needs the MAGICC_AR6_DOWNLOAD_TOKEN
       # environment variable (a magicc.org download token).
       # It has to be set in the project's settings on Read the Docs
-      # (Admin, Environment variables, not public), it can't be set here.
+      # (Admin, Environment variables, not public).
       html:
         - python -m properdocs build --strict --site-dir "$READTHEDOCS_OUTPUT/html"

@@ -17,7 +17,7 @@
 #
 # Here we show how run MAGICC in its AR6 probabilistic configuration
 # (MAGICC v7.5.3 with the 600-member AR6 probabilistic distribution)
-# for four experiments:
+# for four experiments that cover a range of adapters:
 #
 # - 1pctCO2 and abrupt-4xCO2, branching off CMIP7's pre-industrial (piControl) state
 # - flat10 (constant CO2 emissions of 10 GtC/yr), also from CMIP7's pre-industrial
@@ -58,6 +58,9 @@ from openscm_runner.adapters.magicc_ar6 import (
     MAGICCAR6AdapterConfiguration,
 )
 
+# %% [markdown]
+# ## Setup
+
 # %%
 # Adds the `.openscm` accessor to dataframes, which we use for plotting
 pandas_openscm.register_pandas_accessors()
@@ -67,23 +70,18 @@ pandas_openscm.register_pandas_accessors()
 #
 # MAGICC and the AR6 probabilistic distribution don't ship with openscm-runner,
 # so we have to tell the adapters where they are.
-# The configuration below gets them from environment variables:
-# either the paths to an existing installation
-# (`MAGICC_AR6_V753_ROOT_DIR` and `MAGICC_AR6_PROBABILISTIC_DISTRIBUTION`)
-# or a magicc.org download token (`MAGICC_AR6_DOWNLOAD_TOKEN`),
-# which you can get from https://magicc.org/download/magicc7 after logging in.
-# You can also pass the paths in directly (`MAGICCAR6AdapterConfiguration(...)`)
-# or the token (`MAGICCAR6AdapterConfiguration.from_token(...)`).
+# The configuration below gets them from environment variables.
+# See the docstring of `MAGICCAR6AdapterConfiguration`
+# for the full set of options and details.
 #
 # The same configuration can be used for every MAGICC AR6 adapter.
 # We run several copies of MAGICC at once to speed things up (`n_workers`).
-#
+
+# %% editable=true slideshow={"slide_type": ""}
 # If we're building these docs on Read the Docs (or in CI),
 # other than for a release, we only run 10 of the 600 ensemble members
 # to keep compute time low.
-# You will want to skip this step when running yourself.
-
-# %% editable=true slideshow={"slide_type": ""}
+# You will likely want to skip this step when running yourself.
 n_members = None
 if (
     os.environ.get("READTHEDOCS", "False") == "True"
@@ -116,37 +114,22 @@ TEST_DATA = REPO_ROOT / "tests" / "test-data"
 
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# The outputs have one timeseries per ensemble member
-# (identified by the `ensemble_member` index level).
-# We plot plumes across the ensemble with pandas-openscm,
-# one plot per variable (they have different units).
-
-# %% [markdown] editable=true slideshow={"slide_type": ""}
 # ## 1pctCO2 and abrupt-4xCO2
 #
 # These are CO2-concentration-driven experiments:
-# the only input is CO2 concentrations,
+# the only input is CO<sub>2</sub> concentrations,
 # everything else stays at its piControl value.
-# The experiments start (branch off piControl) in 1850.
-#
-# We take the piControl CO2 concentration
-# from the CMIP7 test data's 1850 value.
+# The experiments start (i.e. branch off piControl) in 1850.
 
 # %% editable=true slideshow={"slide_type": ""}
-cmip7 = pd.read_csv(TEST_DATA / "cmip-pre-industrial-branch" / "cmip7-scen7-m.csv")
-cmip7 = cmip7.set_index(["scenario", "variable", "region", "unit"])
-cmip7.columns = cmip7.columns.astype(int)
-
-pi_control_co2 = cmip7.loc[
-    (slice(None), "Atmospheric Concentrations|CO2", "World", "ppm"), 1850
-].item()
+# Could come from lots of places.
+# We simply hard-code here.
+pi_control_co2 = 284.29727
 pi_control_co2
 
+
 # %% editable=true slideshow={"slide_type": ""}
-years = np.arange(1850, 2000)
-
-
-def make_co2_concentrations(experiment, values):
+def make_co2_concentrations(experiment, values, years):
     """Make the input for one CO2-concentration-driven experiment"""
     return pd.DataFrame(
         [values],
@@ -158,11 +141,13 @@ def make_co2_concentrations(experiment, values):
     )
 
 
+years = np.arange(1850, 2000)
 one_pct_co2 = make_co2_concentrations(
-    "1pctCO2", pi_control_co2 * 1.01 ** (years - years[0])
+    "1pctCO2", pi_control_co2 * 1.01 ** (years - years[0]), years
 )
+
 abrupt_4xco2 = make_co2_concentrations(
-    "abrupt-4xCO2", np.full(years.size, 4 * pi_control_co2)
+    "abrupt-4xCO2", np.full(2300 - 1850 + 1, 4 * pi_control_co2), np.arange(1850, 2301)
 )
 one_pct_co2
 
@@ -208,10 +193,11 @@ for variable in co2_conc_res.index.get_level_values("variable").unique():
 # ## flat10
 #
 # flat10 is CO2-emission-driven:
-# constant fossil CO2 emissions of 10 GtC/yr from 1850,
+# here we do constant fossil CO2 emissions of 10 GtC/yr and 5 GtC/yr from 1850,
 # with the carbon cycle calculating the CO2 concentrations.
 
 # %%
+years = np.arange(1850, 2300 + 1)
 flat10 = pd.DataFrame(
     [np.full(years.size, 10.0)],
     index=pd.MultiIndex.from_tuples(
@@ -221,8 +207,12 @@ flat10 = pd.DataFrame(
     columns=years,
 )
 
+
 results = run_co2_emission_driven_from_cmip7_pre_industrial(
-    co2_emissions=(flat10,),
+    co2_emissions=(
+        flat10,
+        flat10.rename({"esm-flat10": "esm-flat5"}, level="scenario") / 2.0,
+    ),
     adapters=(
         MAGICCAR6AdapterCO2EmissionDrivenFromCMIP7PreIndustrial(
             configuration=configuration
@@ -231,8 +221,8 @@ results = run_co2_emission_driven_from_cmip7_pre_industrial(
     output_specs=co2_output_specs,
 )
 results.raise_if_any_failed()
-(flat10_output,) = results[0].outputs
-flat10_res = flat10_output.as_df()
+flat10_res = pd.concat([output.as_df() for output in results[0].outputs])
+flat10_res
 
 # %%
 for variable in flat10_res.index.get_level_values("variable").unique():
@@ -292,8 +282,7 @@ ar6_res = pd.concat([output.as_df() for output in results[0].outputs])
 
 # %% [markdown]
 # The outputs are MAGICC's own:
-# relative to its pre-industrial reference (1750),
-# without the post-processing AR6 applied before reporting temperatures.
+# relative to its pre-industrial reference (1750).
 
 # %%
 for variable in ar6_res.index.get_level_values("variable").unique():
