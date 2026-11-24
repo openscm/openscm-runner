@@ -67,7 +67,7 @@ Candidates for "Next", not yet prioritised.
   at least 95% branch coverage of shared code.
   While writing tests, deliberately break one unit conversion, one ordering path
   and one historical splice, and check the relevant tests fail.
-- **W11** Keep [implementing an adapter](implementing-an-adapter.md) up to date
+- **W11** Keep [implementing an adapter](../how-to-guides/implementing-an-adapter.md) up to date
   (e.g. the minimum outputs (A7), the CICERO-SCM links (W02)
   and how to document running adapters (B21)).
 - **W12** An experiment that starts in 1750.

@@ -2,9 +2,9 @@
 
 TODO: fix up cross refs throughout
 The code is the reference: start with the
-[package docstring](https://github.com/maritsandstad/openscm-runner-v2/blob/main/src/openscm_runner/__init__.py).
+[package docstring][openscm_runner].
 This page gives the overview and the reasoning behind it.
-To add a model, see [implementing an adapter](implementing-an-adapter.md).
+To add a model, see [implementing an adapter](../how-to-guides/implementing-an-adapter.md).
 
 ## Goals and non-goals
 
@@ -191,4 +191,4 @@ Other scientific choices are still open, see [decisions](decisions.md)
 One package (`pip install openscm-runner`), with an optional extra per model.
 Model-specific code stays out of shared code:
 each model gets its own subpackage of `openscm_runner.adapters`
-(see [implementing an adapter](implementing-an-adapter.md#6-packaging-and-ci)).
+(see [implementing an adapter](../how-to-guides/implementing-an-adapter.md#6-packaging-and-ci)).
