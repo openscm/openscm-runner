@@ -562,11 +562,21 @@ Pre-industrial year of MAGICC's historical files
 The `"relative"` rule in [EMISSIONS_DRIVEN_FILE_RULES][(m).] is relative to this.
 """
 
-# TODO: double check whether this should be 1830 so we can handle step changes in 1850
-# for emissions-driven?
-# Or maybe this is doing something different to what I think it is.
 PATTERN_YEAR = 1850
-"""Year whose regional pattern we use for the emissions-driven history files"""
+"""
+Year whose regional pattern we use for the emissions-driven history files
+
+This only sets the linear relationship between emissions and each file's values
+(the reference state and the sensitivity in each box,
+see [derive_emissions_driven_files][(m).]).
+It has nothing to do with timing:
+the files are calculated for every year of the run (spin-up included)
+from that year's emissions,
+so e.g. a step change in emissions in the experiment's first year
+is handled however the relationship is derived.
+We use 1850 because the piControl state is (roughly) MAGICC's 1850 state,
+so the relationship is derived around the state the experiments branch from.
+"""
 
 NORMALISATION_ANCHOR_YEAR = 2000
 """
