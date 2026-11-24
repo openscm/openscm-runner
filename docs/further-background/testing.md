@@ -128,8 +128,7 @@ and the model team is the one who can answer it.
   In this design, the `run_*` functions do the shared output checks once,
   and the integration tests are parametrised over adapters,
   so there is no need for a separate layer.
-- [TODO update this, it's in here now] Packaging/CI scaffolding tests: covered by the copier template
-  (see [tooling.md](tooling.md)).
+- [TODO update this, it's in here now] Packaging/CI scaffolding tests: covered by the copier template.
 
 ### What we try to avoid
 

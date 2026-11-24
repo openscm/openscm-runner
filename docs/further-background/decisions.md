@@ -39,7 +39,7 @@ New decisions take the next free number in either series.
 | A9 | AR7 scenario land-use/irrigation forcing | The formula in [architecture](architecture.md#scientific-conventions) | | `ar_scenarios` |
 | A10 | Scientific configuration | Callers may select scientific configuration (calibration etc.) when constructing an adapter, both for their own advanced use and for testing (e.g. MAGICC AR6's `testing_only_n_members`). Keep it explicit and separate from operational settings; no hidden calibration selection or fallback. Record enough information to reproduce the selected configuration, not just the runner package version (B09). We will eventually want a simplified layer that forces default calibrations and scientific configuration, so non-expert users get easily reproducible results (B14) | 2026-11-11 | [Implementing an adapter](implementing-an-adapter.md#2-implement-the-protocol) |
 | A11 | First models | MAGICC AR6 and CICERO AR7, implemented in parallel. This doesn't certify their scientific configuration or numerical output | 2026-11-11 | Roadmap W01 and W02 |
-| A12 | Development tooling | The copier template's uv/Makefile setup, replacing Pixi. What we haven't adopted (yet) is B15 | 2026-11-11 | [Tooling](tooling.md) |
+| A12 | Development tooling | The copier template's uv/Makefile setup, replacing Pixi. What we haven't adopted (yet) is B15 | 2026-11-11 | `Makefile`, `pyproject.toml`, `.github/workflows` |
 
 ## Backlog
 

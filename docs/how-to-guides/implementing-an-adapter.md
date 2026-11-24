@@ -198,7 +198,7 @@ In short:
   [CI](https://github.com/maritsandstad/openscm-runner-v2/blob/main/.github/workflows/ci.yml)),
   and exclude your marker from `make test-ci`.
   If your model or its resources are licensed,
-  see [tooling](tooling.md#2-gaps-the-template-doesnt-cover).
+  discuss with the package maintainers how to run them in CI.
 - Document your adapters in their docstrings:
   what they do, which scientific choices they make,
   and anything users need to know (e.g. where they differ from your model's usual setup).
