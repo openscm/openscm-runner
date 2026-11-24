@@ -99,10 +99,10 @@ def download(item: MAGICCDownload, *, token: str, cache_dir: Path) -> Path:
         The download failed (e.g. the token is invalid)
     """
     pooch = import_optional_dependency(
-        "pooch", requirement="pooch", callable_name="download", extra="magicc"
+        "pooch", requirement="pooch", callable_name="download", extra="magicc-ar6"
     )
     requests = import_optional_dependency(
-        "requests", requirement="requests", callable_name="download", extra="magicc"
+        "requests", requirement="requests", callable_name="download", extra="magicc-ar6"
     )
 
     # The URL includes the token, so keep it out of pooch's logs
@@ -161,7 +161,7 @@ def get_magicc_ar6_adapter_pieces(
             "pooch",
             requirement="pooch",
             callable_name="get_magicc_ar6_adapter_pieces",
-            extra="magicc",
+            extra="magicc-ar6",
         )
         cache_dir = Path(pooch.os_cache("openscm-runner")) / "magicc-ar6"
 

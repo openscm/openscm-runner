@@ -62,5 +62,5 @@ repos:
         name: export-requirements-only-tests
         args: ["-o", "requirements-only-tests-locked.txt", "--no-hashes", "--no-dev", "--no-emit-project", "--only-group", "tests"]
       - id: uv-export
-        name: export-requirements-magicc
-        args: ["-o", "requirements-magicc-locked.txt", "--no-hashes", "--no-dev", "--no-emit-project", "--extra", "magicc"]
+        name: export-requirements-magicc-ar6
+        args: ["-o", "requirements-magicc-ar6-locked.txt", "--no-hashes", "--no-dev", "--no-emit-project", "--extra", "magicc-ar6"]

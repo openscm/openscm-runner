@@ -190,8 +190,7 @@ In short:
   split by group of experiments if that helps
   (as MAGICC AR6 does, mirroring the experiment subpackages).
 - Put your model's dependencies in an optional extra in `pyproject.toml`
-  (e.g. the optional extra `magicc` group).
-  TODO update name to magicc-ar6
+  (e.g. the `magicc-ar6` extra).
 - Add a make target and a CI job which run your marked tests
   and enforce their coverage
   (e.g. `make test-magicc-ar6` in the

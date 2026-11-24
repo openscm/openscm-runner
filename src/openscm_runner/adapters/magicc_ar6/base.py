@@ -291,7 +291,7 @@ def get_magicc_download_token() -> str:
             f"Set {MAGICC_AR6_DOWNLOAD_TOKEN_ENV_VAR} to a magicc.org download token "
             "(log in at https://magicc.org/download/magicc7 to get one) "
             f"or set {MAGICC_AR6_V753_ROOT_DIR_ENV_VAR} "
-            f"and {MAGICC_AR6_PROBABILISTIC_DISTRIBUTION_ENV_VAR}. "
+            f"and {MAGICC_AR6_PROBABILISTIC_DISTRIBUTION_ENV_VAR}."
         )
         raise MAGICCAR6NotFoundError(msg)
 

@@ -43,8 +43,7 @@ Issues = "https://github.com/openscm/openscm-runner/issues"
 
 [project.optional-dependencies]
 # What the MAGICC AR6 adapters import (lazily, see `openscm_runner.optional_dependencies`)
-# TODO: rename to magicc-ar6
-magicc = [
+magicc-ar6 = [
     "f90nml>=1.4",
     "openscm-units>=0.6.0",
     "pandas-openscm>=0.9.0",
@@ -52,12 +51,8 @@ magicc = [
     # Same minimum as pooch
     "requests>=2.19.0",
 ]
-plots = [
-    "matplotlib>=3.7.1",  # pin based on minimum supported python version
-]
 full = [
-    "openscm-runner[magicc]",
-    "openscm-runner[plots]",
+    "openscm-runner[magicc-ar6]",
 ]
 
 [dependency-groups]

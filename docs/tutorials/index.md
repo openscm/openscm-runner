@@ -2,14 +2,16 @@
 
 This part of the project documentation
 will focus on a **learning-oriented** approach.
-You'll learn how to get started with the code in this project.
 
-It is currently empty, but we will aim to:
+There aren't any tutorials yet.
+What we offer for getting started, running a specific model
+and running multiple models is still to be decided
+(decision B21, see [decisions](../further-background/decisions.md)).
 
-- Help newcomers with getting started
-- Teach readers about the library by having them write code
-- Inspire confidence through examples that work for everyone, repeatably
-- Give readers an immediate sense of achievement
-- Show concrete examples without abstractions
-- Provide the minimum necessary explanation
-- Avoid any distraction
+Until then, the best places to start are:
+
+- the [package docstring][openscm_runner],
+  which describes the pieces
+  (input definitions, adapter protocols and `run_*` functions)
+- the [MAGICC AR6 adapters][openscm_runner.adapters.magicc_ar6],
+  the first model we support, including how to get MAGICC

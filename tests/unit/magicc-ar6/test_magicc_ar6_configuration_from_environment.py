@@ -20,7 +20,7 @@ from openscm_runner.adapters.magicc_ar6.base import (
     get_magicc_download_token,
 )
 
-# These are the MAGICC AR6 adapters' tests (see docs/testing.md)
+# These are the MAGICC AR6 adapters' tests (see docs/further-background/testing.md)
 pytestmark = pytest.mark.magicc_ar6
 
 ENV_VARS = (
@@ -77,11 +77,11 @@ def test_token(monkeypatch: pytest.MonkeyPatch) -> None:
     (pytest.param(None, id="not-set"), pytest.param("", id="empty")),
 )
 def test_no_token_raises(monkeypatch: pytest.MonkeyPatch, value: str | None) -> None:
-    # `.env.sample` has empty values, so an empty value is also missing
+    # An empty value counts as missing
     if value is not None:
         monkeypatch.setenv(MAGICC_AR6_DOWNLOAD_TOKEN_ENV_VAR, value)
 
-    with pytest.raises(MAGICCAR6NotFoundError, match=r"\.env\.sample"):
+    with pytest.raises(MAGICCAR6NotFoundError, match=MAGICC_AR6_DOWNLOAD_TOKEN_ENV_VAR):
         get_magicc_download_token()
 
 
@@ -107,7 +107,7 @@ def test_configuration_from_token(
     monkeypatch: pytest.MonkeyPatch, fake_from_token: list[Any]
 ) -> None:
     monkeypatch.setenv(MAGICC_AR6_DOWNLOAD_TOKEN_ENV_VAR, "a-token")
-    # Empty paths (e.g. copied from `.env.sample`) count as not set
+    # Empty paths count as not set
     monkeypatch.setenv(MAGICC_AR6_V753_ROOT_DIR_ENV_VAR, "")
 
     res = MAGICCAR6AdapterConfiguration.from_environment(n_workers=3)

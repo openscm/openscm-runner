@@ -40,7 +40,7 @@ def import_optional_dependency(
 
     extra
         Optional extra of `openscm-runner` which installs the module
-        (e.g. `"magicc"`, used in the error message)
+        (e.g. `"magicc-ar6"`, used in the error message)
 
     Returns
     -------

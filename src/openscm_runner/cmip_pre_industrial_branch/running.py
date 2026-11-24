@@ -53,7 +53,7 @@ from .inputs import (
 
 # Note: mypy can't tell the CMIP6 and CMIP7 protocols apart
 # (same argument names, and the input aliases are all `pd.DataFrame`).
-# We accept this, see `docs/architecture.md`.
+# We accept this, see `docs/further-background/architecture.md`.
 
 
 class AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial(OutputCapabilities, Protocol):

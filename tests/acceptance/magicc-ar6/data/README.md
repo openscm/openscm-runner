@@ -6,7 +6,7 @@ MAGICC v7.5.3 with the AR6 probabilistic distribution
 ## MAGICC AR6 is an exception
 
 Normally, the adapter writer (model team) provides the acceptance data
-and we don't generate it ourselves (see `docs/testing.md`).
+and we don't generate it ourselves (see `docs/further-background/testing.md`).
 MAGICC AR6 is an exception: we generate the data here.
 It is here to demonstrate how acceptance data like this could be generated.
 
@@ -135,5 +135,5 @@ and reproducing that independently is more trouble than it's worth,
 so they are checked by the integration tests only
 (`tests/integration/magicc-ar6/`).
 They won't be released in the public openscm-runner repo until they have acceptance tests,
-because they don't meet the definition of done (see `docs/implementing-an-adapter.md`)
+because they don't meet the definition of done (see `docs/how-to-guides/implementing-an-adapter.md`)
 (we may put them in private repos if we need to use them for other work).

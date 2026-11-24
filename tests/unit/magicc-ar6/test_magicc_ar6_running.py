@@ -19,7 +19,7 @@ from openscm_runner.adapters.magicc_ar6.running import (
     get_environment,
 )
 
-# These are the MAGICC AR6 adapters' tests (see docs/testing.md)
+# These are the MAGICC AR6 adapters' tests (see docs/further-background/testing.md)
 pytestmark = pytest.mark.magicc_ar6
 
 

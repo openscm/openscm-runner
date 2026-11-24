@@ -26,7 +26,7 @@ from openscm_runner.output_specs import OutputSpecs
 if sys.version_info < (3, 11):
     from exceptiongroup import ExceptionGroup
 
-# These are the MAGICC AR6 adapters' tests (see docs/testing.md)
+# These are the MAGICC AR6 adapters' tests (see docs/further-background/testing.md)
 pytestmark = pytest.mark.magicc_ar6
 
 N_MEMBERS = 2

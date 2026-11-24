@@ -217,13 +217,13 @@ def convert_units(
         "openscm_units",
         requirement="openscm-units",
         callable_name=callable_name,
-        extra="magicc",
+        extra="magicc-ar6",
     )
     unit_conversion = import_optional_dependency(
         "pandas_openscm.unit_conversion",
         requirement="pandas-openscm",
         callable_name=callable_name,
-        extra="magicc",
+        extra="magicc-ar6",
     )
     ur = openscm_units.unit_registry
 
@@ -672,7 +672,7 @@ def from_magicc_output(
             "pandas_openscm.index_manipulation",
             requirement="pandas-openscm",
             callable_name="from_magicc_output",
-            extra="magicc",
+            extra="magicc-ar6",
         )
         out = index_manipulation.set_index_levels_func(
             out, levels_to_set=dict(experiment_levels)

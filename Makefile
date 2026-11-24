@@ -50,7 +50,7 @@ test:  ## run the tests (except each adapter group's tests, which need the model
 
 .PHONY: test-magicc-ar6
 test-magicc-ar6:  ## run the MAGICC AR6 adapter tests (including the slow ones)
-	uv run --group tests --extra magicc pytest -m "magicc_ar6" src tests -r a -v --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report= --cov-fail-under=0
+	uv run --group tests --extra magicc-ar6 pytest -m "magicc_ar6" src tests -r a -v --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report= --cov-fail-under=0
 	uv run --group tests coverage report --include='*/adapters/magicc_ar6/*' --show-missing --skip-covered --fail-under=100
 
 # Note on code coverage and testing:

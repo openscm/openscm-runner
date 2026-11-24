@@ -53,7 +53,7 @@ ANNUAL_STEPS = 1
 
 def _import_f90nml(callable_name: str) -> Any:
     return import_optional_dependency(
-        "f90nml", requirement="f90nml", callable_name=callable_name, extra="magicc"
+        "f90nml", requirement="f90nml", callable_name=callable_name, extra="magicc-ar6"
     )
 
 

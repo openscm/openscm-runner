@@ -176,8 +176,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           # Only this adapter group's extra
-          # TODO: rename extra group to magicc-ar6
-          uv-dependency-install-flags: "--group tests --extra magicc"
+          uv-dependency-install-flags: "--group tests --extra magicc-ar6"
       - name: Install gfortran's libraries (the macOS MAGICC binary needs them)
         if: runner.os == 'macOS'
         run: brew install gcc
@@ -194,7 +193,7 @@ jobs:
         run: |
           # `--cov-fail-under=0` stops pytest-cov applying the threshold
           # to the whole package, `coverage report` checks this group's modules.
-          uv run --group tests --extra magicc pytest -m "magicc_ar6" -r a -v src tests --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report= --cov-fail-under=0
+          uv run --group tests --extra magicc-ar6 pytest -m "magicc_ar6" -r a -v src tests --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report= --cov-fail-under=0
           uv run --group tests coverage report --include='*/adapters/magicc_ar6/*' --show-missing --skip-covered --fail-under=100
 
   tests-resolution-strategies:
