@@ -23,8 +23,7 @@ Backend-independent standard outputs
 Other requests can build off this
 or simply write out their own explicit names.
 """
-# TODO: consider switching to set[str, ...] (although that might be mutable?)
-# and adding definitions of all of these variables alongside these names.
+# Adding definitions of these variables (and maybe using a frozenset) is roadmap W19
 
 
 @dataclass(frozen=True, slots=True)

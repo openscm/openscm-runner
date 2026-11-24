@@ -359,9 +359,7 @@ class RunResults(Generic[AdapterT]):
     or return outputs in which some ensemble members failed
     (see [failures][(c).failures] and [all_succeeded][(c).all_succeeded]).
 
-    TODO: combine everything into a single dataframe.
-    This needs an index level that identifies the adapter/model,
-    which we haven't designed yet.
+    Combining the results into a single dataframe is roadmap [W18][w18].
     """
 
     results: tuple[AdapterRunResult[AdapterT], ...]

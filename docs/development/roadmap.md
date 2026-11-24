@@ -84,3 +84,13 @@ Candidates for "Next", not yet prioritised.
   so it's clear from the type how the data should be shaped.
 - [](){#w17}**W17** Let users choose where the ensemble member level goes in the index
   in `OpenSCMRunnerOutput.as_df` (it's always the first level at the moment).
+- [](){#w18}**W18** Combine the results from all adapters into a single dataframe
+  (`RunResults`). Needs an index level that identifies the adapter/model,
+  which waits for decisions [B10][b10] and [A3][a3].
+- [](){#w19}**W19** Add definitions of the standard output variables
+  alongside their names (`STANDARD_OUTPUT_VARIABLES` in `output_specs.py`),
+  and consider storing them as a `frozenset` rather than a tuple.
+  Related to the minimum outputs (decision [A7][a7]).
+- [](){#w20}**W20** Check that adapters' outputs contain all the requested variables
+  (in `verify_adapter_outputs`).
+  Whether `run_checks=False` skips this is decision [A4][a4].

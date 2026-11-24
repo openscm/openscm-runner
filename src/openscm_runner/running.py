@@ -148,6 +148,7 @@ def verify_adapter_outputs(
         )
         raise AdapterOutputError(msg)
 
-    # TODO: check the requested variables are all in the output.
-    # Ensemble member IDs aren't checked: the naming scheme is decision A3.
-    # TODO: decide which additional output checks `run_checks=False` skips.
+    # Not checked yet:
+    # - that the requested variables are all in the output (roadmap W20)
+    # - ensemble member IDs (the naming scheme is decision A3)
+    # Which of these `run_checks=False` should skip is decision A4.
