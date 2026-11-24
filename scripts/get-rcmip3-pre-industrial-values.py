@@ -21,10 +21,9 @@ These are the values in `src/openscm_runner/adapters/magicc_ar6/pre_industrial.p
   (unit conversions with openscm-units, as the adapters do)
 
 Only non-zero values are printed (`pre_industrial.py` fills in the zeros).
-The data comes from the RCMIP phase 3 protocol
-(https://gitlab.com/rcmip/rcmip-phase-3, tag v3.0.1, pinned to its commit).
-TODO: switch to the Zenodo release (https://zenodo.org/records/23347317)
-rather than grabbing the files from GitLab.
+The data comes from the Zenodo release of the RCMIP phase 3 protocol, v3.0.1
+(https://doi.org/10.5281/zenodo.23347317).
+The hashes of the bundle and of the files we use from it are checked.
 This script must never import `openscm_runner`.
 
 Run with `uv run --locked --script get-rcmip3-pre-industrial-values.py`
@@ -39,16 +38,20 @@ import pandas as pd
 import pooch
 from openscm_units import unit_registry
 
-RCMIP3_URL = (
-    "https://gitlab.com/rcmip/rcmip-phase-3/-/raw/"
-    "449e56d880d79c0ceca11530e0701c282204179b/RCMIP3_input_datafiles/{filename}"
+RCMIP3_BUNDLE_URL = (
+    "https://zenodo.org/api/records/23347317/files/"
+    "RCMIP3_protocol_bundle_V3_0_1.zip/content"
+)
+RCMIP3_BUNDLE_FILENAME = "RCMIP3_protocol_bundle_V3_0_1.zip"
+RCMIP3_BUNDLE_SHA256 = (
+    "03dc520c1a0636d3033bd7ca193474dce101e1d17c2d202a4db327d26b1532b4"
 )
 RCMIP3_FILES = {
-    # Filename: sha256
-    "rcmip_phase3_concentrations_v3.0.1.csv": (
+    # Path in the bundle: sha256
+    "RCMIP3_input_datafiles/rcmip_phase3_concentrations_v3.0.1.csv": (
         "1bc8876f87e2fe97caa37443ee3f0e1b2908d40a30ac7c84967a04f3ddb29634"
     ),
-    "rcmip_phase3_emissions_v3.0.1.csv": (
+    "RCMIP3_input_datafiles/rcmip_phase3_emissions_v3.0.1.csv": (
         "6b32df00635b513a44242ca3a4a62457a93fb9ebfa9ebf2afb860882e75ade51"
     ),
 }
@@ -108,16 +111,23 @@ HALOGENATED_RENAMING = {
 }
 
 
-def load(filename: str) -> pd.DataFrame:
-    """Download a file from RCMIP phase 3 (if not already downloaded) and load it"""
-    path = Path(
-        pooch.retrieve(
-            RCMIP3_URL.format(filename=filename),
-            known_hash=f"sha256:{RCMIP3_FILES[filename]}",
-            fname=filename,
-            path=pooch.os_cache("openscm-runner") / "rcmip3",
-        )
+def load(member: str) -> pd.DataFrame:
+    """
+    Load a file from the RCMIP phase 3 bundle
+
+    The bundle is downloaded (and the file extracted) if not already done.
+    """
+    extracted = pooch.retrieve(
+        RCMIP3_BUNDLE_URL,
+        known_hash=f"sha256:{RCMIP3_BUNDLE_SHA256}",
+        fname=RCMIP3_BUNDLE_FILENAME,
+        path=pooch.os_cache("openscm-runner") / "rcmip3",
+        processor=pooch.Unzip(members=[member]),
     )
+    (path,) = (Path(p) for p in extracted if Path(p).as_posix().endswith(member))
+    if pooch.file_hash(str(path), alg="sha256") != RCMIP3_FILES[member]:
+        raise AssertionError(path)
+
     out = pd.read_csv(path, low_memory=False)
 
     return out.loc[out["Region"] == "World"]
@@ -184,8 +194,10 @@ def print_emissions(emissions: pd.DataFrame, era: str) -> None:
 
 def main() -> None:
     """Print the pre-industrial values for CMIP6 and CMIP7"""
-    concentrations = load("rcmip_phase3_concentrations_v3.0.1.csv")
-    emissions = load("rcmip_phase3_emissions_v3.0.1.csv")
+    concentrations = load(
+        "RCMIP3_input_datafiles/rcmip_phase3_concentrations_v3.0.1.csv"
+    )
+    emissions = load("RCMIP3_input_datafiles/rcmip_phase3_emissions_v3.0.1.csv")
     for era in ("CMIP6", "CMIP7"):
         print_concentrations(concentrations, era)
         print_emissions(emissions, era)

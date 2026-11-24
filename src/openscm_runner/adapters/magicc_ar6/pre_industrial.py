@@ -37,10 +37,9 @@ the species a CO2-only input doesn't provide.
   RCMIP phase 3's protocol doesn't always (e.g. for CO2 emissions).
 ///
 
-Sources: the RCMIP phase 3 protocol
-(https://gitlab.com/rcmip/rcmip-phase-3, tag v3.0.1),
+Sources: the RCMIP phase 3 protocol, v3.0.1
+(Zenodo release, https://doi.org/10.5281/zenodo.23347317),
 retrieved with `scripts/get-rcmip3-pre-industrial-values.py`:
-TODO: update to use https://zenodo.org/records/23347317
 
 - piControl concentrations: CMIP7 from the `piControl` experiment,
   CMIP6 from the `historical-cmip6` experiment in 1850

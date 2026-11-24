@@ -99,3 +99,10 @@ Candidates for "Next", not yet prioritised.
 - [](){#w21}**W21** Report input problems as structured objects rather than plain strings
   (in `verification.py`), so code can inspect them (e.g. via an attribute on
   `InvalidInputError`) instead of parsing the error message.
+- [](){#w22}**W22** Get all the RCMIP phase 3 data from its Zenodo release
+  (https://doi.org/10.5281/zenodo.23347317) once the ScenarioMIP files are released there.
+  `tests/test-data/cmip-pre-industrial-branch/generate_data.py` still downloads
+  from GitLab (tag v3.0.1) because it needs
+  `ScenarioMIP/rcmip_phase3_{concentrations,forcing}_ScenarioMIP_v3.0.1.csv`,
+  which aren't in the Zenodo bundle (v3.0.1) yet.
+  `scripts/get-rcmip3-pre-industrial-values.py` already uses the Zenodo release.
