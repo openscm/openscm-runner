@@ -28,19 +28,16 @@ import importlib.metadata
 
 from .ar_scenarios import (
     AdapterAR6Scenario,
-    # TODO: note details still being worked out
     AdapterAR6ScenarioAnthropogenicOnly,
     AdapterAR6ScenarioCO2ForcingOnly,
     AdapterAR7Scenario,
     AR6Scenario,
-    # TODO: note details still being worked out
     AR6ScenarioCO2Emissions,
     AR7Scenario,
     run_ar6_scenarios,
     run_ar6_scenarios_anthropogenic_only,
     run_ar6_scenarios_co2_forcing_only,
     run_ar7_scenarios,
-    # TODO: note details still being worked out
     verify_ar6_scenario_co2_emissions,
     verify_ar6_scenarios,
     verify_ar7_scenarios,
@@ -59,13 +56,13 @@ from .cmip_pre_industrial_branch import (
     CMIP6PreIndustrialBranchCO2Concentrations,
     # Rename to CMIP6PreIndustrialBranchIdealisedCO2Emissions once we clarify usage?
     CMIP6PreIndustrialBranchCO2Emissions,
-    CMIP6PreIndustrialBranchConcentrations,
+    CMIP6PreIndustrialBranchConcentrationDrivenInput,
     CMIP6PreIndustrialBranchESMAllGHGInput,
     CMIP6PreIndustrialBranchESMInput,
     CMIP7PreIndustrialBranchCO2Concentrations,
     # Rename to CMIP7PreIndustrialBranchIdealisedCO2Emissions once we clarify usage?
     CMIP7PreIndustrialBranchCO2Emissions,
-    CMIP7PreIndustrialBranchConcentrations,
+    CMIP7PreIndustrialBranchConcentrationDrivenInput,
     CMIP7PreIndustrialBranchESMAllGHGInput,
     CMIP7PreIndustrialBranchESMInput,
     run_co2_concentration_driven_from_cmip6_pre_industrial,
@@ -136,12 +133,12 @@ __all__ = [
     "AdapterRunResult",
     "CMIP6PreIndustrialBranchCO2Concentrations",
     "CMIP6PreIndustrialBranchCO2Emissions",
-    "CMIP6PreIndustrialBranchConcentrations",
+    "CMIP6PreIndustrialBranchConcentrationDrivenInput",
     "CMIP6PreIndustrialBranchESMAllGHGInput",
     "CMIP6PreIndustrialBranchESMInput",
     "CMIP7PreIndustrialBranchCO2Concentrations",
     "CMIP7PreIndustrialBranchCO2Emissions",
-    "CMIP7PreIndustrialBranchConcentrations",
+    "CMIP7PreIndustrialBranchConcentrationDrivenInput",
     "CMIP7PreIndustrialBranchESMAllGHGInput",
     "CMIP7PreIndustrialBranchESMInput",
     "EnsembleMemberResult",

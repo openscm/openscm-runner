@@ -79,3 +79,8 @@ Candidates for "Next", not yet prioritised.
 - [](){#w15}**W15** Discuss and prioritise the candidate test cases in
   [testing](testing.md#5-candidate-test-cases-to-discuss-before-writing)
   (alongside [W09][w09]).
+- [](){#w16}**W16** A more informative type hint for ensemble members' output data
+  (`EnsembleMemberResult.data_if_succeeded`, currently a plain `pd.DataFrame`),
+  so it's clear from the type how the data should be shaped.
+- [](){#w17}**W17** Let users choose where the ensemble member level goes in the index
+  in `OpenSCMRunnerOutput.as_df` (it's always the first level at the moment).

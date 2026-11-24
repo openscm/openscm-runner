@@ -64,7 +64,7 @@ def test_partial_member_failure_is_not_adapter_failure():
         output.as_df()
     assert group.value.exceptions == (error,)
     pd.testing.assert_frame_equal(
-        output.as_df(skip_failed=True).xs("ok", level="ensemble_member"),
+        output.as_df(raise_if_any_failed=False).xs("ok", level="ensemble_member"),
         succeeded.data,
     )
     result = AdapterRunResult.from_success("adapter", (output,))
@@ -82,7 +82,7 @@ def test_no_successful_members():
         (EnsembleMemberResult.from_failure("a", RuntimeError("failed")),)
     )
     with pytest.raises(ValueError, match="No ensemble members succeeded"):
-        output.as_df(skip_failed=True)
+        output.as_df(raise_if_any_failed=False)
 
 
 def test_member_identity_and_dataframe_level_collisions():

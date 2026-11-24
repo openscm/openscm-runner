@@ -60,11 +60,11 @@ from openscm_runner.adapters.magicc_ar6.pre_industrial import (
     PreIndustrialValues,
 )
 from openscm_runner.cmip_pre_industrial_branch.inputs import (
+    CMIP7_AEROSOL_OZONE_PRECURSOR_EMISSIONS_VARIABLES,
+    CMIP7_CO2_ESM_EMISSION_VARIABLES,
     CMIP7_CONCENTRATION_VARIABLES,
-    CMIP_AEROSOL_EMISSIONS_VARIABLES,
-    CMIP_GHG_EMISSION_VARIABLES,
-    CMIP_NATURAL_FORCING_VARIABLES,
-    CO2_ESM_EMISSION_VARIABLES,
+    CMIP7_GHG_EMISSION_VARIABLES,
+    CMIP7_NATURAL_FORCING_VARIABLES,
 )
 from openscm_runner.output_specs import OutputSpecs
 
@@ -202,7 +202,7 @@ def make_concentrations(  # noqa: PLR0913
             )
 
         emissions_growth_rates = emissions_growth_rates or {}
-        for variable in sorted(CMIP_AEROSOL_EMISSIONS_VARIABLES):
+        for variable in sorted(CMIP7_AEROSOL_OZONE_PRECURSOR_EMISSIONS_VARIABLES):
             unit, value = get_pi_control_emissions(pre_industrial, variable)
             rows[("1pctCO2", variable, "World", unit)] = value * (
                 1 + emissions_growth_rates.get(variable, 0.0)
@@ -649,7 +649,7 @@ GHG_ERF_COMPONENTS_AND_CHEMISTRY = (
 
 SOME_INPUTS_CASES = (
     pytest.param(
-        CMIP_NATURAL_FORCING_VARIABLES,
+        CMIP7_NATURAL_FORCING_VARIABLES,
         (
             "Effective Radiative Forcing|Solar",
             "Effective Radiative Forcing|Volcanic",
@@ -660,7 +660,7 @@ SOME_INPUTS_CASES = (
         CMIP7_CONCENTRATION_VARIABLES, GHG_ERF_COMPONENTS_AND_CHEMISTRY, id="ghg"
     ),
     pytest.param(
-        CMIP_AEROSOL_EMISSIONS_VARIABLES,
+        CMIP7_AEROSOL_OZONE_PRECURSOR_EMISSIONS_VARIABLES,
         (
             "Effective Radiative Forcing|Aerosols",
             # Responds to the ozone precursors (CO, NMVOC, NOx)
@@ -763,7 +763,7 @@ def test_cmip_only_some_inputs_change(  # noqa: PLR0913
     temperature = res.xs("Surface Air Temperature Change", level="variable")
     assert (temperature.abs().max(axis="columns") > 0.01).all()
 
-    if variables == CMIP_NATURAL_FORCING_VARIABLES:
+    if variables == CMIP7_NATURAL_FORCING_VARIABLES:
         check_natural_forcing_follows_input(inp, res)
 
 
@@ -1213,7 +1213,7 @@ def make_emissions_driven_input(  # noqa: PLR0913
 
     if all_ghg:
         for variable in sorted(
-            CMIP_GHG_EMISSION_VARIABLES - CO2_ESM_EMISSION_VARIABLES
+            CMIP7_GHG_EMISSION_VARIABLES - CMIP7_CO2_ESM_EMISSION_VARIABLES
         ):
             unit, value = get_pi_control_emissions(pre_industrial, variable)
             if variable == "Emissions|CH4":
@@ -1239,7 +1239,7 @@ def make_emissions_driven_input(  # noqa: PLR0913
     ):
         add(variable, "W/m^2", 0.0)
 
-    for variable in sorted(CMIP_AEROSOL_EMISSIONS_VARIABLES):
+    for variable in sorted(CMIP7_AEROSOL_OZONE_PRECURSOR_EMISSIONS_VARIABLES):
         add(variable, *get_pi_control_emissions(pre_industrial, variable))
 
     return pd.DataFrame(

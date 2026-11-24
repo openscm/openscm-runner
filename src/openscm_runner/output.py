@@ -50,12 +50,10 @@ class EnsembleMemberResult:
     """
     ID of the ensemble member, provided by the adapter
 
-    TODO: agree a naming scheme for ensemble members and enforce it with tests
+    The naming scheme for ensemble members is still to be agreed
     (decision [A3][a3]).
     """
 
-    # TODO: consider whether we can give a better type hint here
-    # so it's clear how the output data should be shaped too.
     data_if_succeeded: pd.DataFrame | None
     """Wide dataframe of outputs, `None` if the member failed (use `data` normally)"""
 
@@ -166,10 +164,7 @@ class OpenSCMRunnerOutput:
         self,
         *,
         ensemble_member_level: str = "ensemble_member",
-        # TODO: Rename to raise_if_any_failed ?
-        skip_failed: bool = False,
-        # TODO: Add support for somehow specifying where the ensemble_member_level
-        # should be in the index?
+        raise_if_any_failed: bool = True,
     ) -> pd.DataFrame:
         """
         Combine the ensemble members' outputs into one dataframe
@@ -177,11 +172,13 @@ class OpenSCMRunnerOutput:
         Parameters
         ----------
         ensemble_member_level
-            Name of the index level that identifies the ensemble member
+            Name of the index level that identifies the ensemble member.
+            It is the first level of the index
+            (letting you choose where it goes is roadmap [W17][w17]).
 
-        skip_failed
-            If `True`, leave out failed ensemble members.
-            If `False`, raise if any ensemble member failed.
+        raise_if_any_failed
+            If `True`, raise if any ensemble member failed.
+            If `False`, leave out failed ensemble members.
 
         Returns
         -------
@@ -191,13 +188,13 @@ class OpenSCMRunnerOutput:
         Raises
         ------
         ExceptionGroup
-            `skip_failed` is `False` and at least one ensemble member failed
+            `raise_if_any_failed` is `True` and at least one ensemble member failed
 
         ValueError
             No ensemble member succeeded,
             or `ensemble_member_level` is already an index level of the data
         """
-        if not skip_failed:
+        if raise_if_any_failed:
             self.raise_if_any_failed()
 
         succeeded = [m for m in self.members if m.succeeded]

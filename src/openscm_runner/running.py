@@ -149,5 +149,5 @@ def verify_adapter_outputs(
         raise AdapterOutputError(msg)
 
     # TODO: check the requested variables are all in the output.
-    # TODO: check ensemble member IDs follow the agreed naming scheme.
+    # Ensemble member IDs aren't checked: the naming scheme is decision A3.
     # TODO: decide which additional output checks `run_checks=False` skips.

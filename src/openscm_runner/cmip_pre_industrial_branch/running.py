@@ -31,12 +31,12 @@ from openscm_runner.running import run_adapters
 from .inputs import (
     CMIP6PreIndustrialBranchCO2Concentrations,
     CMIP6PreIndustrialBranchCO2Emissions,
-    CMIP6PreIndustrialBranchConcentrations,
+    CMIP6PreIndustrialBranchConcentrationDrivenInput,
     CMIP6PreIndustrialBranchESMAllGHGInput,
     CMIP6PreIndustrialBranchESMInput,
     CMIP7PreIndustrialBranchCO2Concentrations,
     CMIP7PreIndustrialBranchCO2Emissions,
-    CMIP7PreIndustrialBranchConcentrations,
+    CMIP7PreIndustrialBranchConcentrationDrivenInput,
     CMIP7PreIndustrialBranchESMAllGHGInput,
     CMIP7PreIndustrialBranchESMInput,
     verify_cmip6_pre_industrial_branch_co2_concentrations,
@@ -263,7 +263,7 @@ class AdapterConcentrationDrivenFromCMIP7PreIndustrial(OutputCapabilities, Proto
 
     def __call__(
         self,
-        concentrations: tuple[CMIP7PreIndustrialBranchConcentrations, ...],
+        concentrations: tuple[CMIP7PreIndustrialBranchConcentrationDrivenInput, ...],
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
@@ -288,7 +288,7 @@ class AdapterConcentrationDrivenFromCMIP7PreIndustrial(OutputCapabilities, Proto
 
 
 def run_concentration_driven_from_cmip7_pre_industrial(
-    concentrations: tuple[CMIP7PreIndustrialBranchConcentrations, ...],
+    concentrations: tuple[CMIP7PreIndustrialBranchConcentrationDrivenInput, ...],
     *,
     adapters: tuple[AdapterConcentrationDrivenFromCMIP7PreIndustrial, ...],
     output_specs: OutputSpecs,
@@ -349,7 +349,7 @@ class AdapterConcentrationDrivenFromCMIP6PreIndustrial(OutputCapabilities, Proto
 
     def __call__(
         self,
-        concentrations: tuple[CMIP6PreIndustrialBranchConcentrations, ...],
+        concentrations: tuple[CMIP6PreIndustrialBranchConcentrationDrivenInput, ...],
         *,
         output_specs: OutputSpecs,
     ) -> tuple[OpenSCMRunnerOutput, ...]:
@@ -374,7 +374,7 @@ class AdapterConcentrationDrivenFromCMIP6PreIndustrial(OutputCapabilities, Proto
 
 
 def run_concentration_driven_from_cmip6_pre_industrial(
-    concentrations: tuple[CMIP6PreIndustrialBranchConcentrations, ...],
+    concentrations: tuple[CMIP6PreIndustrialBranchConcentrationDrivenInput, ...],
     *,
     adapters: tuple[AdapterConcentrationDrivenFromCMIP6PreIndustrial, ...],
     output_specs: OutputSpecs,

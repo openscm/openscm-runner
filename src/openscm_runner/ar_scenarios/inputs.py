@@ -139,9 +139,7 @@ def verify_ar7_scenarios(ar7_scenarios: tuple[AR7Scenario, ...]) -> None:
         # A cap for now, it could be lifted later
         last_year_at_most=2500,
     )
-    # TODO: check the scenarios are harmonised to AR7 history
-    # (use gcages'/pandas-openscm's functions for this,
-    # or port them in here if we want to avoid a circular dependency).
+    # Harmonisation to AR7 history isn't checked yet (roadmap W05)
 
 
 AR6Scenario: TypeAlias = pd.DataFrame
@@ -174,8 +172,7 @@ def verify_ar6_scenarios(ar6_scenarios: tuple[AR6Scenario, ...]) -> None:
         # No cap on the last year
         last_year_at_most=None,
     )
-    # TODO: check the scenarios are harmonised to AR6 history
-    # (same approach as for AR7).
+    # Harmonisation to AR6 history isn't checked yet (roadmap W05)
 
 
 AR6ScenarioCO2Emissions: TypeAlias = pd.DataFrame
@@ -183,6 +180,12 @@ AR6ScenarioCO2Emissions: TypeAlias = pd.DataFrame
 The CO2 emissions of an emissions scenario defined in AR6 terms
 
 [verify_ar6_scenario_co2_emissions][(m).] defines the shape.
+
+/// note | Details still being worked out
+Which CO2 emissions these runs take (decision [B17][b17])
+and which feedbacks they include (decision [B16][b16]) are still to be decided,
+so this definition may change.
+///
 """
 
 
@@ -191,6 +194,12 @@ def verify_ar6_scenario_co2_emissions(
 ) -> None:
     """
     Verify that inputs are valid AR6 scenario CO2 emissions
+
+    /// note | Details still being worked out
+    Which CO2 emissions these runs take (decision [B17][b17])
+    and which feedbacks they include (decision [B16][b16]) are still to be decided,
+    so this definition may change.
+    ///
 
     Parameters
     ----------
@@ -210,5 +219,4 @@ def verify_ar6_scenario_co2_emissions(
         # No cap on the last year
         last_year_at_most=None,
     )
-    # TODO: check the scenarios are harmonised to AR6 history
-    # (same approach as for AR7).
+    # Harmonisation to AR6 history isn't checked yet (roadmap W05)

@@ -129,6 +129,12 @@ class AdapterAR6ScenarioAnthropogenicOnly(OutputCapabilities, Protocol):
 
     Forcing: anthropogenic only
     (land-use forcing is anthropogenic, so it is included).
+
+    /// note | Details still being worked out
+    This experiment is for the remaining carbon budget workflow,
+    whose exact needs we are still clarifying (decision [B12][b12]),
+    so its definition may change.
+    ///
     """
 
     def __call__(

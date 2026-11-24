@@ -4,8 +4,13 @@ Input definitions
 CMIP6 and CMIP7 inputs currently have the same shape.
 They are still separate definitions
 so we can change them independently if we wish
-and because they experiments are different
+and because the experiments are different
 (the adapter branches off a different pre-industrial state).
+
+The variable constants are named after CMIP7 (`CMIP7_*`)
+and the CMIP6 definitions re-use them,
+rather than implying that one definition applies to every CMIP era.
+If the eras' definitions diverge, add `CMIP6_*` constants where needed.
 """
 
 from __future__ import annotations
@@ -22,12 +27,12 @@ CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR = 1850
 CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR = 1850
 """First year of runs branching off the CMIP7 pre-industrial state"""
 
-CO2_CONCENTRATION_VARIABLES: frozenset[str] = frozenset(
+CMIP7_CO2_CONCENTRATION_VARIABLES: frozenset[str] = frozenset(
     {"Atmospheric Concentrations|CO2"}
 )
 """Variables required for CO2-concentration-driven runs"""
 
-CO2_EMISSION_VARIABLES: frozenset[str] = frozenset({"Emissions|CO2|Fossil"})
+CMIP7_CO2_EMISSION_VARIABLES: frozenset[str] = frozenset({"Emissions|CO2|Fossil"})
 """
 Variables required for CO2-emission-driven runs
 
@@ -91,7 +96,7 @@ CMIP7_CONCENTRATION_VARIABLES: frozenset[str] = frozenset(
 The 43 concentration species required for CMIP7-style concentration-driven runs
 """
 
-CMIP_NATURAL_FORCING_VARIABLES: frozenset[str] = frozenset(
+CMIP7_NATURAL_FORCING_VARIABLES: frozenset[str] = frozenset(
     {
         "Effective Radiative Forcing|Solar",
         "Effective Radiative Forcing|Volcanic",
@@ -117,8 +122,7 @@ and whether adapters may scale it, is still to be decided (decision [B22][b22]).
 Units are not checked yet, W/m^2 is assumed (roadmap [W04][w04]).
 """
 
-# TODO: rename to CMIP_AEROSOL_OZONE_PRECURSOR_EMISSIONS_VARIABLES
-CMIP_AEROSOL_EMISSIONS_VARIABLES: frozenset[str] = frozenset(
+CMIP7_AEROSOL_OZONE_PRECURSOR_EMISSIONS_VARIABLES: frozenset[str] = frozenset(
     {
         "Emissions|BC",
         "Emissions|CO",
@@ -137,21 +141,16 @@ CMIP's concentration-driven experiments prescribe these as emissions
 These are the totals (anthropogenic plus open biomass burning).
 """
 
-# TODO: fix up naming throughout.
-# All of these constants should probably be CMIP7*,
-# which we can then just use for CMIP6 definitions too
-# rather than claiming
-# that there is one CMIP definition which will apply for all projects.
-CMIP_CONCENTRATION_DRIVEN_VARIABLES: frozenset[str] = (
+CMIP7_CONCENTRATION_DRIVEN_VARIABLES: frozenset[str] = (
     CMIP7_CONCENTRATION_VARIABLES
-    | CMIP_NATURAL_FORCING_VARIABLES
-    | CMIP_AEROSOL_EMISSIONS_VARIABLES
+    | CMIP7_NATURAL_FORCING_VARIABLES
+    | CMIP7_AEROSOL_OZONE_PRECURSOR_EMISSIONS_VARIABLES
 )
 """
 Variables required for CMIP-style concentration-driven runs
 """
 
-CO2_ESM_EMISSION_VARIABLES: frozenset[str] = frozenset(
+CMIP7_CO2_ESM_EMISSION_VARIABLES: frozenset[str] = frozenset(
     {"Emissions|CO2|Fossil", "Emissions|CO2|Biosphere"}
 )
 """
@@ -161,34 +160,38 @@ Unlike the CO2-only runs, land-use change is on,
 so biosphere (AFOLU) CO2 emissions are needed too.
 """
 
-CMIP_ESM_VARIABLES: frozenset[str] = (
-    CO2_ESM_EMISSION_VARIABLES
-    | (CMIP7_CONCENTRATION_VARIABLES - CO2_CONCENTRATION_VARIABLES)
-    | CMIP_NATURAL_FORCING_VARIABLES
-    | CMIP_AEROSOL_EMISSIONS_VARIABLES
+CMIP7_ESM_VARIABLES: frozenset[str] = (
+    CMIP7_CO2_ESM_EMISSION_VARIABLES
+    | (CMIP7_CONCENTRATION_VARIABLES - CMIP7_CO2_CONCENTRATION_VARIABLES)
+    | CMIP7_NATURAL_FORCING_VARIABLES
+    | CMIP7_AEROSOL_OZONE_PRECURSOR_EMISSIONS_VARIABLES
 )
 """
 Variables required for CMIP esm-style runs (emission-driven CO2)
 """
 
-CMIP_GHG_EMISSION_VARIABLES: frozenset[str] = CO2_ESM_EMISSION_VARIABLES | frozenset(
-    f"Emissions|{v.removeprefix('Atmospheric Concentrations|')}"
-    for v in CMIP7_CONCENTRATION_VARIABLES - CO2_CONCENTRATION_VARIABLES
+CMIP7_GHG_EMISSION_VARIABLES: frozenset[str] = (
+    CMIP7_CO2_ESM_EMISSION_VARIABLES
+    | frozenset(
+        f"Emissions|{v.removeprefix('Atmospheric Concentrations|')}"
+        for v in CMIP7_CONCENTRATION_VARIABLES - CMIP7_CO2_CONCENTRATION_VARIABLES
+    )
 )
 """
 GHG emissions variables required for CMIP esm-allGHG-style runs
 
 Emissions of every species in [CMIP7_CONCENTRATION_VARIABLES][(m).]
-(with CO2 split into fossil and biosphere, as in [CO2_ESM_EMISSION_VARIABLES][(m).]).
+(with CO2 split into fossil and biosphere,
+as in [CMIP7_CO2_ESM_EMISSION_VARIABLES][(m).]).
 
 The emissions of halogenated species are totals,
 i.e. they include natural emissions (e.g. of CH3Cl and CH3Br).
 """
 
-CMIP_ESM_ALL_GHG_VARIABLES: frozenset[str] = (
-    CMIP_GHG_EMISSION_VARIABLES
-    | CMIP_NATURAL_FORCING_VARIABLES
-    | CMIP_AEROSOL_EMISSIONS_VARIABLES
+CMIP7_ESM_ALL_GHG_VARIABLES: frozenset[str] = (
+    CMIP7_GHG_EMISSION_VARIABLES
+    | CMIP7_NATURAL_FORCING_VARIABLES
+    | CMIP7_AEROSOL_OZONE_PRECURSOR_EMISSIONS_VARIABLES
 )
 """
 Variables required for CMIP esm-allGHG-style runs (emission-driven GHGs)
@@ -208,6 +211,10 @@ def verify_cmip7_pre_industrial_branch_co2_concentrations(
     """
     Verify inputs for CO2-concentration-driven runs from CMIP7 pre-industrial
 
+    There is deliberately no harmonisation check:
+    the inputs don't have to start from the piControl state,
+    so you can run abrupt-change experiments (e.g. abrupt-4xCO2).
+
     Parameters
     ----------
     co2_concentrations
@@ -221,7 +228,7 @@ def verify_cmip7_pre_industrial_branch_co2_concentrations(
     verify_wide_timeseries_inputs(
         co2_concentrations,
         input_name="CMIP7PreIndustrialBranchCO2Concentrations",
-        required_variables=CO2_CONCENTRATION_VARIABLES,
+        required_variables=CMIP7_CO2_CONCENTRATION_VARIABLES,
         first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
@@ -241,6 +248,10 @@ def verify_cmip6_pre_industrial_branch_co2_concentrations(
     """
     Verify inputs for CO2-concentration-driven runs from CMIP6 pre-industrial
 
+    There is deliberately no harmonisation check:
+    the inputs don't have to start from the piControl state,
+    so you can run abrupt-change experiments (e.g. abrupt-4xCO2).
+
     Parameters
     ----------
     co2_concentrations
@@ -254,14 +265,13 @@ def verify_cmip6_pre_industrial_branch_co2_concentrations(
     verify_wide_timeseries_inputs(
         co2_concentrations,
         input_name="CMIP6PreIndustrialBranchCO2Concentrations",
-        required_variables=CO2_CONCENTRATION_VARIABLES,
+        required_variables=CMIP7_CO2_CONCENTRATION_VARIABLES,
         first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
 
-# TODO: rename to CMIP7PreIndustrialBranchConcentrationDrivenInputs
-CMIP7PreIndustrialBranchConcentrations: TypeAlias = pd.DataFrame
+CMIP7PreIndustrialBranchConcentrationDrivenInput: TypeAlias = pd.DataFrame
 """
 Concentrations for a run branching off the CMIP7 pre-industrial state
 
@@ -270,10 +280,14 @@ Concentrations for a run branching off the CMIP7 pre-industrial state
 
 
 def verify_cmip7_pre_industrial_branch_concentrations(
-    concentrations: tuple[CMIP7PreIndustrialBranchConcentrations, ...],
+    concentrations: tuple[CMIP7PreIndustrialBranchConcentrationDrivenInput, ...],
 ) -> None:
     """
     Verify inputs for CMIP-style concentration-driven runs from CMIP7 pre-industrial
+
+    There is deliberately no harmonisation check:
+    the inputs don't have to start from the piControl state,
+    so you can run abrupt-change experiments (e.g. abrupt-4xCO2).
 
     Parameters
     ----------
@@ -285,18 +299,16 @@ def verify_cmip7_pre_industrial_branch_concentrations(
     InvalidInputError
         An input doesn't match the definition
     """
-    # TODO: add note throughout that there is deliberately no harmonisation check
-    # so people can perform abrupt change experiments
     verify_wide_timeseries_inputs(
         concentrations,
-        input_name="CMIP7PreIndustrialBranchConcentrations",
-        required_variables=CMIP_CONCENTRATION_DRIVEN_VARIABLES,
+        input_name="CMIP7PreIndustrialBranchConcentrationDrivenInput",
+        required_variables=CMIP7_CONCENTRATION_DRIVEN_VARIABLES,
         first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
 
-CMIP6PreIndustrialBranchConcentrations: TypeAlias = pd.DataFrame
+CMIP6PreIndustrialBranchConcentrationDrivenInput: TypeAlias = pd.DataFrame
 """
 CMIP-style concentrations for a run branching off the CMIP6 pre-industrial state
 
@@ -305,10 +317,14 @@ CMIP-style concentrations for a run branching off the CMIP6 pre-industrial state
 
 
 def verify_cmip6_pre_industrial_branch_concentrations(
-    concentrations: tuple[CMIP6PreIndustrialBranchConcentrations, ...],
+    concentrations: tuple[CMIP6PreIndustrialBranchConcentrationDrivenInput, ...],
 ) -> None:
     """
     Verify inputs for CMIP-style concentration-driven runs from CMIP6 pre-industrial
+
+    There is deliberately no harmonisation check:
+    the inputs don't have to start from the piControl state,
+    so you can run abrupt-change experiments (e.g. abrupt-4xCO2).
 
     Parameters
     ----------
@@ -322,9 +338,9 @@ def verify_cmip6_pre_industrial_branch_concentrations(
     """
     verify_wide_timeseries_inputs(
         concentrations,
-        input_name="CMIP6PreIndustrialBranchConcentrations",
+        input_name="CMIP6PreIndustrialBranchConcentrationDrivenInput",
         # CMIP6 and CMIP7 have the same input set
-        required_variables=CMIP_CONCENTRATION_DRIVEN_VARIABLES,
+        required_variables=CMIP7_CONCENTRATION_DRIVEN_VARIABLES,
         first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
@@ -344,6 +360,10 @@ def verify_cmip7_pre_industrial_branch_co2_emissions(
     """
     Verify inputs for CO2-emission-driven runs from CMIP7 pre-industrial
 
+    There is deliberately no harmonisation check:
+    the inputs don't have to start from the piControl state,
+    so you can run abrupt-change experiments (e.g. abrupt-4xCO2).
+
     Parameters
     ----------
     co2_emissions
@@ -357,7 +377,7 @@ def verify_cmip7_pre_industrial_branch_co2_emissions(
     verify_wide_timeseries_inputs(
         co2_emissions,
         input_name="CMIP7PreIndustrialBranchCO2Emissions",
-        required_variables=CO2_EMISSION_VARIABLES,
+        required_variables=CMIP7_CO2_EMISSION_VARIABLES,
         first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
@@ -377,6 +397,10 @@ def verify_cmip6_pre_industrial_branch_co2_emissions(
     """
     Verify inputs for CO2-emission-driven runs from CMIP6 pre-industrial
 
+    There is deliberately no harmonisation check:
+    the inputs don't have to start from the piControl state,
+    so you can run abrupt-change experiments (e.g. abrupt-4xCO2).
+
     Parameters
     ----------
     co2_emissions
@@ -390,7 +414,7 @@ def verify_cmip6_pre_industrial_branch_co2_emissions(
     verify_wide_timeseries_inputs(
         co2_emissions,
         input_name="CMIP6PreIndustrialBranchCO2Emissions",
-        required_variables=CO2_EMISSION_VARIABLES,
+        required_variables=CMIP7_CO2_EMISSION_VARIABLES,
         first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
@@ -410,6 +434,10 @@ def verify_cmip7_pre_industrial_branch_esm_inputs(
     """
     Verify inputs for CMIP esm-style runs from CMIP7 pre-industrial
 
+    There is deliberately no harmonisation check:
+    the inputs don't have to start from the piControl state,
+    so you can run abrupt-change experiments (e.g. abrupt-4xCO2).
+
     Parameters
     ----------
     esm_inputs
@@ -423,7 +451,7 @@ def verify_cmip7_pre_industrial_branch_esm_inputs(
     verify_wide_timeseries_inputs(
         esm_inputs,
         input_name="CMIP7PreIndustrialBranchESMInput",
-        required_variables=CMIP_ESM_VARIABLES,
+        required_variables=CMIP7_ESM_VARIABLES,
         first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
@@ -443,6 +471,10 @@ def verify_cmip7_pre_industrial_branch_esm_all_ghg_inputs(
     """
     Verify inputs for CMIP esm-allGHG-style runs from CMIP7 pre-industrial
 
+    There is deliberately no harmonisation check:
+    the inputs don't have to start from the piControl state,
+    so you can run abrupt-change experiments (e.g. abrupt-4xCO2).
+
     Parameters
     ----------
     esm_all_ghg_inputs
@@ -456,7 +488,7 @@ def verify_cmip7_pre_industrial_branch_esm_all_ghg_inputs(
     verify_wide_timeseries_inputs(
         esm_all_ghg_inputs,
         input_name="CMIP7PreIndustrialBranchESMAllGHGInput",
-        required_variables=CMIP_ESM_ALL_GHG_VARIABLES,
+        required_variables=CMIP7_ESM_ALL_GHG_VARIABLES,
         first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
@@ -476,6 +508,10 @@ def verify_cmip6_pre_industrial_branch_esm_inputs(
     """
     Verify inputs for CMIP esm-style runs from CMIP6 pre-industrial
 
+    There is deliberately no harmonisation check:
+    the inputs don't have to start from the piControl state,
+    so you can run abrupt-change experiments (e.g. abrupt-4xCO2).
+
     Parameters
     ----------
     esm_inputs
@@ -489,7 +525,7 @@ def verify_cmip6_pre_industrial_branch_esm_inputs(
     verify_wide_timeseries_inputs(
         esm_inputs,
         input_name="CMIP6PreIndustrialBranchESMInput",
-        required_variables=CMIP_ESM_VARIABLES,
+        required_variables=CMIP7_ESM_VARIABLES,
         first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
@@ -509,6 +545,10 @@ def verify_cmip6_pre_industrial_branch_esm_all_ghg_inputs(
     """
     Verify inputs for CMIP esm-allGHG-style runs from CMIP6 pre-industrial
 
+    There is deliberately no harmonisation check:
+    the inputs don't have to start from the piControl state,
+    so you can run abrupt-change experiments (e.g. abrupt-4xCO2).
+
     Parameters
     ----------
     esm_all_ghg_inputs
@@ -522,7 +562,7 @@ def verify_cmip6_pre_industrial_branch_esm_all_ghg_inputs(
     verify_wide_timeseries_inputs(
         esm_all_ghg_inputs,
         input_name="CMIP6PreIndustrialBranchESMAllGHGInput",
-        required_variables=CMIP_ESM_ALL_GHG_VARIABLES,
+        required_variables=CMIP7_ESM_ALL_GHG_VARIABLES,
         first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
