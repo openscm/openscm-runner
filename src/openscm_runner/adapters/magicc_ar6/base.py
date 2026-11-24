@@ -147,10 +147,10 @@ class MAGICCAR6AdapterConfiguration:
     The members that are run keep their IDs,
     so the result is exactly a subset of a full run.
 
-    !!! warning "Use with caution"
-
-        If you set this, the outputs are not the AR6 distribution:
-        don't use them for anything other than testing.
+    /// warning | Use with caution
+    If you set this, the outputs are not the AR6 distribution:
+    don't use them for anything other than testing.
+    ///
     """
 
     @classmethod

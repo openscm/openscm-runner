@@ -96,13 +96,13 @@ Natural forcing variables required for CMIP-style concentration-driven runs
 Experiments like historical prescribe solar and volcanic forcing too,
 so they can be part of the input.
 
-!!! warning "What zero natural forcing means still has to be decided"
-
-    E.g. RCMIP phase 3's natural ERF isn't zero in 1850
-    (e.g. volcanic 0.18 (CMIP6) or 0.21 (CMIP7) W/m^2),
-    and CMIP's piControl uses averages
-    (e.g. of solar over a solar cycle, of volcanic over the historical period).
-    So "relative to piControl" needs to be defined (decision B19).
+/// warning | What zero natural forcing means still has to be decided
+E.g. RCMIP phase 3's natural ERF isn't zero in 1850
+(e.g. volcanic 0.18 (CMIP6) or 0.21 (CMIP7) W/m^2),
+and CMIP's piControl uses averages
+(e.g. of solar over a solar cycle, of volcanic over the historical period).
+So "relative to piControl" needs to be defined (decision B19).
+///
 
 TODO: decide whether the input should be ERF (as here)
 or something closer to what CMIP provides,

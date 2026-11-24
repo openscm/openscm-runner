@@ -6,9 +6,9 @@ Still to discuss: the candidate test cases in section 5,
 experiment-specific scientific checks (roadmap W09)
 and runtime and coverage targets for the shared tests (roadmap W10).
 
-## 1. The v1 test suite
+## 1. The test suite of v0.13 and before
 
-We are not carrying the v1 test suite over.
+We are not carrying the test suite of v0.13 and before over.
 It is misleading: numerical baselines live inside the integration tests,
 the regression directory is empty,
 and global fixtures probe for external models at collection time

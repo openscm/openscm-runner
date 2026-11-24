@@ -1,6 +1,6 @@
 [project]
 name = "openscm-runner"
-version = "2.0.0a1"
+version = "0.14.0a1"
 description = "Standardised interfaces for running simple climate models (SCMs)"
 authors = [
     { name = "Zebede Nicholls", email = "zebedee.nicholls@climate-energy-college.org" },

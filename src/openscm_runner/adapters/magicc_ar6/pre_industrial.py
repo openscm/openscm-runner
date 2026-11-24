@@ -14,27 +14,27 @@ the state the experiments branch from and MAGICC's reference concentrations
 The piControl concentrations are also used to fill in
 the species a CO2-only input doesn't provide.
 
-!!! warning "This isn't perfect, it is something we need to fix"
-
-    - The AR6 probabilistic distribution was calibrated with the CMIP6 history
-      and MAGICC's references at their 1750 values
-      (CMIP6: CO2 277.147 ppm, CH4 731.406 ppb, N2O 273.865 ppb;
-      for CMIP7 they would be CO2 278.00745 ppm, CH4 720.8548 ppb, N2O 266.57 ppb).
-      Here the references are the piControl (1850) values instead.
-      That isn't a recalibration (no parameters change),
-      but the GHG forcing formulae aren't logarithms of ratios alone
-      (e.g. the CO2-N2O overlap terms), so the forcing for a given change
-      in concentrations differs slightly from what the AR6 setup would give.
-    - Neither setup is calibrated to CMIP7:
-      the CMIP7 adapters are the AR6 calibration
-      starting from the CMIP7 piControl state.
-    - Halon1202 isn't in the CMIP concentration datasets.
-      We use zero (the ERF is of order 1e-6 W/m^2 anyway).
-    - The numbers are hard-coded here
-      (retrieved with `scripts/get-rcmip3-pre-industrial-values.py`).
-    - What values to use as pre-industrial is still to be decided
-      (decision B19): CMIP's guidance usually says to repeat the 1850 values,
-      RCMIP phase 3's protocol doesn't always (e.g. for CO2 emissions).
+/// warning | This isn't perfect, it is something we need to fix
+- The AR6 probabilistic distribution was calibrated with the CMIP6 history
+  and MAGICC's references at their 1750 values
+  (CMIP6: CO2 277.147 ppm, CH4 731.406 ppb, N2O 273.865 ppb;
+  for CMIP7 they would be CO2 278.00745 ppm, CH4 720.8548 ppb, N2O 266.57 ppb).
+  Here the references are the piControl (1850) values instead.
+  That isn't a recalibration (no parameters change),
+  but the GHG forcing formulae aren't logarithms of ratios alone
+  (e.g. the CO2-N2O overlap terms), so the forcing for a given change
+  in concentrations differs slightly from what the AR6 setup would give.
+- Neither setup is calibrated to CMIP7:
+  the CMIP7 adapters are the AR6 calibration
+  starting from the CMIP7 piControl state.
+- Halon1202 isn't in the CMIP concentration datasets.
+  We use zero (the ERF is of order 1e-6 W/m^2 anyway).
+- The numbers are hard-coded here
+  (retrieved with `scripts/get-rcmip3-pre-industrial-values.py`).
+- What values to use as pre-industrial is still to be decided
+  (decision B19): CMIP's guidance usually says to repeat the 1850 values,
+  RCMIP phase 3's protocol doesn't always (e.g. for CO2 emissions).
+///
 
 Sources: the RCMIP phase 3 protocol
 (https://gitlab.com/rcmip/rcmip-phase-3, tag v3.0.1),

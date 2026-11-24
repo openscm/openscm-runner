@@ -325,6 +325,24 @@ def test_scenario_inputs_do_not_require_halon1202(case: Case) -> None:
     assert len(adapter.calls) == 1
 
 
+@pytest.mark.parametrize(
+    "case", [CASES[1], CASES[2]], ids=["ar6", "ar6-anthropogenic-only"]
+)
+def test_ar6_scenario_inputs_require_halon1202(case: Case) -> None:
+    valid = case.make_valid_input()
+    adapter = RecordingAdapter()
+    assert case.call_run((valid,), adapter).all_succeeded
+
+    without_halon = valid.loc[
+        valid.index.get_level_values("variable") != "Emissions|Halon1202"
+    ]
+    assert len(without_halon) == len(valid) - 1
+    with pytest.raises(InvalidInputError, match=r"missing variables.*Halon1202"):
+        case.call_run((without_halon,), adapter)
+
+    assert len(adapter.calls) == 1
+
+
 @pytest.mark.parametrize("case", [pytest.param(c, id=c.id) for c in CASES])
 @pytest.mark.parametrize(
     "variables",

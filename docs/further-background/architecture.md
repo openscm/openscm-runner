@@ -36,7 +36,7 @@ Goals:
 
 Non-goals:
 
-- A general-purpose config-dictionary API (as v1 had).
+- A general-purpose config-dictionary API (as v0.13 and before had).
 - Calibration fitting, scenario harmonisation and infilling
   (they belong in other packages, e.g. gcages, aneris, silicone).
 - A workflow scheduler, a distributed execution framework or plugin discovery.

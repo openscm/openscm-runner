@@ -169,170 +169,170 @@ How the runs are set up:
    These are buffer years, so we never return their output
    (and there is a normal buffer year between them and the output we do return).
 
-!!! warning "Some of MAGICC's settings are tied to calendar years"
+/// warning | Some of MAGICC's settings are tied to calendar years
+MAGICC v7.5.3 is set up for runs which start in 1750
+and follow history, so some of its settings are calendar years.
 
-    MAGICC v7.5.3 is set up for runs which start in 1750
-    and follow history, so some of its settings are calendar years.
+- The carbon cycle's temperature feedback and CO2 fertilisation
+  start in 1900 by default (relative to the state then),
+  the CH4 and N2O lifetime feedbacks in 1927 and 1925.
+  We start them in [MAGICC_START_YEAR][(m).] instead,
+  see the warning below.
+- These are left at MAGICC's defaults
+  (they matter for runs which go past these years,
+  as nominal years in idealised experiments):
+  stratospheric ozone forcing is zero until 1979
+  and relative to the 1979 EESC after that (`STRATOZ_THRESHOLD_YEAR`),
+  stratospheric lifetimes respond to warming above the 1980 temperature
+  (`GEN_CHANGE_MERIDIONALFLUX_YR`)
+  and land-use and mineral dust forcing are constant after 2018
+  (`RF_LANDUSE_CONSTANTAFTERYR`, `RF_MINERALDUST_CONSTANTAFTERYR`).
+///
 
-    - The carbon cycle's temperature feedback and CO2 fertilisation
-      start in 1900 by default (relative to the state then),
-      the CH4 and N2O lifetime feedbacks in 1927 and 1925.
-      We start them in [MAGICC_START_YEAR][(m).] instead,
-      see the warning below.
-    - These are left at MAGICC's defaults
-      (they matter for runs which go past these years,
-      as nominal years in idealised experiments):
-      stratospheric ozone forcing is zero until 1979
-      and relative to the 1979 EESC after that (`STRATOZ_THRESHOLD_YEAR`),
-      stratospheric lifetimes respond to warming above the 1980 temperature
-      (`GEN_CHANGE_MERIDIONALFLUX_YR`)
-      and land-use and mineral dust forcing are constant after 2018
-      (`RF_LANDUSE_CONSTANTAFTERYR`, `RF_MINERALDUST_CONSTANTAFTERYR`).
+/// warning | Difference from AR6: when the carbon cycle and CH4/N2O feedbacks start
+MAGICC v7.5.3's CO2 fertilisation and carbon cycle temperature feedback
+start in 1900 by default (relative to the state then),
+its CH4 and N2O lifetime feedbacks in 1927 and 1925.
+These are calendar years, set up for runs which start in 1750.
+For runs branching off piControl, we start them in [MAGICC_START_YEAR][(m).]
+([FEEDBACK_START_YEAR_SETTINGS][(m).]),
+so they act relative to the piControl state from the start.
+Otherwise, e.g., an emissions-driven 1pctCO2 run
+would have no CO2 fertilisation for its first 50 years
+and the carbon cycle feedbacks would kick in part way through.
 
-!!! warning "Difference from AR6: when the carbon cycle and CH4/N2O feedbacks start"
+This is a difference from AR6's setup:
+there, e.g., CO2 fertilisation acts relative to the 1900 concentration
+(and not at all before 1900).
+So the emissions-driven adapters' carbon cycle
+(and CH4 and N2O cycles) don't behave exactly as in AR6,
+even though the calibration's parameters are unchanged.
+(For the concentration-driven adapters,
+these feedbacks don't affect the outputs we return.)
+///
 
-    MAGICC v7.5.3's CO2 fertilisation and carbon cycle temperature feedback
-    start in 1900 by default (relative to the state then),
-    its CH4 and N2O lifetime feedbacks in 1927 and 1925.
-    These are calendar years, set up for runs which start in 1750.
-    For runs branching off piControl, we start them in [MAGICC_START_YEAR][(m).]
-    ([FEEDBACK_START_YEAR_SETTINGS][(m).]),
-    so they act relative to the piControl state from the start.
-    Otherwise, e.g., an emissions-driven 1pctCO2 run
-    would have no CO2 fertilisation for its first 50 years
-    and the carbon cycle feedbacks would kick in part way through.
+/// note | Where MAGICC averages emissions over each year and the next
+MAGICC v7.5.3's convention is that the emissions in year `t`
+are the total for year `t`,
+and the state at the start of year `t + 1` is calculated
+from the state at the start of year `t` and the emissions in year `t`
+(`src/MAGICC7.f90`, v7.5.3, around line 127).
+The gas cycles, tropospheric ozone and nitrate use each year's emissions as given.
 
-    This is a difference from AR6's setup:
-    there, e.g., CO2 fertilisation acts relative to the 1900 concentration
-    (and not at all before 1900).
-    So the emissions-driven adapters' carbon cycle
-    (and CH4 and N2O cycles) don't behave exactly as in AR6,
-    even though the calibration's parameters are unchanged.
-    (For the concentration-driven adapters,
-    these feedbacks don't affect the outputs we return.)
+The exception is the aerosol forcing and optical thickness MAGICC derives
+from emissions (direct aerosol, BC on snow
+and, via the optical thicknesses, aerosol-cloud forcing).
+These are start-of-year values calculated from the average of the emissions
+in year `t` and year `t + 1`
+(`extend_rf_box_from_switchyear_with_emissions` in MAGICC v7.5.3),
+so for these a step change in emissions in year `y`
+is half applied in year `y - 1`.
+[undo_magicc_emissions_averaging][openscm_runner.adapters.magicc_ar6.base.]
+gives emissions which these calculations see exactly as you want them,
+but be careful: the same emissions also go, unaveraged,
+into the gas cycles, tropospheric ozone and nitrate.
 
-!!! note "Where MAGICC averages emissions over each year and the next"
+These adapters don't do anything about this:
+we pass the emissions on as given,
+because that is the behaviour MAGICC v7.5.3 has always had.
+One side effect: because of this emissions averaging,
+changing aerosol emissions in year `y` changes aerosol forcing
+in years `y` and `y - 1`.
+Then, sub-annual forcing is linearly interpolated,
+so the forcing over year `y - 2` is the interpolation
+of the `y - 2` and `y - 1` values.
+Putting that together, altering aerosol emissions in year `y`
+changes heat uptake in year `y - 2`.
+(MAGICC v7.5.3's annual mean heat uptake also covers February to February,
+rather than January to January, which looks like a bug.
+This makes the change in `y - 2` bigger, but isn't what causes it,
+see `src/MAGICC7.f90` in MAGICC v7.5.3, around lines 5250 and 6115.)
 
-    MAGICC v7.5.3's convention is that the emissions in year `t`
-    are the total for year `t`,
-    and the state at the start of year `t + 1` is calculated
-    from the state at the start of year `t` and the emissions in year `t`
-    (`src/MAGICC7.f90`, v7.5.3, around line 127).
-    The gas cycles, tropospheric ozone and nitrate use each year's emissions as given.
+Land-use albedo and mineral dust forcing are calculated the same way,
+from cumulative biosphere CO2 emissions,
+so they see biosphere CO2 emissions half a year early too.
+E.g. if the input's first year has non-zero biosphere CO2 emissions,
+these forcings are already non-zero in the last spin-up year (1849),
+so MAGICC isn't exactly in its piControl state before 1850.
+There is nothing we can do about this with MAGICC v7.5.3's set up.
+///
 
-    The exception is the aerosol forcing and optical thickness MAGICC derives
-    from emissions (direct aerosol, BC on snow
-    and, via the optical thicknesses, aerosol-cloud forcing).
-    These are start-of-year values calculated from the average of the emissions
-    in year `t` and year `t + 1`
-    (`extend_rf_box_from_switchyear_with_emissions` in MAGICC v7.5.3),
-    so for these a step change in emissions in year `y`
-    is half applied in year `y - 1`.
-    [undo_magicc_emissions_averaging][openscm_runner.adapters.magicc_ar6.base.]
-    gives emissions which these calculations see exactly as you want them,
-    but be careful: the same emissions also go, unaveraged,
-    into the gas cycles, tropospheric ozone and nitrate.
+/// warning | The regional pattern of aerosol forcing is fixed at 1850
+Direct aerosol, aerosol-cloud and BC on snow forcing respond to emissions
+with the regional pattern (and, for fossil/industrial emissions,
+the forcing per unit emissions) of MAGICC's history files in 1850.
+In MAGICC's historical runs, this pattern changes over time
+(as emissions move between regions).
+For scenarios, MAGICC uses the pattern in the files' last year (2015).
+For experiments branching off piControl,
+1850 is the natural choice, but it means the same emissions change
+gives different forcing here than in a scenario run.
+///
 
-    These adapters don't do anything about this:
-    we pass the emissions on as given,
-    because that is the behaviour MAGICC v7.5.3 has always had.
-    One side effect: because of this emissions averaging,
-    changing aerosol emissions in year `y` changes aerosol forcing
-    in years `y` and `y - 1`.
-    Then, sub-annual forcing is linearly interpolated,
-    so the forcing over year `y - 2` is the interpolation
-    of the `y - 2` and `y - 1` values.
-    Putting that together, altering aerosol emissions in year `y`
-    changes heat uptake in year `y - 2`.
-    (MAGICC v7.5.3's annual mean heat uptake also covers February to February,
-    rather than January to January, which looks like a bug.
-    This makes the change in `y - 2` bigger, but isn't what causes it,
-    see `src/MAGICC7.f90` in MAGICC v7.5.3, around lines 5250 and 6115.)
+/// warning | The aerosol-cloud forcing normalisation isn't perfect
+The normalisation anchor (point 7 above) is the best we can do
+with MAGICC v7.5.3, but it isn't the same as AR6.
+The aerosol-cloud forcing is normalised by the change in cloud droplet number
+from pre-industrial to 2000.
+In AR6, pre-industrial is 1750.
+Here, it is the piControl state (roughly MAGICC's 1850 state),
+which already has more aerosol than 1750.
+The change from pre-industrial to 2000 is therefore smaller here,
+so the aerosol-cloud forcing for a given change in emissions
+is somewhat stronger than AR6's calibration implies.
+Fixing this exactly would need MAGICC's cloud droplet number calculation
+to be re-implemented outside MAGICC (to correct each member's scaling).
+///
 
-    Land-use albedo and mineral dust forcing are calculated the same way,
-    from cumulative biosphere CO2 emissions,
-    so they see biosphere CO2 emissions half a year early too.
-    E.g. if the input's first year has non-zero biosphere CO2 emissions,
-    these forcings are already non-zero in the last spin-up year (1849),
-    so MAGICC isn't exactly in its piControl state before 1850.
-    There is nothing we can do about this with MAGICC v7.5.3's set up.
+/// warning | The solar and volcanic ERF you put in isn't the ERF MAGICC applies
+The input solar and volcanic forcing is passed to MAGICC
+as its solar and volcanic forcing input files.
+Each member of the AR6 probabilistic distribution then:
 
-!!! warning "The regional pattern of aerosol forcing is fixed at 1850"
+- scales it: `RF_SOLAR_SCALE` (0.50-1.30, median 0.91)
+  and `RF_VOLCANIC_SCALE` (0.50-1.10, median 0.77)
+- applies its efficacy: `RF_EFFICACY_SOLAR` (0.60-1.10, median 0.84)
+  and `RF_EFFICACY_VOLC` (0.67-1.23, median 0.93).
+  These are parameters of each member (part of the calibration),
+  not something MAGICC calculates.
+  (MAGICC also calculates an internal efficacy from the regional pattern
+  of each forcing, but that cancels out of the ERF.)
 
-    Direct aerosol, aerosol-cloud and BC on snow forcing respond to emissions
-    with the regional pattern (and, for fossil/industrial emissions,
-    the forcing per unit emissions) of MAGICC's history files in 1850.
-    In MAGICC's historical runs, this pattern changes over time
-    (as emissions move between regions).
-    For scenarios, MAGICC uses the pattern in the files' last year (2015).
-    For experiments branching off piControl,
-    1850 is the natural choice, but it means the same emissions change
-    gives different forcing here than in a scenario run.
+This is how AR6 used MAGICC (the scalings are part of the calibration
+and represent the uncertainty in these forcings).
+So the ERF applied is the input times scale times efficacy,
+which differs from member to member.
+Across the ensemble, the median factor is 0.75 for solar
+(5-95%: 0.41-1.18) and 0.71 for volcanic (5-95%: 0.43-1.12).
+The output `Effective Radiative Forcing|Solar` and
+`Effective Radiative Forcing|Volcanic` are the ERF actually applied,
+so they differ from the input
+(also, the annual volcanic output is a mid-year to mid-year mean,
+so a one-year volcanic input is spread over two years of output).
+If you need the input ERF applied exactly, this adapter doesn't do that.
+(TODO: decide what the input definition should mean here,
+see `CMIP_NATURAL_FORCING_VARIABLES`.)
+///
 
-!!! warning "The aerosol-cloud forcing normalisation isn't perfect"
+/// warning | Annual volcanic forcing isn't ideal for MAGICC
+MAGICC works best with volcanic forcing prescribed monthly
+(it runs on a monthly timestep and volcanic forcing varies within a year).
+The input definition only has annual values, so we repeat each annual value
+for every month of that year.
+This isn't an ideal way to use MAGICC,
+but it is what the input definition requires.
+///
 
-    The normalisation anchor (point 7 above) is the best we can do
-    with MAGICC v7.5.3, but it isn't the same as AR6.
-    The aerosol-cloud forcing is normalised by the change in cloud droplet number
-    from pre-industrial to 2000.
-    In AR6, pre-industrial is 1750.
-    Here, it is the piControl state (roughly MAGICC's 1850 state),
-    which already has more aerosol than 1750.
-    The change from pre-industrial to 2000 is therefore smaller here,
-    so the aerosol-cloud forcing for a given change in emissions
-    is somewhat stronger than AR6's calibration implies.
-    Fixing this exactly would need MAGICC's cloud droplet number calculation
-    to be re-implemented outside MAGICC (to correct each member's scaling).
-
-!!! warning "The solar and volcanic ERF you put in isn't the ERF MAGICC applies"
-
-    The input solar and volcanic forcing is passed to MAGICC
-    as its solar and volcanic forcing input files.
-    Each member of the AR6 probabilistic distribution then:
-
-    - scales it: `RF_SOLAR_SCALE` (0.50-1.30, median 0.91)
-      and `RF_VOLCANIC_SCALE` (0.50-1.10, median 0.77)
-    - applies its efficacy: `RF_EFFICACY_SOLAR` (0.60-1.10, median 0.84)
-      and `RF_EFFICACY_VOLC` (0.67-1.23, median 0.93).
-      These are parameters of each member (part of the calibration),
-      not something MAGICC calculates.
-      (MAGICC also calculates an internal efficacy from the regional pattern
-      of each forcing, but that cancels out of the ERF.)
-
-    This is how AR6 used MAGICC (the scalings are part of the calibration
-    and represent the uncertainty in these forcings).
-    So the ERF applied is the input times scale times efficacy,
-    which differs from member to member.
-    Across the ensemble, the median factor is 0.75 for solar
-    (5-95%: 0.41-1.18) and 0.71 for volcanic (5-95%: 0.43-1.12).
-    The output `Effective Radiative Forcing|Solar` and
-    `Effective Radiative Forcing|Volcanic` are the ERF actually applied,
-    so they differ from the input
-    (also, the annual volcanic output is a mid-year to mid-year mean,
-    so a one-year volcanic input is spread over two years of output).
-    If you need the input ERF applied exactly, this adapter doesn't do that.
-    (TODO: decide what the input definition should mean here,
-    see `CMIP_NATURAL_FORCING_VARIABLES`.)
-
-!!! warning "Annual volcanic forcing isn't ideal for MAGICC"
-
-    MAGICC works best with volcanic forcing prescribed monthly
-    (it runs on a monthly timestep and volcanic forcing varies within a year).
-    The input definition only has annual values, so we repeat each annual value
-    for every month of that year.
-    This isn't an ideal way to use MAGICC,
-    but it is what the input definition requires.
-
-!!! note "Should the ozone response to warming be in idealised CO2 runs?"
-
-    With all forcing agents included, the total ERF includes MAGICC's
-    ozone response to warming (`OZDUETOTEMPERATURE_SCALE`,
-    about -0.038 W/m^2 per K for the median member, 5-95%: -0.054 to -0.020).
-    In 1pctCO2 after 140 years, that's roughly -0.16 W/m^2.
-    It's not clear whether this should be in idealised CO2-only experiments
-    (e.g. 1pctCO2, abrupt-4xCO2) or not:
-    ESMs with interactive chemistry would include it,
-    ESMs with prescribed ozone wouldn't.
+/// note | Should the ozone response to warming be in idealised CO2 runs?
+With all forcing agents included, the total ERF includes MAGICC's
+ozone response to warming (`OZDUETOTEMPERATURE_SCALE`,
+about -0.038 W/m^2 per K for the median member, 5-95%: -0.054 to -0.020).
+In 1pctCO2 after 140 years, that's roughly -0.16 W/m^2.
+It's not clear whether this should be in idealised CO2-only experiments
+(e.g. 1pctCO2, abrupt-4xCO2) or not:
+ESMs with interactive chemistry would include it,
+ESMs with prescribed ozone wouldn't.
+///
 
 All the adapters use the same back-end
 ([run_pre_industrial_branch_experiments][(m).]).
@@ -1500,36 +1500,36 @@ class MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial:
     (see [openscm_runner.adapters.magicc_ar6.pre_industrial][]
     for why this isn't perfect).
 
-    !!! warning "Aerosol forcing is an approximation of MAGICC's AR6 setup"
+    /// warning | Aerosol forcing is an approximation of MAGICC's AR6 setup
+    Direct aerosol and BC on snow forcing use the regional pattern
+    of MAGICC's history files in 1850
+    and the aerosol-cloud forcing's normalisation isn't the same as AR6's
+    (it is somewhat stronger).
+    ///
 
-        Direct aerosol and BC on snow forcing use the regional pattern
-        of MAGICC's history files in 1850
-        and the aerosol-cloud forcing's normalisation isn't the same as AR6's
-        (it is somewhat stronger).
+    /// warning | Solar and volcanic forcing are scaled by each ensemble member
+    The input solar and volcanic ERF isn't applied as-is:
+    each member scales it and applies its efficacy (as in AR6).
+    Across the ensemble, the median member applies ~75% of the input solar
+    and ~70% of the input volcanic ERF (5-95%: roughly 40% to 115%).
+    ///
 
-    !!! warning "Solar and volcanic forcing are scaled by each ensemble member"
+    /// warning | Volcanic forcing is annual
+    MAGICC works best with monthly volcanic forcing,
+    which the input definition doesn't offer.
+    (MAGICC's annual volcanic forcing output is an "end-of-year forcing",
+    so with annual input it is (proportional to) the mean of the input
+    in that year and the next.)
+    ///
 
-        The input solar and volcanic ERF isn't applied as-is:
-        each member scales it and applies its efficacy (as in AR6).
-        Across the ensemble, the median member applies ~75% of the input solar
-        and ~70% of the input volcanic ERF (5-95%: roughly 40% to 115%).
-
-    !!! warning "Volcanic forcing is annual"
-
-        MAGICC works best with monthly volcanic forcing,
-        which the input definition doesn't offer.
-        (MAGICC's annual volcanic forcing output is an "end-of-year forcing",
-        so with annual input it is (proportional to) the mean of the input
-        in that year and the next.)
-
-    !!! warning "Includes MAGICC's ozone forcing due to temperature"
-
-        Unlike the CO2-only adapters, which turn it off.
-        So at the moment these adapters act like a model with interactive chemistry,
-        the CO2-only concentration-driven adapters like a model with prescribed ozone.
-        What we want, and if and how MAGICC can do it,
-        are still to be worked out
-        (see [NO_OZONE_DUE_TO_TEMPERATURE][(m).] and decision B18).
+    /// warning | Includes MAGICC's ozone forcing due to temperature
+    Unlike the CO2-only adapters, which turn it off.
+    So at the moment these adapters act like a model with interactive chemistry,
+    the CO2-only concentration-driven adapters like a model with prescribed ozone.
+    What we want, and if and how MAGICC can do it,
+    are still to be worked out
+    (see [NO_OZONE_DUE_TO_TEMPERATURE][(m).] and decision B18).
+    ///
 
     See the module docstring
     ([openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch][])
@@ -1692,11 +1692,11 @@ class MAGICCAR6AdapterCO2EmissionDrivenFromCMIP7PreIndustrial:
 
     See the module docstring for how emission-driven runs are set up.
 
-    !!! warning "The carbon cycle and CH4/N2O feedbacks start at the start of the run"
-
-        Not in the calendar years AR6's setup uses,
-        so these don't behave exactly as in AR6
-        (see the module docstring).
+    /// warning | The carbon cycle and CH4/N2O feedbacks start at the start of the run
+    Not in the calendar years AR6's setup uses,
+    so these don't behave exactly as in AR6
+    (see the module docstring).
+    ///
     """
 
     supported_output_variables: ClassVar[frozenset[str]] = frozenset(
@@ -1740,11 +1740,11 @@ class MAGICCAR6AdapterESMFromCMIP7PreIndustrial:
 
     See the module docstring for how emission-driven runs are set up.
 
-    !!! warning "The carbon cycle and CH4/N2O feedbacks start at the start of the run"
-
-        Not in the calendar years AR6's setup uses,
-        so these don't behave exactly as in AR6
-        (see the module docstring).
+    /// warning | The carbon cycle and CH4/N2O feedbacks start at the start of the run
+    Not in the calendar years AR6's setup uses,
+    so these don't behave exactly as in AR6
+    (see the module docstring).
+    ///
     """
 
     supported_output_variables: ClassVar[frozenset[str]] = frozenset(
@@ -1785,11 +1785,11 @@ class MAGICCAR6AdapterESMAllGHGFromCMIP7PreIndustrial:
 
     See the module docstring for how emission-driven runs are set up.
 
-    !!! warning "The carbon cycle and CH4/N2O feedbacks start at the start of the run"
-
-        Not in the calendar years AR6's setup uses,
-        so these don't behave exactly as in AR6
-        (see the module docstring).
+    /// warning | The carbon cycle and CH4/N2O feedbacks start at the start of the run
+    Not in the calendar years AR6's setup uses,
+    so these don't behave exactly as in AR6
+    (see the module docstring).
+    ///
     """
 
     supported_output_variables: ClassVar[frozenset[str]] = frozenset(
@@ -1833,11 +1833,11 @@ class MAGICCAR6AdapterCO2EmissionDrivenFromCMIP6PreIndustrial:
 
     See the module docstring for how emission-driven runs are set up.
 
-    !!! warning "The carbon cycle and CH4/N2O feedbacks start at the start of the run"
-
-        Not in the calendar years AR6's setup uses,
-        so these don't behave exactly as in AR6
-        (see the module docstring).
+    /// warning | The carbon cycle and CH4/N2O feedbacks start at the start of the run
+    Not in the calendar years AR6's setup uses,
+    so these don't behave exactly as in AR6
+    (see the module docstring).
+    ///
     """
 
     supported_output_variables: ClassVar[frozenset[str]] = frozenset(
@@ -1881,11 +1881,11 @@ class MAGICCAR6AdapterESMFromCMIP6PreIndustrial:
 
     See the module docstring for how emission-driven runs are set up.
 
-    !!! warning "The carbon cycle and CH4/N2O feedbacks start at the start of the run"
-
-        Not in the calendar years AR6's setup uses,
-        so these don't behave exactly as in AR6
-        (see the module docstring).
+    /// warning | The carbon cycle and CH4/N2O feedbacks start at the start of the run
+    Not in the calendar years AR6's setup uses,
+    so these don't behave exactly as in AR6
+    (see the module docstring).
+    ///
     """
 
     supported_output_variables: ClassVar[frozenset[str]] = frozenset(
@@ -1926,11 +1926,11 @@ class MAGICCAR6AdapterESMAllGHGFromCMIP6PreIndustrial:
 
     See the module docstring for how emission-driven runs are set up.
 
-    !!! warning "The carbon cycle and CH4/N2O feedbacks start at the start of the run"
-
-        Not in the calendar years AR6's setup uses,
-        so these don't behave exactly as in AR6
-        (see the module docstring).
+    /// warning | The carbon cycle and CH4/N2O feedbacks start at the start of the run
+    Not in the calendar years AR6's setup uses,
+    so these don't behave exactly as in AR6
+    (see the module docstring).
+    ///
     """
 
     supported_output_variables: ClassVar[frozenset[str]] = frozenset(

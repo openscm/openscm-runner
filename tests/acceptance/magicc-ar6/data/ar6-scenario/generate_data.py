@@ -21,7 +21,8 @@ and it is obvious what the difference between them is
 (rather than having to diff multi-hundred line files).
 
 Runs MAGICC v7.5.3 with pymagicc, the way the AR6 workflow did
-(which used openscm-runner v1's MAGICC7 adapter, that itself used pymagicc;
+(which used the MAGICC7 adapter of openscm-runner v0.13 and before,
+that itself used pymagicc;
 an independent route to this package's adapter, which doesn't use pymagicc),
 for the first member of the AR6 probabilistic distribution.
 The input is the infilled AR6 emissions in `tests/test-data/ar6-scenarios`.
@@ -311,7 +312,7 @@ def to_magicc_emissions(emissions: pd.DataFrame) -> MAGICCData:
     """
     Convert to pymagicc's names and MAGICC's units
 
-    As openscm-runner v1's MAGICC7 adapter did
+    As the MAGICC7 adapter of openscm-runner v0.13 and before did
     (`_convert_to_magicc_units`).
     """
     zeros = pd.DataFrame(

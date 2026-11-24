@@ -2766,7 +2766,7 @@ wheels = [
 
 [[package]]
 name = "openscm-runner"
-version = "2.0.0a1"
+version = "0.14.0a1"
 source = { editable = "." }
 dependencies = [
     { name = "exceptiongroup", marker = "python_full_version < '3.11'" },

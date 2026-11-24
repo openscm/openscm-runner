@@ -69,6 +69,10 @@ AR6_SCENARIO_EMISSIONS_VARIABLES: frozenset[str] = frozenset(
 """
 The 52 emissions species required for AR6 scenarios
 
+This includes Halon1202 because AR6 scenario data includes it
+(even though values were all zero),
+so AR6 scenarios can be used as they are.
+
 Note on HFC245: everything we use calls this species HFC245fa:
 gcages, CMIP7 ScenarioMIP reporting, CMIP GHG concentrations,
 and Velders et al.'s HFC scenarios (e.g. Velders et al., ACP, 2022,
@@ -87,10 +91,10 @@ AR7_SCENARIO_EMISSIONS_VARIABLES = AR6_SCENARIO_EMISSIONS_VARIABLES - {
 """
 The 51 emissions species required for AR7 scenarios
 
-Halon1202 is excluded from AR6's required inputs
-because it is absent from CMIP GHG concentration datasets,
-was all zero in all AR6 scenarios
-and has negligible ERF (about 1e-6 W/m^2).
+/// note | Halon1202
+Halon1202 is excluded because it is absent from CMIP GHG concentration datasets,
+was all zero in all AR6 scenarios and has negligible ERF (about 1e-6 W/m^2).
+///
 """
 
 AR6_SCENARIO_CO2_EMISSIONS_VARIABLES: frozenset[str] = frozenset(
@@ -102,7 +106,7 @@ CO2 emissions variables of an AR6 scenario
 The input for runs with CO2 forcing only.
 Whether these runs should take fossil CO2 emissions only,
 or both fossil and biosphere CO2 emissions, is still to be decided
-(roadmap item B17).
+(decision B17).
 """
 # TODO: check roadmap cross references
 

@@ -85,18 +85,6 @@ Name of the scenario file we write
 Name doesn't matter, it's just so the runner has a common value.
 """
 
-AR6_MISSING_EMISSIONS: dict[str, float] = {"HALON1202": 0.0}
-"""
-Emissions MAGICC needs which aren't part of the AR6 scenario input
-
-MAGICC's names and units, held constant for the whole scenario.
-Halon1202 isn't one of the required AR6 scenario species
-(see `AR6_SCENARIO_EMISSIONS_VARIABLES`).
-It was an AR6 input, but its emissions were zero in every AR6 scenario,
-so we drop it for simplicity and consistency with AR7 scenarios
-and use zero emissions (which is what AR6 used).
-"""
-
 
 class MAGICCAR6AdapterAR7Scenario:
     """
@@ -126,10 +114,6 @@ class MAGICCAR6AdapterAR6Scenario:
     """
     MAGICC AR6 adapter for AR6 scenarios
 
-    Halon1202 isn't part of the input.
-    Its emissions were zero in every AR6 scenario, so we use zero
-    (see [AR6_MISSING_EMISSIONS][(m).]).
-
     Differences from AR6 WG3 that we know of:
 
     - how we work around MAGICC v7.5.3's last year bug
@@ -142,32 +126,32 @@ class MAGICCAR6AdapterAR6Scenario:
       (the full-ensemble acceptance test reproduces
       AR6's published temperatures, 2100 included).
 
-    !!! note "Where MAGICC averages emissions over each year and the next"
+    /// note | Where MAGICC averages emissions over each year and the next
+    MAGICC v7.5.3's convention is that the emissions in year `t`
+    are the total for year `t`,
+    and the state at the start of year `t + 1` is calculated
+    from the state at the start of year `t` and the emissions in year `t`
+    (`src/MAGICC7.f90`, v7.5.3, around line 127).
+    The gas cycles, tropospheric ozone and nitrate
+    use each year's emissions as given.
 
-        MAGICC v7.5.3's convention is that the emissions in year `t`
-        are the total for year `t`,
-        and the state at the start of year `t + 1` is calculated
-        from the state at the start of year `t` and the emissions in year `t`
-        (`src/MAGICC7.f90`, v7.5.3, around line 127).
-        The gas cycles, tropospheric ozone and nitrate
-        use each year's emissions as given.
+    The exception is the aerosol forcing and optical thickness MAGICC derives
+    from emissions (direct aerosol, BC on snow
+    and, via the optical thicknesses, aerosol-cloud forcing).
+    These are start-of-year values calculated from the average of the emissions
+    in year `t` and year `t + 1`
+    (`extend_rf_box_from_switchyear_with_emissions` in MAGICC v7.5.3),
+    so for these a step change in emissions in year `y`
+    is half applied in year `y - 1`.
+    [undo_magicc_emissions_averaging][openscm_runner.adapters.magicc_ar6.base.]
+    gives emissions which these calculations see exactly as you want them,
+    but be careful: the same emissions also go, unaveraged,
+    into the gas cycles, tropospheric ozone and nitrate.
 
-        The exception is the aerosol forcing and optical thickness MAGICC derives
-        from emissions (direct aerosol, BC on snow
-        and, via the optical thicknesses, aerosol-cloud forcing).
-        These are start-of-year values calculated from the average of the emissions
-        in year `t` and year `t + 1`
-        (`extend_rf_box_from_switchyear_with_emissions` in MAGICC v7.5.3),
-        so for these a step change in emissions in year `y`
-        is half applied in year `y - 1`.
-        [undo_magicc_emissions_averaging][openscm_runner.adapters.magicc_ar6.base.]
-        gives emissions which these calculations see exactly as you want them,
-        but be careful: the same emissions also go, unaveraged,
-        into the gas cycles, tropospheric ozone and nitrate.
-
-        These adapters don't do anything about this:
-        we pass the emissions on as given,
-        because that is the behaviour MAGICC v7.5.3 has always had.
+    These adapters don't do anything about this:
+    we pass the emissions on as given,
+    because that is the behaviour MAGICC v7.5.3 has always had.
+    ///
     """
 
     supported_output_variables: ClassVar[frozenset[str]] = frozenset(
@@ -208,7 +192,6 @@ class MAGICCAR6AdapterAR6Scenario:
             output_variables=get_output_variables(
                 output_specs.output_variables, AR6_SUPPORTED_OUTPUT_VARIABLES
             ),
-            missing_emissions=AR6_MISSING_EMISSIONS,
         )
 
         return run_experiments(experiments, configuration=self.configuration)
@@ -253,7 +236,6 @@ class MAGICCAR6AdapterAR6ScenarioAnthropogenicOnly:
                 AR6_ANTHROPOGENIC_ONLY_SUPPORTED_OUTPUT_VARIABLES,
             ),
             rf_total_runmodus="ANTHROPOGENIC",
-            missing_emissions=AR6_MISSING_EMISSIONS,
         )
 
         return run_experiments(experiments, configuration=self.configuration)
@@ -272,51 +254,51 @@ class MAGICCAR6AdapterAR6ScenarioCO2ForcingOnly:
     The only forcing outputs are the total and CO2 forcing
     ([AR6_CO2_FORCING_ONLY_SUPPORTED_OUTPUT_VARIABLES][(m).]).
 
-    !!! warning "Everything except CO2 is held at pre-industrial (1750)"
+    /// warning | Everything except CO2 is held at pre-industrial (1750)
+    The input is only the scenario's CO2 emissions
+    (nothing else would be used for the forcing).
+    Everything else is held at its pre-industrial (1750) state
+    for the whole run, history included:
+    every gas except CO2 is concentration-driven for the whole run,
+    with its concentrations held at their 1750 values
+    (see [make_pi_control_non_co2_history][(m).]).
+    The CO2 history (concentrations to 2014, fossil and biosphere emissions)
+    is MAGICC's usual history.
 
-        The input is only the scenario's CO2 emissions
-        (nothing else would be used for the forcing).
-        Everything else is held at its pre-industrial (1750) state
-        for the whole run, history included:
-        every gas except CO2 is concentration-driven for the whole run,
-        with its concentrations held at their 1750 values
-        (see [make_pi_control_non_co2_history][(m).]).
-        The CO2 history (concentrations to 2014, fossil and biosphere emissions)
-        is MAGICC's usual history.
+    MAGICC adds the CO2 from the oxidation of fossil CH4
+    to the fossil CO2 emissions
+    (even if CH4 is concentration-driven).
+    Fossil CH4 emissions are zero for the whole run (history included),
+    so there is no CO2 from the oxidation of the scenario's
+    (or history's) CH4 at any point in the run.
+    The exception is CH4 from thawing permafrost
+    (MAGICC's permafrost feedback, which is on in the AR6 distribution):
+    MAGICC counts its oxidation as CO2 too.
+    This is a response to warming, not part of the input,
+    and it's small: for the test scenario
+    (fossil CO2 emissions of 6-12 GtC/yr this century),
+    it is zero until the permafrost starts thawing (1950-2000,
+    depending on the ensemble member) and 0.002-0.024 GtC/yr in 2100,
+    compared to 0.10-0.13 GtC/yr from all CH4 oxidation in the full run.
+    We keep it: it's part of the permafrost feedback, not the input.
 
-        MAGICC adds the CO2 from the oxidation of fossil CH4
-        to the fossil CO2 emissions
-        (even if CH4 is concentration-driven).
-        Fossil CH4 emissions are zero for the whole run (history included),
-        so there is no CO2 from the oxidation of the scenario's
-        (or history's) CH4 at any point in the run.
-        The exception is CH4 from thawing permafrost
-        (MAGICC's permafrost feedback, which is on in the AR6 distribution):
-        MAGICC counts its oxidation as CO2 too.
-        This is a response to warming, not part of the input,
-        and it's small: for the test scenario
-        (fossil CO2 emissions of 6-12 GtC/yr this century),
-        it is zero until the permafrost starts thawing (1950-2000,
-        depending on the ensemble member) and 0.002-0.024 GtC/yr in 2100,
-        compared to 0.10-0.13 GtC/yr from all CH4 oxidation in the full run.
-        We keep it: it's part of the permafrost feedback, not the input.
+    If we change our minds, add `"pf_co2fromch4oxinatm_fraction": 0.0`
+    to the settings in [make_pi_control_non_co2_history][(m).].
+    That setting is the fraction of the permafrost CH4
+    which MAGICC counts as oxidising to CO2
+    (default 1, it isn't part of the AR6 calibration).
+    With it at zero, the fossil fraction of the CH4 in the atmosphere is zero
+    (so there is no CO2 from CH4 oxidation at all),
+    while the rest of the permafrost feedback (its CO2 emissions) stays on.
+    Don't use `PF_APPLY = 0` (that turns off the whole permafrost feedback)
+    or `CH4_INCL_CH4OX = 0` (that would work too,
+    but we'd rather not rely on a switch).
+    Whether CO2-forcing-only runs should include this CO2
+    is something we need to clarify (see decision B16).
 
-        If we change our minds, add `"pf_co2fromch4oxinatm_fraction": 0.0`
-        to the settings in [make_pi_control_non_co2_history][(m).].
-        That setting is the fraction of the permafrost CH4
-        which MAGICC counts as oxidising to CO2
-        (default 1, it isn't part of the AR6 calibration).
-        With it at zero, the fossil fraction of the CH4 in the atmosphere is zero
-        (so there is no CO2 from CH4 oxidation at all),
-        while the rest of the permafrost feedback (its CO2 emissions) stays on.
-        Don't use `PF_APPLY = 0` (that turns off the whole permafrost feedback)
-        or `CH4_INCL_CH4OX = 0` (that would work too,
-        but we'd rather not rely on a switch).
-        Whether CO2-forcing-only runs should include this CO2
-        is something we need to clarify (see decision B16).
-
-        MAGICC's other history files (e.g. aerosol and land-use forcing)
-        are left as they are: they only affect forcing which isn't part of the run.
+    MAGICC's other history files (e.g. aerosol and land-use forcing)
+    are left as they are: they only affect forcing which isn't part of the run.
+    ///
     """
 
     supported_output_variables: ClassVar[frozenset[str]] = frozenset(

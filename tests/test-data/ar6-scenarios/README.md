@@ -5,7 +5,7 @@ Inputs shared between tests (and the published AR6 outputs to compare with).
 - `ar6-aim-cge-2-2-en-npi2020-900f.csv`:
   the infilled emissions AR6 ran the climate models with
   for AIM/CGE 2.2 EN_NPi2020_900f, as AR6 scenario input
-  (our names, from 2015, without Halon1202 in line with the definition)
+  (our names, from 2015, including Halon1202 in line with the definition)
 - `ar6-aim-cge-2-2-en-npi2020-900f-ar6-gsat-percentiles.csv`:
   the temperature percentiles AR6 published for the same scenario
   (MAGICCv7.5.3, after AR6's post-processing)

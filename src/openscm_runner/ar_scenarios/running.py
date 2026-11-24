@@ -135,7 +135,7 @@ class AdapterAR6ScenarioCO2ForcingOnly(OutputCapabilities, Protocol):
 
     The input is only the scenario's CO2 emissions.
     So any CO2 from the oxidation of (fossil) CH4 in the scenario isn't included
-    (see the roadmap).
+    (see decision B16).
     """
 
     def __call__(

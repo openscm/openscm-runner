@@ -20,31 +20,31 @@ Implemented:
   esm-style and esm-allGHG-style
 - ERF-driven experiments starting from equilibrium
 
-!!! note "We probably won't implement any more adapters for MAGICC AR6"
+/// note | We probably won't implement any more adapters for MAGICC AR6
+Setting MAGICC v7.5.3 up for anything other than
+the AR6 scenario runs it was built for is too annoying,
+as getting the CMIP-style runs to work properly showed
+(see [openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch][]).
+So these are likely the only adapters there will be for MAGICC AR6.
+In particular, there won't be an AR7 scenario adapter
+([MAGICCAR6AdapterAR7Scenario][(p).] raises `NotImplementedError`).
+The exception: we could do an adapter for an experiment starting in 1750
+if we needed it (that is how MAGICC v7.5.3 was set up to run,
+so it would be much easier than the CMIP-style runs).
+///
 
-    Setting MAGICC v7.5.3 up for anything other than
-    the AR6 scenario runs it was built for is too annoying,
-    as getting the CMIP-style runs to work properly showed
-    (see [openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch][]).
-    So these are likely the only adapters there will be for MAGICC AR6.
-    In particular, there won't be an AR7 scenario adapter
-    ([MAGICCAR6AdapterAR7Scenario][(p).] raises `NotImplementedError`).
-    The exception: we could do an adapter for an experiment starting in 1750
-    if we needed it (that is how MAGICC v7.5.3 was set up to run,
-    so it would be much easier than the CMIP-style runs).
-
-!!! warning "Emissions-driven CMIP-style runs differ from AR6's setup"
-
-    In the CO2-emission-driven, esm-style and esm-allGHG-style adapters,
-    the CO2 fertilisation, carbon cycle temperature feedback
-    and CH4/N2O lifetime feedbacks start at the start of the run
-    (relative to the piControl state),
-    rather than in the calendar years AR6's setup uses (1900, 1900, 1927, 1925).
-    We had to change this to get sensible emissions-driven runs from piControl,
-    but it means these adapters' carbon cycle (and CH4/N2O cycles) don't behave
-    exactly as in AR6, e.g. CO2 fertilisation acts relative to
-    the piControl concentration rather than the 1900 concentration.
-    See [openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch][].
+/// warning | Emissions-driven CMIP-style runs differ from AR6's setup
+In the CO2-emission-driven, esm-style and esm-allGHG-style adapters,
+the CO2 fertilisation, carbon cycle temperature feedback
+and CH4/N2O lifetime feedbacks start at the start of the run
+(relative to the piControl state),
+rather than in the calendar years AR6's setup uses (1900, 1900, 1927, 1925).
+We had to change this to get sensible emissions-driven runs from piControl,
+but it means these adapters' carbon cycle (and CH4/N2O cycles) don't behave
+exactly as in AR6, e.g. CO2 fertilisation acts relative to
+the piControl concentration rather than the 1900 concentration.
+See [openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch][].
+///
 
 Layers:
 
