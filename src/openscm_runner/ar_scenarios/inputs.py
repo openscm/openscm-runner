@@ -138,6 +138,7 @@ def verify_ar7_scenarios(ar7_scenarios: tuple[AR7Scenario, ...]) -> None:
         first_year=2023,
         # A cap for now, it could be lifted later
         last_year_at_most=2500,
+        timeseries_levels=("variable", "region", "unit"),
     )
     # Harmonisation to AR7 history isn't checked yet (roadmap W05)
 
@@ -171,6 +172,7 @@ def verify_ar6_scenarios(ar6_scenarios: tuple[AR6Scenario, ...]) -> None:
         first_year=2015,
         # No cap on the last year
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
     # Harmonisation to AR6 history isn't checked yet (roadmap W05)
 
@@ -218,5 +220,6 @@ def verify_ar6_scenario_co2_emissions(
         first_year=2015,
         # No cap on the last year
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
     # Harmonisation to AR6 history isn't checked yet (roadmap W05)

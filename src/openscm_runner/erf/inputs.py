@@ -40,4 +40,5 @@ def verify_erf(erf: tuple[ERF, ...]) -> None:
         # Can start in any year
         first_year=None,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )

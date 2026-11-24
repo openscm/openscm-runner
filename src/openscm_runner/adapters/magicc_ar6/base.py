@@ -14,7 +14,6 @@ from typing import Any
 import pandas as pd
 
 from openscm_runner.output import EnsembleMemberResult, OpenSCMRunnerOutput
-from openscm_runner.verification import TIMESERIES_LEVELS
 
 from .download import get_magicc_ar6_adapter_pieces
 from .ensemble import load_ar6_ensemble
@@ -427,6 +426,16 @@ def _to_member_result(
     return EnsembleMemberResult.from_success(result.member_id, data)
 
 
+INPUT_TIMESERIES_LEVELS: tuple[str, ...] = ("variable", "region", "unit")
+"""
+Index levels that describe each timeseries in the inputs these adapters run
+
+Every other index level identifies the experiment.
+This is what these adapters assume about the input definitions
+they support (each definition's verify function states its timeseries levels).
+"""
+
+
 def get_experiment_levels(inp: pd.DataFrame) -> dict[str, Any]:
     """
     Get the index levels (and values) that identify an experiment
@@ -444,7 +453,7 @@ def get_experiment_levels(inp: pd.DataFrame) -> dict[str, Any]:
     return {
         str(name): inp.index.get_level_values(i)[0]
         for i, name in enumerate(inp.index.names)
-        if name not in TIMESERIES_LEVELS
+        if name not in INPUT_TIMESERIES_LEVELS
     }
 
 

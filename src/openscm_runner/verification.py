@@ -26,16 +26,6 @@ import pandas as pd
 
 from openscm_runner.errors import InvalidInputError
 
-# TODO FUTURE: reconsider hard-coding
-TIMESERIES_LEVELS: tuple[str, ...] = ("variable", "region", "unit")
-"""
-Index levels that describe each timeseries
-
-All other index levels identify the experiment.
-They must have a single value within each input
-(each input in the tuple is exactly one experiment).
-"""
-
 
 def verify_wide_timeseries_inputs(  # noqa: PLR0913
     inputs: tuple[pd.DataFrame, ...],
@@ -45,6 +35,7 @@ def verify_wide_timeseries_inputs(  # noqa: PLR0913
     first_year: int | None,
     last_year_at_most: int | None,
     regions: Collection[str] = ("World",),
+    timeseries_levels: Collection[str],
 ) -> None:
     """
     Verify that inputs are wide timeseries that match a definition
@@ -54,7 +45,7 @@ def verify_wide_timeseries_inputs(  # noqa: PLR0913
     - `inputs` is a non-empty tuple of dataframes
       (each element is exactly one experiment)
     - each dataframe is non-empty and has (at least) the index levels
-      in [TIMESERIES_LEVELS][(m).]
+      in `timeseries_levels`
     - any other index level has a single value within each dataframe
     - columns are consecutive integer years
     - the first year is `first_year` (if not `None`)
@@ -86,11 +77,21 @@ def verify_wide_timeseries_inputs(  # noqa: PLR0913
     regions
         Allowed regions
 
+    timeseries_levels
+        Index levels that describe each timeseries
+        (all other levels identify the experiment).
+        The variable and region checks need `"variable"` and `"region"`
+        to be among them.
+
     Raises
     ------
     InvalidInputError
         At least one input doesn't match the definition.
         The message lists every problem found.
+
+    ValueError
+        A level a check needs isn't in `timeseries_levels`
+        (a problem with the definition, not the inputs)
     """
     # TODO: check units (needs a unit registry wired in, default openscm-units).
     # Runtime check for callers who don't use a type checker
@@ -114,6 +115,7 @@ def verify_wide_timeseries_inputs(  # noqa: PLR0913
             first_year=first_year,
             last_year_at_most=last_year_at_most,
             regions=regions,
+            timeseries_levels=timeseries_levels,
         )
     ]
     if problems:
@@ -124,13 +126,14 @@ def verify_wide_timeseries_inputs(  # noqa: PLR0913
         raise InvalidInputError(msg)
 
 
-def get_wide_timeseries_problems(
+def get_wide_timeseries_problems(  # noqa: PLR0913
     inp: object,
     *,
     required_variables: Collection[str],
     first_year: int | None,
     last_year_at_most: int | None,
     regions: Collection[str],
+    timeseries_levels: Collection[str],
     # TODO: switch to problem container with a __repr__ method or something
     # throughout this module rather than plain strings
 ) -> list[str]:
@@ -158,18 +161,33 @@ def get_wide_timeseries_problems(
     regions
         Allowed regions
 
+    timeseries_levels
+        Index levels that describe each timeseries
+        (must include `"variable"` and `"region"`)
+
     Returns
     -------
     :
         Problems found (empty if there are none)
+
+    Raises
+    ------
+    ValueError
+        `"variable"` or `"region"` isn't in `timeseries_levels`
     """
+    # The variable and region checks below need these levels.
+    # Check them first, so a problem with the definition is always raised
+    # (not only when an input gets far enough to reach those checks).
+    ensure_timeseries_level("variable", timeseries_levels)
+    ensure_timeseries_level("region", timeseries_levels)
+
     if not isinstance(inp, pd.DataFrame):
         return [f"must be a pandas DataFrame, received {type(inp)}"]
 
     if inp.empty:
         return ["is empty"]
 
-    index_problems = get_index_level_problems(inp)
+    index_problems = get_index_level_problems(inp, timeseries_levels=timeseries_levels)
     if index_problems:
         # Everything below needs the index levels
         return index_problems
@@ -206,7 +224,35 @@ def get_wide_timeseries_problems(
     return problems
 
 
-def get_index_level_problems(inp: pd.DataFrame) -> list[str]:
+def ensure_timeseries_level(level: str, timeseries_levels: Collection[str]) -> None:
+    """
+    Raise if a level a check needs isn't one of the timeseries levels
+
+    Parameters
+    ----------
+    level
+        Level the check needs
+
+    timeseries_levels
+        Timeseries levels of the input definition
+
+    Raises
+    ------
+    ValueError
+        `level` isn't in `timeseries_levels`
+        (a problem with the definition, not the inputs)
+    """
+    if level not in timeseries_levels:
+        msg = (
+            f"This check needs {level!r} to be a timeseries level, "
+            f"received timeseries_levels={list(timeseries_levels)!r}"
+        )
+        raise ValueError(msg)
+
+
+def get_index_level_problems(
+    inp: pd.DataFrame, *, timeseries_levels: Collection[str]
+) -> list[str]:
     """
     Get the problems with the index levels of one input
 
@@ -219,6 +265,9 @@ def get_index_level_problems(inp: pd.DataFrame) -> list[str]:
     inp
         Input to check
 
+    timeseries_levels
+        Index levels that describe each timeseries
+
     Returns
     -------
     :
@@ -229,12 +278,12 @@ def get_index_level_problems(inp: pd.DataFrame) -> list[str]:
         return [f"all index levels must be named, received {names!r}"]
 
     problems = []
-    missing_levels = [level for level in TIMESERIES_LEVELS if level not in names]
+    missing_levels = [level for level in timeseries_levels if level not in names]
     if missing_levels:
         problems.append(f"is missing index levels: {missing_levels!r}")
 
     for i, level in enumerate(names):
-        if level in TIMESERIES_LEVELS:
+        if level in timeseries_levels:
             continue
 
         values = inp.index.get_level_values(i).unique().tolist()

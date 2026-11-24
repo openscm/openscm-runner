@@ -231,6 +231,7 @@ def verify_cmip7_pre_industrial_branch_co2_concentrations(
         required_variables=CMIP7_CO2_CONCENTRATION_VARIABLES,
         first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
 
 
@@ -268,6 +269,7 @@ def verify_cmip6_pre_industrial_branch_co2_concentrations(
         required_variables=CMIP7_CO2_CONCENTRATION_VARIABLES,
         first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
 
 
@@ -305,6 +307,7 @@ def verify_cmip7_pre_industrial_branch_concentrations(
         required_variables=CMIP7_CONCENTRATION_DRIVEN_VARIABLES,
         first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
 
 
@@ -343,6 +346,7 @@ def verify_cmip6_pre_industrial_branch_concentrations(
         required_variables=CMIP7_CONCENTRATION_DRIVEN_VARIABLES,
         first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
 
 
@@ -380,6 +384,7 @@ def verify_cmip7_pre_industrial_branch_co2_emissions(
         required_variables=CMIP7_CO2_EMISSION_VARIABLES,
         first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
 
 
@@ -417,6 +422,7 @@ def verify_cmip6_pre_industrial_branch_co2_emissions(
         required_variables=CMIP7_CO2_EMISSION_VARIABLES,
         first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
 
 
@@ -454,6 +460,7 @@ def verify_cmip7_pre_industrial_branch_esm_inputs(
         required_variables=CMIP7_ESM_VARIABLES,
         first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
 
 
@@ -491,6 +498,7 @@ def verify_cmip7_pre_industrial_branch_esm_all_ghg_inputs(
         required_variables=CMIP7_ESM_ALL_GHG_VARIABLES,
         first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
 
 
@@ -528,6 +536,7 @@ def verify_cmip6_pre_industrial_branch_esm_inputs(
         required_variables=CMIP7_ESM_VARIABLES,
         first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
 
 
@@ -565,4 +574,5 @@ def verify_cmip6_pre_industrial_branch_esm_all_ghg_inputs(
         required_variables=CMIP7_ESM_ALL_GHG_VARIABLES,
         first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
+        timeseries_levels=("variable", "region", "unit"),
     )
