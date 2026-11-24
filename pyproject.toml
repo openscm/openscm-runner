@@ -90,6 +90,7 @@ docs = [
 # These are used when running our minimum PyPI install tests.
 tests-min = [
     "pytest==8.3.4",
+    "python-dotenv==1.2.4",
 ]
 tests-full = [
     "pytest-cov==6.0.0",

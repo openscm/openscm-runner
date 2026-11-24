@@ -292,9 +292,6 @@ def get_magicc_download_token() -> str:
             "(log in at https://magicc.org/download/magicc7 to get one) "
             f"or set {MAGICC_AR6_V753_ROOT_DIR_ENV_VAR} "
             f"and {MAGICC_AR6_PROBABILISTIC_DISTRIBUTION_ENV_VAR}. "
-            # TODO: fix this, we don't load .env automatically
-            # so this advice isn't enough
-            "In this repository, put them in `.env` (see `.env.sample`)."
         )
         raise MAGICCAR6NotFoundError(msg)
 

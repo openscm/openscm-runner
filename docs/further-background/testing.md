@@ -65,8 +65,13 @@ We check that running through this package reproduces them.
   `MAGICCAR6AdapterConfiguration.from_environment`,
   which uses the paths to MAGICC v7.5.3 and the AR6 probabilistic distribution
   if they are set, otherwise downloads the official versions with a magicc.org token
-  (see `.env.sample`; the Makefile loads `.env` [TODO update this once we figure out a better loading pattern]),
+  (see `.env.sample`),
   and raises (with instructions) if neither is set.
+  Environment variables which are set are used as given.
+  For any which aren't set, the tests fall back to a `.env` file in the repository root
+  (an autouse fixture in `tests/conftest.py` sets them with `monkeypatch`,
+  so only for the duration of each test).
+  The package itself never reads `.env`.
 
 ### Adapter tests, CI and coverage
 
