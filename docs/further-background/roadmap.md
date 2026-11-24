@@ -35,6 +35,8 @@ Candidates for "Next", not yet prioritised.
 - **W08** A thin multi-model test: a combination of models (chosen by us)
   in one environment, checking that installing them together
   doesn't break any individual model's behaviour.
+  It runs as its own CI job.
+  Waits for a second model (CICERO-SCM, W02).
 - **W09** Experiment-specific scientific checks, as integration tests
   (to discuss before writing, some depend on open decisions, e.g. B16-B20):
     - full scenarios: exact historical splice and agreed future natural forcing;

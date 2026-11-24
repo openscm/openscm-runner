@@ -168,6 +168,9 @@ jobs:
         # If you have better proof of whether this is needed or not,
         # feel free to update.
         shell: bash
+    # Locally, all the MAGICC AR6 tests (including the full ensemble, 22s)
+    # take about 2 min 15 s. CI runners have fewer cores, so it will be slower,
+    # but this should still be plenty.
     timeout-minutes: 30
     steps:
       - name: Check out repository

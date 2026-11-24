@@ -65,6 +65,9 @@ jobs:
     - name: Check installed version environment variable
       run: |
         echo "${{ env.INSTALLED_VERSION }}"
+    # Note: until v0.14.0 is released, the latest release on PyPI is v0.13.x,
+    # so this checks out v0.13.x's tests
+    # and the adapter steps below install v0.13.x's extras and run its tests.
     - name: Checkout repository
       uses: actions/checkout@v6
       with:
@@ -98,6 +101,12 @@ jobs:
       run: |
         # Can't run doctests here because the paths are different.
         pytest tests -r a -vv tests
+    # Note: MAGICC AR6 has a Windows binary,
+    # but it hasn't been run in CI on Windows before
+    # (it may need extra runtime libraries).
+    # The MAGICC downloads also aren't cached here
+    # (unlike in ci.yaml, we haven't worked out the cache path on Windows),
+    # so every job downloads them.
     - name: Install the adapters' dependencies
       run: |
         pip install --no-cache-dir "${{ matrix.install.target-with-adapters }}"
