@@ -29,5 +29,4 @@ runs:
         # `--locked`: fail if `uv.lock` is out of date.
         # pre-commit.ci skips the `uv-lock` hook (no network access there),
         # so this is where CI checks the lock file.
-        # TODO: fix copier template
         uv sync --locked ${{ inputs.uv-dependency-install-flags }}

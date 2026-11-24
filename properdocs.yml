@@ -1,7 +1,6 @@
 site_name: OpenSCM-Runner
 site_description: Standardised interfaces for running simple climate models (SCMs)
 site_url: https://openscm-runner.readthedocs.io
-# TODO: fix copier template (it uses `master`, our default branch is `main`)
 edit_uri: blob/main/docs/
 
 repo_name: openscm/openscm-runner

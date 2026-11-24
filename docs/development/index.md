@@ -81,8 +81,6 @@ The steps required are the following:
    else
 
 1. Enjoy the newly available version
-<!-- fix up copier template -->
-<!-- [TODO: add in conda release instructions] -->
 
 #### Further details
 
