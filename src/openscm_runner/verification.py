@@ -55,6 +55,8 @@ def verify_wide_timeseries_inputs(  # noqa: PLR0913
     - the variables are exactly `required_variables` (none missing, none extra)
     - the regions are all in `regions`
 
+    Units aren't checked yet (roadmap [W04][w04]).
+
     Every input is checked and all problems are reported together.
 
     Parameters
@@ -93,7 +95,6 @@ def verify_wide_timeseries_inputs(  # noqa: PLR0913
         A level a check needs isn't in `timeseries_levels`
         (a problem with the definition, not the inputs)
     """
-    # TODO: check units (needs a unit registry wired in, default openscm-units).
     # Runtime check for callers who don't use a type checker
     if not isinstance(inputs, tuple):
         msg = (  # type: ignore[unreachable]

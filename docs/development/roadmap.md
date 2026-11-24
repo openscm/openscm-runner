@@ -27,6 +27,8 @@ Candidates for "Next", not yet prioritised.
   They won't be released in the public openscm-runner repo until we have these
   (see [testing](testing.md#acceptance-tests)).
 - [](){#w04}**W04** Check units in the verify functions (openscm-units).
+  The check will need `"unit"` to be a timeseries level
+  (use `ensure_timeseries_level` in `verification.py`, as the variable and region checks do).
 - [](){#w05}**W05** Check harmonisation to history in the AR6/AR7 verify functions
   (gcages/pandas-openscm functions, or ported in; tolerances are [B05][b05]).
 - [](){#w06}**W06** Talk to the remaining carbon budget team
