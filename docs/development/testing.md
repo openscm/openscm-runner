@@ -72,6 +72,14 @@ We check that running through this package reproduces them.
   (an autouse fixture in `tests/conftest.py` sets them with `monkeypatch`,
   so only for the duration of each test).
   The package itself never reads `.env`.
+- The exception is an adapter group's Python dependencies (its extra,
+  e.g. `openscm-runner[magicc-ar6]`).
+  Test modules which import them at the top use `pytest.importorskip`,
+  so the other tests can be collected and run without the extra
+  (e.g. in the `tests-without-extras` CI job).
+  Each adapter group's CI job installs its extra
+  and checks 100% coverage of the group's modules,
+  so a skipped module there would show up as a coverage failure.
 
 ### Adapter tests, CI and coverage
 

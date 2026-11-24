@@ -8,6 +8,7 @@ See https://oprypin.github.io/mkdocs-literate-nav/
 - [How-to guides](how-to-guides/index.md)
     - [Implementing an adapter](how-to-guides/implementing-an-adapter.md)
 - [Tutorials](tutorials/index.md)
+    - [Running MAGICC AR6](tutorials/running-magicc-ar6.py)
 - [Further background](further-background/index.md)
     - [Architecture](further-background/architecture.md)
     - [Decisions](further-background/decisions.md)

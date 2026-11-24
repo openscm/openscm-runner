@@ -17,8 +17,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pytest
-from pandas_openscm.comparison import compare_close
-from pandas_openscm.io import load_timeseries_csv
 
 from openscm_runner import (
     OutputSpecs,
@@ -34,6 +32,12 @@ from openscm_runner.adapters.magicc_ar6 import (
     MAGICCAR6AdapterConfiguration,
     MAGICCAR6AdapterERFDrivenFromEquilibrium,
 )
+
+# From the MAGICC AR6 extra (`openscm-runner[magicc-ar6]`),
+# skip these tests if it isn't installed
+# (they're also deselected by default, see `addopts` in `pyproject.toml`)
+compare_close = pytest.importorskip("pandas_openscm.comparison").compare_close
+load_timeseries_csv = pytest.importorskip("pandas_openscm.io").load_timeseries_csv
 
 # These are the MAGICC AR6 adapters' tests (see docs/development/testing.md)
 pytestmark = pytest.mark.magicc_ar6

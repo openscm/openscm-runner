@@ -87,6 +87,7 @@ docs = [
     "jupyterlab==4.4.5",
     "jupytext==1.17.2",
     "mkdocs-jupyter==0.25.1",
+    "matplotlib==3.10.9",
 ]
 # For minimum test dependencies.
 # These are used when running our minimum PyPI install tests.
@@ -95,6 +96,10 @@ tests-min = [
     "python-dotenv==1.2.4",
 ]
 tests-full = [
+    # Older versions miss some branches on Python 3.14
+    # (e.g. a `for` loop which finishes without `break`),
+    # which fails the adapter groups' 100% coverage checks
+    "coverage==7.16.2",
     "pytest-cov==6.0.0",
 ]
 # Test dependencies

@@ -3,12 +3,15 @@
 This part of the project documentation
 will focus on a **learning-oriented** approach.
 
-There aren't any tutorials yet.
-What we offer for getting started, running a specific model
+- [Running MAGICC AR6](running-magicc-ar6.py):
+  running MAGICC for CMIP-style experiments (1pctCO2, abrupt-4xCO2, flat10)
+  and AR6 scenarios
+
+What else we offer for getting started, running a specific model
 and running multiple models is still to be decided
 (decision [B21][b21], see [decisions](../further-background/decisions.md)).
 
-Until then, the best places to start are:
+Other good places to start are:
 
 - the [package docstring][openscm_runner],
   which describes the pieces

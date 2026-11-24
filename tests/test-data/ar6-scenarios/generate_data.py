@@ -10,7 +10,7 @@ Generate the AR6 scenario test data from the AR6 database
 
 The infilled emissions AR6 ran MAGICC with
 and the temperature percentiles AR6 published,
-for one scenario (AIM/CGE 2.2 EN_NPi2020_900f).
+for each scenario in `SCENARIOS`.
 This follows gcages' `tests/regression/ar6/convert_ar6_res_to_checking_csvs.py`
 (https://github.com/openscm/gcages/blob/abd45753bf8e964de5302b8a6407cae0879956ee/tests/regression/ar6/convert_ar6_res_to_checking_csvs.py).
 This script must never import `openscm_runner`.
@@ -41,10 +41,13 @@ sha256 of `AR6_Scenarios_Database_World_ALL_CLIMATE_v1.1.csv`
 (Its md5 is 4b8aea8270566584db9d893ff7b4562e, the same as the one gcages records.)
 """
 
-MODEL = "AIM/CGE 2.2"
-SCENARIO = "EN_NPi2020_900f"
+SCENARIOS = {
+    # (model, scenario): stem of the output files
+    ("AIM/CGE 2.2", "EN_NPi2020_900f"): "ar6-aim-cge-2-2-en-npi2020-900f",
+    # AR6's illustrative "current policies" pathway (much more warming)
+    ("GCAM 5.3", "NGFS2_Current Policies"): "ar6-gcam-5-3-ngfs2-current-policies",
+}
 
-OUT_STEM = "ar6-aim-cge-2-2-en-npi2020-900f"
 OUT_INDEX_COLUMNS = ["model", "scenario", "region", "variable", "unit"]
 
 INFILLED_PREFIX = "AR6 climate diagnostics|Infilled|"
@@ -83,10 +86,16 @@ def check_hash(path: Path) -> None:
         raise AssertionError(msg)
 
 
-def load_scenario(path: Path) -> pd.DataFrame:
-    """Load the scenario's rows (in chunks, sensible as the file is so big)"""
+def load_scenarios(path: Path) -> pd.DataFrame:
+    """
+    Load the rows of every scenario in `SCENARIOS`
+
+    In chunks, sensible as the file is so big.
+    All the scenarios are loaded in one pass, so the file is only read once.
+    """
+    wanted = pd.MultiIndex.from_tuples(list(SCENARIOS), names=["Model", "Scenario"])
     chunks = [
-        chunk.loc[(chunk["Model"] == MODEL) & (chunk["Scenario"] == SCENARIO)]
+        chunk.loc[pd.MultiIndex.from_frame(chunk[["Model", "Scenario"]]).isin(wanted)]
         # pandas>=3 reads exactly the values in the file (earlier versions didn't)
         for chunk in pd.read_csv(path, chunksize=100_000)
     ]
@@ -146,10 +155,19 @@ def main() -> None:
     args = parser.parse_args()
 
     check_hash(args.ar6_database)
-    raw = load_scenario(args.ar6_database)
+    raw_all = load_scenarios(args.ar6_database)
 
-    make_emissions(raw).to_csv(HERE / f"{OUT_STEM}.csv")
-    make_temperatures(raw).to_csv(HERE / f"{OUT_STEM}-ar6-gsat-percentiles.csv")
+    for (model, scenario), out_stem in SCENARIOS.items():
+        raw = raw_all.loc[
+            (raw_all.index.get_level_values("model") == model)
+            & (raw_all.index.get_level_values("scenario") == scenario)
+        ]
+        if raw.empty:
+            msg = f"{model} {scenario} isn't in {args.ar6_database}"
+            raise AssertionError(msg)
+
+        make_emissions(raw).to_csv(HERE / f"{out_stem}.csv")
+        make_temperatures(raw).to_csv(HERE / f"{out_stem}-ar6-gsat-percentiles.csv")
 
 
 if __name__ == "__main__":

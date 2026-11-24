@@ -11,7 +11,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pytest
-from openscm_units import unit_registry
 
 from openscm_runner import (
     run_co2_concentration_driven_from_cmip6_pre_industrial,
@@ -67,6 +66,11 @@ from openscm_runner.cmip_pre_industrial_branch.inputs import (
     CMIP7_NATURAL_FORCING_VARIABLES,
 )
 from openscm_runner.output_specs import OutputSpecs
+
+# From the MAGICC AR6 extra (`openscm-runner[magicc-ar6]`),
+# skip these tests if it isn't installed
+# (they're also deselected by default, see `addopts` in `pyproject.toml`)
+unit_registry = pytest.importorskip("openscm_units").unit_registry
 
 # These are the MAGICC AR6 adapters' tests (see docs/development/testing.md)
 pytestmark = pytest.mark.magicc_ar6

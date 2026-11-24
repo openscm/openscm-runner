@@ -11,7 +11,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pint
 import pytest
 
 from openscm_runner.adapters.magicc_ar6.base import hold_last_value
@@ -31,6 +30,11 @@ from openscm_runner.adapters.magicc_ar6.naming import (
     to_magicc_gas,
 )
 from openscm_runner.adapters.magicc_ar6.running import MAGICCInstallation
+
+# From the MAGICC AR6 extra (`openscm-runner[magicc-ar6]`),
+# skip these tests if it isn't installed
+# (they're also deselected by default, see `addopts` in `pyproject.toml`)
+pint = pytest.importorskip("pint")
 
 # These are the MAGICC AR6 adapters' tests (see docs/development/testing.md)
 pytestmark = pytest.mark.magicc_ar6

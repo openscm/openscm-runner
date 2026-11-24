@@ -9,12 +9,15 @@ IDs never change and aren't re-used.
 
 ## Now
 
-- [](){#w01}**W01** Merge the MAGICC AR6 adapters (PR link TBD).
-- [](){#w02}**W02** CICERO AR7 (PR lnk TBD).
+- [](#w01){#w01}**W01** Merge the MAGICC AR6 adapters (PR link TBD).
+  Before merging, add the `MAGICC_AR6_DOWNLOAD_TOKEN` environment variable
+  to the Read the Docs project (the tutorials run MAGICC,
+  see [Read the Docs](index.md#read-the-docs)).
+- [](#w02){#w02}**W02** CICERO AR7 (PR lnk TBD).
 
 ## Next
 
-- [](){#w13}**W13** Decide what to work on next:
+- [](#w13){#w13}**W13** Decide what to work on next:
   which of the items under "Later" to move here,
   and how to make progress on the [active decisions](../further-background/decisions.md#active).
 
@@ -22,24 +25,24 @@ IDs never change and aren't re-used.
 
 Candidates for "Next", not yet prioritised.
 
-- [](){#w03}**W03** Acceptance tests for the MAGICC AR6 CMIP adapters
+- [](#w03){#w03}**W03** Acceptance tests for the MAGICC AR6 CMIP adapters
   (`MAGICCAR6Adapter*From{CMIP6,CMIP7}PreIndustrial`).
   They won't be released in the public openscm-runner repo until we have these
   (see [testing](testing.md#acceptance-tests)).
-- [](){#w04}**W04** Check units in the verify functions (openscm-units).
+- [](#w04){#w04}**W04** Check units in the verify functions (openscm-units).
   The check will need `"unit"` to be a timeseries level
   (use `ensure_timeseries_level` in `verification.py`, as the variable and region checks do).
-- [](){#w05}**W05** Check harmonisation to history in the AR6/AR7 verify functions
+- [](#w05){#w05}**W05** Check harmonisation to history in the AR6/AR7 verify functions
   (gcages/pandas-openscm functions, or ported in; tolerances are [B05][b05]).
-- [](){#w06}**W06** Talk to the remaining carbon budget team
+- [](#w06){#w06}**W06** Talk to the remaining carbon budget team
   about which AR7 scenario variants they need ([B12][b12]).
-- [](){#w07}**W07** Confirm species to use for AR6 workflow and AR7 ([A5][a5]).
-- [](){#w08}**W08** A thin multi-model test: a combination of models (chosen by us)
+- [](#w07){#w07}**W07** Confirm species to use for AR6 workflow and AR7 ([A5][a5]).
+- [](#w08){#w08}**W08** A thin multi-model test: a combination of models (chosen by us)
   in one environment, checking that installing them together
   doesn't break any individual model's behaviour.
   It runs as its own CI job.
   Waits for a second model (CICERO-SCM, [W02][w02]).
-- [](){#w09}**W09** Experiment-specific scientific checks, as integration tests
+- [](#w09){#w09}**W09** Experiment-specific scientific checks, as integration tests
   (to discuss before writing, some depend on open decisions, e.g. [B16][b16]-[B20][b20]):
     - full scenarios: exact historical splice and agreed future natural forcing;
       land-use treatment responds to biosphere emissions as specified
@@ -64,42 +67,42 @@ Candidates for "Next", not yet prioritised.
     Where model APIs expose component diagnostics, test native flags and drivers
     as well as final temperature,
     rather than inferring all forcing isolation from one aggregate output.
-- [](){#w10}**W10** Runtime and coverage targets for the shared tests
+- [](#w10){#w10}**W10** Runtime and coverage targets for the shared tests
   (measure before claiming them):
   unit tests under 60 seconds offline,
   the standard PR suite under 10 minutes with small ensembles,
   at least 95% branch coverage of shared code.
   While writing tests, deliberately break one unit conversion, one ordering path
   and one historical splice, and check the relevant tests fail.
-- [](){#w11}**W11** Keep [implementing an adapter](../how-to-guides/implementing-an-adapter.md) up to date
+- [](#w11){#w11}**W11** Keep [implementing an adapter](../how-to-guides/implementing-an-adapter.md) up to date
   (e.g. the minimum outputs ([A7][a7]), the CICERO-SCM links ([W02][w02])
   and how to document running adapters ([B21][b21])).
-- [](){#w12}**W12** An experiment that starts in 1750.
-- [](){#w14}**W14** A better interface for per-variable tolerances
+- [](#w12){#w12}**W12** An experiment that starts in 1750.
+- [](#w14){#w14}**W14** A better interface for per-variable tolerances
   on top of `pandas_openscm.comparison.compare_close`
   (see [testing](testing.md#4-comparison-rules); tolerances are decision [B08][b08]).
-- [](){#w15}**W15** Discuss and prioritise the candidate test cases in
+- [](#w15){#w15}**W15** Discuss and prioritise the candidate test cases in
   [testing](testing.md#5-candidate-test-cases-to-discuss-before-writing)
   (alongside [W09][w09]).
-- [](){#w16}**W16** A more informative type hint for ensemble members' output data
+- [](#w16){#w16}**W16** A more informative type hint for ensemble members' output data
   (`EnsembleMemberResult.data_if_succeeded`, currently a plain `pd.DataFrame`),
   so it's clear from the type how the data should be shaped.
-- [](){#w17}**W17** Let users choose where the ensemble member level goes in the index
+- [](#w17){#w17}**W17** Let users choose where the ensemble member level goes in the index
   in `OpenSCMRunnerOutput.as_df` (it's always the first level at the moment).
-- [](){#w18}**W18** Combine the results from all adapters into a single dataframe
+- [](#w18){#w18}**W18** Combine the results from all adapters into a single dataframe
   (`RunResults`). Needs an index level that identifies the adapter/model,
   which waits for decisions [B10][b10] and [A3][a3].
-- [](){#w19}**W19** Add definitions of the standard output variables
+- [](#w19){#w19}**W19** Add definitions of the standard output variables
   alongside their names (`STANDARD_OUTPUT_VARIABLES` in `output_specs.py`),
   and consider storing them as a `frozenset` rather than a tuple.
   Related to the minimum outputs (decision [A7][a7]).
-- [](){#w20}**W20** Check that adapters' outputs contain all the requested variables
+- [](#w20){#w20}**W20** Check that adapters' outputs contain all the requested variables
   (in `verify_adapter_outputs`).
   Whether `run_checks=False` skips this is decision [A4][a4].
-- [](){#w21}**W21** Report input problems as structured objects rather than plain strings
+- [](#w21){#w21}**W21** Report input problems as structured objects rather than plain strings
   (in `verification.py`), so code can inspect them (e.g. via an attribute on
   `InvalidInputError`) instead of parsing the error message.
-- [](){#w22}**W22** Get all the RCMIP phase 3 data from its Zenodo release
+- [](#w22){#w22}**W22** Get all the RCMIP phase 3 data from its Zenodo release
   (https://doi.org/10.5281/zenodo.23347317) once the ScenarioMIP files are released there.
   `tests/test-data/cmip-pre-industrial-branch/generate_data.py` still downloads
   from GitLab (tag v3.0.1) because it needs
