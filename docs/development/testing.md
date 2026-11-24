@@ -1,10 +1,10 @@
 # Testing plan
 
 The kinds of tests (unit, integration and acceptance) are decided
-([decision A8](decisions.md#decided)).
+([decision A8](../further-background/decisions.md#decided)).
 Still to discuss: the candidate test cases in section 5,
-experiment-specific scientific checks (roadmap W09)
-and runtime and coverage targets for the shared tests (roadmap W10).
+experiment-specific scientific checks (roadmap [W09][w09])
+and runtime and coverage targets for the shared tests (roadmap [W10][w10]).
 
 ## 1. The test suite of v0.13 and before
 
@@ -209,7 +209,8 @@ Things for them to get right:
   but MAGICC and the AR6 probabilistic distribution aren't).
   To run such models in CI, a custom approach is likely needed
   so discuss with the package maintainers about how to support your use case.
-  TODO: cross ref to how we handle this with MAGICC, probably just point at the magicc-ar6 job in .github/workflows/ci.yaml
+  For an example, see how MAGICC AR6 is run (the `tests-magicc-ar6` job in
+  [CI](https://github.com/openscm/openscm-runner/blob/main/.github/workflows/ci.yaml)).
 
 Updating expected outputs is a change that should be reviewed by the adapter writer,
 explaining why the outputs changed.
@@ -222,7 +223,7 @@ A passing group does not certify every possible calibration or configuration.
 Use `pandas_openscm.comparison.compare_close`
 (it reports which timeseries/years differ),
 plus variable-specific tolerances on top.
-TODO Add to the roadmap: better interface for this
+A better interface for this is roadmap [W14][w14].
 
 - Compare labels (index levels, years, variables) exactly before values.
 - Use a declared tolerance per variable:
@@ -237,10 +238,9 @@ TODO Add to the roadmap: better interface for this
 The unit tests already cover the shape/schema cases for the verify functions
 (empty inputs, wrong years, gaps, NaN/inf, non-numeric values, missing/extra species,
 non-World regions, duplicates, more than one experiment per input, missing index levels).
-TODO: put these on the roadmap
 
-Other cases from the earlier plan, to discuss before writing any tests:
-TODO: put these on the roadmap
+Other cases from the earlier plan, to discuss before writing any tests
+(roadmap [W15][w15]):
 
 | Area | Cases |
 | --- | --- |

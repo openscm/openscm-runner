@@ -50,8 +50,8 @@ class EnsembleMemberResult:
     """
     ID of the ensemble member, provided by the adapter
 
-    TODO: agree a naming scheme for ensemble members and enforce it with tests.
-    TODO: add roadmap item cross-reference for the above
+    TODO: agree a naming scheme for ensemble members and enforce it with tests
+    (decision [A3][a3]).
     """
 
     # TODO: consider whether we can give a better type hint here

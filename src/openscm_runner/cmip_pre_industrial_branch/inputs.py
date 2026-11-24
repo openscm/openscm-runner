@@ -30,8 +30,9 @@ biosphere CO2 emissions are off in the CO2-only experiments
 (there is no land-use change).
 `Emissions|CO2|Fossil` is the canonical input name, including for idealised
 runs such as esm-flat10 where the source data has no fossil/biosphere split.
+How adapters should handle CO2 emissions inputs is still to be decided
+(decision [A6][a6]).
 """
-# TODO: roadmap item cross-ref re naming and setup
 
 CMIP7_CONCENTRATION_VARIABLES: frozenset[str] = frozenset(
     {
@@ -101,14 +102,13 @@ E.g. RCMIP phase 3's natural ERF isn't zero in 1850
 (e.g. volcanic 0.18 (CMIP6) or 0.21 (CMIP7) W/m^2),
 and CMIP's piControl uses averages
 (e.g. of solar over a solar cycle, of volcanic over the historical period).
-So "relative to piControl" needs to be defined (decision B19).
+So "relative to piControl" needs to be defined (decision [B19][b19]).
 ///
 
-TODO: decide whether the input should be ERF (as here)
+Whether the input should be ERF (as here)
 or something closer to what CMIP provides,
-and whether adapters may scale it.
-TODO: units are not checked yet (W/m^2 is assumed).
-TODO: roadmap items for the above
+and whether adapters may scale it, is still to be decided (decision [B22][b22]).
+Units are not checked yet, W/m^2 is assumed (roadmap [W04][w04]).
 """
 
 # TODO: rename to CMIP_AEROSOL_OZONE_PRECURSOR_EMISSIONS_VARIABLES

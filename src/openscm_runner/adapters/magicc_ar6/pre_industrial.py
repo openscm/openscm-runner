@@ -32,7 +32,7 @@ the species a CO2-only input doesn't provide.
 - The numbers are hard-coded here
   (retrieved with `scripts/get-rcmip3-pre-industrial-values.py`).
 - What values to use as pre-industrial is still to be decided
-  (decision B19): CMIP's guidance usually says to repeat the 1850 values,
+  (decision [B19][b19]): CMIP's guidance usually says to repeat the 1850 values,
   RCMIP phase 3's protocol doesn't always (e.g. for CO2 emissions).
 ///
 
@@ -100,7 +100,7 @@ class PreIndustrialValues:
     except for CO2, which is zero
     (see `get_pi_control_emissions` in
     [openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch][]
-    and decision B19).
+    and decision [B19][b19]).
     """
 
 

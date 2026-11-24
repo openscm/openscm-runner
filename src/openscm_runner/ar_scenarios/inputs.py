@@ -106,9 +106,8 @@ CO2 emissions variables of an AR6 scenario
 The input for runs with CO2 forcing only.
 Whether these runs should take fossil CO2 emissions only,
 or both fossil and biosphere CO2 emissions, is still to be decided
-(decision B17).
+(decision [B17][b17]).
 """
-# TODO: check roadmap cross references
 
 AR7Scenario: TypeAlias = pd.DataFrame
 """

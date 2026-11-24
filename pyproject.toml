@@ -170,7 +170,7 @@ addopts = [
 ]
 markers = [
   "slow: slow tests (e.g. full ensembles), not run by default",
-  "magicc_ar6: the MAGICC AR6 adapters' tests (they need MAGICC's AR6 setup, see docs/further-background/testing.md)",
+  "magicc_ar6: the MAGICC AR6 adapters' tests (they need MAGICC's AR6 setup, see docs/development/testing.md)",
 ]
 
 

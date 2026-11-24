@@ -40,6 +40,10 @@ Some suggested options:
 
 - development: the project is actively being worked on
 
+For what we're working on and what's still to be decided, see the
+[roadmap](https://openscm-runner.readthedocs.io/en/latest/development/roadmap/)
+and the [decisions](https://openscm-runner.readthedocs.io/en/latest/further-background/decisions/).
+
 <!--- --8<-- [end:description] -->
 
 Full documentation can be found at:

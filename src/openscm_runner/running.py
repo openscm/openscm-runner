@@ -67,7 +67,8 @@ def run_adapters(
     run_checks
         Whether to check each adapter's capabilities before calling it.
         Returned-output count/type checks are unaffected.
-        TODO: cross reference roadmap item about this
+        What else `run_checks=False` should turn off
+        is still to be decided (decision [A4][a4]).
 
     Returns
     -------

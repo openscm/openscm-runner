@@ -37,9 +37,8 @@ class AdapterAR7Scenario(OutputCapabilities, Protocol):
 
     Note that the AR7 history and other forcings are not defined yet,
     so you should consider this unstable.
-    TODO: roadmap item and consider removing this
-    (we have the CMIP7 branch from history runners also in the roadmap
-    and their definition is clear)
+    Whether to keep this experiment until they are defined
+    is still to be decided (decision [B23][b23]).
     """
 
     def __call__(
@@ -135,7 +134,7 @@ class AdapterAR6ScenarioCO2ForcingOnly(OutputCapabilities, Protocol):
 
     The input is only the scenario's CO2 emissions.
     So any CO2 from the oxidation of (fossil) CH4 in the scenario isn't included
-    (see decision B16).
+    (see decision [B16][b16]).
     """
 
     def __call__(

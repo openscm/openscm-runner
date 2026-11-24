@@ -31,7 +31,7 @@ They live in one subpackage per group of experiments:
 
 - [`ar_scenarios`][openscm_runner.ar_scenarios]:
   AR6 and AR7 scenarios (and their variants;
-  which further AR7 variants to add is decision B12 [add cross-ref to decisions page])
+  which further AR7 variants to add is decision [B12][b12])
 - [`cmip_pre_industrial_branch`][openscm_runner.cmip_pre_industrial_branch]:
   CMIP-style experiments branching off CMIP6 or CMIP7 pre-industrial
 - [`erf`][openscm_runner.erf]:
@@ -41,7 +41,7 @@ The input definitions are in each subpackage's `inputs.py`,
 the protocols and `run_*` functions in its `running.py`.
 Implement the protocols for the experiments you support, you don't need to provide anything else.
 If an experiment you need doesn't exist yet, talk to us first
-(see the [roadmap](../further-background/roadmap.md)
+(see the [roadmap](../development/roadmap.md)
 and [decisions](../further-background/decisions.md)).
 
 ## 2. Implement the protocol
@@ -81,12 +81,12 @@ The rules:
   (`EnsembleMemberResult.from_failure`) rather than raising,
   so the other members' results are kept too.
   Don't invent results for members which didn't run.
-  The exact member naming scheme is still to be agreed (decision A3),
+  The exact member naming scheme is still to be agreed (decision [A3][a3]),
   but you should already have enough details to implement your adapter in full
-  (any future changes needed to adopt decision A3 should be small).
+  (any future changes needed to adopt decision [A3][a3] should be small).
 - **Add everything the input doesn't supply**, e.g. history and natural forcing,
   in line with the experiment's definition (see the protocol's docstring).
-  How much we rely on adapters for this, vs. checking it ourselves, is decision B20.
+  How much we rely on adapters for this, vs. checking it ourselves, is decision [B20][b20].
 - **Make the scientific configuration explicit at construction**
   (model version, calibration etc.), separate from operational settings
   (paths, number of workers).
@@ -121,9 +121,9 @@ and the `run_*` functions check each request against that before running the ada
 [`openscm_runner.output_specs`][openscm_runner.output_specs]).
 `STANDARD_OUTPUT_VARIABLES` (in the same module) lists the outputs we expect to be common,
 so use those names where you can.
-Outputs should be annual-means (decision B04) for the global-mean/total
+Outputs should be annual-means (decision [B04][b04]) for the global-mean/total
 (i.e. a region of `World`) only.
-The minimum list of outputs every adapter must support is decision A7.
+The minimum list of outputs every adapter must support is decision [A7][a7].
 
 ## 4. Parallelisation
 
@@ -149,7 +149,7 @@ so people can do their own parallelisation around your adapter.
 
 ## 5. Tests
 
-See [testing](../further-background/testing.md) for the details.
+See [testing](../development/testing.md) for the details.
 In short:
 
 - **Acceptance tests are mandatory** for every adapter (every experiment you offer):
@@ -199,14 +199,14 @@ In short:
   [CI](https://github.com/openscm/openscm-runner/blob/main/.github/workflows/ci.yaml)),
   and exclude your marker from the general test run
   (`addopts` in `pyproject.toml` and the matching `-m` in CI,
-  see [testing](../further-background/testing.md#adapter-tests-ci-and-coverage)).
+  see [testing](../development/testing.md#adapter-tests-ci-and-coverage)).
   If your model or its resources are licensed,
   discuss with the package maintainers how to run them in CI.
 - Document your adapters in their docstrings:
   what they do, which scientific choices they make,
   and anything users need to know (e.g. where they differ from your model's usual setup).
   Instructions about how to document actually running your adapter are to come
-  (decision B21).
+  (decision [B21][b21]).
 
 ## Definition of done
 

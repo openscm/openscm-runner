@@ -190,8 +190,8 @@ class AdapterConcentrationDrivenFromCMIP7PreIndustrial(OutputCapabilities, Proto
     The adapter starts from its CMIP7 pre-industrial state.
     """  # noqa: E501
 
-    # TODO: decide how non-GHG forcing (land use, natural) is handled.
-    # TODO: add roadmap item for the above
+    # TODO: decide how non-GHG forcing is handled
+    # (land use: decision B07, natural forcing: decision B22).
 
     def __call__(
         self,

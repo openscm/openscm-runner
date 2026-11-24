@@ -6,7 +6,7 @@ MAGICC v7.5.3 with the AR6 probabilistic distribution
 ## MAGICC AR6 is an exception
 
 Normally, the adapter writer (model team) provides the acceptance data
-and we don't generate it ourselves (see `docs/further-background/testing.md`).
+and we don't generate it ourselves (see `docs/development/testing.md`).
 MAGICC AR6 is an exception: we generate the data here.
 It is here to demonstrate how acceptance data like this could be generated.
 

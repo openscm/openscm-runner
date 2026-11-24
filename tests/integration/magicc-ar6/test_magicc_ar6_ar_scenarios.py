@@ -34,7 +34,7 @@ from openscm_runner.adapters.magicc_ar6.ar_scenarios import (
 from openscm_runner.adapters.magicc_ar6.base import run_experiments
 from openscm_runner.output_specs import OutputSpecs
 
-# These are the MAGICC AR6 adapters' tests (see docs/further-background/testing.md)
+# These are the MAGICC AR6 adapters' tests (see docs/development/testing.md)
 pytestmark = pytest.mark.magicc_ar6
 
 TEST_DATA_DIR = Path(__file__).parents[2] / "test-data"

@@ -68,7 +68,7 @@ from openscm_runner.cmip_pre_industrial_branch.inputs import (
 )
 from openscm_runner.output_specs import OutputSpecs
 
-# These are the MAGICC AR6 adapters' tests (see docs/further-background/testing.md)
+# These are the MAGICC AR6 adapters' tests (see docs/development/testing.md)
 pytestmark = pytest.mark.magicc_ar6
 
 TEST_DATA_DIR = Path(__file__).parents[2] / "test-data"

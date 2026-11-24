@@ -78,7 +78,7 @@ How the runs are set up:
       as RCMIP phase 3's CMIP6 esm-piControl does).
       This is a choice, not a given:
       CMIP's guidance usually says to repeat the 1850 values,
-      which would mean non-zero CO2 emissions (decision B19).
+      which would mean non-zero CO2 emissions (decision [B19][b19]).
       The carbon cycle starts close to, but not exactly in, equilibrium:
       with zero emissions, CO2 drifts up by a few tenths of a ppm over 150 years.
 3. **Solar and volcanic forcing** come from the input
@@ -87,7 +87,7 @@ How the runs are set up:
    and the input is relative to piControl.
    This is a choice which is still to be confirmed:
    what zero (piControl) natural forcing means is still to be decided
-   (e.g. RCMIP phase 3's natural forcing isn't zero in 1850, see decision B19).
+   (e.g. RCMIP phase 3's natural forcing isn't zero in 1850, see decision [B19][b19]).
    Without this, MAGICC would apply its default historical solar
    and volcanic forcing.
    See the warnings below: the input isn't used as-is.
@@ -96,7 +96,7 @@ How the runs are set up:
    The piControl emissions are hard-coded for each CMIP era
    ([get_pi_control_emissions][(m).]): the era's historical emissions in 1850
    (CO2: zero, see point 2), a choice which is still to be confirmed
-   (decision B19).
+   (decision [B19][b19]).
    They are used for the spin-up years
    and, for the whole run, for gases which aren't in the input.
    So if the input isn't at piControl in its first year,
@@ -462,7 +462,7 @@ It is part of MAGICC's total ozone forcing,
 but not its tropospheric or stratospheric ozone forcing.
 
 The CO2-only adapters turn it off for now, so their only forcing is CO2 forcing.
-It isn't clear which choice is right (see decisions B16 and B18):
+It isn't clear which choice is right (see decisions [B16][b16] and [B18][b18]):
 CMIP models with prescribed ozone wouldn't have this forcing,
 CMIP models with interactive chemistry probably would.
 We might make the opposite choice.
@@ -1018,7 +1018,7 @@ def make_natural_forcing_files(
     first_year
         First year of the experiment (forcing is zero before this,
         i.e. the piControl natural forcing is zero,
-        a choice which is still to be confirmed, see decision B19)
+        a choice which is still to be confirmed, see decision [B19][b19])
 
     last_year
         Last year to write (including any buffer)
@@ -1084,7 +1084,7 @@ def get_pi_control_emissions(pre_industrial: PreIndustrialValues) -> dict[str, f
         (MAGICC's units): the CMIP era's historical emissions in 1850
         (`pre_industrial.historical_emissions_1850`),
         except CO2, which is zero (no fossil emissions and no land-use change,
-        a choice which is still to be confirmed, see decision B19),
+        a choice which is still to be confirmed, see decision [B19][b19]),
         and gases without historical emissions (zero)
     """
     spec_by_gas = {spec.gas: spec for spec in EMISSIONS_VARIABLES.values()}
@@ -1528,7 +1528,7 @@ class MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial:
     the CO2-only concentration-driven adapters like a model with prescribed ozone.
     What we want, and if and how MAGICC can do it,
     are still to be worked out
-    (see [NO_OZONE_DUE_TO_TEMPERATURE][(m).] and decision B18).
+    (see [NO_OZONE_DUE_TO_TEMPERATURE][(m).] and decision [B18][b18]).
     ///
 
     See the module docstring

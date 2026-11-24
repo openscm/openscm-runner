@@ -1,7 +1,7 @@
 # Roadmap
 
 What we're working on and what's next.
-Decisions (made, active and in the backlog) are in [decisions](decisions.md).
+Decisions (made, active and in the backlog) are in [decisions](../further-background/decisions.md).
 Work which depends on an open decision must not silently settle it.
 
 Work items have IDs so other pages can refer to them.
@@ -9,36 +9,36 @@ IDs never change and aren't re-used.
 
 ## Now
 
-- **W01** Merge the MAGICC AR6 adapters (PR link TBD).
-- **W02** CICERO AR7 (PR lnk TBD).
+- [](){#w01}**W01** Merge the MAGICC AR6 adapters (PR link TBD).
+- [](){#w02}**W02** CICERO AR7 (PR lnk TBD).
 
 ## Next
 
-- **W13** Decide what to work on next:
+- [](){#w13}**W13** Decide what to work on next:
   which of the items under "Later" to move here,
-  and how to make progress on the [active decisions](decisions.md#active).
+  and how to make progress on the [active decisions](../further-background/decisions.md#active).
 
 ## Later
 
 Candidates for "Next", not yet prioritised.
 
-- **W03** Acceptance tests for the MAGICC AR6 CMIP adapters
+- [](){#w03}**W03** Acceptance tests for the MAGICC AR6 CMIP adapters
   (`MAGICCAR6Adapter*From{CMIP6,CMIP7}PreIndustrial`).
   They won't be released in the public openscm-runner repo until we have these
   (see [testing](testing.md#acceptance-tests)).
-- **W04** Check units in the verify functions (openscm-units).
-- **W05** Check harmonisation to history in the AR6/AR7 verify functions
-  (gcages/pandas-openscm functions, or ported in; tolerances are B05).
-- **W06** Talk to the remaining carbon budget team
-  about which AR7 scenario variants they need (B12).
-- **W07** Confirm species to use for AR6 workflow and AR7 (A5).
-- **W08** A thin multi-model test: a combination of models (chosen by us)
+- [](){#w04}**W04** Check units in the verify functions (openscm-units).
+- [](){#w05}**W05** Check harmonisation to history in the AR6/AR7 verify functions
+  (gcages/pandas-openscm functions, or ported in; tolerances are [B05][b05]).
+- [](){#w06}**W06** Talk to the remaining carbon budget team
+  about which AR7 scenario variants they need ([B12][b12]).
+- [](){#w07}**W07** Confirm species to use for AR6 workflow and AR7 ([A5][a5]).
+- [](){#w08}**W08** A thin multi-model test: a combination of models (chosen by us)
   in one environment, checking that installing them together
   doesn't break any individual model's behaviour.
   It runs as its own CI job.
-  Waits for a second model (CICERO-SCM, W02).
-- **W09** Experiment-specific scientific checks, as integration tests
-  (to discuss before writing, some depend on open decisions, e.g. B16-B20):
+  Waits for a second model (CICERO-SCM, [W02][w02]).
+- [](){#w09}**W09** Experiment-specific scientific checks, as integration tests
+  (to discuss before writing, some depend on open decisions, e.g. [B16][b16]-[B20][b20]):
     - full scenarios: exact historical splice and agreed future natural forcing;
       land-use treatment responds to biosphere emissions as specified
     - anthropogenic-only: natural forcing disabled over the approved period;
@@ -62,14 +62,20 @@ Candidates for "Next", not yet prioritised.
     Where model APIs expose component diagnostics, test native flags and drivers
     as well as final temperature,
     rather than inferring all forcing isolation from one aggregate output.
-- **W10** Runtime and coverage targets for the shared tests
+- [](){#w10}**W10** Runtime and coverage targets for the shared tests
   (measure before claiming them):
   unit tests under 60 seconds offline,
   the standard PR suite under 10 minutes with small ensembles,
   at least 95% branch coverage of shared code.
   While writing tests, deliberately break one unit conversion, one ordering path
   and one historical splice, and check the relevant tests fail.
-- **W11** Keep [implementing an adapter](../how-to-guides/implementing-an-adapter.md) up to date
-  (e.g. the minimum outputs (A7), the CICERO-SCM links (W02)
-  and how to document running adapters (B21)).
-- **W12** An experiment that starts in 1750.
+- [](){#w11}**W11** Keep [implementing an adapter](../how-to-guides/implementing-an-adapter.md) up to date
+  (e.g. the minimum outputs ([A7][a7]), the CICERO-SCM links ([W02][w02])
+  and how to document running adapters ([B21][b21])).
+- [](){#w12}**W12** An experiment that starts in 1750.
+- [](){#w14}**W14** A better interface for per-variable tolerances
+  on top of `pandas_openscm.comparison.compare_close`
+  (see [testing](testing.md#4-comparison-rules); tolerances are decision [B08][b08]).
+- [](){#w15}**W15** Discuss and prioritise the candidate test cases in
+  [testing](testing.md#5-candidate-test-cases-to-discuss-before-writing)
+  (alongside [W09][w09]).

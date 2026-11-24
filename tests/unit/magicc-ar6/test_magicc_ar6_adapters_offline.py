@@ -54,7 +54,7 @@ from openscm_runner.adapters.magicc_ar6.running import (
 )
 from openscm_runner.output_specs import OutputSpecs
 
-# These are the MAGICC AR6 adapters' tests (see docs/further-background/testing.md)
+# These are the MAGICC AR6 adapters' tests (see docs/development/testing.md)
 pytestmark = pytest.mark.magicc_ar6
 
 NOT_USED_CONFIGURATION_KWARGS: dict[str, Any] = dict(

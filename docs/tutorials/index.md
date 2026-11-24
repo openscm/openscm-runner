@@ -6,7 +6,7 @@ will focus on a **learning-oriented** approach.
 There aren't any tutorials yet.
 What we offer for getting started, running a specific model
 and running multiple models is still to be decided
-(decision B21, see [decisions](../further-background/decisions.md)).
+(decision [B21][b21], see [decisions](../further-background/decisions.md)).
 
 Until then, the best places to start are:
 

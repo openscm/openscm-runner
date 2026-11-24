@@ -1,8 +1,7 @@
 """
 CMIP pre-industrial branch inputs, protocols and runners
 """
-# TODO: there is no experiment that starts in 1750 yet. Add one.
-# TODO: roadmap item for the above comment
+# TODO: there is no experiment that starts in 1750 yet. Add one (roadmap W12).
 
 from .inputs import (
     CMIP6PreIndustrialBranchCO2Concentrations,

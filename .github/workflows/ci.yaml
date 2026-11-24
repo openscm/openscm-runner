@@ -133,7 +133,7 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  # One job per adapter group, see docs/further-background/testing.md.
+  # One job per adapter group, see docs/development/testing.md.
   # Each group's marker must also be excluded from the `tests` job above
   # (and `addopts` in `pyproject.toml`).
   #

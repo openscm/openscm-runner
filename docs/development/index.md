@@ -11,6 +11,12 @@ We welcome all kinds of contributions, for example:
 - pull requests
 - tutorials
 
+Also in this section:
+
+- [Roadmap](roadmap.md): what we are working on and what is next
+- [Testing](testing.md):
+  the kinds of tests, how each adapter group's tests run in CI and coverage
+
 ## Workflows
 
 We don't mind whether you use a branching or forking workflow.

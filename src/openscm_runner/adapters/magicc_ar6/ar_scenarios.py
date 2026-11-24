@@ -294,7 +294,7 @@ class MAGICCAR6AdapterAR6ScenarioCO2ForcingOnly:
     or `CH4_INCL_CH4OX = 0` (that would work too,
     but we'd rather not rely on a switch).
     Whether CO2-forcing-only runs should include this CO2
-    is something we need to clarify (see decision B16).
+    is something we need to clarify (see decision [B16][b16]).
 
     MAGICC's other history files (e.g. aerosol and land-use forcing)
     are left as they are: they only affect forcing which isn't part of the run.
