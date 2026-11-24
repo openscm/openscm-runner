@@ -12,9 +12,10 @@ and e.g. ozone responds to changes in CH4 and N2O concentrations.
 How the runs are set up:
 
 1. **MAGICC's pre-industrial is the piControl state.**
-   MAGICC starts in [MAGICC_START_YEAR][(m).] (1830)
-   and runs [PI_CONTROL_SPIN_UP_YEARS][(m).] (20) years in the piControl state,
-   and output is returned from 1850 (the experiment's first year).
+   MAGICC starts [PI_CONTROL_SPIN_UP_YEARS][(m).] (20) years
+   before the experiment's first year (1850 for both CMIP6 and CMIP7,
+   see [get_magicc_start_year][(m).]) and runs in the piControl state until then.
+   Output is returned from the experiment's first year.
    MAGICC's pre-industrial reference year (`RF_PREIND_REFERENCEYR`)
    is set to the start year, and forcing is relative to pre-industrial
    (`RF_INITIALIZATION_METHOD = "JUMPSTART"`).
@@ -176,8 +177,8 @@ and follow history, so some of its settings are calendar years.
 - The carbon cycle's temperature feedback and CO2 fertilisation
   start in 1900 by default (relative to the state then),
   the CH4 and N2O lifetime feedbacks in 1927 and 1925.
-  We start them in [MAGICC_START_YEAR][(m).] instead,
-  see the warning below.
+  We start them in MAGICC's start year instead
+  ([get_magicc_start_year][(m).]), see the warning below.
 - These are left at MAGICC's defaults
   (they matter for runs which go past these years,
   as nominal years in idealised experiments):
@@ -194,8 +195,8 @@ MAGICC v7.5.3's CO2 fertilisation and carbon cycle temperature feedback
 start in 1900 by default (relative to the state then),
 its CH4 and N2O lifetime feedbacks in 1927 and 1925.
 These are calendar years, set up for runs which start in 1750.
-For runs branching off piControl, we start them in [MAGICC_START_YEAR][(m).]
-([FEEDBACK_START_YEAR_SETTINGS][(m).]),
+For runs branching off piControl, we start them in MAGICC's start year
+([get_magicc_start_year][(m).], [FEEDBACK_START_YEAR_SETTINGS][(m).]),
 so they act relative to the piControl state from the start.
 Otherwise, e.g., an emissions-driven 1pctCO2 run
 would have no CO2 fertilisation for its first 50 years
@@ -227,10 +228,6 @@ in year `t` and year `t + 1`
 (`extend_rf_box_from_switchyear_with_emissions` in MAGICC v7.5.3),
 so for these a step change in emissions in year `y`
 is half applied in year `y - 1`.
-[undo_magicc_emissions_averaging][openscm_runner.adapters.magicc_ar6.base.]
-gives emissions which these calculations see exactly as you want them,
-but be careful: the same emissions also go, unaveraged,
-into the gas cycles, tropospheric ozone and nitrate.
 
 These adapters don't do anything about this:
 we pass the emissions on as given,
@@ -310,8 +307,6 @@ so they differ from the input
 (also, the annual volcanic output is a mid-year to mid-year mean,
 so a one-year volcanic input is spread over two years of output).
 If you need the input ERF applied exactly, this adapter doesn't do that.
-(TODO: decide what the input definition should mean here,
-see `CMIP_NATURAL_FORCING_VARIABLES`.)
 ///
 
 /// warning | Annual volcanic forcing isn't ideal for MAGICC
@@ -432,16 +427,26 @@ from the piControl state (it uses the 10 years before the switch to emissions,
 plus a year's delay for N2O), see the module docstring.
 """
 
-# TODO: handle this better.
-# Don't want hard-coded 1850.
-# Don't want to assume a single pre-industrial branch year will apply for all CMIP eras.
-MAGICC_START_YEAR = 1850 - PI_CONTROL_SPIN_UP_YEARS
-"""
-Year MAGICC starts in, holding the piControl state
 
-This is also MAGICC's pre-industrial reference year (`RF_PREIND_REFERENCEYR`).
-See the module docstring for why.
-"""
+def get_magicc_start_year(first_year: int) -> int:
+    """
+    Get the year MAGICC starts in, holding the piControl state
+
+    This is also MAGICC's pre-industrial reference year (`RF_PREIND_REFERENCEYR`).
+    See the module docstring for why.
+
+    Parameters
+    ----------
+    first_year
+        First year of the experiment (the year it branches off piControl)
+
+    Returns
+    -------
+    :
+        Year MAGICC starts in
+    """
+    return first_year - PI_CONTROL_SPIN_UP_YEARS
+
 
 FEEDBACK_START_YEAR_SETTINGS: tuple[str, ...] = (
     "co2_tempfeedback_yrstart",
@@ -453,7 +458,8 @@ FEEDBACK_START_YEAR_SETTINGS: tuple[str, ...] = (
 Settings for the years in which MAGICC's carbon cycle and CH4/N2O feedbacks start
 
 MAGICC's defaults are calendar years (1900, 1900, 1927, 1925).
-We set them to [MAGICC_START_YEAR][(m).], see the module docstring.
+We set them to MAGICC's start year ([get_magicc_start_year][(m).]),
+see the module docstring.
 """
 
 NO_OZONE_DUE_TO_TEMPERATURE: dict[str, Any] = {"ozduetotemperature_scale": 0.0}
@@ -860,8 +866,8 @@ def make_concentration_files(
 
     first_year
         First year of the experiment
-        (the years from [MAGICC_START_YEAR][(m).] until then
-        hold the piControl state)
+        (the years from MAGICC's start year until then
+        hold the piControl state, see [get_magicc_start_year][(m).])
 
     last_year
         Last year to write (including any buffer)
@@ -876,7 +882,7 @@ def make_concentration_files(
     """
     files = {}
     filenames = {}
-    pi_control_years = np.arange(MAGICC_START_YEAR, first_year)
+    pi_control_years = np.arange(get_magicc_start_year(first_year), first_year)
     for gas in ALL_CONCENTRATION_GASES:
         if gas in concentrations.index:
             experiment = concentrations.loc[gas]
@@ -930,7 +936,8 @@ def make_history_files(  # noqa: PLR0913
     Make the aerosol, land use etc. history files (see the module docstring)
 
     Each file in [HELD_HISTORY_FILES][(m).] holds the installation's value
-    in `first_year` from [MAGICC_START_YEAR][(m).] to `last_year`.
+    in `first_year` from MAGICC's start year
+    ([get_magicc_start_year][(m).]) to `last_year`.
     The others are calculated from `emissions`.
     In `anchor_years`, every file holds the installation's value
     in [NORMALISATION_ANCHOR_YEAR][(m).].
@@ -946,7 +953,8 @@ def make_history_files(  # noqa: PLR0913
     emissions
         Global emissions, indexed by MAGICC's name for each gas,
         including all the drivers of `emissions_driven_files`,
-        years ([MAGICC_START_YEAR][(m).] to `last_year`) as columns
+        years (MAGICC's start year, see [get_magicc_start_year][(m).],
+        to `last_year`) as columns
 
     first_year
         First year of the experiment
@@ -969,7 +977,7 @@ def make_history_files(  # noqa: PLR0913
     defaults = read_namelist(installation.run_dir / "MAGCFG_DEFAULTALL.CFG")[
         "nml_allcfgs"
     ]
-    years = range(MAGICC_START_YEAR, last_year + 1)
+    years = range(get_magicc_start_year(first_year), last_year + 1)
     to_write: dict[str, tuple[pd.DataFrame | None, str]] = {
         setting: (
             None,
@@ -1061,7 +1069,7 @@ def make_natural_forcing_files(
         Settings which point MAGICC at the files
     """
     years = range(first_year, last_year + 1)
-    before = pd.Series(0.0, index=range(MAGICC_START_YEAR, first_year))
+    before = pd.Series(0.0, index=range(get_magicc_start_year(first_year), first_year))
 
     def full(values: pd.Series[float] | None) -> pd.Series[float]:
         if values is None:
@@ -1112,7 +1120,7 @@ def get_pi_control_emissions(pre_industrial: PreIndustrialValues) -> pd.Series[f
         piControl emissions of each gas in [PI_CONTROL_EMISSIONS_GASES][(m).]
         in MAGICC's units (`variable` and `unit` index levels):
         the CMIP era's historical emissions in 1850
-        (`pre_industrial.historical_emissions_1850`),
+        (`pre_industrial.pi_control_emissions`),
         except CO2, which is zero (no fossil emissions and no land-use change,
         a choice which is still to be confirmed, see decision [B19][b19]),
         and gases without historical emissions (zero)
@@ -1120,7 +1128,7 @@ def get_pi_control_emissions(pre_industrial: PreIndustrialValues) -> pd.Series[f
     values = pd.Series(0.0, index=list(PI_CONTROL_EMISSIONS_GASES))
     given = {
         gas: value_unit
-        for gas, value_unit in pre_industrial.historical_emissions_1850.items()
+        for gas, value_unit in pre_industrial.pi_control_emissions.items()
         if gas not in ("CO2I", "CO2B")
     }
     if given:
@@ -1216,7 +1224,8 @@ def make_scenario_emissions(
         Emissions of each gas in [SCEN7_GASES][(m).]
         (`variable` and `unit` index levels,
         with the units of `pi_control_emissions`),
-        years from [MAGICC_START_YEAR][(m).] to `last_year` as columns
+        years from MAGICC's start year ([get_magicc_start_year][(m).])
+        to `last_year` as columns
 
     Raises
     ------
@@ -1272,12 +1281,12 @@ def make_scenario_emissions(
     pi_control["CH4I"] = 0.0
     pi_control["CH4B"] = pi_control_values["CH4"]
 
-    years = range(MAGICC_START_YEAR, last_year + 1)
+    years = range(get_magicc_start_year(first_year), last_year + 1)
     emissions = pd.DataFrame({y: pi_control for y in years})
     if input_emissions is None:
         return _with_units(emissions, units)
 
-    spin_up_years = range(MAGICC_START_YEAR, first_year)
+    spin_up_years = range(get_magicc_start_year(first_year), first_year)
     for input_gas, values in input_emissions.droplevel("unit").iterrows():
         gas = str(input_gas)
         given = values.reindex(range(first_year, last_year + 1)).ffill()
@@ -1459,8 +1468,8 @@ def run_pre_industrial_branch_experiments(  # noqa: PLR0913
         output_specs.output_variables, SUPPORTED_OUTPUT_VARIABLES
     )
     installation = configuration.installation
-    # TODO: handle this better
-    first_year = 1850
+    first_year = pre_industrial.branch_year
+    start_year = get_magicc_start_year(first_year)
     historical_emissions = load_historical_emissions(installation)
     pre_industrial_emissions = historical_emissions.droplevel("unit")[first_year]
     pi_control_emissions = get_pi_control_emissions(pre_industrial)
@@ -1546,16 +1555,16 @@ def run_pre_industrial_branch_experiments(  # noqa: PLR0913
                     # Derive the natural CH4 and N2O emissions from piControl
                     "ch4_lastbudgetyear": first_year - 1,
                     "n2o_lastbudgetyear": first_year - 1,
-                    **dict.fromkeys(FEEDBACK_START_YEAR_SETTINGS, MAGICC_START_YEAR),
+                    **dict.fromkeys(FEEDBACK_START_YEAR_SETTINGS, start_year),
                     "file_emisscen": SCENARIO_FILE,
                     **NO_EXTRA_SCENARIO_FILES,
                     "rf_initialization_method": "JUMPSTART",
-                    "rf_preind_referenceyr": MAGICC_START_YEAR,
+                    "rf_preind_referenceyr": start_year,
                     "rf_total_runmodus": "ALL",
                     "rf_regions_normyear": anchor_years[0],
                     **(extra_settings or {}),
                 },
-                start_year=MAGICC_START_YEAR,
+                start_year=start_year,
                 end_year=end_year,
                 output_first_year=first_year,
                 output_last_year=last_year,

@@ -14,10 +14,7 @@ import pandas as pd
 import pint
 import pytest
 
-from openscm_runner.adapters.magicc_ar6.base import (
-    hold_last_value,
-    undo_magicc_emissions_averaging,
-)
+from openscm_runner.adapters.magicc_ar6.base import hold_last_value
 from openscm_runner.adapters.magicc_ar6.io import (
     format_conc_in,
     format_hemispheric_monthly_forcing_in,
@@ -270,62 +267,6 @@ def test_monthly_forcing_times(tmp_path: Path) -> None:
     # MAGICC's convention: start of each month, three decimal places
     assert data.columns[1] == 1750.083
     np.testing.assert_allclose(data.iloc[:, 12:].to_numpy(), 1.0)
-
-
-def magicc_averaging(df: pd.DataFrame) -> pd.DataFrame:
-    """What MAGICC does: emissions in t are the average of t and t + 1"""
-    return (df + df.shift(-1, axis="columns")) / 2
-
-
-@pytest.mark.parametrize(
-    "values",
-    (
-        [1.0, 1.0, 1.0, 1.0],
-        [0.0, 0.0, 0.0, 1.0, 2.0, 3.0],
-        [5.0, 3.0, 8.0, -1.0, 2.5],
-    ),
-)
-def test_undo_magicc_emissions_averaging(values: list[float]) -> None:
-    wanted = pd.DataFrame(
-        [values, [2 * v for v in values]],
-        index=pd.MultiIndex.from_tuples(
-            [("SOX", "Mt S / yr"), ("BC", "Mt BC / yr")], names=["variable", "unit"]
-        ),
-        columns=range(2015, 2015 + len(values)),
-    )
-
-    res = undo_magicc_emissions_averaging(wanted)
-
-    # One extra year, so that every year we want is exact
-    assert res.columns.tolist() == [*wanted.columns, wanted.columns[-1] + 1]
-    # MAGICC's averaging gives back what we want in every year
-    pd.testing.assert_frame_equal(magicc_averaging(res).iloc[:, :-1], wanted)
-    # The first year is unchanged
-    pd.testing.assert_series_equal(res.iloc[:, 0], wanted.iloc[:, 0])
-
-
-def test_undo_magicc_emissions_averaging_staircase() -> None:
-    wanted = pd.DataFrame([[0.0, 0.0, 0.0, 1.0, 2.0, 3.0]], columns=range(2000, 2006))
-
-    res = undo_magicc_emissions_averaging(wanted)
-
-    np.testing.assert_allclose(res.to_numpy(), [[0.0, 0.0, 0.0, 0.0, 2.0, 2.0, 4.0]])
-
-
-def test_undo_magicc_emissions_averaging_step() -> None:
-    wanted = pd.DataFrame([[0.0, 0.0, 0.0, 1.0, 1.0, 1.0]], columns=range(2000, 2006))
-
-    res = undo_magicc_emissions_averaging(wanted)
-
-    # Exactness needs a zig-zag after the step (see the docstring)
-    np.testing.assert_allclose(res.to_numpy(), [[0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 2.0]])
-
-
-def test_undo_magicc_emissions_averaging_non_consecutive_years() -> None:
-    with pytest.raises(ValueError, match="consecutive integer years"):
-        undo_magicc_emissions_averaging(
-            pd.DataFrame([[1.0, 2.0]], columns=[2000, 2002])
-        )
 
 
 def test_installation_binary_is_absolute() -> None:

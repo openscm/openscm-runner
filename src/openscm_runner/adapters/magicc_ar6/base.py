@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pandas as pd
 
 from openscm_runner.output import EnsembleMemberResult, OpenSCMRunnerOutput
@@ -67,6 +66,15 @@ class MAGICCAR6AdapterConfiguration:
 
     Every MAGICC AR6 adapter takes one of these.
     The same configuration can be used for all of them.
+
+    /// warning | MAGICC is run in temporary directories
+    MAGICC reads its inputs from, and writes its outputs to, files,
+    so each piece of work is run in its own fresh temporary directory
+    (deleted once the run is done), not in the MAGICC installation.
+    These are made with [tempfile][] in its default location.
+    To put them somewhere else (e.g. if the default location is small or slow),
+    set the `TMPDIR` environment variable before starting Python.
+    ///
     """
 
     magicc_root: Path
@@ -462,78 +470,3 @@ def hold_last_value(df: pd.DataFrame, n_years: int) -> pd.DataFrame:
     return df.reindex(
         columns=[*df.columns, *range(last + 1, last + n_years + 1)], method="ffill"
     )
-
-
-# TODO: delete this
-def undo_magicc_emissions_averaging(emissions: pd.DataFrame) -> pd.DataFrame:
-    """
-    Get the emissions to give MAGICC so that it uses the emissions you want
-
-    MAGICC v7.5.3 calculates aerosol forcing and optical thickness
-    (direct aerosol, BC on snow and, via the optical thicknesses,
-    aerosol-cloud forcing) from the average of the emissions
-    in year `t` and year `t + 1`.
-    The adapters pass emissions on as given (that is how MAGICC has always behaved).
-    If you want these calculations to see `emissions` exactly instead,
-    pass the output of this function to the adapter.
-
-    This only applies to those calculations.
-    MAGICC's gas cycles, tropospheric ozone and nitrate use each year's emissions
-    as given, so they see the output of this function
-    (including any zig-zags, see below) rather than `emissions`.
-    See the note on averaging in
-    [openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch][].
-
-    The output `x` satisfies `(x[t] + x[t + 1]) / 2 == emissions[t]`
-    for every year in `emissions`.
-    To make the last year exact, `x` has one more year than `emissions`.
-    Throw away the output for that extra year
-    (MAGICC's emissions in it aren't anything you asked for).
-
-    The condition above only fixes `x` up to an alternating term
-    (`+c, -c, +c, ...`), which MAGICC's averaging can't see.
-    We fix it by keeping the first year unchanged (`x[first] == emissions[first]`).
-    That keeps the join with whatever MAGICC has before the first year
-    (e.g. history, or the piControl state) the same as without this function.
-
-    Things to be aware of:
-
-    - the output can zig-zag, because exactness needs it.
-      E.g. a step change (`0, 0, 0, 1, 1, 1`) becomes `0, 0, 0, 0, 2, 0, 2`,
-      which zig-zags for ever after the step.
-      Choosing the alternating term differently just moves the zig-zag
-      to before the step: no timeseries averages to a step without one.
-      Similarly, emissions which are flat and then increase linearly
-      become a staircase (`0, 0, 0, 1, 2, 3` becomes `0, 0, 0, 0, 2, 2, 4`).
-      If you don't need the emissions in each year exactly,
-      MAGICC's default behaviour (half a year of smoothing) may be preferable.
-    - the output can be negative where the emissions change quickly
-
-    Parameters
-    ----------
-    emissions
-        Emissions you want MAGICC to use, consecutive integer years as columns
-
-    Returns
-    -------
-    :
-        Emissions to give MAGICC (same index and units as `emissions`),
-        with one more year than `emissions`
-
-    Raises
-    ------
-    ValueError
-        The columns aren't consecutive integer years
-    """
-    years = [int(y) for y in emissions.columns]
-    if years != list(range(years[0], years[0] + len(years))):
-        msg = f"Columns must be consecutive integer years, received {years}"
-        raise ValueError(msg)
-
-    wanted = emissions.to_numpy(dtype=float)
-    out = np.empty((wanted.shape[0], wanted.shape[1] + 1))
-    out[:, 0] = wanted[:, 0]
-    for i in range(1, out.shape[1]):
-        out[:, i] = 2 * wanted[:, i - 1] - out[:, i - 1]
-
-    return pd.DataFrame(out, index=emissions.index, columns=[*years, years[-1] + 1])

@@ -15,7 +15,7 @@ These are the values in `src/openscm_runner/adapters/magicc_ar6/pre_industrial.p
 - `pi_control_concentrations`: CMIP7 from RCMIP phase 3's `piControl` experiment,
   CMIP6 from its `historical-cmip6` experiment in 1850
   (RCMIP phase 3 has no CMIP6 piControl concentrations)
-- `historical_emissions_1850`: RCMIP phase 3's `historical-cmip6` (CMIP6)
+- `pi_control_emissions`: RCMIP phase 3's `historical-cmip6` (CMIP6)
   and `historical` (CMIP7) experiments in 1850
   as `(value, unit)`, with units openscm-units can parse
   (unit conversions with openscm-units, as the adapters do)
@@ -157,7 +157,7 @@ def print_emissions(emissions: pd.DataFrame, era: str) -> None:
         (emissions["Scenario"] == EMISSIONS_SCENARIOS[era])
         & (emissions["Mip_Era"] == era)
     ].set_index("Variable")
-    print(f"{era} historical_emissions_1850 ({EMISSIONS_SCENARIOS[era]}):")
+    print(f"{era} pi_control_emissions ({EMISSIONS_SCENARIOS[era]}):")
     for variable, (gas, unit, magicc_unit, context) in EMISSIONS_VARIABLES.items():
         rcmip_unit = selected.loc[variable, "Unit"]
         # RCMIP calls NO2 mass NOx (see above)

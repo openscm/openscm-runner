@@ -16,6 +16,12 @@ import pandas as pd
 
 from openscm_runner.verification import verify_wide_timeseries_inputs
 
+CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR = 1850
+"""First year of runs branching off the CMIP6 pre-industrial state"""
+
+CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR = 1850
+"""First year of runs branching off the CMIP7 pre-industrial state"""
+
 CO2_CONCENTRATION_VARIABLES: frozenset[str] = frozenset(
     {"Atmospheric Concentrations|CO2"}
 )
@@ -216,7 +222,7 @@ def verify_cmip7_pre_industrial_branch_co2_concentrations(
         co2_concentrations,
         input_name="CMIP7PreIndustrialBranchCO2Concentrations",
         required_variables=CO2_CONCENTRATION_VARIABLES,
-        first_year=1850,
+        first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
@@ -249,9 +255,7 @@ def verify_cmip6_pre_industrial_branch_co2_concentrations(
         co2_concentrations,
         input_name="CMIP6PreIndustrialBranchCO2Concentrations",
         required_variables=CO2_CONCENTRATION_VARIABLES,
-        # TODO: bring pre-industrial branch year back as
-        # CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR
-        first_year=1850,
+        first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
@@ -287,7 +291,7 @@ def verify_cmip7_pre_industrial_branch_concentrations(
         concentrations,
         input_name="CMIP7PreIndustrialBranchConcentrations",
         required_variables=CMIP_CONCENTRATION_DRIVEN_VARIABLES,
-        first_year=1850,
+        first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
@@ -321,7 +325,7 @@ def verify_cmip6_pre_industrial_branch_concentrations(
         input_name="CMIP6PreIndustrialBranchConcentrations",
         # CMIP6 and CMIP7 have the same input set
         required_variables=CMIP_CONCENTRATION_DRIVEN_VARIABLES,
-        first_year=1850,
+        first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
@@ -354,7 +358,7 @@ def verify_cmip7_pre_industrial_branch_co2_emissions(
         co2_emissions,
         input_name="CMIP7PreIndustrialBranchCO2Emissions",
         required_variables=CO2_EMISSION_VARIABLES,
-        first_year=1850,
+        first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
@@ -387,7 +391,7 @@ def verify_cmip6_pre_industrial_branch_co2_emissions(
         co2_emissions,
         input_name="CMIP6PreIndustrialBranchCO2Emissions",
         required_variables=CO2_EMISSION_VARIABLES,
-        first_year=1850,
+        first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
@@ -420,7 +424,7 @@ def verify_cmip7_pre_industrial_branch_esm_inputs(
         esm_inputs,
         input_name="CMIP7PreIndustrialBranchESMInput",
         required_variables=CMIP_ESM_VARIABLES,
-        first_year=1850,
+        first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
@@ -453,7 +457,7 @@ def verify_cmip7_pre_industrial_branch_esm_all_ghg_inputs(
         esm_all_ghg_inputs,
         input_name="CMIP7PreIndustrialBranchESMAllGHGInput",
         required_variables=CMIP_ESM_ALL_GHG_VARIABLES,
-        first_year=1850,
+        first_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
@@ -486,7 +490,7 @@ def verify_cmip6_pre_industrial_branch_esm_inputs(
         esm_inputs,
         input_name="CMIP6PreIndustrialBranchESMInput",
         required_variables=CMIP_ESM_VARIABLES,
-        first_year=1850,
+        first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )
 
@@ -519,6 +523,6 @@ def verify_cmip6_pre_industrial_branch_esm_all_ghg_inputs(
         esm_all_ghg_inputs,
         input_name="CMIP6PreIndustrialBranchESMAllGHGInput",
         required_variables=CMIP_ESM_ALL_GHG_VARIABLES,
-        first_year=1850,
+        first_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
         last_year_at_most=None,
     )

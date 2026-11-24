@@ -33,6 +33,15 @@ if we needed it (that is how MAGICC v7.5.3 was set up to run,
 so it would be much easier than the CMIP-style runs).
 ///
 
+/// warning | MAGICC is run in temporary directories
+MAGICC reads its inputs from, and writes its outputs to, files,
+so each piece of work is run in its own fresh temporary directory
+(deleted once the run is done), not in the MAGICC installation.
+These are made with [tempfile][] in its default location.
+To put them somewhere else (e.g. if the default location is small or slow),
+set the `TMPDIR` environment variable before starting Python.
+///
+
 /// warning | Emissions-driven CMIP-style runs differ from AR6's setup
 In the CO2-emission-driven, esm-style and esm-allGHG-style adapters,
 the CO2 fertilisation, carbon cycle temperature feedback
@@ -68,7 +77,6 @@ from .ar_scenarios import (
 from .base import (
     MAGICCAR6AdapterConfiguration,
     MAGICCAR6NotFoundError,
-    undo_magicc_emissions_averaging,
 )
 from .cmip_pre_industrial_branch import (
     MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP6PreIndustrial,
@@ -110,5 +118,4 @@ __all__ = [
     "MAGICCAR6NotFoundError",
     "MAGICCDownloadError",
     "get_magicc_ar6_adapter_pieces",
-    "undo_magicc_emissions_averaging",
 ]

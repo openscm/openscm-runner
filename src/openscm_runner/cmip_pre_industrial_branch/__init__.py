@@ -4,6 +4,8 @@ CMIP pre-industrial branch inputs, protocols and runners
 # TODO: there is no experiment that starts in 1750 yet. Add one (roadmap W12).
 
 from .inputs import (
+    CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
+    CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
     CMIP6PreIndustrialBranchCO2Concentrations,
     CMIP6PreIndustrialBranchCO2Emissions,
     CMIP6PreIndustrialBranchConcentrations,
@@ -49,6 +51,8 @@ from .running import (
 )
 
 __all__ = [
+    "CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR",
+    "CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR",
     "AdapterCO2ConcentrationDrivenFromCMIP6PreIndustrial",
     "AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial",
     "AdapterCO2EmissionDrivenFromCMIP6PreIndustrial",

@@ -577,7 +577,8 @@ Output variables we know how to get from MAGICC, and MAGICC's name for each
 The units come from MAGICC's output
 (see [MAGICC_OUTPUT_UNITS][(m).]).
 
-TODO: agree output variable names across adapters.
+Which outputs (and names) every adapter must support
+is still to be agreed (decision [A7][a7]).
 """
 
 MAGICC_OUTPUT_UNITS: dict[str, str] = {}

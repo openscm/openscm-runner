@@ -5,18 +5,6 @@ This is the layer the adapters are built on.
 It knows nothing about experiments:
 it takes the files to write, the configuration and the ensemble,
 runs MAGICC and reads the output.
-
-The approach follows `magicc_core.testing.runner` in the MAGICC repository
-(no pymagicc): each worker gets a fresh temporary directory,
-the files are written, then each ensemble member's configuration is written
-and MAGICC is run, one member after the other.
-
-One difference: the MAGICC repository writes every file MAGICC reads
-(its input "bundles"), so nothing comes from MAGICC's own `run` directory.
-We don't have bundles for the released v7.5.3 binary,
-so (like the AR6 workflow) we start from the installation's `run` directory
-(symlinked into each worker's directory) and overwrite what we need.
-TODO: move to bundles once they exist for the binary we use.
 """
 
 from __future__ import annotations

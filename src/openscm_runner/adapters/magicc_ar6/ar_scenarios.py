@@ -34,6 +34,7 @@ from .base import (
 )
 from .io import (
     FILE_HEADER,
+    format_conc_in,
     format_held_tabular_file,
     format_scen7,
     read_namelist,
@@ -41,6 +42,8 @@ from .io import (
 )
 from .naming import (
     EMISSIONS_VARIABLES,
+    FGAS_NAMES,
+    MHALO_NAMES,
     OUTPUT_VARIABLES,
     get_output_variables,
     to_magicc_emissions,
@@ -152,10 +155,6 @@ class MAGICCAR6AdapterAR6Scenario:
     (`extend_rf_box_from_switchyear_with_emissions` in MAGICC v7.5.3),
     so for these a step change in emissions in year `y`
     is half applied in year `y - 1`.
-    [undo_magicc_emissions_averaging][openscm_runner.adapters.magicc_ar6.base.]
-    gives emissions which these calculations see exactly as you want them,
-    but be careful: the same emissions also go, unaveraged,
-    into the gas cycles, tropospheric ozone and nitrate.
 
     These adapters don't do anything about this:
     we pass the emissions on as given,
@@ -411,14 +410,6 @@ def make_pi_control_non_co2_history(
     files: dict[str, str] = {}
 
     def held(filename: str, *, value: float | None = None, to_end: bool) -> str:
-        if not filename:
-            # No file (e.g. MAGICC has no concentrations for Halon1202),
-            # so MAGICC uses zero, which is also its 1750 value
-            # TODO: clean this up.
-            # I think we can just explicitly pass zero for Halon1202 concentrations
-            # and avoid relying on MAGICC's internals.
-            return filename
-
         data, specifications = read_tabular_file(installation.run_dir / filename)
         values = (
             data[AR6_START_YEAR]
@@ -440,6 +431,20 @@ def make_pi_control_non_co2_history(
 
         return name
 
+    def held_conc(gas: str, filename: str) -> str:
+        if filename:
+            return held(filename, to_end=True)
+
+        # MAGICC has no concentration file for some gases (e.g. Halon1202).
+        # It would use zero for these, which is also their 1750 value,
+        # but we write the zeros explicitly rather than rely on MAGICC's internals.
+        name = f"OPENSCM_RUNNER_PI_{gas}_CONC.IN"
+        files[name] = format_conc_in(
+            gas, pd.Series(0.0, index=range(AR6_START_YEAR, end_year + 1))
+        )
+
+        return name
+
     settings: dict[str, Any] = {
         # Concentration-driven for the whole run
         **{
@@ -448,9 +453,15 @@ def make_pi_control_non_co2_history(
         },
         "file_ch4_conc": held(defaults["file_ch4_conc"], to_end=True),
         "file_n2o_conc": held(defaults["file_n2o_conc"], to_end=True),
-        "fgas_files_conc": [held(f, to_end=True) for f in defaults["fgas_files_conc"]],
+        # MAGICC matches these to gases by position,
+        # in the order of its own `FGAS_NAMES` and `MHALO_NAMES`
+        "fgas_files_conc": [
+            held_conc(gas, f)
+            for gas, f in zip(FGAS_NAMES, defaults["fgas_files_conc"], strict=True)
+        ],
         "mhalo_files_conc": [
-            held(f, to_end=True) for f in defaults["mhalo_files_conc"]
+            held_conc(gas, f)
+            for gas, f in zip(MHALO_NAMES, defaults["mhalo_files_conc"], strict=True)
         ],
         # No fossil CH4, so no CO2 from its oxidation
         "file_ch4i_emis": held(defaults["file_ch4i_emis"], value=0.0, to_end=False),

@@ -108,23 +108,28 @@ def get_pi_control_emissions(
     Get the emissions we use as piControl emissions (unit, value)
 
     The CMIP era's historical emissions in 1850
-    (see `PreIndustrialValues.historical_emissions_1850` and decision B19),
+    (see `PreIndustrialValues.pi_control_emissions` and decision B19),
     in MAGICC's units.
     """
     spec = EMISSIONS_VARIABLES[variable]
-    if spec.gas not in pre_industrial.historical_emissions_1850:
+    if spec.gas not in pre_industrial.pi_control_emissions:
         return spec.unit, 0.0
 
-    value, unit = pre_industrial.historical_emissions_1850[spec.gas]
+    value, unit = pre_industrial.pi_control_emissions[spec.gas]
 
     return unit, value
 
 
-def get_historical_emissions_1850(
+def get_pi_control_emissions_in_unit(
     pre_industrial: PreIndustrialValues, gas: str, unit: str
 ) -> float:
-    """Get the CMIP era's historical emissions of `gas` in 1850 in `unit`"""
-    value, value_unit = pre_industrial.historical_emissions_1850[gas]
+    """
+    Get `PreIndustrialValues.pi_control_emissions` of `gas` in `unit`
+
+    These are the CMIP era's historical emissions in 1850.
+    For CO2, they aren't what the adapters use as piControl (zero, see decision B19).
+    """
+    value, value_unit = pre_industrial.pi_control_emissions[gas]
 
     return float(unit_registry.Quantity(value, value_unit).to(unit).magnitude)
 
@@ -1369,7 +1374,7 @@ def test_co2_emission_driven_pre_industrial_emissions(
     (see `test_co2_emission_driven_pi_control` and decision B19),
     but historical CO2 emissions in 1850 aren't
     (we use the CMIP era's historical fossil CO2 emissions in 1850,
-    ~0.05 GtC/yr, see `PreIndustrialValues.historical_emissions_1850`).
+    ~0.05 GtC/yr, see `PreIndustrialValues.pi_control_emissions`).
     So the model is out of equilibrium: CO2 increases and causes warming,
     while every other species stays at piControl
     and its forcing is zero (forcing from CO2 isn't).
@@ -1379,7 +1384,7 @@ def test_co2_emission_driven_pre_industrial_emissions(
         adapter_cls,
         "co2_emissions",
         make_co2_emissions(
-            get_historical_emissions_1850(pre_industrial, "CO2I", "Gt C/yr"), 150
+            get_pi_control_emissions_in_unit(pre_industrial, "CO2I", "Gt C/yr"), 150
         ),
     )
 
@@ -1509,8 +1514,10 @@ def test_esm_pre_industrial_emissions(
             pre_industrial,
             all_ghg=False,
             n_years=150,
-            co2_fossil=get_historical_emissions_1850(pre_industrial, "CO2I", "Gt C/yr"),
-            co2_biosphere=get_historical_emissions_1850(
+            co2_fossil=get_pi_control_emissions_in_unit(
+                pre_industrial, "CO2I", "Gt C/yr"
+            ),
+            co2_biosphere=get_pi_control_emissions_in_unit(
                 pre_industrial, "CO2B", "Gt C/yr"
             ),
         ),
@@ -1592,7 +1599,7 @@ def test_esm_single_year_aerosol_emissions_change(
     because of MAGICC's emissions averaging:
     its aerosol forcing at the start of year `t` is calculated
     from the average of the emissions in years `t` and `t + 1`
-    (see `MAGICCAR6AdapterAR6Scenario` and `undo_magicc_emissions_averaging`).
+    (see `MAGICCAR6AdapterAR6Scenario`).
     Total forcing changes in later years too, through temperature feedbacks.
     Heat uptake changes in the year before those too:
     sub-annual forcing is linearly interpolated,
@@ -1688,8 +1695,10 @@ def test_esm_all_ghg_pre_industrial_emissions(
             pre_industrial,
             all_ghg=True,
             n_years=150,
-            co2_fossil=get_historical_emissions_1850(pre_industrial, "CO2I", "Gt C/yr"),
-            co2_biosphere=get_historical_emissions_1850(
+            co2_fossil=get_pi_control_emissions_in_unit(
+                pre_industrial, "CO2I", "Gt C/yr"
+            ),
+            co2_biosphere=get_pi_control_emissions_in_unit(
                 pre_industrial, "CO2B", "Gt C/yr"
             ),
         ),

@@ -209,8 +209,9 @@ def test_get_pi_control_emissions_only_co2() -> None:
     """piControl CO2 emissions are zero, so with only CO2, everything is zero"""
     pre_industrial = PreIndustrialValues(
         name="only-co2",
+        branch_year=CMIP7_PRE_INDUSTRIAL.branch_year,
         pi_control_concentrations=CMIP7_PRE_INDUSTRIAL.pi_control_concentrations,
-        historical_emissions_1850=MappingProxyType(
+        pi_control_emissions=MappingProxyType(
             {"CO2I": (1.0, "Gt C/yr"), "CO2B": (1.0, "Gt C/yr")}
         ),
     )

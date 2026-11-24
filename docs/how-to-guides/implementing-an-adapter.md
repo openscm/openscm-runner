@@ -109,8 +109,8 @@ The rules:
   rather than in the user's home folder
   (and ideally also give the user a way to specify where to make the temporary directories,
   in case the default location is not a good choice for them).
-  It's also polite to tell users that this will be required in your adapter docstrings.
-  TODO: add this warning for MAGICC AR6
+  It's also polite to tell users that this will be required in your adapter docstrings
+  (e.g. see the warning in [openscm_runner.adapters.magicc_ar6][]).
 
 ## 3. Outputs
 

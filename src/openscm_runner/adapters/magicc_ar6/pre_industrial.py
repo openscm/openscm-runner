@@ -5,7 +5,8 @@ The adapters run MAGICC with its pre-industrial state set to the piControl state
 (see [openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch][]).
 For concentrations, MAGICC (v7.5.3) reads its pre-industrial reference values
 from the concentration input files in its pre-industrial reference year
-(`RF_PREIND_REFERENCEYR`), which the adapters set to the year before 1850.
+(`RF_PREIND_REFERENCEYR`), which the adapters set to a year
+before the experiment branches off piControl (`PreIndustrialValues.branch_year`).
 So the piControl concentrations here are both
 the state the experiments branch from and MAGICC's reference concentrations
 (v7.5.3 only lets you state a reference concentration directly for CO2,
@@ -53,6 +54,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from openscm_runner.cmip_pre_industrial_branch.inputs import (
+    CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
+    CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
+)
+
 from .naming import FGAS_NAMES, MHALO_NAMES
 
 ALL_CONCENTRATION_GASES: tuple[str, ...] = (
@@ -80,6 +86,11 @@ class PreIndustrialValues:
     name: str
     """Name of the CMIP era"""
 
+    branch_year: int
+    """
+    First year of the experiments which branch off this era's piControl state
+    """
+
     pi_control_concentrations: MappingProxyType[str, float] = field(repr=False)
     """
     piControl (1850) concentrations
@@ -87,25 +98,26 @@ class PreIndustrialValues:
     These are also MAGICC's pre-industrial reference concentrations.
     """
 
-    historical_emissions_1850: MappingProxyType[str, tuple[float, str]] = field(
-        repr=False
-    )
+    pi_control_emissions: MappingProxyType[str, tuple[float, str]] = field(repr=False)
     """
-    Emissions in 1850 in this CMIP era's historical experiment
+    piControl emissions
 
+    These are the emissions in 1850 in this CMIP era's historical experiment.
     `(value, unit)`, the units are MAGICC's
     and can be parsed by openscm-units (e.g. to convert to other units).
     Species which aren't listed are zero.
-    The adapters use these as their piControl emissions,
-    except for CO2, which is zero
+
+    What these should be is still under discussion
     (see `get_pi_control_emissions` in
     [openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch][]
     and decision [B19][b19]).
+    This affects handling, particularly of CO2.
     """
 
 
 CMIP6_PRE_INDUSTRIAL = PreIndustrialValues(
     name="CMIP6",
+    branch_year=CMIP6_PRE_INDUSTRIAL_BRANCH_YEAR,
     pi_control_concentrations=_complete(
         {
             "CO2": 284.3169987996419,
@@ -124,7 +136,7 @@ CMIP6_PRE_INDUSTRIAL = PreIndustrialValues(
             "HALON1211": 0.0044465725465367,
         }
     ),
-    historical_emissions_1850=MappingProxyType(
+    pi_control_emissions=MappingProxyType(
         {
             "CO2I": (0.051353778897682424, "Gt C/yr"),
             "CO2B": (0.5022039312521428, "Gt C/yr"),
@@ -162,6 +174,7 @@ The tiny non-zero 1850 values for some HFCs/PFCs/SO2F2 are in the data
 
 CMIP7_PRE_INDUSTRIAL = PreIndustrialValues(
     name="CMIP7",
+    branch_year=CMIP7_PRE_INDUSTRIAL_BRANCH_YEAR,
     pi_control_concentrations=_complete(
         {
             "CO2": 284.29727,
@@ -174,7 +187,7 @@ CMIP7_PRE_INDUSTRIAL = PreIndustrialValues(
             "CH3BR": 5.3,
         }
     ),
-    historical_emissions_1850=MappingProxyType(
+    pi_control_emissions=MappingProxyType(
         {
             "CO2I": (0.05211779560611025, "Gt C/yr"),
             "CO2B": (0.720144575, "Gt C/yr"),
