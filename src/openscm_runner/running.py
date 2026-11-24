@@ -16,22 +16,16 @@ from .output import (
 from .output_specs import OutputCapabilities, OutputSpecs, validate_output_request
 
 AdapterT = TypeVar("AdapterT", bound=OutputCapabilities)
+InputT = TypeVar("InputT")
 
 
 def run_adapters(
     adapters: tuple[AdapterT, ...],
     *,
-    # TODO: why not make this ?
-    # inputs: tuple[InputT, ...],
-    # call: Callable[[AdapterT, InputT], tuple[OpenSCMRunnerOutput, ...]],
-    # I assume so that you can run multiple adapters for different experiments
-    # (the above would only allow this to run a single kind of experiment
-    # at a time).
-    # However, the fact that we have n_inputs means we are effectively locked
-    # to a single kind of input here too.
-    # There is something I'm missing about why this is a useful interface...
-    call: Callable[[AdapterT], tuple[OpenSCMRunnerOutput, ...]],
-    n_inputs: int,
+    inputs: tuple[InputT, ...],
+    call: Callable[
+        [AdapterT, tuple[InputT, ...], OutputSpecs], tuple[OpenSCMRunnerOutput, ...]
+    ],
     output_specs: OutputSpecs,
     run_checks: bool = True,
 ) -> RunResults[AdapterT]:
@@ -52,14 +46,23 @@ def run_adapters(
     adapters
         Adapters to run
 
-    call
-        Function that calls one adapter with the inputs.
-        Each `run_*` function passes in a function that calls the adapter
-        with keyword arguments, so mypy can check the argument names.
+    inputs
+        Inputs to run (each element is exactly one experiment).
+        Each adapter must return exactly one output per input.
 
-    n_inputs
-        Number of inputs.
-        Each adapter must return exactly this many outputs.
+    call
+        Function that calls one adapter with `inputs` and `output_specs`,
+        i.e. `call(adapter, inputs, output_specs)`.
+
+        This exists because each experiment's adapter protocol
+        gives its inputs argument a different name
+        (e.g. `erf`, `ar7_scenarios`), which this function doesn't know.
+        So each `run_*` function passes in a function
+        that calls the adapter with the right keyword arguments,
+        which means mypy can check the argument names.
+        It should only pass the arguments on: the inputs and output request
+        are given to this function (rather than captured by `call`)
+        so that the checks here are done on exactly what the adapter receives.
 
     output_specs
         Request forwarded to every adapter.
@@ -85,9 +88,9 @@ def run_adapters(
             if run_checks:
                 validate_output_request(adapter, output_specs)
 
-            outputs = call(adapter)
+            outputs = call(adapter, inputs, output_specs)
 
-            verify_adapter_outputs(adapter, outputs, n_inputs=n_inputs)
+            verify_adapter_outputs(adapter, outputs, n_inputs=len(inputs))
 
         except Exception as exc:
             results.append(AdapterRunResult.from_error(adapter, exc))

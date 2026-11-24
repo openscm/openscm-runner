@@ -147,10 +147,10 @@ def run_co2_concentration_driven_from_cmip7_pre_industrial(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            co2_concentrations=co2_concentrations, output_specs=output_specs
+        inputs=co2_concentrations,
+        call=lambda adapter, inputs, output_specs: adapter(
+            co2_concentrations=inputs, output_specs=output_specs
         ),
-        n_inputs=len(co2_concentrations),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -233,10 +233,10 @@ def run_co2_concentration_driven_from_cmip6_pre_industrial(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            co2_concentrations=co2_concentrations, output_specs=output_specs
+        inputs=co2_concentrations,
+        call=lambda adapter, inputs, output_specs: adapter(
+            co2_concentrations=inputs, output_specs=output_specs
         ),
-        n_inputs=len(co2_concentrations),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -330,10 +330,10 @@ def run_concentration_driven_from_cmip7_pre_industrial(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            concentrations=concentrations, output_specs=output_specs
+        inputs=concentrations,
+        call=lambda adapter, inputs, output_specs: adapter(
+            concentrations=inputs, output_specs=output_specs
         ),
-        n_inputs=len(concentrations),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -416,10 +416,10 @@ def run_concentration_driven_from_cmip6_pre_industrial(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            concentrations=concentrations, output_specs=output_specs
+        inputs=concentrations,
+        call=lambda adapter, inputs, output_specs: adapter(
+            concentrations=inputs, output_specs=output_specs
         ),
-        n_inputs=len(concentrations),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -510,10 +510,10 @@ def run_co2_emission_driven_from_cmip7_pre_industrial(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            co2_emissions=co2_emissions, output_specs=output_specs
+        inputs=co2_emissions,
+        call=lambda adapter, inputs, output_specs: adapter(
+            co2_emissions=inputs, output_specs=output_specs
         ),
-        n_inputs=len(co2_emissions),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -596,10 +596,10 @@ def run_co2_emission_driven_from_cmip6_pre_industrial(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            co2_emissions=co2_emissions, output_specs=output_specs
+        inputs=co2_emissions,
+        call=lambda adapter, inputs, output_specs: adapter(
+            co2_emissions=inputs, output_specs=output_specs
         ),
-        n_inputs=len(co2_emissions),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -694,8 +694,10 @@ def run_esm_from_cmip7_pre_industrial(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(esm_inputs=esm_inputs, output_specs=output_specs),
-        n_inputs=len(esm_inputs),
+        inputs=esm_inputs,
+        call=lambda adapter, inputs, output_specs: adapter(
+            esm_inputs=inputs, output_specs=output_specs
+        ),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -787,10 +789,10 @@ def run_esm_all_ghg_from_cmip7_pre_industrial(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            esm_all_ghg_inputs=esm_all_ghg_inputs, output_specs=output_specs
+        inputs=esm_all_ghg_inputs,
+        call=lambda adapter, inputs, output_specs: adapter(
+            esm_all_ghg_inputs=inputs, output_specs=output_specs
         ),
-        n_inputs=len(esm_all_ghg_inputs),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -873,8 +875,10 @@ def run_esm_from_cmip6_pre_industrial(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(esm_inputs=esm_inputs, output_specs=output_specs),
-        n_inputs=len(esm_inputs),
+        inputs=esm_inputs,
+        call=lambda adapter, inputs, output_specs: adapter(
+            esm_inputs=inputs, output_specs=output_specs
+        ),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -957,10 +961,10 @@ def run_esm_all_ghg_from_cmip6_pre_industrial(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            esm_all_ghg_inputs=esm_all_ghg_inputs, output_specs=output_specs
+        inputs=esm_all_ghg_inputs,
+        call=lambda adapter, inputs, output_specs: adapter(
+            esm_all_ghg_inputs=inputs, output_specs=output_specs
         ),
-        n_inputs=len(esm_all_ghg_inputs),
         output_specs=output_specs,
         run_checks=run_checks,
     )

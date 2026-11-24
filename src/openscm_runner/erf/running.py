@@ -100,8 +100,10 @@ def run_erf_driven_from_equilibrium(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(erf=erf, output_specs=output_specs),
-        n_inputs=len(erf),
+        inputs=erf,
+        call=lambda adapter, inputs, output_specs: adapter(
+            erf=inputs, output_specs=output_specs
+        ),
         output_specs=output_specs,
         run_checks=run_checks,
     )

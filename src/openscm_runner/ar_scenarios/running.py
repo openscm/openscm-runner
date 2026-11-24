@@ -248,10 +248,10 @@ def run_ar7_scenarios(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            ar7_scenarios=ar7_scenarios, output_specs=output_specs
+        inputs=ar7_scenarios,
+        call=lambda adapter, inputs, output_specs: adapter(
+            ar7_scenarios=inputs, output_specs=output_specs
         ),
-        n_inputs=len(ar7_scenarios),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -300,10 +300,10 @@ def run_ar6_scenarios(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            ar6_scenarios=ar6_scenarios, output_specs=output_specs
+        inputs=ar6_scenarios,
+        call=lambda adapter, inputs, output_specs: adapter(
+            ar6_scenarios=inputs, output_specs=output_specs
         ),
-        n_inputs=len(ar6_scenarios),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -352,10 +352,10 @@ def run_ar6_scenarios_anthropogenic_only(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            ar6_scenarios=ar6_scenarios, output_specs=output_specs
+        inputs=ar6_scenarios,
+        call=lambda adapter, inputs, output_specs: adapter(
+            ar6_scenarios=inputs, output_specs=output_specs
         ),
-        n_inputs=len(ar6_scenarios),
         output_specs=output_specs,
         run_checks=run_checks,
     )
@@ -404,10 +404,10 @@ def run_ar6_scenarios_co2_forcing_only(
 
     return run_adapters(
         adapters,
-        call=lambda adapter: adapter(
-            ar6_co2_emissions=ar6_co2_emissions, output_specs=output_specs
+        inputs=ar6_co2_emissions,
+        call=lambda adapter, inputs, output_specs: adapter(
+            ar6_co2_emissions=inputs, output_specs=output_specs
         ),
-        n_inputs=len(ar6_co2_emissions),
         output_specs=output_specs,
         run_checks=run_checks,
     )
