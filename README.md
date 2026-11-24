@@ -38,7 +38,11 @@ Some suggested options:
   and we won't reply to any issues
 -->
 
-- prototype: the project is just starting up and the code is all prototype
+- development: the project is actively being worked on
+
+For what we're working on and what's still to be decided, see the
+[roadmap](https://openscm-runner.readthedocs.io/en/latest/development/roadmap/)
+and the [decisions](https://openscm-runner.readthedocs.io/en/latest/further-background/decisions/).
 
 <!--- --8<-- [end:description] -->
 
@@ -93,8 +97,9 @@ Additional dependencies can be installed using
 
 === "pip"
     ```sh
-    # To add plotting dependencies
-    pip install 'openscm-runner[plots]'
+    # To add the dependencies of the MAGICC AR6 adapters
+    # (MAGICC itself is not installed, see the MAGICC AR6 adapters' docs)
+    pip install 'openscm-runner[magicc-ar6]'
 
     # To add all optional dependencies
     pip install 'openscm-runner[full]'

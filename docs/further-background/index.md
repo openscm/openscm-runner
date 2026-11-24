@@ -1,15 +1,12 @@
 # Further background
 
 This part of the project documentation
-will focus on an **understanding-oriented** approach.
-Here, we will describe the background of the project,
-as well as reasoning about how it was implemented.
+focuses on an **understanding-oriented** approach:
+why the package is the way it is.
 
-Points we will aim to cover:
-
-- Context and background on the library
-- Why it was created
-- Help the reader make connections
-
-We will aim to avoid writing instructions or technical descriptions here,
-they belong elsewhere.
+- [Architecture](architecture.md):
+  the design, its principles and the reasoning behind them
+- [Decisions](decisions.md):
+  what we have decided, what we are deciding and what is in the backlog
+- [Dependency pinning and testing](dependency-pinning-and-testing.md):
+  how we pin dependencies and test against different versions of them

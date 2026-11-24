@@ -11,7 +11,7 @@ inputs:
   run-uv-install:
     description: "Should we run the uv install steps"
     required: false
-    default: true
+    default: "true"
 
 runs:
   using: "composite"
@@ -26,4 +26,7 @@ runs:
       shell: bash
       if: ${{ (inputs.run-uv-install == 'true') }}
       run: |
-        uv sync ${{ inputs.uv-dependency-install-flags }}
+        # `--locked`: fail if `uv.lock` is out of date.
+        # pre-commit.ci skips the `uv-lock` hook (no network access there),
+        # so this is where CI checks the lock file.
+        uv sync --locked ${{ inputs.uv-dependency-install-flags }}

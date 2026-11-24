@@ -1,6 +1,6 @@
 [project]
 name = "openscm-runner"
-version = "2.0.0a1"
+version = "0.14.0a1"
 description = "Standardised interfaces for running simple climate models (SCMs)"
 authors = [
     { name = "Zebede Nicholls", email = "zebedee.nicholls@climate-energy-college.org" },
@@ -9,6 +9,7 @@ authors = [
 license = { text = "3-Clause BSD License" }
 requires-python = ">=3.10"
 dependencies = [
+    "exceptiongroup>=1.0.0 ; python_full_version < '3.11'",
     # If you use numpy, we suggest pinning to >2.1.0
     # based on the minimum supported python version
     "pandas>=2.2.0",  # pin based on minimum supported python version
@@ -41,17 +42,26 @@ Issues = "https://github.com/openscm/openscm-runner/issues"
 
 
 [project.optional-dependencies]
-plots = [
-    "matplotlib>=3.7.1",  # pin based on minimum supported python version
+# What the MAGICC AR6 adapters import (lazily, see `openscm_runner.optional_dependencies`)
+magicc-ar6 = [
+    "f90nml>=1.4",
+    "openscm-units>=0.6.0",
+    "pandas-openscm>=0.9.0",
+    "pooch>=1.8.0",
+    # Same minimum as pooch
+    "requests>=2.19.0",
 ]
 full = [
-    "openscm-runner[plots]",
+    "openscm-runner[magicc-ar6]",
 ]
 
 [dependency-groups]
 dev = [
+    # Loosen these off and let uv.lock handle versions when we need to start upgrading
+    # (pins here are all from copier, not because the pins are needed)
     "liccheck==0.9.2",
-    "mypy==1.14.0",
+    "mypy==2.4.1",
+    "pandas-stubs==2.3.3.260113",
     # Required for liccheck, see https://github.com/dhatim/python-license-check/pull/113
     "pip==24.3.1",
     "pre-commit==4.0.1",
@@ -77,13 +87,19 @@ docs = [
     "jupyterlab==4.4.5",
     "jupytext==1.17.2",
     "mkdocs-jupyter==0.25.1",
+    "matplotlib==3.10.9",
 ]
 # For minimum test dependencies.
 # These are used when running our minimum PyPI install tests.
 tests-min = [
     "pytest==8.3.4",
+    "python-dotenv==1.2.4",
 ]
 tests-full = [
+    # Older versions miss some branches on Python 3.14
+    # (e.g. a `for` loop which finishes without `break`),
+    # which fails the adapter groups' 100% coverage checks
+    "coverage==7.16.2",
     "pytest-cov==6.0.0",
 ]
 # Test dependencies
@@ -148,7 +164,20 @@ formats = "ipynb,py:percent"
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
+    "--strict-markers",
+    # Each adapter group's tests and slow tests are deselected by default.
+    # Keep this consistent with the `-m` in `.github/workflows/ci.yaml`
+    # (`tests` and `tests-resolution-strategies` jobs)
+    # and `.github/workflows/test-upstream-latest.yaml`.
+    # Only one `-m` is used (the last one), so combine everything into one expression.
+    "-m",
+    "not magicc_ar6 and not slow",
 ]
+markers = [
+  "slow: slow tests (e.g. full ensembles), not run by default",
+  "magicc_ar6: the MAGICC AR6 adapters' tests (they need MAGICC's AR6 setup, see docs/development/testing.md)",
+]
+
 
 [tool.ruff]
 src = [

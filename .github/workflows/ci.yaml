@@ -57,7 +57,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           uv-dependency-install-flags: "--group docs --all-extras"
+      # The tutorials run MAGICC (see the `tests-magicc-ar6` job for details).
+      # As there, this fails for pull requests from forks (which don't get secrets).
+      - name: Cache the MAGICC and AR6 probabilistic distribution downloads
+        uses: actions/cache@v4
+        with:
+          # pooch's cache directory (see `openscm_runner.adapters.magicc_ar6.download`)
+          path: ~/.cache/openscm-runner/magicc-ar6
+          # The downloads' hashes are pinned in download.py
+          key: magicc-ar6-${{ runner.os }}-${{ hashFiles('src/openscm_runner/adapters/magicc_ar6/download.py') }}
       - name: docs
+        env:
+          MAGICC_AR6_DOWNLOAD_TOKEN: ${{ secrets.MAGICC_AR6_DOWNLOAD_TOKEN }}
+          # Build as Read the Docs does for non-release builds,
+          # e.g. the tutorials run fewer ensemble members
+          READTHEDOCS: "True"
         run: |
           uv run --group docs properdocs build --strict
       - uses: ./.github/actions/setup
@@ -65,6 +79,9 @@ jobs:
           python-version: "3.11"
           uv-dependency-install-flags: "--group docs --group dev --all-extras"
       - name: docs-with-changelog
+        env:
+          MAGICC_AR6_DOWNLOAD_TOKEN: ${{ secrets.MAGICC_AR6_DOWNLOAD_TOKEN }}
+          READTHEDOCS: "True"
         run: |
           # Check CHANGELOG will build too
           uv run --group dev towncrier build --yes
@@ -118,12 +135,86 @@ jobs:
           # Don't need interactive plots
           MPLBACKEND: Agg
         run: |
-          uv run --group tests pytest -r a -v src tests --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report=term-missing --cov-report=xml
-          uv run --group dev coverage report
+          # Everything except each adapter group's tests (they run in their own jobs below)
+          # and slow tests (each adapter group's job runs its slow tests).
+          # Keep `-m` consistent with `addopts` in `pyproject.toml`:
+          # add each new adapter group's marker to both.
+          # Coverage excludes the adapters (each adapter job checks its own coverage).
+          # `--cov-fail-under=0` stops pytest-cov applying the threshold
+          # to the whole package, `coverage report` does the check.
+          uv run --group tests pytest -r a -v src tests --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report= --cov-fail-under=0 -m "not magicc_ar6 and not slow"
+          uv run --group tests coverage report --omit='*/adapters/*'
+          uv run --group tests coverage xml --omit='*/adapters/*'
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v6
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # One job per adapter group, see docs/development/testing.md.
+  # Each group's marker must also be excluded from the `tests` job above
+  # (and `addopts` in `pyproject.toml`).
+  #
+  # For now, adapter jobs run on every pull request (no path filters)
+  # and include the slow tests (e.g. full ensembles).
+  # We may want to change this if CI becomes too slow.
+
+  # The MAGICC AR6 adapters' tests (unit, integration and acceptance).
+  # MAGICC is downloaded with a magicc.org token (a repository secret),
+  # so this fails for pull requests from forks (which don't get secrets).
+  # This is deliberate: a required check which can't run fails, it isn't skipped.
+  tests-magicc-ar6:
+    name: Test MAGICC AR6 (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Oldest and newest supported Python on Linux,
+          # plus macOS (MAGICC has a separate macOS binary).
+          # `macos-26` is pinned rather than following the moving `macos-latest` label.
+          - os: "ubuntu-latest"
+            python-version: "3.10"
+          - os: "ubuntu-latest"
+            python-version: "3.14"
+          - os: "macos-26"
+            python-version: "3.14"
+    runs-on: "${{ matrix.os }}"
+    defaults:
+      run:
+        # This might be needed for Windows
+        # and doesn't seem to affect unix-based systems so we include it.
+        # If you have better proof of whether this is needed or not,
+        # feel free to update.
+        shell: bash
+    # Locally, all the MAGICC AR6 tests (including the full ensemble, 22s)
+    # take about 2 min 15 s. CI runners have fewer cores, so it will be slower,
+    # but this should still be plenty.
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+        with:
+          python-version: ${{ matrix.python-version }}
+          # Only this adapter group's extra
+          uv-dependency-install-flags: "--group tests --extra magicc-ar6"
+      - name: Install gfortran's libraries (the macOS MAGICC binary needs them)
+        if: runner.os == 'macOS'
+        run: brew install gcc
+      - name: Cache the MAGICC and AR6 probabilistic distribution downloads
+        uses: actions/cache@v4
+        with:
+          # pooch's cache directory (see `openscm_runner.adapters.magicc_ar6.download`)
+          path: ${{ runner.os == 'macOS' && '~/Library/Caches/openscm-runner/magicc-ar6' || '~/.cache/openscm-runner/magicc-ar6' }}
+          # The downloads' hashes are pinned in download.py
+          key: magicc-ar6-${{ runner.os }}-${{ hashFiles('src/openscm_runner/adapters/magicc_ar6/download.py') }}
+      - name: Run tests
+        env:
+          MAGICC_AR6_DOWNLOAD_TOKEN: ${{ secrets.MAGICC_AR6_DOWNLOAD_TOKEN }}
+        run: |
+          # `--cov-fail-under=0` stops pytest-cov applying the threshold
+          # to the whole package, `coverage report` checks this group's modules.
+          uv run --group tests --extra magicc-ar6 pytest -m "magicc_ar6" -r a -v src tests --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report= --cov-fail-under=0
+          uv run --group tests coverage report --include='*/adapters/magicc_ar6/*' --show-missing --skip-covered --fail-under=100
 
   tests-resolution-strategies:
     strategy:
@@ -173,7 +264,9 @@ jobs:
           # Don't need interactive plots
           MPLBACKEND: Agg
         run: |
-          uv run --no-sync pytest tests -r a -v
+          # The shared tests only (no adapter groups' tests, no slow tests).
+          # Keep `-m` consistent with `addopts` in `pyproject.toml`.
+          uv run --no-sync pytest tests -r a -v -m "not magicc_ar6 and not slow"
 
   tests-without-extras:
     # Run the tests without installing extras.

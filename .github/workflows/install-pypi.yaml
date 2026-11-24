@@ -17,15 +17,20 @@ on:
 
 jobs:
   test-pypi-install:
-    name: Test PyPI install ${{ matrix.install-target }} (${{ matrix.python-version }}, ${{ matrix.os }})
+    name: Test PyPI install ${{ matrix.install.target }} (${{ matrix.python-version }}, ${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         # Test against all security and bugfix versions: https://devguide.python.org/versions/
         python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
-        # Check both 'library' install and the 'application' (i.e. locked) install
-        install-target: ["openscm-runner", "openscm-runner[locked]"]
+        # Check both 'library' install and the 'application' (i.e. locked) install.
+        # `target-with-adapters` adds the extras the adapters need.
+        install:
+          - target: "openscm-runner"
+            target-with-adapters: "openscm-runner[full]"
+          - target: "openscm-runner[locked]"
+            target-with-adapters: "openscm-runner[full-locked]"
     runs-on: "${{ matrix.os }}"
     steps:
     - name: Set up Python "${{ matrix.python-version }}"
@@ -38,7 +43,7 @@ jobs:
         # Install without a cache dir to get a 'fresh' install
         # and to avoid cache deserialisation warnings.
         pip install --no-cache-dir --upgrade pip wheel
-        pip install --no-cache-dir "${{ matrix.install-target }}" 2>stderr.txt
+        pip install --no-cache-dir "${{ matrix.install.target }}" 2>stderr.txt
     - name: Check no warnings
       if: matrix.os != 'windows-latest'
       run: |
@@ -60,6 +65,9 @@ jobs:
     - name: Check installed version environment variable
       run: |
         echo "${{ env.INSTALLED_VERSION }}"
+    # Note: until v0.14.0 is released, the latest release on PyPI is v0.13.x,
+    # so this checks out v0.13.x's tests
+    # and the adapter steps below install v0.13.x's extras and run its tests.
     - name: Checkout repository
       uses: actions/checkout@v6
       with:
@@ -93,3 +101,29 @@ jobs:
       run: |
         # Can't run doctests here because the paths are different.
         pytest tests -r a -vv tests
+    # Note: MAGICC AR6 has a Windows binary,
+    # but it hasn't been run in CI on Windows before
+    # (it may need extra runtime libraries).
+    # The MAGICC downloads also aren't cached here
+    # (unlike in ci.yaml, we haven't worked out the cache path on Windows),
+    # so every job downloads them.
+    - name: Install the adapters' dependencies
+      run: |
+        pip install --no-cache-dir "${{ matrix.install.target-with-adapters }}"
+    - name: Install gfortran's libraries (the macOS MAGICC binary needs them)
+      if: runner.os == 'macOS'
+      run: brew install gcc
+    - name: Run all tests, including each adapter group's tests
+      # bash so that the empty `-m ""` is passed through on Windows too
+      shell: bash
+      env:
+        # Don't need interactive plots
+        MPLBACKEND: Agg
+        MAGICC_AR6_DOWNLOAD_TOKEN: ${{ secrets.MAGICC_AR6_DOWNLOAD_TOKEN }}
+      run: |
+        # Can't run doctests here because the paths are different.
+        # `-m ""` runs everything, including each adapter group's tests
+        # and the slow tests (overriding `addopts` in `pyproject.toml`).
+        # We may want to change this later
+        # (e.g. it is a big matrix and each job runs the full MAGICC AR6 ensemble).
+        pytest tests -r a -vv -m ""
