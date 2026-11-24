@@ -1,5 +1,11 @@
 """
 Input definitions
+
+CMIP6 and CMIP7 inputs currently have the same shape.
+They are still separate definitions
+so we can change them independently if we wish
+and because they experiments are different
+(the adapter branches off a different pre-industrial state).
 """
 
 from __future__ import annotations

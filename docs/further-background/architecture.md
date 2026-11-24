@@ -25,6 +25,10 @@ Goals:
   which locks runs to a default scientific configuration (decision B14).
 - Keep the package importable without any model installed
   (cheap installation if desired and imports without surprises).
+  Adapters import their model's dependencies lazily
+  (see [openscm_runner.optional_dependencies][]),
+  so importing `openscm_runner` never requires them,
+  they are only needed if the adapter is actually used.
 - Shared helpers (validation, names, units, test helpers) are available
   to adapter implementers, but not imposed.
   There is no execution engine or inheritance hierarchy.

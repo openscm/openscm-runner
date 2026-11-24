@@ -155,3 +155,13 @@ dmypy.json
 
 # Mac stuff
 *.DS_Store
+
+# MAGICC binary, run files and probabilistic distribution
+# (licensed, copied in locally, never check them in)
+data/magicc/
+
+# Output from scratch scripts
+scratch-output/
+
+# Pixi environments
+.pixi/
