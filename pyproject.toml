@@ -154,16 +154,20 @@ include = ["src"]
 formats = "ipynb,py:percent"
 
 [tool.pytest.ini_options]
-# Slow tests only run if asked for (`-m slow`)
 addopts = [
     "--import-mode=importlib",
     "--strict-markers",
-    "-m not slow",
-    "-m not magicc_ar6",
+    # Each adapter group's tests and slow tests are deselected by default.
+    # Keep this consistent with the `-m` in `.github/workflows/ci.yaml`
+    # (`tests` and `tests-resolution-strategies` jobs)
+    # and `.github/workflows/test-upstream-latest.yaml`.
+    # Only one `-m` is used (the last one), so combine everything into one expression.
+    "-m",
+    "not magicc_ar6 and not slow",
 ]
 markers = [
   "slow: slow tests (e.g. full ensembles), not run by default",
-  "magicc_ar6: the MAGICC AR6 adapters' tests (they need MAGICC, see docs/testing.md)",
+  "magicc_ar6: the MAGICC AR6 adapters' tests (they need MAGICC's AR6 setup, see docs/further-background/testing.md)",
 ]
 
 

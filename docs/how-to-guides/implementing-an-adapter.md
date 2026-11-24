@@ -198,7 +198,9 @@ In short:
   [Makefile](https://github.com/openscm/openscm-runner/blob/main/Makefile)
   and the `tests-magicc-ar6` job in
   [CI](https://github.com/openscm/openscm-runner/blob/main/.github/workflows/ci.yaml)),
-  and exclude your marker from the general test run.
+  and exclude your marker from the general test run
+  (`addopts` in `pyproject.toml` and the matching `-m` in CI,
+  see [testing](../further-background/testing.md#adapter-tests-ci-and-coverage)).
   If your model or its resources are licensed,
   discuss with the package maintainers how to run them in CI.
 - Document your adapters in their docstrings:

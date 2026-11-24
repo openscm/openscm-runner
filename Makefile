@@ -37,13 +37,21 @@ ruff-fixes:  ## fix the code using ruff
 	uv run --group dev ruff check src tests scripts docs --fix
 	uv run --group dev ruff format src tests scripts docs
 
+# The coverage checks match CI (`.github/workflows/ci.yaml`):
+# the shared tests are checked excluding the adapters,
+# each adapter group's tests must cover 100% of its modules.
+# `--cov-fail-under=0` stops pytest-cov applying the global threshold
+# to the whole package, the `coverage report` lines do the checking.
+
 .PHONY: test
-test:  ## run the tests ('fast' mode i.e. skip slow tests, skip adapter specific tests)
-	uv run --group tests pytest src tests -r a -v --doctest-modules --doctest-report ndiff --cov=openscm_runner
+test:  ## run the tests (except each adapter group's tests, which need the models)
+	uv run --group tests pytest src tests -r a -v --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report= --cov-fail-under=0
+	uv run --group tests coverage report --omit='*/adapters/*'
 
 .PHONY: test-magicc-ar6
-test-magicc-ar6:  ## run the MAGICC AR6 adapter tests
-	uv run --group tests --extra magicc pytest -m "magicc_ar6" src tests -r a -v --doctest-modules --doctest-report ndiff --cov=openscm_runner
+test-magicc-ar6:  ## run the MAGICC AR6 adapter tests (including the slow ones)
+	uv run --group tests --extra magicc pytest -m "magicc_ar6" src tests -r a -v --doctest-modules --doctest-report ndiff --cov=openscm_runner --cov-report= --cov-fail-under=0
+	uv run --group tests coverage report --include='*/adapters/magicc_ar6/*' --show-missing --skip-covered --fail-under=100
 
 # Note on code coverage and testing:
 # You must specify cov=src.

@@ -77,20 +77,56 @@ This includes the adapter group's cases of the shared integration tests
 The marker makes it easy to select an adapter group's tests
 (e.g. `pytest -m magicc_ar6`) or to opt out of them (`pytest -m "not magicc_ar6"`).
 
-CI runs [TODO double check this]:
+By default (via `addopts` in `pyproject.toml`),
+pytest deselects every adapter group's tests and slow tests,
+so `pytest` and `make test` run the shared tests without needing any models.
 
-- the shared tests (everything which isn't marked as an adapter's tests,
-  `make test-ci`) in an environment without any models
-- one job per adapter group, in an environment with that group's model,
-  which runs the tests marked for the group
-  (e.g. `make test-magicc-ar6`, which gets MAGICC with a magicc.org token
-  stored as a repository secret, so it fails for pull requests from forks).
+CI (`.github/workflows/ci.yaml`) runs on every pull request:
+
+- the shared tests
+  (everything which isn't marked as an adapter group's tests or slow, `make test`),
+  with the same `-m` as `addopts`
+- one job per adapter group, in an environment with only that group's extra,
+  which runs all the tests marked for the group, including the slow ones
+  (e.g. `make test-magicc-ar6`).
+  MAGICC AR6's job gets MAGICC with a magicc.org token
+  stored as a repository secret, so it fails for pull requests from forks.
+  This is deliberate: a required check which can't run fails, it isn't skipped.
+  It runs on Linux with the oldest and newest supported Python, and on macOS.
   A job which selects no tests fails (pytest's exit code).
 
-Coverage: the tests marked for an adapter group must give 100% coverage
-of the group's modules.
-The adapter group's CI job fails if they don't
-(e.g. `make test-magicc-ar6` for MAGICC AR6).
+The lowest-direct dependency job (`tests-resolution-strategies` in `ci.yaml`)
+and the scheduled latest-upstream-dependencies workflow (`test-upstream-latest.yaml`)
+run the shared tests only (the same `-m` as `addopts`, so they don't need any models).
+The scheduled PyPI installation workflow (`install-pypi.yaml`)
+runs everything (`-m ""`), including every adapter group's tests and the slow tests.
+
+For now there are no path filters (every adapter job runs on every pull request)
+and each adapter group's job runs its slow tests.
+We may change this if CI becomes too slow.
+
+Slow tests which aren't an adapter group's tests have no home in CI yet:
+every job which runs the shared tests deselects slow tests
+(only the weekly PyPI installation workflow would run them).
+There aren't any at the moment.
+If we add one, we need to make a CI home for them
+(e.g. a job which runs `-m "slow and not magicc_ar6"`).
+
+Adding an adapter group means adding its marker
+(registered in `pyproject.toml`)
+to `addopts` and the matching `-m` in CI
+(the `tests` and `tests-resolution-strategies` jobs in `ci.yaml`
+and `test-upstream-latest.yaml`; keep them all consistent),
+plus a make target and a CI job like MAGICC AR6's.
+
+Coverage:
+
+- the shared tests must give at least 90% coverage of everything except the adapters
+  (`fail_under` in `pyproject.toml`, the adapters are omitted from the report)
+- the tests marked for an adapter group must give 100% coverage
+  of the group's modules.
+  The adapter group's CI job fails if they don't
+  (e.g. `make test-magicc-ar6` for MAGICC AR6).
 Code which can only run on some platforms is tested by mocking the platform
 (e.g. MAGICC AR6's binary selection), so the coverage is the same everywhere.
 
@@ -112,7 +148,8 @@ which compares with AR6's published temperature percentiles.
 This is the only check against an external source,
 so it validates the infrastructure the other MAGICC AR6 tests rely on.
 It runs all 600 ensemble members, so it is marked `slow`.
-Slow tests don't run by default: run them with `make test-slow`.
+It runs with the rest of the MAGICC AR6 tests (`make test-magicc-ar6`).
+If you're in a hurry, deselect it with `-m "magicc_ar6 and not slow"`.
 
 In all cases the question is "does the adapter produce what the model team expects?",
 and the model team is the one who can answer it.

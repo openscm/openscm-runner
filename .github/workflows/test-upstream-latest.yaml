@@ -58,4 +58,6 @@ jobs:
           # Don't need interactive plots
           MPLBACKEND: Agg
         run: |
-          uv run --no-sync pytest tests -r a -v
+          # The shared tests only (no adapter groups' tests, no slow tests).
+          # Keep `-m` consistent with `addopts` in `pyproject.toml`.
+          uv run --no-sync pytest tests -r a -v -m "not magicc_ar6 and not slow"
