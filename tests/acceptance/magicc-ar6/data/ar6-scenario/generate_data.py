@@ -44,12 +44,13 @@ import platform
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
-import pooch
-from pymagicc.core import MAGICC7
-from pymagicc.definitions import MAGICC7_EMISSIONS_UNITS
-from pymagicc.io import MAGICCData
+
+if TYPE_CHECKING:
+    from pymagicc.core import MAGICC7
+    from pymagicc.io import MAGICCData
 
 HERE = Path(__file__).parent
 INPUT_FILE = (
@@ -224,6 +225,9 @@ CASES = {
 
 def download(magicc_type: str) -> Path:
     """Download from magicc.org (if not already downloaded), returning the directory"""
+    # Lazy import so tests load (pooch needn't be in the tests' environment)
+    import pooch  # noqa: PLC0415
+
     archive_name, sha256, extract_dir = DOWNLOADS[magicc_type]
     cache_dir = Path(pooch.os_cache("openscm-runner")) / "magicc-ar6"
     # The URL includes the token, so keep it out of pooch's logs
@@ -328,6 +332,10 @@ def to_magicc_emissions(emissions: pd.DataFrame) -> MAGICCData:
     for year in range(last_year + 1, last_year + 1 + END_YEAR_BUFFER):
         emissions[year] = emissions[last_year]
 
+    # Lazy import so tests load (pymagicc isn't in the tests' environment)
+    from pymagicc.definitions import MAGICC7_EMISSIONS_UNITS  # noqa: PLC0415
+    from pymagicc.io import MAGICCData  # noqa: PLC0415
+
     magicc_units = MAGICC7_EMISSIONS_UNITS.set_index("magicc_variable")[
         "emissions_unit"
     ]
@@ -384,6 +392,9 @@ def hold_non_co2_at_pre_industrial(magicc: MAGICC7, end_year: int) -> dict[str, 
             # so MAGICC uses zero, which is also its 1750 value
             return filename
 
+        # Lazy import so tests load (pymagicc isn't in the tests' environment)
+        from pymagicc.io import MAGICCData  # noqa: PLC0415
+
         original = MAGICCData(str(run_dir / filename))
         timeseries = original.timeseries()
         if value is None:
@@ -418,6 +429,9 @@ def hold_non_co2_at_pre_industrial(magicc: MAGICC7, end_year: int) -> dict[str, 
 
 
 def write_scenario_file(magicc: MAGICC7, emissions: MAGICCData) -> None:
+    # Lazy import so tests load (pymagicc isn't in the tests' environment)
+    from pymagicc.io import MAGICCData  # noqa: PLC0415
+
     writer = MAGICCData(emissions.timeseries())
     writer["todo"] = "SET"
     writer.metadata = {"header": "Scenario for openscm-runner acceptance data"}
@@ -497,6 +511,9 @@ def main() -> None:
     member_id, config = load_first_member(distribution)
 
     last_year = inputs.columns.max()
+    # Lazy import so tests load (pymagicc isn't in the tests' environment)
+    from pymagicc.core import MAGICC7  # noqa: PLC0415
+
     with MAGICC7() as magicc:
         for directory, case in CASES.items():
             if case.co2_only:

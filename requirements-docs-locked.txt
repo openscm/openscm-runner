@@ -40,10 +40,6 @@ cffi==2.0.0
     # via
     #   argon2-cffi-bindings
     #   pyzmq
-cftime==1.6.5 ; python_full_version < '3.11'
-    # via scmdata
-cftime==1.6.6.1 ; python_full_version >= '3.11'
-    # via scmdata
 charset-normalizer==3.4.7
     # via requests
 click==8.1.8
@@ -58,7 +54,6 @@ colorama==0.4.6
     #   mkdocs
     #   mkdocs-material
     #   properdocs
-    #   tqdm
 comm==0.2.3
     # via ipykernel
 contourpy==1.3.2 ; python_full_version < '3.11'
@@ -83,7 +78,7 @@ exceptiongroup==1.3.0 ; python_full_version < '3.11'
 executing==2.2.1
     # via stack-data
 f90nml==1.5
-    # via pymagicc
+    # via openscm-runner
 fastjsonschema==2.21.2
     # via nbformat
 flexcache==0.3
@@ -281,36 +276,27 @@ notebook-shim==0.2.4
     # via jupyterlab
 numpy==2.2.6 ; python_full_version < '3.11'
     # via
-    #   cftime
     #   contourpy
     #   matplotlib
     #   openscm-units
     #   pandas
     #   pandas-openscm
-    #   scmdata
-    #   xarray
 numpy==2.4.6 ; python_full_version == '3.11.*'
     # via
-    #   cftime
     #   contourpy
     #   matplotlib
     #   openscm-units
     #   pandas
     #   pandas-openscm
-    #   scmdata
-    #   xarray
 numpy==2.5.5 ; python_full_version >= '3.12'
     # via
-    #   cftime
     #   contourpy
     #   matplotlib
     #   openscm-units
     #   pandas
     #   pandas-openscm
-    #   scmdata
-    #   xarray
 openscm-units==0.6.3
-    # via scmdata
+    # via openscm-runner
 overrides==7.7.0 ; python_full_version < '3.12'
     # via jupyter-server
 packaging==24.2
@@ -326,32 +312,18 @@ packaging==24.2
     #   nbconvert
     #   pooch
     #   properdocs
-    #   scmdata
-    #   xarray
 paginate==0.5.7
     # via mkdocs-material
 pandas==2.3.3 ; python_full_version < '3.11'
     # via
     #   openscm-runner
     #   openscm-units
-    #   pandas-datapackage-reader
     #   pandas-openscm
-    #   pint-pandas
-    #   pymagicc
-    #   scmdata
-    #   xarray
 pandas==3.1.1 ; python_full_version >= '3.11'
     # via
     #   openscm-runner
     #   openscm-units
-    #   pandas-datapackage-reader
     #   pandas-openscm
-    #   pint-pandas
-    #   pymagicc
-    #   scmdata
-    #   xarray
-pandas-datapackage-reader==0.18.0
-    # via pymagicc
 pandas-openscm==0.9.2
     # via openscm-runner
 pandocfilters==1.5.1
@@ -369,22 +341,11 @@ pillow==12.3.0 ; python_full_version < '3.11'
 pillow==13.0.0 ; python_full_version >= '3.11'
     # via matplotlib
 pint==0.24.4 ; python_full_version < '3.11'
-    # via
-    #   openscm-units
-    #   pint-pandas
-    #   scmdata
+    # via openscm-units
 pint==0.25.3 ; python_full_version == '3.11.*'
-    # via
-    #   openscm-units
-    #   pint-pandas
-    #   scmdata
+    # via openscm-units
 pint==0.26.2 ; python_full_version >= '3.12'
-    # via
-    #   openscm-units
-    #   pint-pandas
-    #   scmdata
-pint-pandas==0.7.1
-    # via scmdata
+    # via openscm-units
 platformdirs==4.3.6
     # via
     #   jupyter-core
@@ -422,8 +383,6 @@ pygments==2.19.1
     #   mkdocs-jupyter
     #   mkdocs-material
     #   nbconvert
-pymagicc==2.1.5
-    # via openscm-runner
 pymdown-extensions==10.21.3
     # via
     #   mkdocs-material
@@ -437,7 +396,6 @@ python-dateutil==2.9.0.post0
     #   jupyter-client
     #   matplotlib
     #   pandas
-    #   scmdata
 python-json-logger==4.1.0
     # via jupyter-events
 pytz==2026.6 ; python_full_version < '3.11'
@@ -454,7 +412,6 @@ pyyaml==6.0.2
     #   mkdocs
     #   mkdocs-get-deps
     #   properdocs
-    #   pymagicc
     #   pymdown-extensions
     #   pyyaml-env-tag
 pyyaml-env-tag==1.1
@@ -475,7 +432,7 @@ requests==2.34.2
     # via
     #   jupyterlab-server
     #   mkdocs-material
-    #   pandas-datapackage-reader
+    #   openscm-runner
     #   pooch
 rfc3339-validator==0.1.4
     # via
@@ -492,8 +449,6 @@ rpds-py==0.30.0
     #   jsonschema
     #   referencing
 ruff==0.15.12
-scmdata==0.19.0
-    # via pymagicc
 send2trash==2.1.0
     # via jupyter-server
 setuptools==75.6.0
@@ -502,7 +457,6 @@ six==1.17.0
     # via
     #   python-dateutil
     #   rfc3339-validator
-    #   scmdata
 soupsieve==2.8.3
     # via beautifulsoup4
 stack-data==0.6.3
@@ -524,8 +478,6 @@ tornado==6.5.5
     #   jupyter-server
     #   jupyterlab
     #   terminado
-tqdm==4.70.1
-    # via scmdata
 traitlets==5.15.0
     # via
     #   ipykernel
@@ -552,14 +504,12 @@ typing-extensions==4.12.2 ; python_full_version < '3.15'
     #   mkdocstrings-python
     #   pint
     #   referencing
-    #   scmdata
 typing-extensions==4.16.0 ; python_full_version >= '3.15'
     # via
     #   beautifulsoup4
     #   flexcache
     #   flexparser
     #   pint
-    #   scmdata
 tzdata==2026.2
     # via
     #   arrow
@@ -568,8 +518,6 @@ uri-template==1.3.0
     # via jsonschema
 urllib3==2.7.0
     # via requests
-versioneer==0.29
-    # via pymagicc
 watchdog==6.0.0
     # via
     #   mkdocs
@@ -584,7 +532,3 @@ webencodings==0.5.1
     #   tinycss2
 websocket-client==1.9.0
     # via jupyter-server
-xarray==2024.7.0
-    # via
-    #   openscm-runner
-    #   scmdata

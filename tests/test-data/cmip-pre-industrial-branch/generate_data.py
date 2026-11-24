@@ -36,7 +36,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-import pooch
 
 HERE = Path(__file__).parent
 
@@ -94,6 +93,9 @@ N_CONCENTRATION_SPECIES = 43
 
 def load(path: str) -> pd.DataFrame:
     """Download a file from RCMIP phase 3 (if not already downloaded) and load it"""
+    # Lazy import so tests load (pooch needn't be in the tests' environment)
+    import pooch  # noqa: PLC0415
+
     local = Path(
         pooch.retrieve(
             RCMIP3_URL.format(path=path),

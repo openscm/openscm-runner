@@ -33,12 +33,13 @@ import json
 import os
 import platform
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-import pooch
-from pymagicc.core import MAGICC7
-from pymagicc.io import MAGICCData
+
+if TYPE_CHECKING:
+    from pymagicc.core import MAGICC7
 
 HERE = Path(__file__).parent
 
@@ -91,6 +92,9 @@ ERF_FILE = "PYMAGICC_EXTRA_RF.IN"
 
 def download(magicc_type: str) -> Path:
     """Download from magicc.org (if not already downloaded), returning the directory"""
+    # Lazy import so tests load (pooch needn't be in the tests' environment)
+    import pooch  # noqa: PLC0415
+
     archive_name, sha256, extract_dir = DOWNLOADS[magicc_type]
     cache_dir = Path(pooch.os_cache("openscm-runner")) / "magicc-ar6"
     # The URL includes the token, so keep it out of pooch's logs
@@ -202,6 +206,9 @@ def write_erf_file(magicc: MAGICC7, erf: pd.Series) -> None:
             ),
         ]
     )
+    # Lazy import so tests load (pymagicc isn't in the tests' environment)
+    from pymagicc.io import MAGICCData  # noqa: PLC0415
+
     mdata = MAGICCData(
         values.to_numpy(),
         index=[int(y) for y in values.index],
@@ -274,6 +281,9 @@ def main() -> None:
     member_id, config = load_first_member(distribution)
 
     outputs = []
+    # Lazy import so tests load (pymagicc isn't in the tests' environment)
+    from pymagicc.core import MAGICC7  # noqa: PLC0415
+
     with MAGICC7() as magicc:
         for (scenario, *_), erf in inputs.iterrows():
             res = run_one(magicc, config, erf)
