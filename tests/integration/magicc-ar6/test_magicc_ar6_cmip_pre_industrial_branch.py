@@ -1026,7 +1026,7 @@ def test_emissions_driven_files_reproduce_history_in_1850() -> None:
     installation = MAGICCAR6AdapterConfiguration.from_environment(
         testing_only_n_members=N_MEMBERS, n_workers=N_WORKERS
     ).installation
-    historical_emissions = load_historical_emissions(installation)
+    historical_emissions = load_historical_emissions(installation).droplevel("unit")
     defaults = read_namelist(installation.run_dir / "MAGCFG_DEFAULTALL.CFG")[
         "nml_allcfgs"
     ]

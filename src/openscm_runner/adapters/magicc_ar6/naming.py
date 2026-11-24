@@ -335,6 +335,31 @@ Every species other than CO2 is a total
 (MAGICC splits these into fossil and biomass burning internally).
 """
 
+SCEN7_EMISSIONS: dict[str, MAGICCEmissions] = {
+    **{spec.gas: spec for spec in EMISSIONS_VARIABLES.values()},
+    **{
+        f"{spec.gas}{sector}": MAGICCEmissions(
+            f"{spec.gas}{sector}", spec.unit, spec.magicc_unit
+        )
+        for spec in EMISSIONS_VARIABLES.values()
+        if spec.gas not in HALOGENATED_GAS_NAMES.values()
+        and spec.gas not in ("CO2I", "CO2B")
+        for sector in ("I", "B")
+    },
+}
+"""
+Each gas a `.SCEN7` file can have (MAGICC's names) and its units
+
+The totals in [EMISSIONS_VARIABLES][(m).]
+and the industrial (`I`) and biomass burning (`B`) parts
+of the non-halogenated gases (CO2 is always given as these parts).
+"""
+
+SCEN7_UNITS: dict[str, str] = {
+    gas: spec.magicc_unit for gas, spec in SCEN7_EMISSIONS.items()
+}
+"""MAGICC's unit for each gas in [SCEN7_EMISSIONS][(m).]"""
+
 
 def to_magicc_emissions(emissions: pd.DataFrame) -> pd.DataFrame:
     """

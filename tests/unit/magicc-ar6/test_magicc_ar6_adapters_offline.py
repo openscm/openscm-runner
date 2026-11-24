@@ -13,7 +13,6 @@ from typing import Any
 import pandas as pd
 import pytest
 
-from openscm_runner.adapter_errors import InvalidInputError
 from openscm_runner.adapters.magicc_ar6 import (
     MAGICCAR6AdapterAR6Scenario,
     MAGICCAR6AdapterAR6ScenarioAnthropogenicOnly,
@@ -38,11 +37,15 @@ from openscm_runner.adapters.magicc_ar6.base import (
     _to_member_result,
 )
 from openscm_runner.adapters.magicc_ar6.cmip_pre_industrial_branch import (
+    AEROSOL_GASES,
+    NORMALISATION_ANCHOR_YEAR,
     PI_CONTROL_EMISSIONS_GASES,
+    anchor_scenario_emissions,
     get_pi_control_emissions,
+    make_scenario_emissions,
 )
 from openscm_runner.adapters.magicc_ar6.ensemble import load_ar6_ensemble
-from openscm_runner.adapters.magicc_ar6.naming import EMISSIONS_VARIABLES
+from openscm_runner.adapters.magicc_ar6.naming import EMISSIONS_VARIABLES, SCEN7_UNITS
 from openscm_runner.adapters.magicc_ar6.pre_industrial import (
     CMIP7_PRE_INDUSTRIAL,
     PreIndustrialValues,
@@ -52,6 +55,7 @@ from openscm_runner.adapters.magicc_ar6.running import (
     EnsembleMember,
     MAGICCMemberResult,
 )
+from openscm_runner.errors import InvalidInputError
 from openscm_runner.output_specs import OutputSpecs
 
 # These are the MAGICC AR6 adapters' tests (see docs/development/testing.md)
@@ -211,9 +215,53 @@ def test_get_pi_control_emissions_only_co2() -> None:
         ),
     )
 
-    assert get_pi_control_emissions(pre_industrial) == dict.fromkeys(
-        PI_CONTROL_EMISSIONS_GASES, 0.0
+    res = get_pi_control_emissions(pre_industrial)
+
+    assert list(res.index.get_level_values("variable")) == list(
+        PI_CONTROL_EMISSIONS_GASES
     )
+    assert list(res.index.get_level_values("unit")) == [
+        SCEN7_UNITS[gas] for gas in PI_CONTROL_EMISSIONS_GASES
+    ]
+    assert (res == 0.0).all()
+
+
+def test_make_scenario_emissions_input_units_must_match() -> None:
+    input_emissions = pd.DataFrame(
+        [[1.0]],
+        index=pd.MultiIndex.from_tuples(
+            [("CO2I", "Mt CO2 / yr")], names=["variable", "unit"]
+        ),
+        columns=[1850],
+    )
+
+    with pytest.raises(ValueError, match=r"input's units.*CO2I.*Mt CO2 / yr"):
+        make_scenario_emissions(
+            pd.Series(dtype=float),
+            get_pi_control_emissions(CMIP7_PRE_INDUSTRIAL),
+            input_emissions,
+            first_year=1850,
+            last_year=1851,
+        )
+
+
+def test_anchor_scenario_emissions_units_must_match() -> None:
+    gases = [f"{gas}{sector}" for gas in AEROSOL_GASES for sector in ("I", "B")]
+
+    def make(units: list[str]) -> pd.DataFrame:
+        return pd.DataFrame(
+            1.0,
+            index=pd.MultiIndex.from_tuples(
+                list(zip(gases, units)), names=["variable", "unit"]
+            ),
+            columns=[NORMALISATION_ANCHOR_YEAR],
+        )
+
+    units = [SCEN7_UNITS[gas] for gas in gases]
+    emissions = make(["kt SOx / yr", *units[1:]])
+
+    with pytest.raises(ValueError, match=r"historical emissions' units.*SOXI"):
+        anchor_scenario_emissions(emissions, make(units), anchor_years=[2100])
 
 
 def test_pre_industrial_unknown_gas() -> None:

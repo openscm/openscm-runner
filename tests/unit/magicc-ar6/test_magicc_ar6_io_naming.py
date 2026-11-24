@@ -15,13 +15,13 @@ import pint
 import pytest
 
 from openscm_runner.adapters.magicc_ar6.base import (
-    format_conc_in,
-    format_hemispheric_monthly_forcing_in,
-    format_scen7,
     hold_last_value,
     undo_magicc_emissions_averaging,
 )
 from openscm_runner.adapters.magicc_ar6.io import (
+    format_conc_in,
+    format_hemispheric_monthly_forcing_in,
+    format_scen7,
     format_tabular_file,
     read_binout,
     read_tabular_file,
@@ -209,6 +209,40 @@ def test_scen7_round_trip(tmp_path: Path) -> None:
     assert spec["THISFILE_FIRSTYEAR"] == 2015
     assert "GAS" in path.read_text()
     np.testing.assert_allclose(data.to_numpy(), emissions.to_numpy())
+
+
+def test_scen7_requires_units() -> None:
+    # Index of MAGICC's gas names only: the caller has to say what the units are
+    emissions = pd.DataFrame([[1.0, 2.0]], index=["CO2I"], columns=[2015, 2016])
+
+    with pytest.raises(ValueError, match=r"`variable` and `unit` index levels"):
+        format_scen7(emissions)
+
+
+def test_scen7_wrong_unit_raises() -> None:
+    emissions = pd.DataFrame(
+        [[1.0, 2.0]],
+        index=pd.MultiIndex.from_tuples(
+            [("CO2I", "Mt CO2 / yr")], names=["variable", "unit"]
+        ),
+        columns=[2015, 2016],
+    )
+
+    with pytest.raises(ValueError, match=r"Not MAGICC's units.*CO2I.*Mt CO2 / yr"):
+        format_scen7(emissions)
+
+
+def test_scen7_unknown_gas_raises() -> None:
+    emissions = pd.DataFrame(
+        [[1.0, 2.0]],
+        index=pd.MultiIndex.from_tuples(
+            [("CO2", "Gt C / yr")], names=["variable", "unit"]
+        ),
+        columns=[2015, 2016],
+    )
+
+    with pytest.raises(ValueError, match=r"Not gases a \.SCEN7 file can have.*CO2"):
+        format_scen7(emissions)
 
 
 def test_conc_in_round_trip(tmp_path: Path) -> None:

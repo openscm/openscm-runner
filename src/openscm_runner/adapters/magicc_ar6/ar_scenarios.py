@@ -26,16 +26,19 @@ from openscm_runner.output_specs import OutputSpecs
 
 from .base import (
     END_YEAR_BUFFER,
-    FILE_HEADER,
     MAGICCAR6AdapterConfiguration,
     MAGICCAR6Experiment,
-    format_held_tabular_file,
-    format_scen7,
     get_experiment_levels,
     hold_last_value,
     run_experiments,
 )
-from .io import read_namelist, read_tabular_file
+from .io import (
+    FILE_HEADER,
+    format_held_tabular_file,
+    format_scen7,
+    read_namelist,
+    read_tabular_file,
+)
 from .naming import (
     EMISSIONS_VARIABLES,
     OUTPUT_VARIABLES,
@@ -90,12 +93,13 @@ class MAGICCAR6AdapterAR7Scenario:
     """
     MAGICC adapter for AR7 scenarios
 
-    For the experiment, see [AdapterAR7Scenario][openscm_runner.ar_scenarios.running.].
+    For experiment details, see
+    [AdapterAR7Scenario][openscm_runner.ar_scenarios.running.].
 
-    Unlikely to be implemented.
-    Doing so would require us to create a way to join AR6 history
-    (which this relies on)
-    and AR7 scenarios, which won't match what anyone else does.
+    Not implemented, and we don't plan to implement it:
+    this setup relies on AR6's history,
+    so running AR7 scenarios would mean joining AR6 history and AR7 scenarios,
+    which won't match what anyone else does.
     """
 
     supported_output_variables: ClassVar[frozenset[str]] = frozenset()
@@ -116,7 +120,8 @@ class MAGICCAR6AdapterAR6Scenario:
     """
     MAGICC AR6 adapter for AR6 scenarios
 
-    For the experiment, see [AdapterAR6Scenario][openscm_runner.ar_scenarios.running.].
+    For experiment details, see
+    [AdapterAR6Scenario][openscm_runner.ar_scenarios.running.].
 
     Differences from AR6 WG3 that we know of:
 
@@ -191,7 +196,7 @@ class MAGICCAR6AdapterAR6ScenarioAnthropogenicOnly:
     """
     MAGICC AR6 adapter for AR6 scenarios with anthropogenic forcing only
 
-    For the experiment, see
+    For experiment details, see
     [AdapterAR6ScenarioAnthropogenicOnly][openscm_runner.ar_scenarios.running.].
 
     As for [MAGICCAR6AdapterAR6Scenario][(m).],
@@ -235,7 +240,7 @@ class MAGICCAR6AdapterAR6ScenarioCO2ForcingOnly:
     """
     MAGICC AR6 adapter for AR6 scenarios with CO2 forcing only
 
-    For the experiment, see
+    For experiment details, see
     [AdapterAR6ScenarioCO2ForcingOnly][openscm_runner.ar_scenarios.running.].
 
     As for [MAGICCAR6AdapterAR6Scenario][(m).],

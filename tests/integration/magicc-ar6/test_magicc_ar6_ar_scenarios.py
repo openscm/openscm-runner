@@ -20,7 +20,6 @@ from openscm_runner import (
     run_ar6_scenarios_co2_forcing_only,
     run_ar7_scenarios,
 )
-from openscm_runner.adapter_errors import InvalidInputError
 from openscm_runner.adapters.magicc_ar6 import (
     MAGICCAR6AdapterAR6Scenario,
     MAGICCAR6AdapterAR6ScenarioAnthropogenicOnly,
@@ -32,6 +31,7 @@ from openscm_runner.adapters.magicc_ar6.ar_scenarios import (
     make_ar6_co2_forcing_only_experiments,
 )
 from openscm_runner.adapters.magicc_ar6.base import run_experiments
+from openscm_runner.errors import InvalidInputError
 from openscm_runner.output_specs import OutputSpecs
 
 # These are the MAGICC AR6 adapters' tests (see docs/development/testing.md)

@@ -132,7 +132,7 @@ so new experiments can make different choices.
 Many of the current experiments share common rules
 (see [`openscm_runner.verification.verify_wide_timeseries_inputs`][openscm_runner.verification.verify_wide_timeseries_inputs]).
 
-All problems are reported together in one [`InvalidInputError`][openscm_runner.adapter_errors.InvalidInputError].
+All problems are reported together in one [`InvalidInputError`][openscm_runner.errors.InvalidInputError].
 Units aren't checked yet (planned: openscm-units, roadmap [W04][w04]).
 
 ## Outputs and failures
@@ -152,7 +152,7 @@ We recommend using them.
 
 Output requests are an explicit per-call `output_specs` argument.
 Adapters declare `supported_output_variables`.
-With checks on, an unsupported request is recorded as [`UnsupportedOutputError`][openscm_runner.adapter_errors.UnsupportedOutputError]
+With checks on, an unsupported request is recorded as [`UnsupportedOutputError`][openscm_runner.errors.UnsupportedOutputError]
 for that adapter without calling it; other adapters still run.
 Whatever `run_checks` is, the `run_*` functions check each adapter
 returned a tuple of one [`OpenSCMRunnerOutput`][openscm_runner.output.OpenSCMRunnerOutput] per input

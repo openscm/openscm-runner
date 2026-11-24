@@ -5,7 +5,7 @@ Pieces shared by the MAGICC AR6 adapters
 from __future__ import annotations
 
 import os
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from concurrent.futures import Executor
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,8 +19,7 @@ from openscm_runner.verification import TIMESERIES_LEVELS
 
 from .download import get_magicc_ar6_adapter_pieces
 from .ensemble import load_ar6_ensemble
-from .io import format_tabular_file
-from .naming import CONCENTRATION_UNITS, from_magicc_output
+from .naming import from_magicc_output
 from .running import (
     EnsembleMember,
     MAGICCExperiment,
@@ -46,8 +45,6 @@ So we run it a few years longer (holding the inputs constant)
 and cut the output at the input's last year.
 """
 
-FILE_HEADER = "Written by openscm-runner"
-"""Header of every input file we write"""
 
 MAGICC_AR6_V753_ROOT_DIR_ENV_VAR = "MAGICC_AR6_V753_ROOT_DIR"
 """Environment variable giving the root of a MAGICC v7.5.3 installation"""
@@ -540,220 +537,3 @@ def undo_magicc_emissions_averaging(emissions: pd.DataFrame) -> pd.DataFrame:
         out[:, i] = 2 * wanted[:, i - 1] - out[:, i - 1]
 
     return pd.DataFrame(out, index=emissions.index, columns=[*years, years[-1] + 1])
-
-
-# TODO: Put these in IO?
-SHAPE_SPECIFICATIONS: frozenset[str] = frozenset(
-    {
-        "THISFILE_DATACOLUMNS",
-        "THISFILE_DATAROWS",
-        "THISFILE_FIRSTYEAR",
-        "THISFILE_LASTYEAR",
-        "THISFILE_ANNUALSTEPS",
-        "THISFILE_FIRSTDATAROW",
-    }
-)
-"""
-`THISFILE_SPECIFICATIONS` which describe a file's shape
-
-`format_tabular_file` writes these, so they aren't copied from the original file.
-"""
-
-
-# TODO: put this in IO?
-def format_held_tabular_file(
-    values: pd.Series[float],
-    *,
-    years: Iterable[Any],
-    specifications: Mapping[str, Any],
-    header: str,
-) -> str:
-    """
-    Format a tabular input file which holds the same values every year
-
-    Parameters
-    ----------
-    values
-        Value in each column of the file (the index is the file's `YEARS` labels)
-
-    years
-        Years to write
-
-    specifications
-        The original file's `THISFILE_SPECIFICATIONS`
-        (the ones which describe its shape are dropped)
-
-    header
-        Header of the file
-
-    Returns
-    -------
-    :
-        Contents of the file
-    """
-    return format_tabular_file(
-        pd.DataFrame({int(y): values for y in years}),
-        specifications={
-            k: v for k, v in specifications.items() if k not in SHAPE_SPECIFICATIONS
-        },
-        header=header,
-        label_rows={"YEARS": [str(v) for v in values.index]},
-    )
-
-
-# TODO: put this in IO?
-def format_scen7(emissions: pd.DataFrame) -> str:
-    """
-    Format a `.SCEN7` file (World-only emissions)
-
-    Parameters
-    ----------
-    emissions
-        Emissions in MAGICC's names and units
-        (`variable` and `unit` index levels), integer years as columns
-
-    Returns
-    -------
-    :
-        Contents of the file
-    """
-    gases = list(emissions.index.get_level_values("variable"))
-    units = [
-        u.replace(" / ", "_per_").replace(" ", "_")
-        for u in emissions.index.get_level_values("unit")
-    ]
-
-    return format_tabular_file(
-        emissions,
-        specifications={
-            "THISFILE_UNITS": "MISC",
-            "THISFILE_DATTYPE": "SCEN7",
-            "THISFILE_REGIONMODE": "WORLD",
-        },
-        header=FILE_HEADER,
-        label_rows={
-            "GAS": gases,
-            "TODO": ["SET"] * len(gases),
-            "UNITS": units,
-            "YEARS": ["WORLD"] * len(gases),
-        },
-    )
-
-
-# TODO: put this in IO?
-def format_conc_in(gas: str, values: pd.Series[float]) -> str:
-    """
-    Format a global concentration input file (`*_CONC.IN`)
-
-    Parameters
-    ----------
-    gas
-        MAGICC's name for the gas
-
-    values
-        Concentrations, integer years as the index
-
-    Returns
-    -------
-    :
-        Contents of the file
-    """
-    unit = CONCENTRATION_UNITS[gas]
-
-    return format_tabular_file(
-        values.to_frame().T,
-        specifications={
-            "THISFILE_UNITS": unit,
-            "THISFILE_DATTYPE": "NOTUSED",
-            "THISFILE_REGIONMODE": "FOURBOX",
-        },
-        header=FILE_HEADER,
-        label_rows={
-            "VARIABLE": [f"{gas}_CONC"],
-            "TODO": ["SET"],
-            "UNITS": [unit],
-            "YEARS": ["WORLD"],
-        },
-    )
-
-
-# TODO: put this in IO?
-def format_forcing_in(variable: str, values: pd.Series[float]) -> str:
-    """
-    Format a global, annual forcing input file (e.g. `*_SOLAR_RF.IN`)
-
-    Parameters
-    ----------
-    variable
-        MAGICC's name for the variable (e.g. `"SOLAR_RF"`)
-
-    values
-        Forcing (W/m^2), integer years as the index
-
-    Returns
-    -------
-    :
-        Contents of the file
-    """
-    return format_tabular_file(
-        values.to_frame().T,
-        specifications={
-            "THISFILE_UNITS": "Wpermsuper2",
-            "THISFILE_DATTYPE": "NOTUSED",
-            "THISFILE_REGIONMODE": "FOURBOX",
-        },
-        header=FILE_HEADER,
-        label_rows={
-            "VARIABLE": [variable],
-            "TODO": ["SET"],
-            "UNITS": ["Wpermsuper2"],
-            "YEARS": ["WORLD"],
-        },
-    )
-
-
-# TODO: put this in IO?
-def format_hemispheric_monthly_forcing_in(
-    variable: str, values: pd.Series[float]
-) -> str:
-    """
-    Format a monthly, hemispheric forcing input file (e.g. `*_VOLCANIC_RF.MON`)
-
-    The same values are written for both hemispheres.
-
-    Parameters
-    ----------
-    variable
-        MAGICC's name for the variable (e.g. `"VOLCANIC_ANNUAL_RF"`)
-
-    values
-        Forcing (W/m^2), integer years as the index
-        (the annual value is used for every month)
-
-    Returns
-    -------
-    :
-        Contents of the file
-    """
-    # MAGICC's convention for monthly files: decimal years at the start of each month
-    times = [
-        round(year + month / 12, 3) for year in values.index for month in range(12)
-    ]
-    monthly = [v for v in values.to_numpy() for _ in range(12)]
-
-    return format_tabular_file(
-        pd.DataFrame([monthly, monthly], columns=times),
-        specifications={
-            "THISFILE_UNITS": "Wpermsuper2",
-            "THISFILE_DATTYPE": "NOTUSED",
-            "THISFILE_REGIONMODE": "HEMISPHERIC",
-        },
-        header=FILE_HEADER,
-        label_rows={
-            "VARIABLE": [variable, variable],
-            "TODO": ["SET", "SET"],
-            "UNITS": ["Wpermsuper2", "Wpermsuper2"],
-            "YEARS": ["NH", "SH"],
-        },
-        annualsteps=12,
-    )

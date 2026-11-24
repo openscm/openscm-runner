@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from .adapter_errors import UnsupportedOutputError
+from .errors import UnsupportedOutputError
 
 STANDARD_OUTPUT_VARIABLES: tuple[str, ...] = (
     "Surface Air Temperature Change",

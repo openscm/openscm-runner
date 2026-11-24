@@ -18,7 +18,7 @@ Copied (no dependency) from `magicc_core.testing.io` in the MAGICC repository
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +26,8 @@ import numpy as np
 import pandas as pd
 
 from openscm_runner.optional_dependencies import import_optional_dependency
+
+from .naming import CONCENTRATION_UNITS, SCEN7_UNITS
 
 MAGICC_FILE_ENCODING = "latin-1"
 """Encoding MAGICC's own input files use"""
@@ -346,4 +348,285 @@ def read_binout(path: Path) -> pd.DataFrame:
         np.vstack(values),
         index=pd.MultiIndex.from_tuples(index, names=["variable", "region", "unit"]),
         columns=range(first_year, last_year + 1),
+    )
+
+
+def encode_unit(unit: str) -> str:
+    """
+    Encode a unit the way MAGICC writes units in its files
+
+    E.g. `"Gt C / yr"` becomes `"Gt_C_per_yr"`.
+
+    Parameters
+    ----------
+    unit
+        Unit (as understood by openscm-units)
+
+    Returns
+    -------
+    :
+        Unit as MAGICC writes it
+    """
+    return unit.replace(" / ", "_per_").replace(" ", "_")
+
+
+def decode_unit(unit: str) -> str:
+    """
+    Decode a unit as MAGICC writes it in its files
+
+    E.g. `"Gt_C_per_yr"` becomes `"Gt C / yr"`
+    (the inverse of [encode_unit][(m).]).
+
+    Parameters
+    ----------
+    unit
+        Unit as MAGICC writes it
+
+    Returns
+    -------
+    :
+        Unit openscm-units can parse
+    """
+    return unit.replace("_per_", " / ").replace("_", " ")
+
+
+FILE_HEADER = "Written by openscm-runner"
+"""Header of every input file we write"""
+
+
+SHAPE_SPECIFICATIONS: frozenset[str] = frozenset(
+    {
+        "THISFILE_DATACOLUMNS",
+        "THISFILE_DATAROWS",
+        "THISFILE_FIRSTYEAR",
+        "THISFILE_LASTYEAR",
+        "THISFILE_ANNUALSTEPS",
+        "THISFILE_FIRSTDATAROW",
+    }
+)
+"""
+`THISFILE_SPECIFICATIONS` which describe a file's shape
+
+`format_tabular_file` writes these, so they aren't copied from the original file.
+"""
+
+
+def format_held_tabular_file(
+    values: pd.Series[float],
+    *,
+    years: Iterable[Any],
+    specifications: Mapping[str, Any],
+    header: str,
+) -> str:
+    """
+    Format a tabular input file which holds the same values every year
+
+    Parameters
+    ----------
+    values
+        Value in each column of the file (the index is the file's `YEARS` labels)
+
+    years
+        Years to write
+
+    specifications
+        The original file's `THISFILE_SPECIFICATIONS`
+        (the ones which describe its shape are dropped)
+
+    header
+        Header of the file
+
+    Returns
+    -------
+    :
+        Contents of the file
+    """
+    return format_tabular_file(
+        pd.DataFrame({int(y): values for y in years}),
+        specifications={
+            k: v for k, v in specifications.items() if k not in SHAPE_SPECIFICATIONS
+        },
+        header=header,
+        label_rows={"YEARS": [str(v) for v in values.index]},
+    )
+
+
+def format_scen7(emissions: pd.DataFrame) -> str:
+    """
+    Format a `.SCEN7` file (World-only emissions)
+
+    Parameters
+    ----------
+    emissions
+        Emissions in MAGICC's names and units
+        (`variable` and `unit` index levels), integer years as columns.
+        The units must be MAGICC's units for each gas
+        ([SCEN7_UNITS][openscm_runner.adapters.magicc_ar6.naming.]).
+
+    Returns
+    -------
+    :
+        Contents of the file
+
+    Raises
+    ------
+    ValueError
+        `emissions` doesn't have `variable` and `unit` index levels,
+        a gas isn't one a `.SCEN7` file can have,
+        or a unit isn't MAGICC's unit for the gas
+    """
+    missing_levels = sorted({"variable", "unit"} - set(emissions.index.names))
+    if missing_levels:
+        msg = (
+            "emissions must have `variable` and `unit` index levels, "
+            f"missing {missing_levels}"
+        )
+        raise ValueError(msg)
+
+    gases = list(emissions.index.get_level_values("variable"))
+    unknown = sorted(set(gases) - set(SCEN7_UNITS))
+    if unknown:
+        msg = f"Not gases a .SCEN7 file can have: {unknown}"
+        raise ValueError(msg)
+
+    units = list(emissions.index.get_level_values("unit"))
+    wrong = [
+        (gas, given, SCEN7_UNITS[gas])
+        for gas, given in zip(gases, units)
+        if given != SCEN7_UNITS[gas]
+    ]
+    if wrong:
+        msg = f"Not MAGICC's units (gas, given, expected): {wrong}"
+        raise ValueError(msg)
+
+    return format_tabular_file(
+        emissions,
+        specifications={
+            "THISFILE_UNITS": "MISC",
+            "THISFILE_DATTYPE": "SCEN7",
+            "THISFILE_REGIONMODE": "WORLD",
+        },
+        header=FILE_HEADER,
+        label_rows={
+            "GAS": gases,
+            "TODO": ["SET"] * len(gases),
+            "UNITS": [encode_unit(u) for u in units],
+            "YEARS": ["WORLD"] * len(gases),
+        },
+    )
+
+
+def format_conc_in(gas: str, values: pd.Series[float]) -> str:
+    """
+    Format a global concentration input file (`*_CONC.IN`)
+
+    Parameters
+    ----------
+    gas
+        MAGICC's name for the gas
+
+    values
+        Concentrations, integer years as the index
+
+    Returns
+    -------
+    :
+        Contents of the file
+    """
+    unit = CONCENTRATION_UNITS[gas]
+
+    return format_tabular_file(
+        values.to_frame().T,
+        specifications={
+            "THISFILE_UNITS": unit,
+            "THISFILE_DATTYPE": "NOTUSED",
+            "THISFILE_REGIONMODE": "FOURBOX",
+        },
+        header=FILE_HEADER,
+        label_rows={
+            "VARIABLE": [f"{gas}_CONC"],
+            "TODO": ["SET"],
+            "UNITS": [unit],
+            "YEARS": ["WORLD"],
+        },
+    )
+
+
+def format_forcing_in(variable: str, values: pd.Series[float]) -> str:
+    """
+    Format a global, annual forcing input file (e.g. `*_SOLAR_RF.IN`)
+
+    Parameters
+    ----------
+    variable
+        MAGICC's name for the variable (e.g. `"SOLAR_RF"`)
+
+    values
+        Forcing (W/m^2), integer years as the index
+
+    Returns
+    -------
+    :
+        Contents of the file
+    """
+    return format_tabular_file(
+        values.to_frame().T,
+        specifications={
+            "THISFILE_UNITS": "Wpermsuper2",
+            "THISFILE_DATTYPE": "NOTUSED",
+            "THISFILE_REGIONMODE": "FOURBOX",
+        },
+        header=FILE_HEADER,
+        label_rows={
+            "VARIABLE": [variable],
+            "TODO": ["SET"],
+            "UNITS": ["Wpermsuper2"],
+            "YEARS": ["WORLD"],
+        },
+    )
+
+
+def format_hemispheric_monthly_forcing_in(
+    variable: str, values: pd.Series[float]
+) -> str:
+    """
+    Format a monthly, hemispheric forcing input file (e.g. `*_VOLCANIC_RF.MON`)
+
+    The same values are written for both hemispheres.
+
+    Parameters
+    ----------
+    variable
+        MAGICC's name for the variable (e.g. `"VOLCANIC_ANNUAL_RF"`)
+
+    values
+        Forcing (W/m^2), integer years as the index
+        (the annual value is used for every month)
+
+    Returns
+    -------
+    :
+        Contents of the file
+    """
+    # MAGICC's convention for monthly files: decimal years at the start of each month
+    times = [
+        round(year + month / 12, 3) for year in values.index for month in range(12)
+    ]
+    monthly = [v for v in values.to_numpy() for _ in range(12)]
+
+    return format_tabular_file(
+        pd.DataFrame([monthly, monthly], columns=times),
+        specifications={
+            "THISFILE_UNITS": "Wpermsuper2",
+            "THISFILE_DATTYPE": "NOTUSED",
+            "THISFILE_REGIONMODE": "HEMISPHERIC",
+        },
+        header=FILE_HEADER,
+        label_rows={
+            "VARIABLE": [variable, variable],
+            "TODO": ["SET", "SET"],
+            "UNITS": ["Wpermsuper2", "Wpermsuper2"],
+            "YEARS": ["NH", "SH"],
+        },
+        annualsteps=12,
     )

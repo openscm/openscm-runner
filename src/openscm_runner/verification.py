@@ -24,7 +24,7 @@ from collections.abc import Collection
 import numpy as np
 import pandas as pd
 
-from openscm_runner.adapter_errors import InvalidInputError
+from openscm_runner.errors import InvalidInputError
 
 # TODO FUTURE: reconsider hard-coding
 TIMESERIES_LEVELS: tuple[str, ...] = ("variable", "region", "unit")

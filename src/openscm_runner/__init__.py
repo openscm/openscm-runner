@@ -26,13 +26,10 @@ Each group of experiments lives in its own subpackage
 
 import importlib.metadata
 
-# Rename adapter_errors to just errors ?
-from .adapter_errors import InvalidInputError, UnsupportedOutputError
 from .ar_scenarios import (
     AdapterAR6Scenario,
     # TODO: note details still being worked out
     AdapterAR6ScenarioAnthropogenicOnly,
-    # TODO: note details still being worked out
     AdapterAR6ScenarioCO2ForcingOnly,
     AdapterAR7Scenario,
     AR6Scenario,
@@ -49,13 +46,9 @@ from .ar_scenarios import (
     verify_ar7_scenarios,
 )
 from .cmip_pre_industrial_branch import (
-    # TODO: note details still being worked out
     AdapterCO2ConcentrationDrivenFromCMIP6PreIndustrial,
-    # TODO: note details still being worked out
     AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial,
-    # TODO: note details still being worked out
     AdapterCO2EmissionDrivenFromCMIP6PreIndustrial,
-    # TODO: note details still being worked out
     AdapterCO2EmissionDrivenFromCMIP7PreIndustrial,
     AdapterConcentrationDrivenFromCMIP6PreIndustrial,
     AdapterConcentrationDrivenFromCMIP7PreIndustrial,
@@ -102,6 +95,7 @@ from .erf import (
     run_erf_driven_from_equilibrium,
     verify_erf,
 )
+from .errors import InvalidInputError, UnsupportedOutputError
 from .output import (
     AdapterOutputError,
     AdapterRunResult,

@@ -170,7 +170,9 @@ and the model team is the one who can answer it.
   In this design, the `run_*` functions do the shared output checks once,
   and the integration tests are parametrised over adapters,
   so there is no need for a separate layer.
-- [TODO update this, it's in here now] Packaging/CI scaffolding tests: covered by the copier template.
+- Separate packaging/CI scaffolding tests:
+  the CI from the copier template covers these
+  (building and checking the package, importing it without extras, installing it from PyPI).
 
 ### What we try to avoid
 

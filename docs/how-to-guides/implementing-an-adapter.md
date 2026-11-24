@@ -169,8 +169,8 @@ In short:
   (MAGICC AR6 is an exception in this respect,
   normally we want you to generate the data yourselves somewhere external
   so we have a 100% independent check of adapter behaviour).
-  TODO: mark all the MAGICC AR6 adapters without acceptance tests with "DELETE BEFORE MERGING",
-  then delete them before we make the PR
+  TODO: delete the MAGICC AR6 adapters marked "DELETE BEFORE MERGING"
+  (the ones without acceptance tests) before we make the PR
 - Add your adapters to the shared integration tests for your experiments
   (e.g. [`tests/integration/test_erf_zero.py`](https://github.com/openscm/openscm-runner/blob/main/tests/integration/test_erf_zero.py)).
   Add your own unit and integration tests for what you know can go wrong

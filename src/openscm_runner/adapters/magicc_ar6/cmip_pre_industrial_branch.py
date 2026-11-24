@@ -386,23 +386,28 @@ from openscm_runner.output_specs import OutputSpecs
 
 from .base import (
     END_YEAR_BUFFER,
-    FILE_HEADER,
     MAGICCAR6AdapterConfiguration,
     MAGICCAR6Experiment,
+    get_experiment_levels,
+    run_experiments,
+)
+from .io import (
+    FILE_HEADER,
+    decode_unit,
     format_conc_in,
     format_forcing_in,
     format_hemispheric_monthly_forcing_in,
     format_scen7,
-    get_experiment_levels,
-    run_experiments,
+    format_tabular_file,
+    read_namelist,
+    read_tabular_file,
 )
-from .io import format_tabular_file, read_namelist, read_tabular_file
 from .naming import (
     EMISSIONS_UNIT_CONVERSION_CONTEXTS,
-    EMISSIONS_VARIABLES,
     FGAS_NAMES,
     MHALO_NAMES,
     OUTPUT_VARIABLES,
+    SCEN7_EMISSIONS,
     convert_units,
     get_output_variables,
     split_emissions,
@@ -600,27 +605,27 @@ SCEN7_GASES: tuple[str, ...] = (
 )
 """Gases we write into the `.SCEN7` file (MAGICC's names)"""
 
-SCEN7_UNITS: dict[str, str] = {
-    **{
-        f"{spec.gas}{sector}": spec.magicc_unit
-        for spec in EMISSIONS_VARIABLES.values()
-        if spec.gas in ("CH4", "N2O", *AEROSOL_GASES)
-        for sector in ("I", "B")
-    },
-    "CO2I": EMISSIONS_VARIABLES["Emissions|CO2|Fossil"].magicc_unit,
-    "CO2B": EMISSIONS_VARIABLES["Emissions|CO2|Biosphere"].magicc_unit,
-    **{
-        spec.gas: spec.magicc_unit
-        for spec in EMISSIONS_VARIABLES.values()
-        if spec.gas in (*FGAS_NAMES, *MHALO_NAMES)
-    },
+
+INCOMPLETE_FILE_UNITS: dict[tuple[str, str], str] = {
+    ("C5F12", "kt"): "kt C5F12 / yr",
 }
-"""Units of the gases in [SCEN7_GASES][(m).] (MAGICC's units)"""
+"""
+Units of historical emissions files which give an incomplete unit
+
+Keys are MAGICC's name for the gas and the unit the file gives,
+values are the unit to use instead.
+MAGICC v7.5.3's C5F12 file gives `kt`:
+like the other halogenated gases' files, it is kt of the gas per year.
+"""
 
 
 def load_historical_emissions(installation: MAGICCInstallation) -> pd.DataFrame:
     """
     Load the installation's historical emissions
+
+    Each file's unit is read from the file
+    (see [INCOMPLETE_FILE_UNITS][(m).] for the exceptions)
+    and the emissions are converted to MAGICC's units.
 
     Parameters
     ----------
@@ -630,8 +635,10 @@ def load_historical_emissions(installation: MAGICCInstallation) -> pd.DataFrame:
     Returns
     -------
     :
-        Global emissions of each gas in [SCEN7_GASES][(m).] (in [SCEN7_UNITS][(m).])
-        plus natural SOx emissions (`"SOXN"`), years as columns.
+        Global emissions of each gas in [SCEN7_GASES][(m).]
+        plus natural SOx emissions (`"SOXN"`),
+        in MAGICC's units (`variable` and `unit` index levels),
+        years as columns.
         Back-filled with the first value if a file starts later than another
         (MAGICC does the same).
     """
@@ -643,12 +650,33 @@ def load_historical_emissions(installation: MAGICCInstallation) -> pd.DataFrame:
         **dict(zip(MHALO_NAMES, defaults["mhalo_files_emis"], strict=True)),
     }
     values = {}
+    units = {}
     for gas in (*SCEN7_GASES, "SOXN"):
         filename = files[gas] if gas in files else defaults[f"file_{gas.lower()}_emis"]
-        data, _ = read_tabular_file(installation.run_dir / filename)
+        data, specifications = read_tabular_file(installation.run_dir / filename)
         values[gas] = data.sum(axis="index")
+        file_unit = specifications["THISFILE_UNITS"]
+        units[gas] = INCOMPLETE_FILE_UNITS.get((gas, file_unit), decode_unit(file_unit))
 
-    return pd.DataFrame(values).T.sort_index(axis="columns").bfill(axis="columns")
+    raw = pd.DataFrame(values).T.sort_index(axis="columns").bfill(axis="columns")
+    gases = list(raw.index)
+    raw.index = pd.MultiIndex.from_tuples(
+        [(gas, units[gas]) for gas in gases], names=["variable", "unit"]
+    )
+    # Natural SOx emissions are in the same units as SOx emissions
+    specs = [SCEN7_EMISSIONS["SOX" if gas == "SOXN" else gas] for gas in gases]
+    out = convert_units(
+        raw,
+        [spec.unit for spec in specs],
+        callable_name="load_historical_emissions",
+        contexts=EMISSIONS_UNIT_CONVERSION_CONTEXTS,
+    )
+    out.index = pd.MultiIndex.from_tuples(
+        [(gas, spec.magicc_unit) for gas, spec in zip(gases, specs, strict=True)],
+        names=["variable", "unit"],
+    )
+
+    return out
 
 
 @dataclass(frozen=True)
@@ -763,7 +791,8 @@ def derive_emissions_driven_files(
     defaults = read_namelist(installation.run_dir / "MAGCFG_DEFAULTALL.CFG")[
         "nml_allcfgs"
     ]
-    historical_emissions = load_historical_emissions(installation)
+    # Only the values are used (they're in MAGICC's units)
+    historical_emissions = load_historical_emissions(installation).droplevel("unit")
 
     out = []
     for setting, (drivers, rule) in EMISSIONS_DRIVEN_FILE_RULES.items():
@@ -1064,7 +1093,7 @@ PI_CONTROL_EMISSIONS_GASES: tuple[str, ...] = (
 """Gases we need piControl emissions for (MAGICC's names, as totals except CO2)"""
 
 
-def get_pi_control_emissions(pre_industrial: PreIndustrialValues) -> dict[str, float]:
+def get_pi_control_emissions(pre_industrial: PreIndustrialValues) -> pd.Series[float]:
     """
     Get the piControl emissions
 
@@ -1081,48 +1110,58 @@ def get_pi_control_emissions(pre_industrial: PreIndustrialValues) -> dict[str, f
     -------
     :
         piControl emissions of each gas in [PI_CONTROL_EMISSIONS_GASES][(m).]
-        (MAGICC's units): the CMIP era's historical emissions in 1850
+        in MAGICC's units (`variable` and `unit` index levels):
+        the CMIP era's historical emissions in 1850
         (`pre_industrial.historical_emissions_1850`),
         except CO2, which is zero (no fossil emissions and no land-use change,
         a choice which is still to be confirmed, see decision [B19][b19]),
         and gases without historical emissions (zero)
     """
-    spec_by_gas = {spec.gas: spec for spec in EMISSIONS_VARIABLES.values()}
+    values = pd.Series(0.0, index=list(PI_CONTROL_EMISSIONS_GASES))
     given = {
         gas: value_unit
         for gas, value_unit in pre_industrial.historical_emissions_1850.items()
         if gas not in ("CO2I", "CO2B")
     }
-    out = dict.fromkeys(PI_CONTROL_EMISSIONS_GASES, 0.0)
-    if not given:
-        return out
+    if given:
+        # Convert to MAGICC's units
+        # (the given units are written in a way openscm-units understands)
+        converted = convert_units(
+            pd.DataFrame(
+                [[value] for value, _ in given.values()],
+                index=pd.MultiIndex.from_tuples(
+                    [(gas, unit) for gas, (_, unit) in given.items()],
+                    names=["variable", "unit"],
+                ),
+            ),
+            [SCEN7_EMISSIONS[gas].unit for gas in given],
+            callable_name="get_pi_control_emissions",
+            contexts=EMISSIONS_UNIT_CONVERSION_CONTEXTS,
+        )
+        for gas, value in zip(given, converted.iloc[:, 0], strict=True):
+            values[gas] = float(value)
 
-    # The units of `historical_emissions_1850` are MAGICC's,
-    # but not necessarily written the same way, so convert to be sure
-    values = pd.DataFrame(
-        [[value] for value, _ in given.values()],
-        index=pd.MultiIndex.from_tuples(
-            [(gas, unit) for gas, (_, unit) in given.items()],
-            names=["variable", "unit"],
-        ),
+    values.index = pd.MultiIndex.from_tuples(
+        [(gas, SCEN7_EMISSIONS[gas].magicc_unit) for gas in values.index],
+        names=["variable", "unit"],
     )
-    converted = convert_units(
-        values,
-        [spec_by_gas[gas].unit for gas in given],
-        callable_name="get_pi_control_emissions",
-        contexts=EMISSIONS_UNIT_CONVERSION_CONTEXTS,
+
+    return values
+
+
+def _with_units(emissions: pd.DataFrame, units: Mapping[str, str]) -> pd.DataFrame:
+    """Add a `unit` index level to emissions indexed by MAGICC's gas names"""
+    out = emissions.copy()
+    out.index = pd.MultiIndex.from_tuples(
+        [(gas, units[gas]) for gas in emissions.index], names=["variable", "unit"]
     )
-    for converted_gas, value in zip(
-        converted.index.get_level_values("variable"), converted.iloc[:, 0], strict=True
-    ):
-        out[str(converted_gas)] = float(value)
 
     return out
 
 
 def make_scenario_emissions(
     pre_industrial_emissions: pd.Series[float],
-    pi_control_emissions: Mapping[str, float],
+    pi_control_emissions: pd.Series[float],
     input_emissions: pd.DataFrame | None,
     *,
     first_year: int,
@@ -1156,9 +1195,11 @@ def make_scenario_emissions(
 
     pi_control_emissions
         piControl emissions of each gas in [PI_CONTROL_EMISSIONS_GASES][(m).]
+        (`variable` and `unit` index levels)
 
     input_emissions
-        Emissions from the input (MAGICC's names and units),
+        Emissions from the input
+        (MAGICC's names and units, `variable` and `unit` index levels),
         starting in `first_year`.
         CO2 is given as `CO2I` and `CO2B`, other species as totals.
         If `None`, all emissions are held at their piControl values.
@@ -1172,9 +1213,47 @@ def make_scenario_emissions(
     Returns
     -------
     :
-        Emissions of each gas in [SCEN7_GASES][(m).] (in [SCEN7_UNITS][(m).]),
+        Emissions of each gas in [SCEN7_GASES][(m).]
+        (`variable` and `unit` index levels,
+        with the units of `pi_control_emissions`),
         years from [MAGICC_START_YEAR][(m).] to `last_year` as columns
+
+    Raises
+    ------
+    ValueError
+        The units of `input_emissions` aren't the units of `pi_control_emissions`
     """
+    pi_control_units = dict(
+        zip(
+            pi_control_emissions.index.get_level_values("variable"),
+            pi_control_emissions.index.get_level_values("unit"),
+            strict=True,
+        )
+    )
+    pi_control_values = pi_control_emissions.droplevel("unit")
+    if input_emissions is not None:
+        wrong = [
+            (gas, unit, pi_control_units[gas])
+            for gas, unit in zip(
+                input_emissions.index.get_level_values("variable"),
+                input_emissions.index.get_level_values("unit"),
+                strict=True,
+            )
+            if unit != pi_control_units[gas]
+        ]
+        if wrong:
+            msg = (
+                "The input's units aren't the piControl emissions' units "
+                f"(gas, input, piControl): {wrong}"
+            )
+            raise ValueError(msg)
+
+    units = {
+        gas: pi_control_units[gas]
+        for gas in ("CO2I", "CO2B", *FGAS_NAMES, *MHALO_NAMES)
+    }
+    for gas in ("CH4", "N2O", *AEROSOL_GASES):
+        units[f"{gas}I"] = units[f"{gas}B"] = pi_control_units[gas]
 
     def industrial_share(gas: str) -> float:
         industrial = pre_industrial_emissions[f"{gas}I"]
@@ -1184,25 +1263,25 @@ def make_scenario_emissions(
 
     pi_control = pd.Series(0.0, index=list(SCEN7_GASES))
     for gas in ("CO2I", "CO2B", *FGAS_NAMES, *MHALO_NAMES):
-        pi_control[gas] = pi_control_emissions[gas]
+        pi_control[gas] = pi_control_values[gas]
 
     for gas in ("N2O", *AEROSOL_GASES):
-        pi_control[f"{gas}I"] = pi_control_emissions[gas] * industrial_share(gas)
-        pi_control[f"{gas}B"] = pi_control_emissions[gas] * (1 - industrial_share(gas))
+        pi_control[f"{gas}I"] = pi_control_values[gas] * industrial_share(gas)
+        pi_control[f"{gas}B"] = pi_control_values[gas] * (1 - industrial_share(gas))
 
     pi_control["CH4I"] = 0.0
-    pi_control["CH4B"] = pi_control_emissions["CH4"]
+    pi_control["CH4B"] = pi_control_values["CH4"]
 
     years = range(MAGICC_START_YEAR, last_year + 1)
     emissions = pd.DataFrame({y: pi_control for y in years})
     if input_emissions is None:
-        return emissions
+        return _with_units(emissions, units)
 
     spin_up_years = range(MAGICC_START_YEAR, first_year)
-    for input_gas, values in input_emissions.iterrows():
+    for input_gas, values in input_emissions.droplevel("unit").iterrows():
         gas = str(input_gas)
         given = values.reindex(range(first_year, last_year + 1)).ffill()
-        spin_up_value = pi_control_emissions[gas]
+        spin_up_value = pi_control_values[gas]
         full = pd.concat([pd.Series(spin_up_value, index=spin_up_years), given])
 
         if gas in ("CO2I", "CO2B", *FGAS_NAMES, *MHALO_NAMES):
@@ -1217,7 +1296,7 @@ def make_scenario_emissions(
             emissions.loc[f"{gas}I"] = full * share
             emissions.loc[f"{gas}B"] = full * (1 - share)
 
-    return emissions
+    return _with_units(emissions, units)
 
 
 def anchor_scenario_emissions(
@@ -1234,7 +1313,8 @@ def anchor_scenario_emissions(
     Parameters
     ----------
     emissions
-        Emissions (see [make_scenario_emissions][(m).])
+        Emissions (`variable` and `unit` index levels,
+        see [make_scenario_emissions][(m).])
 
     historical_emissions
         The installation's historical emissions
@@ -1250,39 +1330,43 @@ def anchor_scenario_emissions(
         `emissions`, with the aerosol and aerosol/ozone precursor emissions
         in `anchor_years` set to their historical values
         in [NORMALISATION_ANCHOR_YEAR][(m).]
+
+    Raises
+    ------
+    ValueError
+        The units of `emissions` and `historical_emissions` aren't the same
     """
-    out = emissions.copy()
     gases = [f"{gas}{sector}" for gas in AEROSOL_GASES for sector in ("I", "B")]
+
+    def units(df: pd.DataFrame) -> dict[str, str]:
+        return dict(
+            zip(
+                df.index.get_level_values("variable"),
+                df.index.get_level_values("unit"),
+                strict=True,
+            )
+        )
+
+    emissions_units = units(emissions)
+    historical_units = units(historical_emissions)
+    wrong = [
+        (gas, emissions_units[gas], historical_units[gas])
+        for gas in gases
+        if emissions_units[gas] != historical_units[gas]
+    ]
+    if wrong:
+        msg = (
+            "The emissions' units aren't the historical emissions' units "
+            f"(gas, emissions, historical): {wrong}"
+        )
+        raise ValueError(msg)
+
+    out = emissions.droplevel("unit")
+    historical = historical_emissions.droplevel("unit")
     for year in anchor_years:
-        out.loc[gases, year] = historical_emissions.loc[
-            gases, NORMALISATION_ANCHOR_YEAR
-        ]
+        out.loc[gases, year] = historical.loc[gases, NORMALISATION_ANCHOR_YEAR]
 
-    return out
-
-
-# TODO: put in io?
-def format_scenario_file(emissions: pd.DataFrame) -> str:
-    """
-    Format the `.SCEN7` file
-
-    Parameters
-    ----------
-    emissions
-        Emissions (see [make_scenario_emissions][(m).])
-
-    Returns
-    -------
-    :
-        Contents of the file
-    """
-    out = emissions.copy()
-    out.index = pd.MultiIndex.from_tuples(
-        [(gas, SCEN7_UNITS[gas]) for gas in out.index],
-        names=["variable", "unit"],
-    )
-
-    return format_scen7(out)
+    return _with_units(out, emissions_units)
 
 
 GAS_GROUPS: dict[str, tuple[str, ...]] = {
@@ -1320,7 +1404,7 @@ def get_emissions_driven_groups(input_emissions: pd.DataFrame | None) -> set[str
     if input_emissions is None:
         return set()
 
-    gases = set(input_emissions.index)
+    gases = set(input_emissions.index.get_level_values("variable"))
 
     return {group for group, members in GAS_GROUPS.items() if gases & set(members)}
 
@@ -1378,7 +1462,7 @@ def run_pre_industrial_branch_experiments(  # noqa: PLR0913
     # TODO: handle this better
     first_year = 1850
     historical_emissions = load_historical_emissions(installation)
-    pre_industrial_emissions = historical_emissions[first_year]
+    pre_industrial_emissions = historical_emissions.droplevel("unit")[first_year]
     pi_control_emissions = get_pi_control_emissions(pre_industrial)
     if emissions_driven_files is None:
         emissions_driven_files = derive_emissions_driven_files(installation)
@@ -1393,11 +1477,7 @@ def run_pre_industrial_branch_experiments(  # noqa: PLR0913
             # Everything is emissions-driven
             else pd.DataFrame(columns=inp.columns, index=pd.Index([], name="variable"))
         )
-        input_emissions = (
-            None
-            if emissions.empty
-            else to_magicc_emissions(emissions).droplevel("unit")
-        )
+        input_emissions = None if emissions.empty else to_magicc_emissions(emissions)
         emissions_driven = get_emissions_driven_groups(input_emissions)
         last_year = int(inp.columns.max())
         end_year = last_year + END_YEAR_BUFFER
@@ -1421,7 +1501,7 @@ def run_pre_industrial_branch_experiments(  # noqa: PLR0913
         # Natural SOx emissions are constant
         driver_emissions = pd.concat(
             [
-                scenario_emissions,
+                scenario_emissions.droplevel("unit"),
                 pd.DataFrame(
                     {"SOXN": pre_industrial_emissions["SOXN"]},
                     index=scenario_emissions.columns,
@@ -1439,19 +1519,16 @@ def run_pre_industrial_branch_experiments(  # noqa: PLR0913
         natural_files, natural_settings = make_natural_forcing_files(
             natural_forcing, first_year=first_year, last_year=end_year
         )
+        scen7_emissions = anchor_scenario_emissions(
+            scenario_emissions, historical_emissions, anchor_years=anchor_years
+        )
         experiments.append(
             MAGICCAR6Experiment(
                 files={
                     **concentration_files,
                     **history_files,
                     **natural_files,
-                    SCENARIO_FILE: format_scenario_file(
-                        anchor_scenario_emissions(
-                            scenario_emissions,
-                            historical_emissions,
-                            anchor_years=anchor_years,
-                        )
-                    ),
+                    SCENARIO_FILE: format_scen7(scen7_emissions),
                 },
                 settings={
                     **concentration_settings,
@@ -1490,12 +1567,13 @@ def run_pre_industrial_branch_experiments(  # noqa: PLR0913
     return run_experiments(experiments, configuration=configuration)
 
 
+# DELETE BEFORE MERGING: no acceptance tests (see docs/development/testing.md)
 @dataclass(frozen=True, kw_only=True)
 class MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP-style concentration-driven runs from CMIP7 pre-industrial
 
-    For the experiment, see
+    For experiment details, see
     [AdapterConcentrationDrivenFromCMIP7PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     Uses the AR6 probabilistic distribution,
@@ -1565,12 +1643,13 @@ class MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial:
         )
 
 
+# DELETE BEFORE MERGING: no acceptance tests (see docs/development/testing.md)
 @dataclass(frozen=True, kw_only=True)
 class MAGICCAR6AdapterConcentrationDrivenFromCMIP6PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP-style concentration-driven runs from CMIP6 pre-industrial
 
-    For the experiment, see
+    For experiment details, see
     [AdapterConcentrationDrivenFromCMIP6PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     As for [MAGICCAR6AdapterConcentrationDrivenFromCMIP7PreIndustrial][(m).]
@@ -1604,12 +1683,13 @@ class MAGICCAR6AdapterConcentrationDrivenFromCMIP6PreIndustrial:
         )
 
 
+# DELETE BEFORE MERGING: no acceptance tests (see docs/development/testing.md)
 @dataclass(frozen=True, kw_only=True)
 class MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial:
     """
     MAGICC AR6 adapter for CO2-concentration-driven runs from CMIP7 pre-industrial
 
-    For the experiment, see
+    For experiment details, see
     [AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     Same back-end as
@@ -1649,12 +1729,13 @@ class MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial:
         )
 
 
+# DELETE BEFORE MERGING: no acceptance tests (see docs/development/testing.md)
 @dataclass(frozen=True, kw_only=True)
 class MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP6PreIndustrial:
     """
     MAGICC AR6 adapter for CO2-concentration-driven runs from CMIP6 pre-industrial
 
-    For the experiment, see
+    For experiment details, see
     [AdapterCO2ConcentrationDrivenFromCMIP6PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     As for [MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP7PreIndustrial][(m).],
@@ -1689,12 +1770,13 @@ class MAGICCAR6AdapterCO2ConcentrationDrivenFromCMIP6PreIndustrial:
         )
 
 
+# DELETE BEFORE MERGING: no acceptance tests (see docs/development/testing.md)
 @dataclass(frozen=True, kw_only=True)
 class MAGICCAR6AdapterCO2EmissionDrivenFromCMIP7PreIndustrial:
     """
     MAGICC AR6 adapter for CO2-emission-driven runs from CMIP7 pre-industrial
 
-    For the experiment, see
+    For experiment details, see
     [AdapterCO2EmissionDrivenFromCMIP7PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     No biosphere CO2 emissions (no land-use change),
@@ -1741,12 +1823,13 @@ class MAGICCAR6AdapterCO2EmissionDrivenFromCMIP7PreIndustrial:
         )
 
 
+# DELETE BEFORE MERGING: no acceptance tests (see docs/development/testing.md)
 @dataclass(frozen=True, kw_only=True)
 class MAGICCAR6AdapterESMFromCMIP7PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP esm-style runs from CMIP7 pre-industrial
 
-    For the experiment, see
+    For experiment details, see
     [AdapterESMFromCMIP7PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     As for
@@ -1788,12 +1871,13 @@ class MAGICCAR6AdapterESMFromCMIP7PreIndustrial:
         )
 
 
+# DELETE BEFORE MERGING: no acceptance tests (see docs/development/testing.md)
 @dataclass(frozen=True, kw_only=True)
 class MAGICCAR6AdapterESMAllGHGFromCMIP7PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP esm-allGHG-style runs from CMIP7 pre-industrial
 
-    For the experiment, see
+    For experiment details, see
     [AdapterESMAllGHGFromCMIP7PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     As for
@@ -1835,12 +1919,13 @@ class MAGICCAR6AdapterESMAllGHGFromCMIP7PreIndustrial:
         )
 
 
+# DELETE BEFORE MERGING: no acceptance tests (see docs/development/testing.md)
 @dataclass(frozen=True, kw_only=True)
 class MAGICCAR6AdapterCO2EmissionDrivenFromCMIP6PreIndustrial:
     """
     MAGICC AR6 adapter for CO2-emission-driven runs from CMIP6 pre-industrial
 
-    For the experiment, see
+    For experiment details, see
     [AdapterCO2EmissionDrivenFromCMIP6PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     No biosphere CO2 emissions (no land-use change),
@@ -1887,12 +1972,13 @@ class MAGICCAR6AdapterCO2EmissionDrivenFromCMIP6PreIndustrial:
         )
 
 
+# DELETE BEFORE MERGING: no acceptance tests (see docs/development/testing.md)
 @dataclass(frozen=True, kw_only=True)
 class MAGICCAR6AdapterESMFromCMIP6PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP esm-style runs from CMIP6 pre-industrial
 
-    For the experiment, see
+    For experiment details, see
     [AdapterESMFromCMIP6PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     As for
@@ -1934,12 +2020,13 @@ class MAGICCAR6AdapterESMFromCMIP6PreIndustrial:
         )
 
 
+# DELETE BEFORE MERGING: no acceptance tests (see docs/development/testing.md)
 @dataclass(frozen=True, kw_only=True)
 class MAGICCAR6AdapterESMAllGHGFromCMIP6PreIndustrial:
     """
     MAGICC AR6 adapter for CMIP esm-allGHG-style runs from CMIP6 pre-industrial
 
-    For the experiment, see
+    For experiment details, see
     [AdapterESMAllGHGFromCMIP6PreIndustrial][openscm_runner.cmip_pre_industrial_branch.running.].
 
     As for

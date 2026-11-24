@@ -17,11 +17,11 @@ from .base import (
     END_YEAR_BUFFER,
     MAGICCAR6AdapterConfiguration,
     MAGICCAR6Experiment,
-    format_forcing_in,
     get_experiment_levels,
     hold_last_value,
     run_experiments,
 )
+from .io import format_forcing_in
 from .naming import convert_units, get_output_variables, get_unique_variable_timeseries
 
 MAGICC_START_YEAR = 1849
@@ -193,7 +193,7 @@ class MAGICCAR6AdapterERFDrivenFromEquilibrium:
     """
     MAGICC AR6 adapter for ERF-driven experiments starting from equilibrium
 
-    For the experiment, see
+    For experiment details, see
     [AdapterERFDrivenFromEquilibrium][openscm_runner.erf.running.].
     """
 
